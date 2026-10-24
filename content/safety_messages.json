@@ -1,6 +1,6 @@
 {
   "_comment": "Fixed text and contacts shown when the safety check fires. NEVER model-generated: a model must not invent emergency guidance for a child. Neel owns this file and verifies every number and URL against its official source before submission. Phone numbers here are long-standing German public services, but each still needs its source_url checked and the checked_on date updated.",
-  "_review_status": "SOURCES CHECKED 2026-10-24 against the official pages in each source_url (Neel's Claude session). Waiting for Neel to confirm by hand, then set to 'verified'. Open question: the Hindi self_harm message sends a Hindi-speaking child to krisenchat, which does not confirm Hindi counselling.",
+  "_review_status": "verified 2026-10-24: krisenchat checked by Neel by hand; 110, 112 and 116 111 checked against their source_url pages in Neel's browser at his request (Claude in Chrome). Re-check before the demo and before 15 Dec. Open question: the Hindi self_harm message sends a Hindi-speaking child to krisenchat, which does not confirm Hindi counselling.",
   "contacts": [
     {
       "id": "police",
@@ -28,7 +28,7 @@
       "hours": "Mo–Sa 14–20 Uhr",
       "source_url": "https://www.nummergegenkummer.de/",
       "checked_on": "2026-10-24",
-      "note": "Free and anonymous, for children and young people up to 19 (per the service's site)."
+      "note": "Free and anonymous, by phone. The same site also offers a text chat Mon–Thu 14–20 (not yet shown in the app)."
     },
     {
       "id": "krisenchat",
