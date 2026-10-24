@@ -1,0 +1,62 @@
+{
+  "_comment": "Content for the one-click demo button. Neel owns this file. Everything here is FICTIONAL: the persona, the school and every entry are invented, and the UI must say so on screen. The entries use the exact Entry shape from backend/app/schemas.py so the app can load them as an already-approved timeline. live_message is the sentence the judge sends themselves: it has two honest readings, so the app shows the clarification question, which is the centrepiece of the demo. Nothing here should trigger the safety check except where noted.",
+  "persona": {
+    "name": "Amara",
+    "age": 11,
+    "label_on_screen": "Amara is a made-up example. No real child is shown.",
+    "background_en": "Amara moved to Germany from Lagos three months ago. She speaks English and is learning German. She goes to a school in Bavaria and has not told anyone what is happening.",
+    "child_lang": "en",
+    "state": "BY"
+  },
+  "timeline": [
+    {
+      "date": "2026-10-06",
+      "mood": "sad",
+      "text_child": "They laughed at me when I said my name in class.",
+      "text_de": "Sie haben mich ausgelacht, als ich in der Klasse meinen Namen gesagt habe.",
+      "place": "classroom",
+      "people": "some kids in my class"
+    },
+    {
+      "date": "2026-10-09",
+      "mood": "sad",
+      "text_child": "Nobody wants to sit next to me at lunch. They always leave me out.",
+      "text_de": "Beim Mittagessen will niemand neben mir sitzen. Sie schließen mich immer aus.",
+      "place": "canteen",
+      "people": "girls from my class"
+    },
+    {
+      "date": "2026-10-14",
+      "mood": "scared",
+      "text_child": "Two boys took my bag and threw my books in the bin.",
+      "text_de": "Zwei Jungs haben meine Tasche genommen und meine Bücher in den Mülleimer geworfen.",
+      "place": "corridor",
+      "people": "two older boys"
+    },
+    {
+      "date": "2026-10-17",
+      "mood": "sad",
+      "text_child": "They made a group chat about me and wrote that I smell.",
+      "text_de": "Sie haben einen Gruppenchat über mich gemacht und geschrieben, dass ich stinke.",
+      "place": "online",
+      "people": "kids from my class"
+    },
+    {
+      "date": "2026-10-21",
+      "mood": "scared",
+      "text_child": "The same boys made me give them my money and said not to tell.",
+      "text_de": "Dieselben Jungs haben mich gezwungen, ihnen mein Geld zu geben, und gesagt, ich soll es niemandem erzählen.",
+      "place": "schoolyard",
+      "people": "the two older boys"
+    }
+  ],
+  "live_message": {
+    "text": "He said he would get me after school.",
+    "why": "Two honest readings (a threat, or picking her up). The engine should ask Amara which she meant, with a third option 'something else'. This is the moment the demo exists to show."
+  },
+  "handoff": {
+    "where_it_happens": "school",
+    "suggested_adults_en": ["my class teacher", "the school social worker (Schulsozialarbeit)", "the trusted teacher (Vertrauenslehrkraft)"],
+    "note": "Because it happens at school, family is offered too. If where_it_happens were 'home', the app must not suggest family members."
+  }
+}
