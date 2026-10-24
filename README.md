@@ -1,4 +1,6 @@
-# vividia
+# Vividia
+
+*Powered by NVIDIA Nemotron on Nebius Token Factory.*
 
 A submission to the [Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com/),
 track **Best Apps and Agents**.

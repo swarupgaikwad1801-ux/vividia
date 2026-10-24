@@ -3,7 +3,7 @@
 Neel owns this file. **Draft, 24 Oct 2026.** Paste section by section into the
 Devpost form. Rules: every claim must be true of the shipped demo, every
 number comes from `eval/results/` or `CLAUDE.md`, and **[TBD]** marks what is
-filled in after the live eval or cut. App name: **[APP NAME]**.
+filled in after the live eval or cut. App name: **Vividia**. Always write it as "Vividia, powered by NVIDIA Nemotron" at least once per section a judge reads first; no NVIDIA logo or brand colours.
 
 **Track:** Best Apps and Agents
 
