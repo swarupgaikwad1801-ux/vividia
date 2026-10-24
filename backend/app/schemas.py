@@ -160,6 +160,15 @@ class ResourcesResponse(BaseModel):
     )
 
 
+# --- GET /api/emergency ------------------------------------------------------
+
+
+class EmergencyResponse(BaseModel):
+    numbers: list[Resource] = Field(
+        description="110 and 112 from content/helplines.json, in file order; never Tavily, never a model"
+    )
+
+
 # --- GET /api/health ---------------------------------------------------------
 
 

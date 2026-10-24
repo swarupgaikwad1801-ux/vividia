@@ -127,6 +127,12 @@ export interface ResourcesResponse {
   source: "live" | "fallback";
 }
 
+/** GET /api/emergency */
+export interface EmergencyResponse {
+  /** 110 and 112 from content/helplines.json, in file order; never Tavily, never a model */
+  numbers: Resource[];
+}
+
 /** GET /api/health */
 export interface HealthResponse {
   status: "ok" | "degraded";
