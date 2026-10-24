@@ -236,6 +236,12 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
     haystack = _normalise(text)
     found = []
     for entry in _ambiguous_words().get(source_lang, []):
+        # Some words are only ambiguous without their context. Hindi "kal" is
+        # both tomorrow and yesterday, but a future or past verb settles it,
+        # and asking anyway spends a question the child does not owe us.
+        skip = entry.get("skip_when", {}).get("patterns", [])
+        if any(re.search(pattern, text, re.IGNORECASE | re.UNICODE) for pattern in skip):
+            continue
         if any(_normalise(form) in haystack for form in entry["forms"]):
             found.append({
                 "phrase": entry["word"],

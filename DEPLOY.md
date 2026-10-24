@@ -6,6 +6,27 @@ goal here is "cheap and boring", not clever.
 Nothing in this file needs a key in the repository. Keys go in the host's
 dashboard, and `.env` never leaves your machine.
 
+## Check the image before trusting it
+
+Running the app from a clone proves nothing about the image: a clone has
+`content/` sitting next to `backend/`, and the container might not. Build it
+and call it:
+
+```bash
+docker build -f backend/Dockerfile -t vividia-backend .
+docker run --rm -p 8000:8000 \
+  -e NEBIUS_API_KEY=... \
+  -e NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1/ \
+  -e NEMOTRON_NANO_MODEL=nvidia/Nemotron-3.5-Super-VL \
+  -e NEMOTRON_JUDGE_MODEL=nvidia/nemotron-3-super-120b-a12b \
+  vividia-backend
+curl localhost:8000/api/health
+```
+
+It must report `"engine": "live"` and name both models. `tests/test_deploy.py`
+checks the Dockerfile's shape without Docker, but only an actual build proves
+the image.
+
 ## Before you start
 
 - A Nebius Token Factory key, and the Tavily key.
@@ -18,8 +39,12 @@ dashboard, and `.env` never leaves your machine.
 1. Push to GitHub (already done).
 2. render.com → **New** → **Web Service** → connect `swarupgaikwad1801-ux/vividia`.
 3. Settings:
-   - **Root directory:** `backend`
-   - **Runtime:** Docker (it picks up `backend/Dockerfile`)
+   - **Root directory:** leave blank, i.e. the repository root. **Not**
+     `backend`: the image has to copy `content/` as well, and that lives at
+     the root. Setting it to `backend` builds an image whose container starts
+     and then dies on `content/safety_messages.json`.
+   - **Dockerfile path:** `backend/Dockerfile`
+   - **Runtime:** Docker
    - **Instance type:** Free is enough for judging; it sleeps after inactivity
      and takes ~30 s to wake. If the video shows a live demo, pay for the
      smallest always-on tier instead: a judge who hits a sleeping service may

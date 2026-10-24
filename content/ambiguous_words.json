@@ -1,68 +1,134 @@
 {
-  "_comment": "Words whose two meanings change what an adult should do. When one of these appears in a child's text, the app always asks the child which they meant; it never guesses. Asking the model alone proved unreliable: it knows these ambiguities when asked directly, but reports them inconsistently inside a judging task, and a knife threat that loses its timing is not something to leave to chance. The model check still runs alongside this and catches what the list does not. Each entry must be reviewed by a team member who speaks the language; this is a vocabulary question, so getting it wrong is visible.",
-  "_review": { "hi": null, "en": null },
+  "_comment": "Words whose two meanings change what an adult should do. When one of these appears in a child's text, the app always asks the child which they meant; it never guesses. Asking the model alone proved unreliable: it knows these ambiguities when asked directly, but reports them inconsistently inside a judging task, and a knife threat that loses its timing is not something to leave to chance. The model check still runs alongside this and catches what the list does not. Each entry must be reviewed by a team member who speaks the language; this is a vocabulary question, so getting it wrong is visible. 25 Oct: 'maarna' removed after review. A child writing it is alive, so offering them 'kills' as a reading is impossible to answer and frightening; the hit/kill risk is a translation error for the judge, not a question for the child. 'kal' now carries skip_when so tense settles it where it can.",
+  "_review": {
+    "hi": null,
+    "en": null
+  },
   "languages": {
     "hi": [
       {
         "word": "kal",
-        "forms": ["kal", "कल"],
-        "readings": [
-          { "meaning": "tomorrow", "target_phrasing": "morgen" },
-          { "meaning": "yesterday", "target_phrasing": "gestern" }
+        "forms": [
+          "kal",
+          "कल"
         ],
-        "note": "Hindi uses one word for both. With a threat this is the difference between something about to happen and something already over."
+        "readings": [
+          {
+            "meaning": "tomorrow",
+            "target_phrasing": "morgen"
+          },
+          {
+            "meaning": "yesterday",
+            "target_phrasing": "gestern"
+          }
+        ],
+        "note": "Hindi uses one word for both. With a threat this is the difference between something about to happen and something already over. Only asked when the sentence carries no tense marker: with one, the tense decides, and asking anyway spends a question the child does not owe us. Since a list match also forces the full check, asking about every 'kal' cost latency as well.",
+        "skip_when": {
+          "_comment": "Tense decides 'kal' nearly always: a future verb makes it tomorrow, a past one yesterday. Only ask when neither is present.",
+          "patterns": [
+            "\\b\\w+(ega|egi|enge|oge|unga|ungi)\\b",
+            "[ीे]?ग[ाीे]\\b",
+            "\\b(tha|thi|the|aaya|aayi|gaya|gayi|kiya|hua|hui)\\b",
+            "\\b(था|थी|थे|आया|गया|किया)\\b"
+          ]
+        }
       },
       {
         "word": "chhutti",
-        "forms": ["chhutti", "chutti", "छुट्टी"],
+        "forms": [
+          "chhutti",
+          "chutti",
+          "छुट्टी"
+        ],
         "readings": [
-          { "meaning": "after school today", "target_phrasing": "nach der Schule" },
-          { "meaning": "during the holidays", "target_phrasing": "in den Ferien" }
+          {
+            "meaning": "after school today",
+            "target_phrasing": "nach der Schule"
+          },
+          {
+            "meaning": "during the holidays",
+            "target_phrasing": "in den Ferien"
+          }
         ],
         "note": "Caught in the Hindi benchmark: 'kal chhutti ke baad chaaku leke aayega' was translated as 'after the holidays', so a knife threat for tomorrow lost its timing."
       },
       {
         "word": "bhaiya",
-        "forms": ["bhaiya", "bhaia", "भैया"],
+        "forms": [
+          "bhaiya",
+          "bhaia",
+          "भैया"
+        ],
         "readings": [
-          { "meaning": "my own brother", "target_phrasing": "mein Bruder" },
-          { "meaning": "an older boy, not related to me", "target_phrasing": "ein älterer Junge" }
+          {
+            "meaning": "my own brother",
+            "target_phrasing": "mein Bruder"
+          },
+          {
+            "meaning": "an older boy, not related to me",
+            "target_phrasing": "ein älterer Junge"
+          }
         ],
         "note": "Changes whether the person is family, which changes who the child can safely be handed off to."
       },
       {
         "word": "didi",
-        "forms": ["didi", "दीदी"],
+        "forms": [
+          "didi",
+          "दीदी"
+        ],
         "readings": [
-          { "meaning": "my own sister", "target_phrasing": "meine Schwester" },
-          { "meaning": "an older girl, not related to me", "target_phrasing": "ein älteres Mädchen" }
+          {
+            "meaning": "my own sister",
+            "target_phrasing": "meine Schwester"
+          },
+          {
+            "meaning": "an older girl, not related to me",
+            "target_phrasing": "ein älteres Mädchen"
+          }
         ],
         "note": "Same reason as bhaiya."
       },
       {
-        "word": "maarna",
-        "forms": ["marta", "marte", "marti", "maarta", "maarte", "maara", "mara", "maar", "मारता", "मारते", "मारा"],
-        "readings": [
-          { "meaning": "hits or beats me", "target_phrasing": "schlägt mich" },
-          { "meaning": "kills", "target_phrasing": "tötet" }
-        ],
-        "note": "Children commonly write 'marte' for 'maarte'. The hitting reading is almost always the right one, but the app must not decide that for the child."
-      },
-      {
         "word": "chhedna",
-        "forms": ["chhedte", "chhedti", "chhedta", "chhed", "छेड़ते", "छेड़ती"],
+        "forms": [
+          "chhedte",
+          "chhedti",
+          "chhedta",
+          "chhed",
+          "छेड़ते",
+          "छेड़ती"
+        ],
         "readings": [
-          { "meaning": "teasing me", "target_phrasing": "ärgern mich" },
-          { "meaning": "harassing me, including in a sexual way", "target_phrasing": "belästigen mich" }
+          {
+            "meaning": "teasing me",
+            "target_phrasing": "ärgern mich"
+          },
+          {
+            "meaning": "harassing me, including in a sexual way",
+            "target_phrasing": "belästigen mich"
+          }
         ],
         "note": "The two readings are a world apart in how an adult must respond, and only the child knows which they meant."
       },
       {
         "word": "dekh lena",
-        "forms": ["dekh lena", "dekh lunga", "dekh legi", "देख लेना", "देख लूँगा"],
+        "forms": [
+          "dekh lena",
+          "dekh lunga",
+          "dekh legi",
+          "देख लेना",
+          "देख लूँगा"
+        ],
         "readings": [
-          { "meaning": "a threat: you'll see what happens to you", "target_phrasing": "du wirst schon sehen" },
-          { "meaning": "literally: take a look at it", "target_phrasing": "schau es dir an" }
+          {
+            "meaning": "a threat: you'll see what happens to you",
+            "target_phrasing": "du wirst schon sehen"
+          },
+          {
+            "meaning": "literally: take a look at it",
+            "target_phrasing": "schau es dir an"
+          }
         ],
         "note": "Nearly always the threat, but it reads as an ordinary phrase to anyone translating word by word."
       }
@@ -70,28 +136,56 @@
     "en": [
       {
         "word": "get me",
-        "forms": ["get me", "get you", "gets me"],
+        "forms": [
+          "get me",
+          "get you",
+          "gets me"
+        ],
         "readings": [
-          { "meaning": "a threat to hurt me", "target_phrasing": "mir etwas antun" },
-          { "meaning": "come and collect me", "target_phrasing": "mich abholen" }
+          {
+            "meaning": "a threat to hurt me",
+            "target_phrasing": "mir etwas antun"
+          },
+          {
+            "meaning": "come and collect me",
+            "target_phrasing": "mich abholen"
+          }
         ],
         "note": "Measured failure: 'he said he would get me after school' was translated as 'abholen', turning a threat into a lift home."
       },
       {
         "word": "playing with me",
-        "forms": ["playing with me", "played with me"],
+        "forms": [
+          "playing with me",
+          "played with me"
+        ],
         "readings": [
-          { "meaning": "playing together, friendly", "target_phrasing": "mit mir gespielt" },
-          { "meaning": "messing with me, making me a target", "target_phrasing": "sich über mich lustig gemacht" }
+          {
+            "meaning": "playing together, friendly",
+            "target_phrasing": "mit mir gespielt"
+          },
+          {
+            "meaning": "messing with me, making me a target",
+            "target_phrasing": "sich über mich lustig gemacht"
+          }
         ],
         "note": "Often how a child first describes being picked on, because it is what the other children call it."
       },
       {
         "word": "touched me",
-        "forms": ["touched me", "touching me"],
+        "forms": [
+          "touched me",
+          "touching me"
+        ],
         "readings": [
-          { "meaning": "ordinary contact", "target_phrasing": "mich berührt" },
-          { "meaning": "something that frightened or upset me", "target_phrasing": "mich unangenehm angefasst" }
+          {
+            "meaning": "ordinary contact",
+            "target_phrasing": "mich berührt"
+          },
+          {
+            "meaning": "something that frightened or upset me",
+            "target_phrasing": "mich unangenehm angefasst"
+          }
         ],
         "note": "Never guessed, never escalated by the app, and never asked twice."
       }
