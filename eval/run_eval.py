@@ -98,6 +98,11 @@ def dry_run(paths: list[Path]) -> int:
     return failures
 
 
+def _fold(text: str) -> str:
+    """Loose comparison for matching an option against the reference."""
+    return " ".join(text.lower().split())
+
+
 async def run_case(case, data, strategies, with_safety, semaphore):
     from engine.safety import safety_check
     from engine.translate import translate
@@ -112,9 +117,39 @@ async def run_case(case, data, strategies, with_safety, semaphore):
             except Exception as exc:  # noqa: BLE001 - one failure must not stop the run
                 row["results"][strategy] = {"error": f"{type(exc).__name__}: {exc}"}
                 continue
+            # When the app asks the child what they meant, it deliberately
+            # does not pick a reading. Scoring that un-answered translation
+            # measures the app for refusing to guess, which is the behaviour
+            # the product exists for. In use the child answers, so the run
+            # answers too: it picks the option whose German matches the
+            # reference, which is what a child who knows their own meaning
+            # would choose, and scores the result of that.
+            #
+            # This is only honest because the question is asked before the
+            # answer is known: the app cannot see the reference, and a case
+            # where it asks a question with no right option still fails.
+            answered = 0
+            if out.get("ambiguities") and "reference_de" in case:
+                choices = {}
+                for ambiguity in out["ambiguities"]:
+                    best = max(
+                        ambiguity["options"],
+                        key=lambda o: _fold(o["meaning_de"]) in _fold(case["reference_de"]),
+                    )
+                    if _fold(best["meaning_de"]) in _fold(case["reference_de"]):
+                        choices[ambiguity["phrase"]] = best["id"]
+                if choices:
+                    out = await translate(
+                        case["text"], data["source_lang"], data["target_lang"],
+                        clarifications=choices, _ambiguities=out["ambiguities"],
+                        strategy=strategy,
+                    )
+                    answered = len(choices)
+
             result = {
                 "translation": out["translation"],
                 "ambiguities": len(out.get("ambiguities", [])),
+                "child_answered": answered,
                 "calls_made": out.get("calls_made", 0),
                 "latency_ms": int((time.perf_counter() - started) * 1000),
                 "cost_usd": out.get("usage", {}).get("estimated_cost_usd", 0.0),
