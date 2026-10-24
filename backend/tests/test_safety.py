@@ -15,13 +15,19 @@ worrying about their marks. A crisis screen there teaches the child the app
 does not understand them, and a child who feels misread stops writing.
 """
 
+import json
 import os
 
 import pytest
 
-from engine.safety import contacts_for, message_for, safety_check
+from engine.config import REPO_ROOT
+from engine.safety import CONTENT, contacts_for, language_warning, message_for, safety_check
 
-pytestmark = pytest.mark.skipif(
+# Only the classification tests need a model. The content rules below must
+# run everywhere, including CI with no API key: a duplicated phone number is
+# exactly the kind of mistake that should fail a build, not wait for someone
+# to remember to run the live suite.
+needs_model = pytest.mark.skipif(
     os.getenv("ENGINE_MODE") != "live",
     reason="needs real model calls; set ENGINE_MODE=live",
 )
@@ -47,6 +53,7 @@ MUST_NOT_FIRE = [
 ]
 
 
+@needs_model
 @pytest.mark.parametrize("text,lang,expected", MUST_FIRE)
 @pytest.mark.asyncio
 async def test_real_crisis_is_recognised(text, lang, expected):
@@ -56,6 +63,7 @@ async def test_real_crisis_is_recognised(text, lang, expected):
     assert result["message_child"], "an urgent result with no message shows the child nothing"
 
 
+@needs_model
 @pytest.mark.parametrize("text,lang", MUST_NOT_FIRE)
 @pytest.mark.asyncio
 async def test_everyday_exaggeration_does_not_fire(text, lang):
@@ -64,6 +72,7 @@ async def test_everyday_exaggeration_does_not_fire(text, lang):
     assert result["message_child"] == ""
 
 
+@needs_model
 @pytest.mark.asyncio
 async def test_unknown_language_still_gets_a_message():
     """A child whose language we have no copy for must not get a blank screen."""
@@ -82,3 +91,43 @@ def test_crisis_copy_exists_for_every_shipped_language():
 def test_danger_offers_emergency_numbers_and_self_harm_offers_a_person():
     assert {c["contact"] for c in contacts_for("danger")} >= {"110", "112"}
     assert any("krisenchat" in c["contact"] for c in contacts_for("self_harm"))
+
+
+# --- contacts live in exactly one file -------------------------------------
+
+
+def test_contacts_are_not_duplicated_across_content_files():
+    """helplines.json is the only place a contact may be defined.
+
+    Two copies of a phone number agree on the day they are written and drift
+    apart afterwards, and the version a child sees in a crisis is whichever
+    one nobody remembered to update.
+    """
+    assert "contacts" not in CONTENT, (
+        "safety_messages.json must hold wording only; contacts belong in helplines.json"
+    )
+
+    helplines = json.loads((REPO_ROOT / "content/helplines.json").read_text(encoding="utf-8"))
+    defined = [c["contact"] for c in helplines["helplines"] + helplines["emergency"]]
+    assert len(defined) == len(set(defined)), f"same contact listed twice: {defined}"
+
+
+def test_every_contact_says_which_languages_it_works_in():
+    """A contact without languages cannot be shown honestly to a child."""
+    for category in ("danger", "self_harm"):
+        for resource in contacts_for(category):
+            assert resource["languages"], f"{resource['contact']} does not say its languages"
+
+
+def test_a_child_is_warned_when_no_service_speaks_their_language():
+    """Both German helplines are German-only, which is the whole problem the
+    app exists for. The UI must say so rather than hand a Hindi-speaking child
+    a number nobody will answer them on."""
+    assert language_warning("self_harm", "hi") is True
+    assert language_warning("danger", "hi") is True
+    assert language_warning("self_harm", "de") is False
+
+
+def test_language_preference_puts_usable_services_first():
+    ordered = contacts_for("self_harm", "uk")
+    assert "uk" in ordered[0]["languages"], "a service the child can use should come first"

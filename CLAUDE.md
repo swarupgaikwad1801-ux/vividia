@@ -326,6 +326,34 @@ critical path for the whole benchmark. Until it exists:
   generation prompt ("Let me go with: ..."). Our production prompts are tight
   and have not shown it, but output is guarded rather than trusted.
 
+## Content files: one fact, one place
+
+- `content/helplines.json` is **the only** place a contact may be defined:
+  emergency numbers, helplines, name, hours, languages, source and check
+  date. `engine/resources.py` and `engine/safety.py` both read it.
+- `content/safety_messages.json` holds **wording only** and refers to
+  contacts by id.
+- Nothing may copy a contact into a second file. Two copies agree on the day
+  they are written and drift apart afterwards, and the version a child sees
+  in a crisis is whichever one nobody remembered to update. A test enforces
+  this and runs offline, so a duplicate fails the build rather than waiting
+  for someone to run the live suite.
+
+### Both helplines we can offer are German-only
+
+`116 111` is German; krisenchat is German and Ukrainian. Neither confirms
+Hindi or English counselling. So in a crisis we currently hand a
+Hindi-speaking child a number nobody will answer them on.
+
+`safety.py` exposes `language_warning(category, lang)` and orders contacts so
+a service the child can actually use comes first. **The crisis screen must
+print each service's languages**; hiding this is worse than the gap itself.
+
+This is also the clearest statement of why the product exists. German support
+for children is German-only, so a child without German is locked out of it.
+The handoff card gives them German words to show a person. That argument
+belongs in the Devpost write-up, sourced, not as a complaint.
+
 ## Hard requirements (failing any one = disqualified)
 
 1. Runtime call to **Nebius Token Factory** (we do this in every engine call).

@@ -24,9 +24,12 @@ import json
 from pathlib import Path
 
 from engine.client import Usage, call
-from engine.contract import SafetyResult
+from engine.contract import Resource, SafetyResult
 from engine.prompts import language_name
+from engine.resources import emergency_numbers, national_helplines
 
+# Only the wording lives here. Contacts come from helplines.json via
+# resources.py, so a phone number exists in exactly one place in the repo.
 CONTENT = json.loads(
     (Path(__file__).resolve().parents[2] / "content/safety_messages.json").read_text(encoding="utf-8")
 )
@@ -88,10 +91,29 @@ def message_for(category: str, lang: str) -> str:
     return messages.get(lang) or messages.get("en", "")
 
 
-def contacts_for(category: str) -> list[dict]:
-    """Which verified contacts belong with this category."""
-    when = "immediate_danger" if category == "danger" else "talk_to_someone"
-    return [c for c in CONTENT["contacts"] if c["when"] == when]
+def contacts_for(category: str, lang: str | None = None) -> list[Resource]:
+    """The contacts for this category, read from the one file that holds them.
+
+    When `lang` is given, services that work in the child's language come
+    first. Both German helplines we can offer operate in German only, so a
+    child who cannot speak German may be shown a number they cannot use. The
+    UI must therefore print each service's languages rather than hide this;
+    see `language_warning()`.
+    """
+    found = emergency_numbers() if category == "danger" else national_helplines()
+    if lang:
+        found = sorted(found, key=lambda r: lang not in r["languages"])
+    return found
+
+
+def language_warning(category: str, lang: str) -> bool:
+    """True when nothing we can offer here works in the child's language.
+
+    The honest answer is to say so. Telling a child in crisis to call a number
+    where nobody speaks to them, without warning, is worse than saying plainly
+    that this service is in German.
+    """
+    return not any(lang in resource["languages"] for resource in contacts_for(category))
 
 
 async def safety_check(text: str, lang: str, usage: Usage | None = None) -> SafetyResult:
