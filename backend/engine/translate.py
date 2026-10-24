@@ -88,6 +88,32 @@ def _script_share(text: str) -> dict[str, float]:
     return shares
 
 
+# Hindi written in Latin letters (Hinglish) is how children actually type, and
+# it defeats a script check: "Pause me woh log mein tiffin wegnehmen" is half
+# German and looks Latin throughout. These are common Hinglish function words
+# that are not German words, so two or more of them means the model copied the
+# input through instead of translating it.
+_HINGLISH = {
+    "woh", "hai", "hain", "mujhe", "mujhse", "mera", "meri", "mere", "nahi", "nahin",
+    "kar", "karta", "karte", "karti", "kiya", "aur", "bhi", "tha", "thi", "the",
+    "hoon", "hun", "kya", "usne", "unhone", "raha", "rahi", "liya", "diya", "gaya",
+    "bola", "bolte", "lete", "dete", "koi", "sab", "roz", "phir", "jab", "kyuki",
+    "me", "mein", "ko", "se", "pe", "par", "ki", "jo", "toh", "kuch", "log",
+    "saath", "wala", "waale", "bade", "chhota", "apna", "apne", "isliye",
+}
+# "mein" and "par" are German words too, so they only count towards Hinglish
+# when the target is German and other markers are already present.
+_ALSO_GERMAN = {"mein", "par", "me"}
+
+
+def _hinglish_words(text: str) -> int:
+    words = re.findall(r"[a-z]+", text.lower())
+    clear = sum(1 for word in words if word in _HINGLISH - _ALSO_GERMAN)
+    ambiguous = sum(1 for word in words if word in _ALSO_GERMAN)
+    # An ambiguous word only counts once something unambiguous is already there.
+    return clear + (ambiguous if clear else 0)
+
+
 def untranslated(source: str, output: str, target_lang: str) -> bool:
     """True when the model echoed the input instead of translating it.
 
@@ -99,7 +125,13 @@ def untranslated(source: str, output: str, target_lang: str) -> bool:
     if _normalise(source) == _normalise(output):
         return True
     if target_lang in ("de", "en"):  # Latin-script targets
-        return any(share > 0.3 for share in _script_share(output).values())
+        if any(share > 0.3 for share in _script_share(output).values()):
+            return True
+        # Caught in the Hindi benchmark: the model returned
+        # "Pause me woh log mein tiffin wegnehmen und wegwerfen" and the script
+        # check passed it, because Hinglish is Latin letters too.
+        # Only for a German target: "me" and "to" are ordinary English words.
+        return target_lang == "de" and _hinglish_words(output) >= 2
     return False
 
 

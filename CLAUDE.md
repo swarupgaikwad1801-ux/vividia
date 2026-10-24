@@ -374,6 +374,66 @@ video, this file):
 Until then `eval/run_eval.py` may be run freely, but its output stays in
 `eval/results/` and does not go in front of a judge.
 
+## First real Hindi benchmark (24 Oct): verification did NOT earn its cost
+
+30 Hindi sentences, scored by string matching against a team-written answer
+key. No model grades another model.
+
+| Strategy | Meaning kept | Avg calls | Avg latency | Cost |
+|---|---|---|---|---|
+| baseline | **29/30** | 1.0 | 1.6 s | $0.0022 |
+| adaptive | **28/30** | 9.5 | 6.3 s | $0.0266 |
+
+Safety: 27/30, **0 missed crises**, 3 over-triggers.
+
+**Adaptive lost to baseline.** Our own rule in this file says we publish that
+and explain it rather than quietly reporting the English numbers, so:
+
+### Why it lost, both cases
+
+- **`dekh-lena` — the judge picked a worse candidate.** The child wrote that
+  someone said "if you tell anyone, you'll see". Baseline kept the threat:
+  *"werde er schon sehen"*. Adaptive returned *"werde ich es ihm schon
+  zeigen"* — "I'll show him" — which **flips who is threatening whom**. One
+  verification step made a correct translation wrong. This is a real
+  regression in the judge, not a scoring artefact.
+- **`chaaku-kal` — both failed, and ours should not have.** *"kal chhutti ke
+  baad chaaku leke aayega"* became *"nach den Ferien"* (after the holidays)
+  instead of *"morgen nach der Schule"*. A knife threat for tomorrow lost its
+  timing. `chhutti` genuinely means both "holiday" and "end of the school
+  day", so this is precisely the source ambiguity the dedicated check exists
+  to catch, and it missed it. Every pass agreed on the wrong reading.
+
+### What this says, before anyone writes a Devpost claim
+
+On short, clear sentences a single pass is already strong, so verification
+has little room to help and some room to hurt. Its value showed up on the
+cases where a single pass silently inverts meaning ("gegeben" for
+"gezwungen", "trifft" for "schlägt") — which the English set contains and
+this Hindi set largely does not.
+
+So the honest claim is **not** "our pipeline is more accurate". It is: *it
+catches a specific, dangerous class of error that a single pass ships
+silently, and we can show exactly when it does and does not earn its cost.*
+
+**Before we claim anything:** fix the judge regression, make the ambiguity
+check catch `chhutti`, then re-run both sets. If adaptive still does not beat
+baseline, that result goes in the README and the video as it stands.
+
+### Also found
+
+- **Hinglish defeated the untranslated-output guard.** The model returned
+  *"Pause me woh log mein tiffin wegnehmen und wegwerfen"* and the script
+  check passed it, because Hinglish is Latin letters. `untranslated()` now
+  also counts Hinglish function words, requiring two markers and ignoring
+  words that are also German.
+- **Four of my own answer keys were wrong**, marking correct German as
+  failed: German separable verbs split ("machen ... nach"), "keine Lust mehr
+  zu leben" is the correct self-harm reading, "necken" is valid for teasing,
+  and "verrückt werden" is valid for the anger idiom. The first Hindi run
+  read 23/30 because of this. **An answer key needs reviewing as carefully as
+  the system it scores.**
+
 ## Hard requirements (failing any one = disqualified)
 
 1. Runtime call to **Nebius Token Factory** (we do this in every engine call).
