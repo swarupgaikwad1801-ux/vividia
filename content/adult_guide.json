@@ -1,0 +1,68 @@
+{
+  "_comment": "The 5-minute guide the trusted adult sees on the handoff card, plus the escalation ladder. Neel owns this file. Every step cites the page it comes from; checked 2026-10-24. Paraphrased in our own words, not copied. German is primary (the adult reads German); English for adults who do not. This is guidance for a person, not legal advice, and the app never contacts this adult itself: the child hands it over.",
+  "checked_on": "2026-10-24",
+  "sources": {
+    "ubskm": "https://beauftragte-missbrauch.de/themen/definition/symptome-und-signale",
+    "klicksafe": "https://www.klicksafe.de/cybermobbing",
+    "schulportal": "https://deutsches-schulportal.de/schulkultur/mobbing-in-der-schule-so-reagieren-lehrkraefte-richtig/"
+  },
+  "guide": {
+    "title": {
+      "de": "Ein Kind hat Ihnen etwas anvertraut. So reagieren Sie in den nächsten 5 Minuten.",
+      "en": "A child has trusted you with something. How to respond in the next 5 minutes."
+    },
+    "steps": [
+      {
+        "de": "Bleiben Sie ruhig und hören Sie zu. Handeln Sie nicht übereilt: Für das Kind ist der schwerste Schritt schon getan.",
+        "en": "Stay calm and listen. Do not rush into action: the hardest step for the child is already done.",
+        "source": "ubskm"
+      },
+      {
+        "de": "Sagen Sie dem Kind, dass Sie ihm glauben, und dass es mutig war, Ihnen das zu erzählen.",
+        "en": "Tell the child you believe them, and that it was brave to tell you.",
+        "source": "ubskm"
+      },
+      {
+        "de": "Halten Sie zu dem Kind. Suchen Sie gemeinsam nach Lösungen, statt über seinen Kopf hinweg zu entscheiden.",
+        "en": "Stand by the child. Look for solutions together instead of deciding over their head.",
+        "source": "klicksafe"
+      },
+      {
+        "de": "Versprechen Sie nicht, alles für sich zu behalten, sonst können Sie nicht helfen. Sagen Sie stattdessen ehrlich, was Sie als Nächstes tun und wen Sie dazuholen.",
+        "en": "Do not promise to keep everything secret, or you cannot help. Instead, say honestly what you will do next and who you will involve.",
+        "source": "ubskm"
+      },
+      {
+        "de": "Sprechen Sie nicht vorschnell mit den Eltern der anderen Kinder. Das kann die Fronten verhärten. Holen Sie zuerst Unterstützung in der Schule.",
+        "en": "Do not rush to speak to the other children's parents; it can harden positions. Get support at the school first.",
+        "source": "klicksafe"
+      },
+      {
+        "de": "Lehrkräfte: Handeln Sie schon bei einem begründeten Verdacht. Es müssen nicht alle Merkmale von Mobbing erfüllt sein.",
+        "en": "Teachers: act on a well-founded suspicion. Not every criterion of bullying has to be met first.",
+        "source": "schulportal"
+      },
+      {
+        "de": "Wenn das Leben oder die Sicherheit des Kindes in Gefahr ist: Rufen Sie sofort die Polizei unter 110.",
+        "en": "If the child's life or safety is in danger: call the police on 110 at once.",
+        "source": "ubskm"
+      }
+    ],
+    "footer": {
+      "de": "Der Bericht unten enthält die Worte des Kindes, die es selbst geprüft und freigegeben hat. Er ist keine Bewertung, ob etwas wahr ist.",
+      "en": "The report below contains the child's own words, which they checked and approved. It is not a judgement of whether anything is true."
+    }
+  },
+  "escalation_ladder": {
+    "_comment": "Shown to the child when nothing changes. Order from CLAUDE.md. School roles exist at every German school in some form, though names vary by state; contacts for steps 4-6 come from resources.py and safety_messages.json, never typed here.",
+    "steps": [
+      {"id": "teacher", "en": "Your class teacher", "de": "Deine Klassenlehrerin oder dein Klassenlehrer"},
+      {"id": "trusted", "en": "The trusted teacher or the school social worker", "de": "Die Vertrauenslehrkraft oder die Schulsozialarbeit"},
+      {"id": "head", "en": "The head of the school", "de": "Die Schulleitung"},
+      {"id": "school_psychology", "en": "The school psychology service for your area", "de": "Die schulpsychologische Beratungsstelle", "contacts_from": "resources.py (live, per state)"},
+      {"id": "helplines", "en": "Nummer gegen Kummer 116 111 or krisenchat", "de": "Nummer gegen Kummer 116 111 oder krisenchat", "contacts_from": "safety_messages.json"},
+      {"id": "emergency", "en": "If you are in danger right now: 110 or 112", "de": "Wenn du gerade in Gefahr bist: 110 oder 112", "contacts_from": "safety_messages.json"}
+    ],
+    "home_rule": "If the child said it happens at home, never suggest family members at any step."
+  }
+}
