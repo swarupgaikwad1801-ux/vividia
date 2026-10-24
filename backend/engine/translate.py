@@ -64,7 +64,12 @@ TRIAGE_TEMPERATURES = [0.2, 0.8]
 RISK_PATTERNS = [
     r"\b(not|никог|لا|değil|kein|nicht|never|nobody|no one|didn'?t|won'?t|can'?t)\b",  # negation
     r"\b(made|forced|threat|hurt|hit|kick|push|touch|afraid|scared|weapon|knife)\w*\b",  # force or threat
-    r"\b(they|them|he|she|someone|somebody)\b",  # who did it is not named
+    # An unnamed actor was a marker here until it was measured: it fired on
+    # 29 of 50 English sentences and was the only reason 19 of them
+    # escalated. Almost every disclosure says "they" or "he", so it selected
+    # for "a child is describing other children", which is the whole corpus
+    # rather than a risk. Disagreement between the first two passes is the
+    # better signal, and unlike these patterns it works in every language.
 ]
 _RISK = [re.compile(pattern, re.IGNORECASE | re.UNICODE) for pattern in RISK_PATTERNS]
 
@@ -232,6 +237,12 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
     haystack = _normalise(text)
     found = []
     for entry in _ambiguous_words().get(source_lang, []):
+        # Some words are only ambiguous without their context. Hindi "kal" is
+        # both tomorrow and yesterday, but a future or past verb settles it,
+        # and asking anyway spends a question the child does not owe us.
+        skip = entry.get("skip_when", {}).get("patterns", [])
+        if any(re.search(pattern, text, re.IGNORECASE | re.UNICODE) for pattern in skip):
+            continue
         if any(_normalise(form) in haystack for form in entry["forms"]):
             found.append({
                 "phrase": entry["word"],
@@ -572,8 +583,14 @@ async def translate(
     first = await asyncio.gather(
         *[_one_pass(text, source_lang, target_lang, usage, t) for t in TRIAGE_TEMPERATURES]
     )
+    # A word from the reviewed list always earns the full check, because the
+    # two passes agreeing proves nothing here: they can agree on one reading
+    # of a word that has two. Costs nothing to test, and it is what keeps
+    # "he said he would get me after school" asking the child rather than
+    # quietly choosing the lift home.
     passes_agree = _normalise(first[0]) == _normalise(first[1])
-    if passes_agree and not looks_risky(text):
+    known_ambiguous = bool(lexicon_ambiguities(text, source_lang))
+    if passes_agree and not known_ambiguous and not looks_risky(text):
         return _finish(
             {"translation": first[0], "confidence": 1.0, "ambiguities": []}, usage, ADAPTIVE
         )

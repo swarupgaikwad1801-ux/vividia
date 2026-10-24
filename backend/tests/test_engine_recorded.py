@@ -289,13 +289,9 @@ async def test_every_call_is_counted_including_the_wasted_ones(monkeypatch):
 # --- report ------------------------------------------------------------------
 
 
-@pytest.mark.skip(
-    reason="engine/report.py does not exist yet (Swarup, issue #3 item 8). The "
-    "transcript for it cannot be written before the prompts it replays exist; "
-    "tests/test_contract.py covers the mock's shape until then."
-)
-async def test_report_renders_both_languages_from_a_transcript():
-    raise NotImplementedError
+# engine/report.py now exists and has its own transcripts; see
+# tests/test_report.py. The placeholder that stood here is removed rather than
+# left as a permanent skip.
 
 
 # --- the honesty rule, enforced ---------------------------------------------
