@@ -71,7 +71,8 @@ exactly what the child meant, and leaves the child in charge of who hears it.
 - **Benchmark:** `eval/run_eval.py` compares a single translation with our
   pipeline on 50 English and 30 Hindi sentences written by people, scored
   against a human answer key with plain string matching, so no model grades
-  another model. Results: **a draw, 76/80 either way**. What the extra
+  another model. Results: **level: 76/80 and 77/80**, a margin too small
+  on 80 sentences to claim. What the extra
   calls buy is the 8 of 80 sentences where the child's own words carried
   two meanings: a single pass picked one silently, ours asked the child.
   0 missed crises on the safety set.

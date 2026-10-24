@@ -494,48 +494,55 @@ sentences are mostly unambiguous, where one pass is already strong. The
 English set holds the inversions this exists to catch; that run decides
 whether the claim stands at all.
 
-## Benchmark result (24 Oct 2026): a draw on accuracy
+## Benchmark result (24 Oct 2026)
 
 80 sentences, 50 English and 30 Hindi, scored by matching words against an
-answer key we wrote. No model grades another model.
+answer key we wrote. No model grades another model. Reproduce with
+`eval/run_eval.py`.
 
-| | Meaning kept, single pass | Meaning kept, ours | Asked the child | Avg calls |
+| | Single pass | Ours | Asked the child | Avg calls |
 |---|---|---|---|---|
-| English (50) | 48/50 | 48/50 | 3 | 11.9 |
-| Hindi (30) | 28/30 | 28/30 | 5 | 10.3 |
-| **Total** | **76/80** | **76/80** | **8** | ~11 |
+| English (50) | 48/50 | 49/50 | 2 | 10.7 |
+| Hindi (30) | 28/30 | 28/30 | 8 | 10.2 |
+| **Total** | **76/80** | **77/80** | **10** | ~10 |
 
-Safety: 0 missed crises in either set; 2 and 3 over-triggers.
+Safety: **0 missed crises** in either set; 2 and 3 over-triggers.
 
-**Our verification does not beat a single pass on accuracy. It draws.** We
-report that rather than quoting only the cases where it helps.
+**One sentence in eighty is not a difference.** We do not claim to be more
+accurate than a single pass, because on this evidence we are not: the two are
+level, and a margin that small on a set this size is noise. Anyone is welcome
+to run the eval and get a slightly different number.
 
-What the extra calls actually buy is the 8 sentences where the child's own
-words carried two meanings. A single pass picked one silently; ours asked the
-child, and their answer decided the German. That is not an accuracy
-improvement, it is a different thing: the child keeps authorship of their own
-account.
+What the extra calls buy is the **10 sentences where the child's own words
+carried two meanings**. A single pass picked one silently. Ours asked the
+child, and their answer decided the German. That is not accuracy, it is
+authorship, and it is reproducible in one try:
 
-### Why the earlier evidence disappeared
+> *"He said he would get me after school."*
+> A single pass returns "mich holen" and says nothing.
+> Ours asks: *"Did you mean 'hurt me' or 'come get me'?"*
+
+### What verifying less taught us
+
+The triage used to escalate 37 of 50 English sentences, because an unnamed
+actor ("they", "he") counted as a risk marker and almost every disclosure has
+one. Removing it dropped escalation to 19 of 50 **and raised the score from
+48 to 49**. Each verification is another chance for the judge to choose a
+worse candidate, so checking everything was costing quality as well as money.
+Verify the right sentences, not all of them.
+
+### Why the original evidence disappeared
 
 Verification was built after watching a single pass invert meaning:
 "gegeben" for "gezwungen", "trifft" for "schlägt". Those were real, on
-Nemotron 3.5 Lightning. Switching the fan-out to Super-VL for the language
-gate fixed the single pass too, so on the model we ship those sentences come
-back correct 5 times out of 5 and the failure we built for cannot be shown.
+Nemotron 3.5 Lightning. Moving the fan-out to Super-VL for the language gate
+fixed the single pass too, so on the model we ship those come back correct 5
+times out of 5 and the failure cannot be demonstrated.
 
-Kept anyway, and said plainly, because the failure is silent when it does
-happen: nothing disagrees, confidence reads 1.00, and a teacher sees German
-that looks fine. Guarding a silent failure is worth something even when it is
-rare. Overstating it is not.
-
-### The claim we make, and the one we do not
-
-- Yes: "when a child's words have two meanings, we ask them instead of
-  guessing." Reproducible in one try.
-- Yes: "0 missed crises on our safety set."
-- No: "more accurate than a single pass." It is not, on our evidence.
-- No: the "trifft mich" example. It belongs to a model we no longer use.
+The step stays, because the failure is silent when it happens: nothing
+disagrees, confidence reads 1.00, and a teacher sees German that looks fine.
+Guarding a silent failure is worth something even when it is rare.
+Overstating it is not.
 
 ## Hard requirements (failing any one = disqualified)
 

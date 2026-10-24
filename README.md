@@ -265,7 +265,8 @@ English**, and that the architecture is language-independent.
 - Benchmark: 50 English and 30 Hindi sentences, drafted by the team with
   Claude's help and then read line by line by a team member who speaks the
   language, scored against a reference meaning with `eval/run_eval.py`.
-  Results: **76/80 for a single pass, 76/80 for ours** - a draw on accuracy.
+  Results: **76/80 for a single pass, 77/80 for ours** - level, since one
+  sentence in eighty is noise, not a difference.
   What the extra calls buy is the 8 sentences where the child's own words
   had two meanings and the app asked them instead of guessing. 0 missed
   crises on the safety set. Numbers stand once the native review of the
