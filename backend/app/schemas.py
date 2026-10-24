@@ -104,12 +104,26 @@ class ClarifyRequest(BaseModel):
 
     `choices` maps Ambiguity.phrase to the chosen Option.id. The child decides
     the meaning; the model never resolves an ambiguity on its own.
+
+    `ambiguities` is the list the server returned from /api/translate, echoed
+    back unchanged. It is required, and that is the whole fix: an Option.id on
+    its own is meaningless to the server, because the id -> meaning_de mapping
+    only ever existed in the response the client is holding. Without it the
+    server had nothing to apply and silently translated as if the child had
+    never answered, while still reporting confidence 1.0.
+
+    Required rather than optional on purpose. A client that forgets it now gets
+    a 422 it can see, instead of a translation that quietly ignores the child.
     """
 
     text: str = Field(min_length=1, max_length=2000)
     source_lang: str
     target_lang: str = Field(default="de")
     choices: dict[str, str] = Field(description="{ambiguity.phrase: option.id}")
+    ambiguities: list[Ambiguity] = Field(
+        min_length=1,
+        description="The ambiguities /api/translate returned, sent back as they were received",
+    )
 
 
 # Same shape as a translate response; ambiguities should come back empty.

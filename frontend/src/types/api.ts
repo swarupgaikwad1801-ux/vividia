@@ -77,6 +77,15 @@ export interface ClarifyRequest {
   target_lang?: string;
   /** { [ambiguity.phrase]: option.id } */
   choices: Record<string, string>;
+  /**
+   * The `ambiguities` from the TranslateResponse, sent back unchanged.
+   *
+   * Required: an option id on its own means nothing to the server, because the
+   * id -> meaning_de mapping only exists in the response you are holding.
+   * Omitting it used to make the server translate as if the child had never
+   * answered; it is now a 422 you can see.
+   */
+  ambiguities: Ambiguity[];
 }
 
 /** Same shape as TranslateResponse; `ambiguities` should come back empty. */

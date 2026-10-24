@@ -225,8 +225,14 @@ async def clarify(request: ClarifyRequest, http: Request) -> TranslateResponse:
     _metered(http, request.source_lang)
     try:
         result, safety = await asyncio.gather(
+            # _ambiguities is what was missing: the engine needs the options it
+            # offered in order to turn the chosen id back into a meaning.
             ENGINE.translate(
-                request.text, request.source_lang, request.target_lang, clarifications=request.choices
+                request.text,
+                request.source_lang,
+                request.target_lang,
+                clarifications=request.choices,
+                _ambiguities=[ambiguity.model_dump() for ambiguity in request.ambiguities],
             ),
             ENGINE.safety_check(request.text, request.source_lang),
         )

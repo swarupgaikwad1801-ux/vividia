@@ -178,29 +178,10 @@ async def test_the_childs_answer_reaches_the_final_pass(monkeypatch):
     assert result["ambiguities"] == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Known bug, Swarup's to fix (issue #3, item 8: 'report.py and the clarify "
-    "flow'). /api/clarify sends only {phrase: option.id}; the option.id -> meaning_de "
-    "mapping lives in the Ambiguity objects the client already has, and main.py never "
-    "passes them as _ambiguities. _decisions_text then returns '', the clarified "
-    "suffix is never appended, and the child's choice is silently dropped while the "
-    "response still reports confidence 1.0. Fixing it needs a contract change, so it "
-    "is not this session's to make.",
-)
-async def test_the_childs_answer_survives_the_api_shaped_call(monkeypatch):
-    """Called exactly the way backend/main.py calls it: no _ambiguities.
-
-    When this starts passing, delete the xfail and the bug is closed.
-    """
-    transcript = replay(monkeypatch, "child_answer_is_rendered")
-
-    result = await translate(
-        transcript.data["text"], "en", clarifications={"laughed at me": "opt0"}
-    )
-
-    assert transcript.count("translate_clarified") == 1
-    assert "ausgelacht" in result["translation"]
+# The strict xfail that stood here is gone: /api/clarify now carries the
+# ambiguities it offered, so the child's choice reaches the final pass. The
+# endpoint-level proof lives in tests/test_clarify_fix.py, which is where the
+# contract change is exercised end to end.
 
 
 # --- untranslated output must never reach a teacher -------------------------
