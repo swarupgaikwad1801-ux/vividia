@@ -1,116 +1,184 @@
 # CLAUDE.md
 
-Shared context for this repository. Both team members run their own Claude
-session against this repo; this file is what keeps those sessions aligned.
-Keep it current — if a decision changes, change it here first and push.
+Shared context for this repository. Each team member runs their own Claude
+session against this repo; this file keeps those sessions aligned.
+**If a decision changes, change it here first and push.**
 
-## The project: Ankommen
+Locked: Sat 24 Oct 2026.
 
-A paperwork copilot for internationals living in Germany.
+## The project
 
-You give it a German official letter (Ausländerbehörde, Krankenkasse,
-Finanzamt, university). It:
+**Working name: not chosen yet** (pick by Sat 24 Oct night; the repo stays `vividia`).
 
-1. Explains the letter in plain English.
-2. Extracts what is being demanded and the deadline.
-3. Lists the documents you need to produce.
-4. Drafts the reply in German.
-5. **Remembers your case** — permit type, documents you hold, open deadlines —
-   so the next letter is read in the context of the last one.
+An app for **children and students who can't speak up** about bullying or
+harm, because they freeze, don't have the words, don't speak German, or have a
+disability that makes it hard.
 
-The memory is the point. A translator is a commodity; a thing that knows your
-situation and tracks your deadlines is a personal assistant. That distinction
-is what puts this in the Personal AI track rather than "another chatbot".
+**Hero user:** a migrant or refugee child, about 10–16, bullied at a German
+school, who can't explain it in German.
 
-**Track:** Personal AI.
-**Team:** Swarup Gaikwad (backend / agent logic), Vernika Sharma (frontend,
-also Python).
+> The problem isn't that kids won't talk. It's that they've learned what
+> happens when they do.
 
-## Deadline
+> The child decides who knows. The app makes sure the child knows everything
+> they can do.
 
-**Friday 30 October 2026, 10:00 PDT = 18:00 German time.**
+### The journey (what we ship)
 
-Target: submit as a draft on **Thursday 29 Oct**. Friday is buffer only.
-After Thursday night, only fix what is broken — no new features.
+| # | Step | Status |
+|---|------|--------|
+| 1 | **Notice**: emoji check-in, no language needed | Must |
+| 2 | **Find the words**: write in your own language; verified German shown side by side; the app asks the child when a phrase is ambiguous | **Must, centrepiece** |
+| 3 | **Build the case**: timeline + bilingual report the child approves word by word | Must |
+| 4 | **Choose who hears it**: handoff card for one trusted adult, with a 5-minute guide for that adult. Child-initiated only | Must |
+| 7 | **Talk to a professional**: route to krisenchat / 116 111, bringing the words already written | Must |
+| 8 | **Don't get dropped**: follow-up check-ins + escalation ladder that carries the timeline | Must |
+| + | **Safety floor**: if the child writes about danger or self-harm, show 110/112 and krisenchat at once. Nothing is sent to anyone | Must |
+| + | **Quick exit + PIN lock** | Must |
+| + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
+| 5 | **Witness mode**: report for someone else | Only if every Must passes the quality checklist by Wed 28 Oct 20:00 |
+| 6 | Anonymous school signal | Out. Future work |
 
-## Hard requirements (failing any of these = disqualified)
+### What we never build
 
-From the Official Rules, not from guesswork:
+- No monitoring of messages, no automatic SOS, **no alert behind the child's back**.
+- No AI "friend" or companion. We are the bridge to people who can be.
+- No diagnosis, no depression inference. It is a communication tool, not a
+  clinical one; the UI says so.
+- No school case-management system.
 
-1. **Must make a runtime call to Nebius Token Factory**, or be deployed/run on
-   Nebius AI Cloud compute (Serverless Jobs, Serverless Endpoints, DevPods).
-   A project that only calls some other provider does not qualify.
-2. **Must use at least one NVIDIA open source model** — Nemotron 3 (Nano /
-   Super / Ultra).
-3. **Public repo with an open source license visible in the About box.**
-   Done: MIT at the repo root.
-4. **README with setup instructions**, explicitly stating where Nemotron is
-   used, where Token Factory is used, and which other Nebius services.
-5. **Public demo URL** — a working hosted app or test build.
-6. **YouTube video, public, 3 minutes or less.**
-7. Must genuinely fit the track. Stage One judging is pass/fail on whether it
-   is "a genuine attempt at the track's stated goal, not a superficial rebrand
-   of an unrelated idea."
+### Escalation ladder (content owned by Neel, every item sourced)
 
-## Judging criteria (four, equally weighted)
+Teacher → Vertrauenslehrer/in or Schulsozialarbeit → Schulleitung →
+schulpsychologische Beratungsstelle → krisenchat / Nummer gegen Kummer 116 111
+→ immediate danger: 110 / 112.
 
-- **Technological Implementation** — how well built, how effectively it uses
-  Nebius and the NVIDIA model.
-- **Design** — "a complete, coherent product experience, not just a technical
-  proof of concept." 25% of the score. UI work is load-bearing, not decoration.
-- **Potential Impact** — a credible, specific case for a real audience.
-  Ours: international students and workers in Germany. We are the users.
-- **Quality of the Idea** — creative, non-obvious use of the models.
+## Track
 
-## Bonus prizes we are deliberately chasing
+**Best Apps and Agents.** Not Personal AI: a child-safety disclosure tool is
+not a "daily workflow assistant", and Stage One is pass/fail on track fit.
+The Overall prizes are open from any track.
 
-- **Best Use of Tavily ($3,000)** — requires a *functional runtime call* to the
-  Tavily API. In Ankommen it fetches the current rule, fee or deadline from the
-  relevant authority's own website so the advice is not stale, and the answer
-  cites the source. This is load-bearing, not bolted on. A project may hold one
-  Overall or Track award **plus** one Bonus award.
-- **Most Valuable Feedback ($100 + swag, 10 awarded)** — the submission form's
-  feedback section. Write it properly, not as an afterthought.
+## Team and ownership
 
-## Scope discipline
+Each person owns separate files. Do not edit someone else's files without
+asking them; that is how we avoid merge conflicts.
 
-Seven days, two people. Things that are **in** scope:
+| Who | Owns | Files |
+|-----|------|-------|
+| **Swarup Gaikwad** | The AI engine, Nebius setup, prompts, eval runner | `backend/engine/` (except `resources.py`), `backend/engine/prompts/`, `eval/run_eval.py` |
+| **Vernika Sharma** | The app: all screens, i18n + Arabic RTL, on-device encrypted storage, PIN, quick exit, FastAPI server, deployment | `frontend/`, `backend/main.py` |
+| **Neel Shah** | Proof, content and story: Tavily resources, safety content with sources, translation test set + native-speaker ratings, QA, video, Devpost | `backend/engine/resources.py`, `content/`, `eval/testset/`, `SAFETY.md`, `FEEDBACK.md` |
 
-- Paste German letter text in → structured analysis out.
-- Persistent case file (permit type, documents held, open deadlines).
-- Tavily lookup of the governing rule, with a citation.
-- German reply draft.
-- One clean, finished-looking web UI.
+Shared: README (Swarup writes the tech sections, Neel the rest), evening
+testing every day.
 
-Things that are **out** unless everything above is done early:
+## The engine contract
 
-- OCR from photos, user accounts and login, mobile app, multiple languages
-  beyond German→English, real integrations with any authority.
+Defined in `backend/engine/contract.py`; fake implementations with the exact
+same signatures live in `backend/engine/mock.py`. Vernika builds against the
+mocks; Swarup and Neel replace them with real code **without changing the
+signatures**. Any change to the contract is agreed by all three first.
 
-A small thing that works completely beats a large thing that half-works. The
-Design criterion rewards *coherent and complete*, not *big*.
+All functions are `async`.
+
+```python
+translate(text, source_lang, target_lang="de", clarifications=None) -> TranslationResult
+report(entries, child_lang) -> Report
+safety_check(text, lang) -> SafetyResult
+resources(state, lang) -> list[Resource]
+```
+
+### How `translate` works
+
+1. **Fan out:** Nemotron Nano translates the text into German N times
+   independently (N=5, varied temperature), in parallel.
+2. **Back-translate:** Nano translates each German version back.
+3. **Judge:** a larger Nemotron (Super or Ultra) compares all versions, picks
+   the best German, scores agreement, and lists phrases whose meaning drifts.
+4. **Ask the child:** each drifting phrase becomes a question in the child's
+   language with 2 options. The child's answer is passed back in
+   `clarifications`. The child confirms meaning; the model never decides it.
+
+`calls_made` is returned so the UI can show the live check count.
+
+## Hard requirements (failing any one = disqualified)
+
+1. Runtime call to **Nebius Token Factory** (we do this in every engine call).
+2. At least one **NVIDIA Nemotron** model (Nano + Super/Ultra).
+3. Public repo, **MIT license visible in the About box**.
+4. README with setup and exactly where Nemotron, Token Factory, other Nebius
+   services and Tavily are used.
+5. **Public demo URL** that works for judges **until 15 Dec 2026**.
+6. **Public YouTube video, 3:00 or less.**
+7. Genuine fit with the track (Stage One pass/fail).
+
+## Judging (four criteria, equal weight)
+
+Technological Implementation · Design ("complete, coherent product, not a
+proof of concept") · Potential Impact · Quality of the Idea.
+
+What a judge (Jacquie) said in the Nebius Discord on 20 Oct: make it super
+easy to try; don't make judges paste an API key; a pre-filled demo they just
+press send on; don't let it feel like a marketing page.
+
+## Competition (checked 24 Oct 2026)
+
+576 Nemotron + Nebius projects on Devpost; **none about bullying, child safety
+or refugees**. Ones to beat: Xvimo (Nano triage → Ultra agent, multilingual,
+publishes a 330-message benchmark), Jaga, NawiAI, Porchlight, Airlock, Tagout
+(puts real numbers in its tagline). Lessons: everyone says "verified", so the
+child is our difference; **a real benchmark is required, not optional**.
+
+## Bonus prizes we chase
+
+- **Best Use of Tavily ($3,000):** live helpline/support lookup, restricted to
+  a domain whitelist (krisenchat.de, nummergegenkummer.de, official school
+  counselling sites). Children never see unvetted web content.
+- **Most Valuable Feedback ($100 + swag):** keep `FEEDBACK.md` from day 1;
+  write down every Nebius friction as it happens.
+
+## Quality bar ("perfect")
+
+- Every button works; no placeholders, nothing labelled "simulated".
+- Works on a cheap Android phone in Chrome at 360px; Arabic RTL correct.
+- Verification shows progress and finishes in about 10 s or less.
+- Friendly error in the child's language for timeouts and no network.
+- Nothing about the child stored on the server; the backend logs no message
+  content.
+- Quick exit works in under 1 s.
+- Every claim in README/video has a source or is removed.
+- Eval numbers are real and reproducible.
 
 ## Working agreement
 
-- Work on branches, open a PR into `main`. Two people pushing straight to
-  `main` on a 7-day deadline will cost time in conflicts.
-- **Never commit API keys.** Nebius and Tavily keys go in `.env`, which is
-  gitignored. If a key is ever committed, rotate it — deleting the line is not
-  enough, it stays in the history.
-- Commit early and often. The repo is judged, so its history is visible.
+- Branch per feature (`feat/...`), PR into `main`. `main` is always deployable.
+- **Never commit API keys.** Keys go in `.env` (gitignored). If one is ever
+  committed, rotate it; deleting the line is not enough.
+- Public demo needs a **spending cap and rate limit** so credits last until
+  15 Dec.
+- Commit early and often; the history is judged.
 
-## Honesty rules for the submission
+## Honesty rules
 
-- Do not claim a feature in the video or description that the demo does not
-  actually do. Judges test the repo.
-- Ankommen explains official letters; it is not legal advice. Say so in the UI.
-- Do not use copyrighted music or third-party trademarks in the video.
-- All work here is new, started 23 Oct 2026, so no prior-work disclosure is
-  needed.
+- Never claim a feature the demo doesn't do. Judges test it.
+- **Do not claim EU zero-retention inference until verified** on our account.
+- No real incident and no real minors in the video or on Devpost. Personas
+  (e.g. "Amira, 12") are fictional and say so.
+- Communication tool, not counselling, therapy or legal advice; the UI says so.
+- All work started 23 Oct 2026; no prior work to disclose.
+
+## Deadline
+
+**Fri 30 Oct 2026, 10:00 PDT = 18:00 German time.** Full draft submitted
+Thu 29 Oct by 22:00. Day-by-day plan: see `PLAN.md`.
 
 ## Environment notes
 
-- Swarup's machine had no Python and no Node installed as of 23 Oct 2026.
-  Verify the toolchain before assuming a command will run.
-- Exact Nebius Token Factory base URL and model IDs: read them from the Nebius
-  console once the API key exists. **Do not guess them.**
+- Swarup's machine (24 Oct): Python 3.12 (`py`) and Git installed; Node not
+  installed. Verify before assuming a command runs.
+- Token Factory signup **requires a Visa or Mastercard** (RuPay rejected,
+  some countries unsupported, no exceptions). Without a card the trial ends
+  with `402 credit_balance_exhausted`.
+- **Base URL and model IDs: copy from the Nebius console or run
+  `py -m engine.smoke_test --list-models`. Never guess them.**
