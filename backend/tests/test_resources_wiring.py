@@ -182,6 +182,14 @@ def test_health_reports_resources_as_live(live_engine):
 
     assert body.engine == "live"
     assert body.models["resources"] == "live"
-    # report is the one still standing on the mock, and health must say so
-    # rather than letting anyone demo it believing it is real.
-    assert body.models["report"] == "mock"
+
+    # Health must say, per function, whether it is real yet, so nobody demos a
+    # mock believing it is live. This asserts that every function reports one
+    # of the two honestly, rather than pinning a particular one to "mock":
+    # naming report here was true when this test was written and went stale
+    # the moment #19 made report live, failing a test about resources.
+    from engine import live
+
+    for name, state in live.STATUS.items():
+        assert body.models[name] == state, f"health misreports {name}"
+        assert state in ("live", "mock")
