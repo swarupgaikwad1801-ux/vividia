@@ -21,7 +21,10 @@ import re
 from engine.client import Usage, call
 from engine.contract import Ambiguity, TranslationResult
 from engine.prompts import (
+    AMBIGUITY_SCHEMA,
+    AMBIGUITY_SYSTEM,
     BACK_TRANSLATE_SYSTEM,
+    REPAIR_SYSTEM,
     CLARIFIED_SUFFIX,
     JUDGE_SCHEMA,
     JUDGE_SYSTEM,
@@ -75,6 +78,57 @@ async def _back(german, source_lang, target_lang, usage):
     return await call("fanout", system, german, usage, temperature=0.2, max_tokens=500)
 
 
+async def _repair(text, german, losses, source_lang, target_lang, usage):
+    """Re-translate just the phrases whose meaning did not survive.
+
+    Selecting a better candidate cannot help when every candidate made the
+    same mistake, which is exactly when a reported harm quietly turns
+    harmless. Here the judge tells the translator what was lost, and the
+    translator puts it back.
+    """
+    detail = "\n".join(
+        f'- "{loss["phrase"]}" means: {loss["intended"]}. '
+        f'The translation turned it into: {loss["became"]}'
+        for loss in losses
+    )
+    user = (
+        f"The child wrote ({language_name(source_lang)}):\n{text}\n\n"
+        f"Translation into {language_name(target_lang)}:\n{german}\n\n"
+        f"Meaning that did not survive:\n{detail}"
+    )
+    return await call(
+        "fanout",
+        REPAIR_SYSTEM.format(target_name=language_name(target_lang)),
+        user,
+        usage,
+        temperature=0.2,
+        max_tokens=500,
+    )
+
+
+async def _find_ambiguity(text, source_lang, target_lang, usage):
+    """Ask whether the child's own sentence has more than one honest reading.
+
+    Deliberately given the original only. The judge, once it has candidates in
+    front of it, reports where they differ and stops examining the source; an
+    ambiguity every pass resolved the same way then goes unseen, which is the
+    case that matters most ("he said he would get me after school").
+    """
+    raw = await call(
+        "judge",
+        AMBIGUITY_SYSTEM,
+        f"Language: {language_name(source_lang)}\nSentence: {text}",
+        usage,
+        temperature=0.0,
+        max_tokens=600,
+        response_format=AMBIGUITY_SCHEMA,
+    )
+    try:
+        return json.loads(raw).get("ambiguous_phrases", [])
+    except json.JSONDecodeError:
+        return []
+
+
 async def _judge(text, candidates, backs, source_lang, target_lang, usage):
     numbered = "\n".join(f"[{i}] {c}" for i, c in enumerate(candidates))
     numbered_backs = "\n".join(f"[{i}] {b}" for i, b in enumerate(backs))
@@ -95,7 +149,7 @@ async def _judge(text, candidates, backs, source_lang, target_lang, usage):
         # Schema-constrained output has not failed in testing, but a malformed
         # verdict must not take the whole request down: fall back to "no
         # disagreement found" rather than inventing one.
-        return {"best_index": 0, "agreement": 0.5, "disputes": []}
+        return {"best_index": 0, "agreement": 0.5, "meaning_lost": [], "disputes": []}
 
 
 async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
@@ -141,8 +195,8 @@ def _decisions_text(ambiguities, choices) -> str:
     return "\n".join(lines)
 
 
-async def _verify(text, candidates, source_lang, target_lang, usage):
-    """Back-translate, judge, and turn critical disputes into child questions."""
+async def _verify(text, candidates, source_lang, target_lang, usage, source_ambiguities=None):
+    """Back-translate, judge, repair what was lost, and ask the child what only they know."""
     backs = await asyncio.gather(*[_back(c, source_lang, target_lang, usage) for c in candidates])
     verdict = await _judge(text, candidates, backs, source_lang, target_lang, usage)
 
@@ -150,19 +204,56 @@ async def _verify(text, candidates, source_lang, target_lang, usage):
     if not 0 <= best_index < len(candidates):
         best_index = 0
 
-    critical = [
-        dispute
-        for dispute in verdict.get("disputes", [])
-        if dispute.get("severity") == "critical" and len(dispute.get("readings", [])) >= 2
-    ][:2]  # never interrupt a child with more than two questions
+    disputes = [d for d in verdict.get("disputes", []) if len(d.get("readings", [])) >= 2]
+
+    # Two very different things look identical in the raw verdict, and only one
+    # of them is the child's business:
+    #
+    #   translation_error - the child was clear and a pass got it wrong. The
+    #     judge has already discarded it by choosing a better candidate. Asking
+    #     the child to adjudicate our own mistake would be confusing, and would
+    #     imply they wrote something unclear when they did not.
+    #   source_ambiguous  - the child's own words carry two honest readings.
+    #     Only the child knows which. This is the one worth asking about.
+    #
+    # We still count the errors: they are the clearest evidence of what the
+    # verification is for, and the benchmark reports them.
+    errors_caught = sum(1 for d in disputes if d.get("kind") == "translation_error")
+
+    # Meaning the back-translation shows was lost by every candidate. No
+    # amount of choosing between candidates fixes this, so repair it.
+    losses = [
+        loss for loss in verdict.get("meaning_lost", [])
+        if loss.get("severity") == "critical"
+    ]
+    best = candidates[best_index]
+    repaired = False
+    if losses:
+        best = await _repair(text, best, losses, source_lang, target_lang, usage)
+        repaired = True
+    # Questions for the child come from the dedicated check on the original
+    # sentence, plus any genuine ambiguity the judge noticed while comparing.
+    ask_about = list(source_ambiguities or [])
+    seen = {a["phrase"].lower() for a in ask_about}
+    for dispute in disputes:
+        if dispute.get("kind") == "source_ambiguous" and dispute["phrase"].lower() not in seen:
+            ask_about.append(dispute)
+            seen.add(dispute["phrase"].lower())
+    ask_about = ask_about[:2]  # never interrupt a child with more than two questions
 
     questions = await asyncio.gather(
-        *[_question(d["phrase"], d["readings"], source_lang, usage) for d in critical]
+        *[_question(d["phrase"], d["readings"], source_lang, usage) for d in ask_about]
     )
+    # Agreement between passes is worthless as a confidence signal when the
+    # passes agreed on something wrong, so cap it when meaning had to be
+    # repaired. Confidence must never overstate what we actually know.
+    agreement = float(verdict.get("agreement", 0.5))
     return {
-        "translation": candidates[best_index],
-        "confidence": float(verdict.get("agreement", 0.5)),
+        "translation": best,
+        "confidence": min(agreement, 0.6) if repaired else agreement,
         "ambiguities": [q for q in questions if q],
+        "errors_caught": errors_caught + len(losses),
+        "meaning_repaired": len(losses),
     }
 
 
@@ -187,18 +278,23 @@ async def translate(
         decisions = _decisions_text(_ambiguities or [], clarifications)
         german = await _one_pass(text, source_lang, target_lang, usage, 0.2, decisions)
         return {"translation": german, "confidence": 1.0, "ambiguities": [],
-                "calls_made": usage.calls_made, "usage": usage.as_dict(), "strategy_used": strategy}
+                "errors_caught": 0, "calls_made": usage.calls_made,
+                "usage": usage.as_dict(), "strategy_used": strategy}
 
     if strategy == BASELINE:
         german = await _one_pass(text, source_lang, target_lang, usage, 0.2)
         return {"translation": german, "confidence": 0.0, "ambiguities": [],
-                "calls_made": usage.calls_made, "usage": usage.as_dict(), "strategy_used": BASELINE}
+                "errors_caught": 0, "calls_made": usage.calls_made,
+                "usage": usage.as_dict(), "strategy_used": BASELINE}
 
     if strategy == MULTI_PASS:
-        candidates = await asyncio.gather(
-            *[_one_pass(text, source_lang, target_lang, usage, t) for t in FANOUT_TEMPERATURES]
+        candidates, ambiguous = await asyncio.gather(
+            asyncio.gather(
+                *[_one_pass(text, source_lang, target_lang, usage, t) for t in FANOUT_TEMPERATURES]
+            ),
+            _find_ambiguity(text, source_lang, target_lang, usage),
         )
-        result = await _verify(text, list(candidates), source_lang, target_lang, usage)
+        result = await _verify(text, list(candidates), source_lang, target_lang, usage, ambiguous)
         return {**result, "calls_made": usage.calls_made, "usage": usage.as_dict(),
                 "strategy_used": MULTI_PASS}
 
@@ -209,12 +305,15 @@ async def translate(
     passes_agree = _normalise(first[0]) == _normalise(first[1])
     if passes_agree and not looks_risky(text):
         return {"translation": first[0], "confidence": 1.0, "ambiguities": [],
-                "calls_made": usage.calls_made, "usage": usage.as_dict(),
-                "strategy_used": ADAPTIVE}
+                "errors_caught": 0, "calls_made": usage.calls_made,
+                "usage": usage.as_dict(), "strategy_used": ADAPTIVE}
 
-    extra = await asyncio.gather(
-        *[_one_pass(text, source_lang, target_lang, usage, t) for t in FANOUT_TEMPERATURES[2:]]
+    extra, ambiguous = await asyncio.gather(
+        asyncio.gather(
+            *[_one_pass(text, source_lang, target_lang, usage, t) for t in FANOUT_TEMPERATURES[2:]]
+        ),
+        _find_ambiguity(text, source_lang, target_lang, usage),
     )
-    result = await _verify(text, [*first, *extra], source_lang, target_lang, usage)
+    result = await _verify(text, [*first, *extra], source_lang, target_lang, usage, ambiguous)
     return {**result, "calls_made": usage.calls_made, "usage": usage.as_dict(),
             "strategy_used": ADAPTIVE}

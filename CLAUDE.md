@@ -216,6 +216,46 @@ The benchmark compares three, and the app uses C:
 If the data shows C is no better than A, we publish that and explain why. We
 never add calls to make the architecture look impressive.
 
+## How verification actually works, and why
+
+Three separate checks, because one model call cannot do all three jobs. Each
+was added after watching the previous design fail on a real sentence.
+
+1. **Fan-out + judge: catches one pass getting it wrong.**
+   The judge picks the best candidate. Meaning first, fluency second: an
+   early version chose "Sie machten mich, ihnen Geld zu geben", which is
+   broken German, over a correct and fluent alternative.
+
+2. **Back-translation + repair: catches every pass getting it wrong together.**
+   This is the one that matters most. *"My friend hits me sometimes"* became
+   *"Mein Freund **trifft** mich"* (my friend **meets** me) in all five
+   passes, with agreement 1.00. Nothing disagreed, so nothing looked wrong.
+   Only the back-translation showed it: *"My friend meets me sometimes."*
+   The judge now compares each back-translation against the child's original,
+   reports what was lost, and a repair pass puts it back:
+   *"Mein Freund **schlägt** mich manchmal."* Confidence is capped at 0.6
+   whenever a repair was needed, because agreement had already proved
+   worthless on that sentence.
+
+3. **A separate ambiguity check on the original: catches what no translation
+   can resolve.** Run against the child's sentence alone, with no candidates
+   in view. Folding this into the judge did not work: once it has candidates
+   to compare, it reports where they differ and stops reading the original.
+   *"He said he would get me after school"* is a threat or a lift home, and
+   every pass chose the lift. Only the child knows, so the app asks:
+   *"When you said 'get me', did you mean someone should come find you, or
+   hurt you?"*
+
+**The distinction that keeps the app honest:** a disagreement because a pass
+was *wrong* is ours to fix silently (`translation_error`). A disagreement
+because the child's words carry two honest readings is theirs to decide
+(`source_ambiguous`). We never ask a child to adjudicate our own mistake; an
+early build asked "did you mean they gave you money?" about a sentence that
+plainly said the opposite.
+
+Cost of all this, measured: a safe sentence takes 2 calls and ~340 ms; a
+sentence needing full verification and repair takes 13 calls and ~3 s.
+
 ## Hard requirements (failing any one = disqualified)
 
 1. Runtime call to **Nebius Token Factory** (we do this in every engine call).

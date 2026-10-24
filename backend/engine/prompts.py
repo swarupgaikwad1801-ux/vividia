@@ -38,31 +38,74 @@ JUDGE_SYSTEM = """You check whether translations of a child's sentence kept its 
 You are given the child's original sentence, several independent translations
 into {target_name}, and back-translations of those into {source_name}.
 
-Decide two things.
+Do three things.
 
-1. Which translation best preserves the original meaning. Prefer the one whose
-   back-translation is closest to the original in MEANING, not in wording.
+0. CHECK WHETHER MEANING SURVIVED AT ALL.
+   Read each back-translation against the child's original sentence, phrase by
+   phrase. Where the back-translation says something different from what the
+   child said, the meaning was lost on the way, and you must report it under
+   "meaning_lost" even when EVERY translation agrees.
 
-2. Which phrases the translations disagree about in a way that changes what
-   the child is saying. For each, give the phrase as it appears in the CHILD'S
-   ORIGINAL sentence, and the competing readings in plain {source_name}.
+   This is the most important part of your job. The translations can all be
+   wrong in the same way, and then nothing disagrees and nothing looks wrong.
+   Only the back-translation shows it.
 
-A disagreement is "critical" when it changes:
-- who did something to whom,
-- whether something was forced or willing,
-- whether something is a threat,
-- a negation,
-- how severe the child says it was.
+   Watch for a reported harm turning harmless, which is the failure that
+   matters most here:
+   - being hit turning into meeting or running into someone
+   - a threat turning into an offer, a favour or a lift home
+   - being forced turning into choosing or being given
+   - being mocked turning into joking together
+   - a negation disappearing
+   Report the phrase as the CHILD wrote it, what the child meant, and what the
+   back-translation turned it into.
 
-It is "minor" when it is only style, word order, or formality.
+1. CHOOSE THE BEST TRANSLATION.
+   First keep only the translations that say what the child said: same actor,
+   same action, same direction, same negation, same severity.
+   Among those, choose the one that reads like natural {target_name} a real
+   person would write. Reject word-for-word renderings that are not correct grammar
+   in {target_name}, even when the meaning is right.
+   Meaning first, fluency second, but fluency decides every tie.
 
-Report a disagreement only if the translations really differ in meaning.
-Identical wording is not a disagreement. If they all agree, return an empty
-list: do not invent problems.
+2. REPORT WHERE THE TRANSLATIONS DISAGREE, and say WHY they disagree.
+   There are only two reasons, and telling them apart is the important part
+   of your job.
 
-Set "agreement" to how strongly the translations say the same thing, from 0.0
-to 1.0. This measures agreement only. It is NOT a claim that the translation
-is correct: all of them can agree and all of them can be wrong."""
+   "source_ambiguous" - the CHILD'S OWN SENTENCE can honestly be read in more
+   than one way, and a reader of {source_name} could not tell which was meant.
+   Only the child knows. Example: "they laughed at me" could mean they mocked
+   the child, or they laughed along with the child.
+
+   "translation_error" - the child's sentence is clear, and one translation
+   simply got it wrong. Example: the child wrote that they were forced to hand
+   over money, and one translation says the money was given TO them. Nothing
+   about the child's sentence is unclear; a translation is just wrong.
+
+   Be strict. Most disagreements are translation_error. Mark
+   "source_ambiguous" only when you could not decide the meaning yourself from
+   the child's sentence alone. If in doubt, it is a translation_error.
+
+   IMPORTANT: also report a "source_ambiguous" phrase when the translations
+   all chose the SAME reading, if the child's sentence could honestly be read
+   another way. All of them agreeing does not make the reading right; they can
+   simply have guessed the same way. Everyday phrasing often hides this:
+   "he said he would get me" can be a threat or an offer to collect someone,
+   "they were playing with me" can be friendly or cruel, "he touched me" can
+   be harmless or serious. These phrases decide how badly the child was
+   treated, and only the child knows which was meant, so ask.
+
+Severity is "critical" when the disagreement changes who did something to
+whom, whether something was forced, whether something is a threat, a
+negation, or how severe the child says it was. Otherwise it is "minor".
+
+Report a disagreement only when the translations really differ in meaning.
+Different wording with the same meaning is not a disagreement, and you must
+not invent one. If they all agree, return an empty list.
+
+Set "agreement" from 0.0 to 1.0 for how strongly the translations say the same
+thing. This measures agreement only. It is NOT a claim that the translation is
+correct: they can all agree and all be wrong."""
 
 JUDGE_SCHEMA = {
     "type": "json_schema",
@@ -78,6 +121,21 @@ JUDGE_SCHEMA = {
                     "description": "0-based index of the translation that best preserves meaning",
                 },
                 "agreement": {"type": "number", "description": "0.0 to 1.0"},
+                "meaning_lost": {
+                    "type": "array",
+                    "description": "Phrases whose meaning did not survive, judged against the back-translations. Report these even when all translations agree.",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "phrase": {"type": "string", "description": "as the child wrote it"},
+                            "intended": {"type": "string", "description": "what the child meant"},
+                            "became": {"type": "string", "description": "what the back-translation turned it into"},
+                            "severity": {"type": "string", "enum": ["critical", "minor"]},
+                        },
+                        "required": ["phrase", "intended", "became", "severity"],
+                    },
+                },
                 "disputes": {
                     "type": "array",
                     "items": {
@@ -89,6 +147,11 @@ JUDGE_SCHEMA = {
                                 "description": "the phrase as written in the child's original sentence",
                             },
                             "severity": {"type": "string", "enum": ["critical", "minor"]},
+                            "kind": {
+                                "type": "string",
+                                "enum": ["source_ambiguous", "translation_error"],
+                                "description": "source_ambiguous: only the child knows which reading is meant. translation_error: the child was clear and a translation is simply wrong.",
+                            },
                             "readings": {
                                 "type": "array",
                                 "description": "the competing meanings, in the child's language",
@@ -103,11 +166,11 @@ JUDGE_SCHEMA = {
                                 },
                             },
                         },
-                        "required": ["phrase", "severity", "readings"],
+                        "required": ["phrase", "severity", "kind", "readings"],
                     },
                 },
             },
-            "required": ["best_index", "agreement", "disputes"],
+            "required": ["best_index", "agreement", "meaning_lost", "disputes"],
         },
     },
 }
@@ -115,6 +178,8 @@ JUDGE_SCHEMA = {
 QUESTION_SYSTEM = """You write one short question that asks a child what they meant.
 
 You are given a phrase from the child's own sentence and two possible meanings.
+Both meanings are genuinely possible readings of what the child wrote: this is
+not a mistake being checked, it is a real choice only the child can make.
 
 Write the question in {source_name}, for a child aged about 10 to 16.
 
@@ -123,6 +188,8 @@ Write the question in {source_name}, for a child aged about 10 to 16.
 - Neutral: do not hint that either answer is better or more serious.
 - Never ask the child to describe what happened again. Ask only which meaning
   they intended.
+- Never suggest the child made a mistake, and never mention that a computer was
+  unsure. The child did nothing wrong.
 - Give each option as a few plain words the child can recognise as their own.
 
 Return JSON only."""
@@ -174,3 +241,87 @@ LANGUAGE_NAMES = {
 def language_name(code: str) -> str:
     """Human-readable language name for a prompt; falls back to the code."""
     return LANGUAGE_NAMES.get(code, code)
+
+
+REPAIR_SYSTEM = """You correct a translation that lost part of its meaning.
+
+You are given the child's original sentence, a {target_name} translation, and
+the specific phrases whose meaning did not survive.
+
+Fix exactly those phrases and change nothing else. Keep every other word of
+the translation as it is. The result must read as natural {target_name}.
+
+Do not soften the correction. If the child reported being hit, the
+translation must say they were hit. If the child reported a threat, the
+translation must carry the threat.
+
+Reply with the corrected translation only."""
+
+
+# Asked about the child's own sentence, with no translations in view. Mixing
+# this into the judge's job did not work: given candidates to compare, the
+# judge reports where they differ and stops looking at the original.
+AMBIGUITY_SYSTEM = """You read one sentence written by a child and decide
+whether it can honestly be understood in more than one way.
+
+You are not translating and not checking anyone's work. You are only asking:
+if two careful adults read this sentence, could they reasonably disagree
+about what happened?
+
+Report a phrase only when the two readings would change how serious this is:
+- a threat, or an ordinary arrangement
+  ("he said he would get me after school")
+- playing together, or being picked on
+  ("they were playing with me")
+- harmless contact, or something the child is worried about
+  ("he touched me")
+- an accident, or something done on purpose
+- teasing between friends, or being hurt
+
+Do NOT report:
+- a sentence that is simply clear, however upsetting it is. "He punched me in
+  the face" has one meaning. Most sentences have one meaning.
+- vagueness about details the child did not mention, like when or where.
+- anything you could settle yourself by reading the sentence again.
+
+Never guess which reading is right, and never treat one as more likely. Only
+the child knows. Return an empty list when the sentence is clear; that is the
+normal answer."""
+
+AMBIGUITY_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "ambiguity",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "ambiguous_phrases": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "phrase": {"type": "string", "description": "exactly as the child wrote it"},
+                            "readings": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "meaning": {"type": "string"},
+                                        "target_phrasing": {"type": "string", "description": "how this reading would be translated"},
+                                    },
+                                    "required": ["meaning", "target_phrasing"],
+                                },
+                            },
+                        },
+                        "required": ["phrase", "readings"],
+                    },
+                }
+            },
+            "required": ["ambiguous_phrases"],
+        },
+    },
+}
