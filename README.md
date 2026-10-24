@@ -142,12 +142,16 @@ was added after watching the previous design fail on a real sentence.
    what the child said, then picks the most natural German among them.
 
 2. **Back-translation and repair** catches *every* pass getting it wrong
-   together, which is the failure that matters most. *"My friend hits me
-   sometimes"* became *"Mein Freund **trifft** mich"* — my friend **meets** me —
-   in all five passes, with agreement 1.00. Nothing disagreed, so nothing
-   looked wrong. Only the back-translation showed it. A repair pass restores
-   the harm, and confidence is capped at 0.6 whenever a repair was needed,
-   because agreement had already proved worthless on that sentence.
+   together, which is the failure that matters most, because nothing
+   disagrees and so nothing looks wrong. While we were building on Nemotron
+   3.5 Lightning, *"My friend hits me sometimes"* became *"Mein Freund
+   **trifft** mich"* — my friend **meets** me — in all five passes at
+   agreement 1.00, and only the back-translation showed it. **That example no
+   longer reproduces:** on Nemotron 3.5 Super-VL, which we now use, a single
+   pass gets it right 5 times out of 5. We keep the step because the failure
+   is silent when it happens, and we say plainly that we can no longer
+   demonstrate it on this model. A repair restores the lost meaning, and
+   confidence is capped at 0.6 whenever a repair was needed.
 
 3. **A separate ambiguity check on the child's own sentence** catches what no
    translation can resolve. *"He said he would get me after school"* is a

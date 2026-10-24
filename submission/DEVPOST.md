@@ -75,10 +75,18 @@ exactly what the child meant, and leaves the child in charge of who hears it.
 
 ## Challenges we ran into
 
-- **Agreement is not correctness.** All five passes once agreed that "my
-  friend hits me" meant "Mein Freund trifft mich" (meets me). Only comparing
-  the back-translation with the original caught it, so we added a repair step
-  and cap confidence whenever a repair was needed.
+- **Agreement is not correctness.** On Nemotron 3.5 Lightning, all five
+  passes agreed that "my friend hits me" meant "Mein Freund trifft mich"
+  (meets me). Only comparing the back-translation with the original caught
+  it, so we added a repair step and cap confidence whenever a repair runs.
+  Being honest about our own evidence: after we moved to Super-VL for other
+  reasons, that sentence is translated correctly by a single pass 5 times out
+  of 5, so we can no longer demonstrate the failure we built the step for. We
+  kept it because the failure is silent when it does happen.
+- **Our verification does not beat a single pass on overall accuracy.** On
+  our own benchmark the two draw. What the extra calls buy is specific: when
+  the child's own words carry two meanings, the app asks them instead of
+  guessing. A single pass silently picks one.
 - **The fastest model failed our languages.** Nemotron 3.5 Lightning won the
   English bake-off, then returned Ukrainian input untranslated in 5 of 12
   runs. We switched the fan-out model and now reject any output that echoes
