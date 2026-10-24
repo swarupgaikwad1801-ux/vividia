@@ -79,17 +79,32 @@ asking them; that is how we avoid merge conflicts.
 
 | Who | Owns | Files |
 |-----|------|-------|
-| **Swarup Gaikwad** | The AI engine, Nebius setup, prompts, eval runner | `backend/engine/` (except `resources.py`), `backend/engine/prompts/`, `eval/run_eval.py` |
-| **Vernika Sharma** | The app: all screens, i18n + Arabic RTL, on-device encrypted storage, PIN, quick exit, FastAPI server, deployment | `frontend/`, `backend/main.py` |
-| **Neel Shah** | Proof, content and story: Tavily resources, safety content with sources, translation test set + native-speaker ratings, QA, video, Devpost | `backend/engine/resources.py`, `content/`, `eval/testset/`, `SAFETY.md`, `FEEDBACK.md` |
+| **Swarup Gaikwad** | AI engine and model orchestration: strategies A/B/C, prompts, judge, cost and latency instrumentation, engine tests | `backend/engine/` (except `resources.py`), `eval/bakeoff.py`, `eval/probe_thinking.py` |
+| **Vernika Sharma** | Full-stack and product: all screens (React + Vite + TypeScript + Tailwind), i18n + Arabic RTL, browser storage and deletion, PIN, quick exit, the FastAPI app, deployment | `frontend/`, `backend/main.py` |
+| **Neel Shah** | Evaluation, QA, Tavily and submission: the dataset, the eval runner and charts, Tavily resource discovery, end-to-end QA, diagrams, video, Devpost | `backend/engine/resources.py`, `content/`, `eval/testset/`, `eval/run_eval.py`, `SAFETY.md`, `FEEDBACK.md` |
+
+Neel is an engineering contributor, not a presentation role: the eval runner
+and the Tavily module are his code.
 
 Shared: README (Swarup writes the tech sections, Neel the rest), evening
 testing every day.
 
-## The engine contract
+## The contracts
 
-Defined in `backend/engine/contract.py`; fake implementations with the exact
-same signatures live in `backend/engine/mock.py`. Vernika builds against the
+Two layers, both frozen as of 24 Oct:
+
+1. **HTTP** - `backend/app/schemas.py` (Pydantic) mirrored exactly in
+   `frontend/src/types/api.ts` (TypeScript). Endpoints: `POST /api/translate`,
+   `POST /api/clarify`, `POST /api/report`, `GET /api/resources`,
+   `GET /api/health`. Every non-2xx body is an `ErrorResponse` carrying
+   `message_child`, the only string a child may ever see.
+   `backend/tests/test_contract.py` enforces all of it and runs offline.
+   **Change the Python and the TypeScript in the same commit, never one alone.**
+2. **Engine** - `backend/engine/contract.py`; fake implementations with the
+   exact same signatures live in `backend/engine/mock.py`.
+
+The safety check is part of the `/api/translate` response rather than its own
+endpoint, so no caller can forget to run it. Vernika builds against the
 mocks; Swarup and Neel replace them with real code **without changing the
 signatures**. Any change to the contract is agreed by all three first.
 
@@ -162,6 +177,44 @@ consensus cannot save us. All three passes rendered "they call me names" as
 "Sie nennen mir Namen", which is not German for insults. This is why the
 judge step and the question to the child exist, and why the README must say
 consensus measures agreement, not correctness.
+
+## What we may and may not say about privacy
+
+Our own early drafts said the child's data "stays on the device". **That is
+false and must never ship.** Translation is cloud inference on Nebius: the
+disclosure text leaves the phone. Correct statements only:
+
+- Yes: the timeline is stored only in the child's browser, and the child can
+  delete it.
+- Yes: our backend keeps no disclosure and logs no message content.
+- Yes: Nebius Zero Data Retention is enabled, so prompts and outputs are not
+  stored after processing and are never used to train any model (verified
+  24 Oct 2026).
+- No: not "everything stays on your device" - translation is cloud inference.
+- No: not "we are GDPR compliant" - we have no legal review. We may say which
+  certifications Nebius holds, and describe what we do.
+- No: quick exit leaves the page; it does **not** erase browser history, and
+  the UI must not imply that it does.
+- No: never "this keeps you safe", never a judgement that an allegation is
+  true, never a diagnosis.
+
+The data-flow diagram in `SAFETY.md` (Neel) must show the disclosure leaving
+the device, or it is not an honest diagram.
+
+## Verification strategies (A/B/C)
+
+The benchmark compares three, and the app uses C:
+
+- **A, baseline:** one translation call. The honest comparison point.
+- **B, multi-pass:** always fan out, back-translate, judge.
+- **C, adaptive:** a cheap triage decides per sentence whether B is needed.
+  Escalate on negation, on an unclear actor ("they", "he"), on coercion or
+  threat wording, on slang, and on low agreement between the first two
+  passes. Otherwise stop at A.
+
+**C is the one that must win**, because extra calls have to earn their place.
+If the data shows C is no better than A, we publish that and explain why. We
+never add calls to make the architecture look impressive.
 
 ## Hard requirements (failing any one = disqualified)
 

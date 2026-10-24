@@ -8,6 +8,7 @@ The data below is a fictional example, not a real child.
 """
 
 import asyncio
+from datetime import datetime, timezone
 
 from engine.contract import Entry, Report, Resource, SafetyResult, TranslationResult
 
@@ -35,9 +36,10 @@ async def translate(
                 "phrase": "laughed at me",
                 "question": "Did they laugh to make fun of you, or did they laugh together with you?",
                 "options": [
-                    {"label": "To make fun of me", "meaning_de": "mich ausgelacht"},
-                    {"label": "Together with me", "meaning_de": "mit mir gelacht"},
+                    {"id": "mock", "label": "To make fun of me", "meaning_de": "mich ausgelacht"},
+                    {"id": "with", "label": "Together with me", "meaning_de": "mit mir gelacht"},
                 ],
+                "severity": "critical",
             }
         ],
         "calls_made": 11,
@@ -66,5 +68,6 @@ async def resources(state: str, lang: str) -> list[Resource]:
             "hours": "TBD",
             "languages": ["de"],
             "source_url": "TBD",
+            "retrieved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         }
     ]

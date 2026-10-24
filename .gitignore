@@ -33,3 +33,5 @@ Thumbs.db
 data/local/
 scratch/
 *.sqlite3
+__pycache__/
+.pytest_cache/

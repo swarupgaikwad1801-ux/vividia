@@ -11,6 +11,7 @@ from typing import Literal, TypedDict
 
 
 class Option(TypedDict):
+    id: str  # stable id the client sends back as the child's choice
     label: str  # shown to the child, in the child's language
     meaning_de: str  # what the German would say if the child picks this
 
@@ -18,7 +19,10 @@ class Option(TypedDict):
 class Ambiguity(TypedDict):
     phrase: str  # the phrase in the child's original text
     question: str  # asked in the child's language, e.g. "Did you mean ...?"
-    options: list[Option]  # exactly 2
+    options: list[Option]  # 2 or 3
+    # "critical" when the disagreement changes who did what, or loses a
+    # negation; those are the only ones worth interrupting a child for.
+    severity: Literal["critical", "minor"]
 
 
 class TranslationResult(TypedDict):
@@ -54,3 +58,4 @@ class Resource(TypedDict):
     hours: str
     languages: list[str]  # ISO 639-1 codes
     source_url: str  # where this information was verified
+    retrieved_at: str  # ISO timestamp; the UI shows it so nothing looks fresher than it is

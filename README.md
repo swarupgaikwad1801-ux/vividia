@@ -10,12 +10,29 @@ track **Best Apps and Agents**.
 
 An app for children who can't speak up about bullying or harm: because they
 freeze, don't have the words, or don't speak German yet. A child checks in
-without words, writes in their own language, sees a verified German version,
-builds a timeline they approve, and chooses one trusted adult to show it to.
-The app never contacts anyone behind the child's back.
+without words, writes in their own language, sees a German version that has
+been checked by several independent model passes, answers a short question
+when the passes disagree about what they meant, builds a timeline they
+approve, and chooses whether to show it to one trusted adult.
 
-It is a communication tool. It does not diagnose, counsel or replace
-professional help.
+**The child's words. The child's story. The child's choice.**
+
+Nothing is ever shared automatically.
+
+It is a communication tool. It does not diagnose, decide whether an
+allegation is true, counsel, or replace a safeguarding professional. It is a
+hackathon research prototype.
+
+### How your data is handled
+
+Translation runs on Nebius, so **the text a child writes does leave the
+device**. We will not pretend otherwise. What we do:
+
+- The timeline is kept only in the child's own browser, and can be deleted.
+- Our backend stores no disclosure and logs no message content.
+- Nebius Zero Data Retention is enabled on our account: prompts and outputs
+  are not stored after processing, and are never used to train any model.
+- Quick exit leaves the page. It does not, and cannot, erase browser history.
 
 ## How it uses Nebius and NVIDIA
 
