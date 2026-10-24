@@ -60,7 +60,7 @@ exactly what the child meant, and leaves the child in charge of who hears it.
 - **Adaptive verification:** two cheap passes first; the full check only when
   a sentence carries risk (negation, coercion, an unnamed actor) or the passes
   disagree. Measured: a safe sentence takes 2 calls and about 0.34 s; a
-  sentence needing full verification and repair takes 13 calls and about 3 s.
+  sentence needing full verification and repair takes 15 calls and about 3 s.
 - **Tavily** finds the school psychology service for the child's state,
   restricted to one hand-checked official site per state for all 16 states.
   Only the state name is sent, never the child's words.
@@ -71,14 +71,25 @@ exactly what the child meant, and leaves the child in charge of who hears it.
 - **Benchmark:** `eval/run_eval.py` compares a single translation with our
   pipeline on 50 English and 30 Hindi sentences written by people, scored
   against a human answer key with plain string matching, so no model grades
-  another model. Results: **[TBD]**.
+  another model. Results: **a draw, 76/80 either way**. What the extra
+  calls buy is the 8 of 80 sentences where the child's own words carried
+  two meanings: a single pass picked one silently, ours asked the child.
+  0 missed crises on the safety set.
 
 ## Challenges we ran into
 
-- **Agreement is not correctness.** All five passes once agreed that "my
-  friend hits me" meant "Mein Freund trifft mich" (meets me). Only comparing
-  the back-translation with the original caught it, so we added a repair step
-  and cap confidence whenever a repair was needed.
+- **Agreement is not correctness.** On Nemotron 3.5 Lightning, all five
+  passes agreed that "my friend hits me" meant "Mein Freund trifft mich"
+  (meets me). Only comparing the back-translation with the original caught
+  it, so we added a repair step and cap confidence whenever a repair runs.
+  Being honest about our own evidence: after we moved to Super-VL for other
+  reasons, that sentence is translated correctly by a single pass 5 times out
+  of 5, so we can no longer demonstrate the failure we built the step for. We
+  kept it because the failure is silent when it does happen.
+- **Our verification does not beat a single pass on overall accuracy.** On
+  our own benchmark the two draw. What the extra calls buy is specific: when
+  the child's own words carry two meanings, the app asks them instead of
+  guessing. A single pass silently picks one.
 - **The fastest model failed our languages.** Nemotron 3.5 Lightning won the
   English bake-off, then returned Ukrainian input untranslated in 5 of 12
   runs. We switched the fan-out model and now reject any output that echoes

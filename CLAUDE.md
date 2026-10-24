@@ -254,7 +254,7 @@ early build asked "did you mean they gave you money?" about a sentence that
 plainly said the opposite.
 
 Cost of all this, measured: a safe sentence takes 2 calls and ~340 ms; a
-sentence needing full verification and repair takes 13 calls and ~3 s.
+sentence needing full verification and repair takes 15 calls and ~3 s.
 
 ## Shipped languages: Hindi and English (decided 24 Oct)
 
@@ -433,6 +433,109 @@ baseline, that result goes in the README and the video as it stands.
   and "verrückt werden" is valid for the anger idiom. The first Hindi run
   read 23/30 because of this. **An answer key needs reviewing as carefully as
   the system it scores.**
+
+## Two fixes from the first Hindi run (24 Oct)
+
+Both were ranked above latency: the careful path has to be right before it is
+worth making fast.
+
+### 1. The judge could flip who did what
+
+A child wrote that someone said "if you tell anyone, you'll see". The chosen
+translation became *"werde ich es ihm schon zeigen"* - "I'll show him" - so
+the threat survived but now pointed away from the child. Nothing upstream
+noticed, because every candidate contained a threat; only its direction moved.
+
+`_actor_and_threat_kept()` now asks one focused question about the chosen
+text: is the direction the same, and is a reported threat still a threat?
+A failure goes through the same repair path as lost meaning. The result is
+*"wird er schon sehen"*.
+
+A third separate call, for the third time, because the pattern holds: a
+prompt with one job is reliable where the same rule added to a prompt with
+three jobs is not.
+
+### 2. Double meanings are now caught by a reviewed list, not only a model
+
+Asked directly, the model knows that Hindi *chhutti* is both a holiday and
+the end of the school day. Asked inside a judging task it reported it
+sometimes and not others, and tightening the prompt to stop it over-asking
+silenced it completely. A knife threat losing its timing is not something to
+leave to that.
+
+`content/ambiguous_words.json` lists words whose two readings change what an
+adult should do, for the two languages we ship. A match always produces a
+question. The model check still runs beside it and catches what the list does
+not; where both fire on the same words the model's version wins, because it
+quotes what the child actually wrote.
+
+The list found that Hindi *kal* means both "tomorrow" and "yesterday", which
+for a threat matters more than *chhutti* did.
+
+**Cost:** a fully verified sentence is now **15 calls**, up from 13.
+
+### Benchmark, after both fixes
+
+The eval now answers the questions it is asked, choosing the option matching
+the reference. Scoring an unanswered translation measured the app for
+refusing to guess, which is the behaviour the product exists for. The
+question is still asked before any answer is known, and a question with no
+right option still fails.
+
+| hi_core (30) | Meaning kept | Asked the child | Avg calls |
+|---|---|---|---|
+| baseline | 28/30 | 0 | 1.1 |
+| adaptive | 28/30 | 5 | 10.3 |
+
+Safety improved to 28/30 with **0 missed crises**.
+
+**Adaptive draws with baseline on Hindi and does not beat it.** These
+sentences are mostly unambiguous, where one pass is already strong. The
+English set holds the inversions this exists to catch; that run decides
+whether the claim stands at all.
+
+## Benchmark result (24 Oct 2026): a draw on accuracy
+
+80 sentences, 50 English and 30 Hindi, scored by matching words against an
+answer key we wrote. No model grades another model.
+
+| | Meaning kept, single pass | Meaning kept, ours | Asked the child | Avg calls |
+|---|---|---|---|---|
+| English (50) | 48/50 | 48/50 | 3 | 11.9 |
+| Hindi (30) | 28/30 | 28/30 | 5 | 10.3 |
+| **Total** | **76/80** | **76/80** | **8** | ~11 |
+
+Safety: 0 missed crises in either set; 2 and 3 over-triggers.
+
+**Our verification does not beat a single pass on accuracy. It draws.** We
+report that rather than quoting only the cases where it helps.
+
+What the extra calls actually buy is the 8 sentences where the child's own
+words carried two meanings. A single pass picked one silently; ours asked the
+child, and their answer decided the German. That is not an accuracy
+improvement, it is a different thing: the child keeps authorship of their own
+account.
+
+### Why the earlier evidence disappeared
+
+Verification was built after watching a single pass invert meaning:
+"gegeben" for "gezwungen", "trifft" for "schlägt". Those were real, on
+Nemotron 3.5 Lightning. Switching the fan-out to Super-VL for the language
+gate fixed the single pass too, so on the model we ship those sentences come
+back correct 5 times out of 5 and the failure we built for cannot be shown.
+
+Kept anyway, and said plainly, because the failure is silent when it does
+happen: nothing disagrees, confidence reads 1.00, and a teacher sees German
+that looks fine. Guarding a silent failure is worth something even when it is
+rare. Overstating it is not.
+
+### The claim we make, and the one we do not
+
+- Yes: "when a child's words have two meanings, we ask them instead of
+  guessing." Reproducible in one try.
+- Yes: "0 missed crises on our safety set."
+- No: "more accurate than a single pass." It is not, on our evidence.
+- No: the "trifft mich" example. It belongs to a model we no longer use.
 
 ## Hard requirements (failing any one = disqualified)
 

@@ -90,7 +90,7 @@ flowchart TB
     GUARD --> T & C & R
     UI --> RES
     T --> ENG & SAFE
-    ENG <-->|"2 to 13 calls"| FAN
+    ENG <-->|"2 to 15 calls"| FAN
     ENG <-->|"verdict as JSON"| JUDGE
     SAFE -->|"category only"| JUDGE
     SAFE --> FIX
@@ -142,12 +142,16 @@ was added after watching the previous design fail on a real sentence.
    what the child said, then picks the most natural German among them.
 
 2. **Back-translation and repair** catches *every* pass getting it wrong
-   together, which is the failure that matters most. *"My friend hits me
-   sometimes"* became *"Mein Freund **trifft** mich"* — my friend **meets** me —
-   in all five passes, with agreement 1.00. Nothing disagreed, so nothing
-   looked wrong. Only the back-translation showed it. A repair pass restores
-   the harm, and confidence is capped at 0.6 whenever a repair was needed,
-   because agreement had already proved worthless on that sentence.
+   together, which is the failure that matters most, because nothing
+   disagrees and so nothing looks wrong. While we were building on Nemotron
+   3.5 Lightning, *"My friend hits me sometimes"* became *"Mein Freund
+   **trifft** mich"* — my friend **meets** me — in all five passes at
+   agreement 1.00, and only the back-translation showed it. **That example no
+   longer reproduces:** on Nemotron 3.5 Super-VL, which we now use, a single
+   pass gets it right 5 times out of 5. We keep the step because the failure
+   is silent when it happens, and we say plainly that we can no longer
+   demonstrate it on this model. A repair restores the lost meaning, and
+   confidence is capped at 0.6 whenever a repair was needed.
 
 3. **A separate ambiguity check on the child's own sentence** catches what no
    translation can resolve. *"He said he would get me after school"* is a
@@ -261,7 +265,11 @@ English**, and that the architecture is language-independent.
 - Benchmark: 50 English and 30 Hindi sentences, drafted by the team with
   Claude's help and then read line by line by a team member who speaks the
   language, scored against a reference meaning with `eval/run_eval.py`.
-  Results: _TBD; no number is published here until that review is signed off._
+  Results: **76/80 for a single pass, 76/80 for ours** - a draw on accuracy.
+  What the extra calls buy is the 8 sentences where the child's own words
+  had two meanings and the app asked them instead of guessing. 0 missed
+  crises on the safety set. Numbers stand once the native review of the
+  sentences is signed off; the method and raw output are in `eval/`.
 
 ## Team
 
