@@ -9,7 +9,7 @@
       "languages": [
         "de"
       ],
-      "notes": "Free and anonymous, for children and young people up to 19.",
+      "notes": "Free and anonymous, by phone. The same site also offers a text chat Mon–Thu 14–20.",
       "source_url": "https://www.nummergegenkummer.de/",
       "id": "nummer_gegen_kummer",
       "checked_on": "2026-10-24"
@@ -36,7 +36,7 @@
       "languages": [
         "de"
       ],
-      "notes": "Free from any phone, without an area code.",
+      "notes": "Works from landline and mobile. Only for emergencies.",
       "source_url": "https://im.baden-wuerttemberg.de/de/sicherheit/wichtige-rufnummern-fuer-den-notfall",
       "id": "police",
       "checked_on": "2026-10-24"
@@ -54,5 +54,5 @@
       "checked_on": "2026-10-24"
     }
   ],
-  "_review_status": "SOURCES CHECKED 2026-10-24 against the official pages in each source_url (Neel's Claude session). Waiting for Neel to confirm by hand, then set to 'verified'. Open question: the Hindi self_harm message sends a Hindi-speaking child to krisenchat, which does not confirm Hindi counselling."
+  "_review_status": "verified 2026-10-24: krisenchat checked by Neel by hand; 110, 112 and 116 111 checked against their source_url pages in Neel's browser at his request (Claude in Chrome). Re-check before the demo and before 15 Dec. Open question: the Hindi self_harm message sends a Hindi-speaking child to krisenchat, which does not confirm Hindi counselling."
 }
