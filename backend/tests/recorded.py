@@ -34,6 +34,7 @@ hand-authored transcript are plausible filler, so no test may assert a dollar
 figure from one as if it had been measured.
 """
 
+import asyncio
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -171,20 +172,37 @@ class Transcript:
 
 
 class _Completions:
-    def __init__(self, transcript: Transcript):
+    def __init__(self, transcript: Transcript, latency_ms: dict[str, int] | None):
         self._transcript = transcript
+        self._latency_ms = latency_ms or {}
 
     async def create(self, *, model, messages, **kwargs):  # noqa: ARG002 - mirrors the real signature
         system = next(m["content"] for m in messages if m["role"] == "system")
+
+        # Sleeping here is what makes a latency test mean anything: the sleep is
+        # a real await, so steps the pipeline gathers overlap and steps it
+        # awaits one after another add up, exactly as they would on the network.
+        delay = self._latency_ms.get(kind_of(system))
+        if delay:
+            await asyncio.sleep(delay / 1000)
+
         return self._transcript.answer(system)
 
 
 class _StubClient:
-    def __init__(self, transcript: Transcript):
-        self.chat = type("_Chat", (), {"completions": _Completions(transcript)})()
+    def __init__(self, transcript: Transcript, latency_ms: dict[str, int] | None = None):
+        self.chat = type(
+            "_Chat", (), {"completions": _Completions(transcript, latency_ms)}
+        )()
 
 
-def install(monkeypatch, transcript: Transcript, *, rpm: int | None = None) -> Transcript:
+def install(
+    monkeypatch,
+    transcript: Transcript,
+    *,
+    rpm: int | None = None,
+    latency_ms: dict[str, int] | None = None,
+) -> Transcript:
     """Serve `transcript` instead of Token Factory for the rest of this test.
 
     `engine.client._state` is the one function replaced. It is the only place
@@ -195,12 +213,16 @@ def install(monkeypatch, transcript: Transcript, *, rpm: int | None = None) -> T
     `rpm` overrides the real per-model request limit. Tests pass a high value to
     avoid paying 0.25 s of real limiter sleep per call; the latency-budget test
     passes None to keep the limits the console actually sets.
+
+    `latency_ms` maps a step name to how long its call should appear to take.
+    Without it every call returns instantly, which is right for a logic test and
+    useless for a timing one.
     """
     limiters: dict[str, engine_client._Limiter] = {}
     if rpm is not None:
         limiters = {role: engine_client._Limiter(rpm) for role in engine_client.ROLES}
 
-    stub = _StubClient(transcript)
+    stub = _StubClient(transcript, latency_ms)
     monkeypatch.setattr(engine_client, "_state", lambda: (stub, limiters))
     return transcript
 

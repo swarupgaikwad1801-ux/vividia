@@ -112,6 +112,7 @@ async def safety_check(text: str, lang: str, usage: Usage | None = None) -> Safe
             temperature=0.0,
             max_tokens=200,
             response_format=SAFETY_SCHEMA,
+            step="safety",
         )
         verdict = json.loads(raw)
         category = verdict.get("category", "none")

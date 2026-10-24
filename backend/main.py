@@ -171,7 +171,18 @@ async def translate(request: TranslateRequest) -> TranslateResponse:
         # a rate limit and an exhausted account no longer both read as "internal".
         raise ChildSafeError(error, request.source_lang) from error
 
-    log.info("translate lang=%s chars=%d calls=%d", request.source_lang, len(request.text), result["calls_made"])
+    # The length of the text, never the text. Step timings come from
+    # Usage.step_summary(), which is step names and milliseconds only.
+    log.info(
+        "translate lang=%s chars=%d calls=%d %s",
+        request.source_lang,
+        len(request.text),
+        result["calls_made"],
+        result.get("step_summary", ""),
+    )
+    for breach in result.get("budget_breaches", []):
+        # Logged rather than raised: a slow answer is still the child's answer.
+        log.warning("over the latency budget: %s", breach)
     return TranslateResponse(
         translation=result["translation"],
         confidence=result["confidence"],
