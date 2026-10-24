@@ -40,6 +40,34 @@ export const ESCAPE_COUNT = 3;
 export const ESCAPE_WINDOW_MS = 1500;
 
 /**
+ * Move between the app's own screens WITHOUT adding a history entry.
+ *
+ * `replace()` in quickExit only swaps the entry the child is on. If moving
+ * from check-in to writing had pushed an entry (React Router's default
+ * `navigate()` and `<Link>` both do), history would read
+ * `[before-app, /checkin, /write]`, the exit would replace `/write`, and Back
+ * would land on `/checkin`: inside the app, the one thing this module
+ * promises cannot happen.
+ *
+ * So the rule is: **the app never pushes history.** Screens navigate through
+ * this function, or the router is configured with `replace: true` on every
+ * navigation. Then the app only ever owns one history entry, and quick exit
+ * replaces that one.
+ *
+ * The cost is that the browser's Back button does not step between our
+ * screens; each screen needs its own back control. For a child who may need
+ * to leave fast, that is the right trade.
+ */
+export function go(path: string): void {
+  try {
+    globalThis.history?.replaceState(globalThis.history.state, "", path);
+  } catch {
+    // A history API that refuses (sandboxed frame) leaves the URL as it was;
+    // the screen still changes, because routing state lives in the app.
+  }
+}
+
+/**
  * A callback that drops in-memory state: the draft the child was typing, a
  * decrypted timeline, an unlocked PIN session. Registered by the screens that
  * hold such state.
@@ -109,7 +137,11 @@ export function bindQuickExit(
   let presses: number[] = [];
 
   const onKey = (event: Event): void => {
-    const key = (event as KeyboardEvent).key;
+    const { key, repeat } = event as KeyboardEvent;
+    // Holding a key down sends repeated keydowns. One long press on Escape
+    // must not count as three separate ones, and a held letter must not
+    // break a run either: only fresh presses count, in either direction.
+    if (repeat) return;
     if (key !== "Escape") {
       // Any other key breaks the run, so three Escapes spread across normal
       // typing do not add up to an exit.

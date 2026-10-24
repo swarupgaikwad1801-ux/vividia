@@ -20,6 +20,7 @@ import {
   ESCAPE_WINDOW_MS,
   NEUTRAL_URL,
   bindQuickExit,
+  go,
   onQuickExit,
   quickExit,
   resetQuickExit,
@@ -43,8 +44,8 @@ function fakeTarget() {
       listeners.add(fn as (event: Event) => void),
     removeEventListener: (_type: string, fn: EventListenerOrEventListenerObject) =>
       listeners.delete(fn as (event: Event) => void),
-    press: (key: string) => {
-      for (const fn of [...listeners]) fn({ key } as unknown as Event);
+    press: (key: string, repeat = false) => {
+      for (const fn of [...listeners]) fn({ key, repeat } as unknown as Event);
     },
     get count() {
       return listeners.size;
@@ -202,6 +203,30 @@ test("presses outside the window do not add up", async () => {
   }
 });
 
+test("holding Escape down is one press, not three", () => {
+  const location = fakeLocation();
+  const target = fakeTarget();
+  bindQuickExit(target);
+
+  target.press("Escape");
+  for (let i = 0; i < 10; i++) target.press("Escape", true);
+
+  assert.deepEqual(location.replaced, [], "a long press must not throw the child out mid-sentence");
+});
+
+test("separate presses still count while another key is held", () => {
+  const location = fakeLocation();
+  const target = fakeTarget();
+  bindQuickExit(target);
+
+  target.press("Escape");
+  target.press("Shift", true);
+  target.press("Escape");
+  target.press("Escape");
+
+  assert.deepEqual(location.replaced, [NEUTRAL_URL]);
+});
+
 test("unbinding stops the shortcut", () => {
   const location = fakeLocation();
   const target = fakeTarget();
@@ -218,4 +243,50 @@ test("binding with no target is harmless", () => {
   const unbind = bindQuickExit(undefined);
   assert.equal(typeof unbind, "function");
   unbind();
+});
+
+// --- moving between screens -------------------------------------------------
+
+/** A history that records whether anything was pushed. */
+function fakeHistory() {
+  const calls = { pushed: [] as string[], replaced: [] as string[] };
+  (globalThis as { history?: unknown }).history = {
+    state: null,
+    pushState: (_s: unknown, _t: string, url: string) => calls.pushed.push(url),
+    replaceState: (_s: unknown, _t: string, url: string) => calls.replaced.push(url),
+  };
+  return calls;
+}
+
+test("moving between screens never pushes a history entry", () => {
+  const history = fakeHistory();
+
+  go("/checkin");
+  go("/write");
+  go("/handoff");
+
+  assert.deepEqual(history.pushed, [], "a pushed entry is where Back would land after a quick exit");
+  assert.deepEqual(history.replaced, ["/checkin", "/write", "/handoff"]);
+});
+
+test("after moving around, the exit still leaves the app with nothing to go back to", () => {
+  const history = fakeHistory();
+  const location = fakeLocation();
+
+  go("/checkin");
+  go("/write");
+  quickExit();
+
+  assert.deepEqual(history.pushed, []);
+  assert.deepEqual(location.replaced, [NEUTRAL_URL]);
+});
+
+test("a history API that refuses does not throw at the child", () => {
+  (globalThis as { history?: unknown }).history = {
+    state: null,
+    replaceState: () => {
+      throw new Error("sandboxed");
+    },
+  };
+  assert.doesNotThrow(() => go("/write"));
 });
