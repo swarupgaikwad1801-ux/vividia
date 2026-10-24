@@ -10,11 +10,13 @@ Then open http://127.0.0.1:8000/docs for the generated API docs.
 """
 
 import logging
+import os
 import time
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
+from engine.client import ROLES
 from app.schemas import (
     ClarifyRequest,
     ErrorCode,
@@ -27,7 +29,12 @@ from app.schemas import (
     TranslateRequest,
     TranslateResponse,
 )
-from engine import mock as ENGINE
+# ENGINE_MODE=live uses real Nemotron calls; anything else (the default)
+# uses the mock, so the app runs with no API key and costs nothing.
+if os.getenv("ENGINE_MODE", "mock") == "live":
+    from engine import live as ENGINE
+else:
+    from engine import mock as ENGINE
 
 # Never log disclosure text. The formatter below carries no request body, and
 # no handler in this file may add one.
@@ -50,6 +57,20 @@ app.add_middleware(
 )
 
 
+def _usage_of(result: dict, started: float) -> dict:
+    """Prefer the engine's own accounting; fall back for the mock."""
+    usage = result.get("usage")
+    if usage:
+        return usage
+    return {
+        "calls_made": result.get("calls_made", 0),
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "latency_ms": int((time.perf_counter() - started) * 1000),
+        "estimated_cost_usd": 0.0,
+    }
+
+
 def _fail(code: ErrorCode, message: str, message_child: str, retryable: bool, status: int):
     """Raise an HTTP error whose body always matches ErrorResponse."""
     body = ErrorResponse(code=code, message=message, message_child=message_child, retryable=retryable)
@@ -58,10 +79,12 @@ def _fail(code: ErrorCode, message: str, message_child: str, retryable: bool, st
 
 @app.get("/api/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
+    live = ENGINE.__name__.endswith("live")
+    models = {role: spec.model for role, spec in ROLES.items()} if live else {}
     return HealthResponse(
         status="ok",
-        engine="mock" if ENGINE.__name__.endswith("mock") else "live",
-        models={"fanout": "nvidia/Nemotron-3_5-Lightning", "judge": "nvidia/nemotron-3-super-120b-a12b"},
+        engine="live" if live else "mock",
+        models={**models, **getattr(ENGINE, "STATUS", {})},
     )
 
 
@@ -69,7 +92,9 @@ async def health() -> HealthResponse:
 async def translate(request: TranslateRequest) -> TranslateResponse:
     started = time.perf_counter()
     try:
-        result = await ENGINE.translate(request.text, request.source_lang, request.target_lang)
+        result = await ENGINE.translate(
+            request.text, request.source_lang, request.target_lang, strategy=request.strategy.value
+        )
         safety = await ENGINE.safety_check(request.text, request.source_lang)
     except TimeoutError:
         _fail(
@@ -89,14 +114,8 @@ async def translate(request: TranslateRequest) -> TranslateResponse:
         confidence=result["confidence"],
         ambiguities=result["ambiguities"],
         safety=safety,
-        strategy_used=request.strategy,
-        usage={
-            "calls_made": result["calls_made"],
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "latency_ms": int((time.perf_counter() - started) * 1000),
-            "estimated_cost_usd": 0.0,
-        },
+        strategy_used=result.get("strategy_used", request.strategy),
+        usage=_usage_of(result, started),
     )
 
 
@@ -113,13 +132,7 @@ async def clarify(request: ClarifyRequest) -> TranslateResponse:
         ambiguities=result["ambiguities"],
         safety=safety,
         strategy_used=Strategy.ADAPTIVE,
-        usage={
-            "calls_made": result["calls_made"],
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "latency_ms": int((time.perf_counter() - started) * 1000),
-            "estimated_cost_usd": 0.0,
-        },
+        usage=_usage_of(result, started),
     )
 
 

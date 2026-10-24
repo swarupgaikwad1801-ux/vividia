@@ -18,6 +18,8 @@ async def translate(
     source_lang: str,
     target_lang: str = "de",
     clarifications: dict[str, str] | None = None,
+    strategy: str = "adaptive",
+    _ambiguities: list | None = None,
 ) -> TranslationResult:
     """`clarifications` maps an ambiguous phrase to the option label the child picked."""
     await asyncio.sleep(1.5)  # roughly what the real fan-out will feel like
