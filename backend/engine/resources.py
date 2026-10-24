@@ -33,15 +33,25 @@ CONTENT_FILE = REPO_ROOT / "content" / "helplines.json"
 TAVILY_URL = "https://api.tavily.com/search"
 TIMEOUT_S = 6.0
 
-# One official site per state, each checked by hand on 24 Oct 2026. A state
+# One official site per state, each checked by hand on 24 Oct 2026. A code
 # missing here gets the national helplines only, never an open web search.
 STATE_SITES: dict[str, tuple[str, str]] = {
     "BW": ("Baden-Württemberg", "zsl-bw.de"),
     "BY": ("Bayern", "schulberatung.bayern.de"),
     "BE": ("Berlin", "berlin.de"),
+    "BB": ("Brandenburg", "mbjs.brandenburg.de"),
+    "HB": ("Bremen", "rebuz.bremen.de"),
+    "HH": ("Hamburg", "hamburg.de"),
     "HE": ("Hessen", "schulaemter.hessen.de"),
+    "MV": ("Mecklenburg-Vorpommern", "bildung-mv.de"),
     "NI": ("Niedersachsen", "bildungsportal-niedersachsen.de"),
     "NW": ("Nordrhein-Westfalen", "schulministerium.nrw"),
+    "RP": ("Rheinland-Pfalz", "bildung.rlp.de"),
+    "SL": ("Saarland", "saarland.de"),
+    "SN": ("Sachsen", "bildung.sachsen.de"),
+    "ST": ("Sachsen-Anhalt", "landesschulamt.sachsen-anhalt.de"),
+    "SH": ("Schleswig-Holstein", "schleswig-holstein.de"),
+    "TH": ("Thüringen", "schulamt.thueringen.de"),
 }
 
 # Tests swap this for httpx.MockTransport so they never touch the network.

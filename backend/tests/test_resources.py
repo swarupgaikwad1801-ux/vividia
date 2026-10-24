@@ -72,8 +72,13 @@ def test_results_from_other_hosts_are_dropped(monkeypatch):
 def test_unknown_state_never_triggers_a_search(monkeypatch):
     seen = []
     monkeypatch.setattr(res, "_transport", tavily_returning([], seen))
-    run(res.resources_with_source("SN", "de"))
+    run(res.resources_with_source("XX", "de"))
     assert seen == []
+
+
+def test_all_sixteen_states_have_a_vetted_site():
+    assert len(res.STATE_SITES) == 16
+    assert all(domain and "/" not in domain for _, domain in res.STATE_SITES.values())
 
 
 def test_only_the_state_is_sent_to_tavily(monkeypatch):
