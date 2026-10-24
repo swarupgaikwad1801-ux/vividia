@@ -5,10 +5,17 @@
   "scenario": "the passes all agree, and the child is still asked what they meant",
   "source_lang": "en",
   "text": "He said he would get me after school.",
-  "tokens": {"prompt": 102, "completion": 28},
+  "tokens": {
+    "prompt": 102,
+    "completion": 28
+  },
   "responses": {
-    "translate": ["Er hat gesagt, er holt mich nach der Schule ab."],
-    "back_translate": ["He said he would pick me up after school."],
+    "translate": [
+      "Er hat gesagt, er holt mich nach der Schule ab."
+    ],
+    "back_translate": [
+      "He said he would pick me up after school."
+    ],
     "ambiguity": [
       {
         "ambiguous_phrases": [
@@ -40,9 +47,20 @@
       {
         "question": "When you said \"get me\", did you mean come and hurt you, or pick you up?",
         "options": [
-          {"label": "Come and hurt me"},
-          {"label": "Pick me up to go home"}
+          {
+            "label": "Come and hurt me"
+          },
+          {
+            "label": "Pick me up to go home"
+          }
         ]
+      }
+    ],
+    "actor_threat": [
+      {
+        "direction_kept": true,
+        "threat_kept": true,
+        "what_changed": ""
       }
     ]
   }

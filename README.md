@@ -90,7 +90,7 @@ flowchart TB
     GUARD --> T & C & R
     UI --> RES
     T --> ENG & SAFE
-    ENG <-->|"2 to 13 calls"| FAN
+    ENG <-->|"2 to 15 calls"| FAN
     ENG <-->|"verdict as JSON"| JUDGE
     SAFE -->|"category only"| JUDGE
     SAFE --> FIX

@@ -86,19 +86,24 @@ async def test_confidence_is_capped_once_meaning_had_to_be_repaired(monkeypatch)
     assert result["confidence"] <= 0.6
 
 
-async def test_full_verification_costs_the_thirteen_calls_we_publish(monkeypatch):
-    """CLAUDE.md quotes 13 calls for a sentence needing full verification and
-    repair. If the pipeline changes shape, this is the number to update there."""
+async def test_full_verification_costs_the_fifteen_calls_we_publish(monkeypatch):
+    """CLAUDE.md quotes 15 calls for a sentence needing full verification and
+    repair. If the pipeline changes shape, this is the number to update there.
+
+    It was 13 until the direction check was added: a repaired translation is
+    back-translated again and then checked for who did what to whom, because
+    choosing between candidates had been seen to flip a threat around."""
     transcript = replay(monkeypatch, "hits_trifft_repair")
 
     result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
 
-    assert result["calls_made"] == 13
+    assert result["calls_made"] == 15
     assert transcript.count("translate") == 5
-    assert transcript.count("back_translate") == 5
+    assert transcript.count("back_translate") == 6  # 5 candidates + the repaired text
     assert transcript.count("ambiguity") == 1
     assert transcript.count("judge") == 1
     assert transcript.count("repair") == 1
+    assert transcript.count("actor_threat") == 1
 
 
 async def test_multi_pass_verifies_a_sentence_that_adaptive_would_have_skipped(monkeypatch):
@@ -271,9 +276,9 @@ async def test_every_call_is_counted_including_the_wasted_ones(monkeypatch):
     result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
     usage = result["usage"]
 
-    assert usage["calls_made"] == 13 == len(transcript.calls)
-    assert usage["input_tokens"] == 13 * transcript.data["tokens"]["prompt"]
-    assert usage["output_tokens"] == 13 * transcript.data["tokens"]["completion"]
+    assert usage["calls_made"] == 15 == len(transcript.calls)
+    assert usage["input_tokens"] == 15 * transcript.data["tokens"]["prompt"]
+    assert usage["output_tokens"] == 15 * transcript.data["tokens"]["completion"]
     # The token counts in a hand-authored transcript are filler, so this checks
     # that cost is accumulated at all, never that a dollar figure is accurate.
     assert usage["estimated_cost_usd"] > 0

@@ -69,9 +69,9 @@ async def test_a_full_verification_stays_inside_the_budget(monkeypatch):
 
     result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
 
-    assert result["calls_made"] == 13
+    assert result["calls_made"] == 15
     assert result["usage"]["latency_ms"] < TOTAL_MS, (
-        f"{result['usage']['latency_ms']}ms for 13 calls; the gathers in "
+        f"{result['usage']['latency_ms']}ms for 15 calls; the gathers in "
         "translate.py are what keep this under budget"
     )
     assert result["budget_breaches"] == []

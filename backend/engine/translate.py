@@ -17,11 +17,15 @@ disagreement; the child chooses; the final pass renders that choice.
 import asyncio
 import json
 import re
+from functools import lru_cache
 
 from engine.budget import over_budget
 from engine.client import EngineError, Usage, call
+from engine.config import REPO_ROOT
 from engine.contract import Ambiguity, TranslationResult
 from engine.prompts import (
+    ACTOR_THREAT_SCHEMA,
+    ACTOR_THREAT_SYSTEM,
     AMBIGUITY_SCHEMA,
     AMBIGUITY_SYSTEM,
     BACK_TRANSLATE_SYSTEM,
@@ -204,6 +208,34 @@ async def _repair(text, german, losses, source_lang, target_lang, usage):
     )
 
 
+@lru_cache(maxsize=1)
+def _ambiguous_words() -> dict:
+    path = REPO_ROOT / "content" / "ambiguous_words.json"
+    return json.loads(path.read_text(encoding="utf-8"))["languages"]
+
+
+def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
+    """Known two-meaning words, matched in code rather than asked of a model.
+
+    The model knows these ambiguities when asked about them directly, but
+    reports them inconsistently inside a judging task: in testing the same
+    sentence sometimes produced a question and sometimes nothing. A knife
+    threat losing its timing is not something to leave to that. The model
+    check still runs alongside this and catches words the list does not have.
+    """
+    haystack = _normalise(text)
+    found = []
+    for entry in _ambiguous_words().get(source_lang, []):
+        if any(_normalise(form) in haystack for form in entry["forms"]):
+            found.append({
+                "phrase": entry["word"],
+                "readings": entry["readings"],
+                "severity": "critical",
+                "source": "lexicon",
+            })
+    return found
+
+
 async def _find_ambiguity(text, source_lang, target_lang, usage):
     """Ask whether the child's own sentence has more than one honest reading.
 
@@ -223,9 +255,33 @@ async def _find_ambiguity(text, source_lang, target_lang, usage):
         step="ambiguity",
     )
     try:
-        return json.loads(raw).get("ambiguous_phrases", [])
+        found = json.loads(raw).get("ambiguous_phrases", [])
     except json.JSONDecodeError:
         return []
+
+    # Only ask about words the child actually wrote. The model has offered
+    # phrases that appear nowhere in the sentence, and asking a child what
+    # they meant by words they never used is worse than asking nothing.
+    haystack = _normalise(text)
+    from_model = [
+        item for item in found
+        if item.get("phrase") and _normalise(item["phrase"]) in haystack
+    ]
+
+    # The list is a safety net for what the model misses, not a second voice.
+    # Where both describe the same words - the list has "get me", the model
+    # has "get me after school" - the model's version wins, because it quotes
+    # what the child actually wrote and reads better back to them. Asking the
+    # same question twice in different words is its own harm.
+    from_model_norm = [(_normalise(item["phrase"]), item) for item in from_model]
+    known = [
+        item for item in lexicon_ambiguities(text, source_lang)
+        if not any(
+            _normalise(item["phrase"]) in model_phrase or model_phrase in _normalise(item["phrase"])
+            for model_phrase, _ in from_model_norm
+        )
+    ]
+    return [item for _, item in from_model_norm] + known
 
 
 async def _judge(text, candidates, backs, source_lang, target_lang, usage):
@@ -256,6 +312,39 @@ async def _judge(text, candidates, backs, source_lang, target_lang, usage):
         # verdict must not take the whole request down: fall back to "no
         # disagreement found" rather than inventing one.
         return {"best_index": 0, "agreement": 0.5, "meaning_lost": [], "disputes": []}
+
+
+async def _actor_and_threat_kept(text, german, back, source_lang, target_lang, usage):
+    """Last line of defence on the chosen translation.
+
+    Choosing between candidates can make things worse, not only better: the
+    benchmark caught the judge turning "he said you'll see" into "I'll show
+    him", which kept the threat but pointed it at the wrong person. A single
+    focused question is far more reliable here than another clause in the
+    judge's prompt, which already has three jobs.
+    """
+    user = (
+        f"The child wrote ({language_name(source_lang)}):\n{text}\n\n"
+        f"{language_name(target_lang)} translation:\n{german}\n\n"
+        f"That translated back into {language_name(source_lang)}:\n{back}"
+    )
+    raw = await call(
+        "judge",
+        ACTOR_THREAT_SYSTEM.format(
+            target_name=language_name(target_lang), source_name=language_name(source_lang)
+        ),
+        user,
+        usage,
+        temperature=0.0,
+        max_tokens=300,
+        response_format=ACTOR_THREAT_SCHEMA,
+    )
+    try:
+        verdict = json.loads(raw)
+    except json.JSONDecodeError:
+        return True, ""
+    ok = verdict.get("direction_kept", True) and verdict.get("threat_kept", True)
+    return ok, verdict.get("what_changed", "")
 
 
 async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
@@ -337,6 +426,31 @@ async def _verify(text, candidates, source_lang, target_lang, usage, source_ambi
     repaired = False
     if losses:
         best = await _repair(text, best, losses, source_lang, target_lang, usage)
+        repaired = True
+
+    # Choosing between candidates can make a translation worse, not only
+    # better: the Hindi benchmark caught the judge turning "he said you'll
+    # see" into "I'll show him", pointing the threat at the wrong person.
+    # Nothing above would notice, because every candidate kept a threat; only
+    # its direction moved. So the chosen text gets one focused check, and if
+    # it fails, the same repair path that fixes lost meaning fixes this.
+    chosen_back = await _back(best, source_lang, target_lang, usage) if repaired else backs[best_index]
+    direction_ok, moved = await _actor_and_threat_kept(
+        text, best, chosen_back, source_lang, target_lang, usage
+    )
+    if not direction_ok:
+        best = await _repair(
+            text,
+            best,
+            [{
+                "phrase": text,
+                "intended": "who did what to whom, and any threat, exactly as the child wrote it",
+                "became": moved or "the direction of the action or the threat changed",
+            }],
+            source_lang,
+            target_lang,
+            usage,
+        )
         repaired = True
     # Questions for the child come from the dedicated check on the original
     # sentence, plus any genuine ambiguity the judge noticed while comparing.

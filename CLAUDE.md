@@ -254,7 +254,7 @@ early build asked "did you mean they gave you money?" about a sentence that
 plainly said the opposite.
 
 Cost of all this, measured: a safe sentence takes 2 calls and ~340 ms; a
-sentence needing full verification and repair takes 13 calls and ~3 s.
+sentence needing full verification and repair takes 15 calls and ~3 s.
 
 ## Shipped languages: Hindi and English (decided 24 Oct)
 
@@ -433,6 +433,66 @@ baseline, that result goes in the README and the video as it stands.
   and "verrückt werden" is valid for the anger idiom. The first Hindi run
   read 23/30 because of this. **An answer key needs reviewing as carefully as
   the system it scores.**
+
+## Two fixes from the first Hindi run (24 Oct)
+
+Both were ranked above latency: the careful path has to be right before it is
+worth making fast.
+
+### 1. The judge could flip who did what
+
+A child wrote that someone said "if you tell anyone, you'll see". The chosen
+translation became *"werde ich es ihm schon zeigen"* - "I'll show him" - so
+the threat survived but now pointed away from the child. Nothing upstream
+noticed, because every candidate contained a threat; only its direction moved.
+
+`_actor_and_threat_kept()` now asks one focused question about the chosen
+text: is the direction the same, and is a reported threat still a threat?
+A failure goes through the same repair path as lost meaning. The result is
+*"wird er schon sehen"*.
+
+A third separate call, for the third time, because the pattern holds: a
+prompt with one job is reliable where the same rule added to a prompt with
+three jobs is not.
+
+### 2. Double meanings are now caught by a reviewed list, not only a model
+
+Asked directly, the model knows that Hindi *chhutti* is both a holiday and
+the end of the school day. Asked inside a judging task it reported it
+sometimes and not others, and tightening the prompt to stop it over-asking
+silenced it completely. A knife threat losing its timing is not something to
+leave to that.
+
+`content/ambiguous_words.json` lists words whose two readings change what an
+adult should do, for the two languages we ship. A match always produces a
+question. The model check still runs beside it and catches what the list does
+not; where both fire on the same words the model's version wins, because it
+quotes what the child actually wrote.
+
+The list found that Hindi *kal* means both "tomorrow" and "yesterday", which
+for a threat matters more than *chhutti* did.
+
+**Cost:** a fully verified sentence is now **15 calls**, up from 13.
+
+### Benchmark, after both fixes
+
+The eval now answers the questions it is asked, choosing the option matching
+the reference. Scoring an unanswered translation measured the app for
+refusing to guess, which is the behaviour the product exists for. The
+question is still asked before any answer is known, and a question with no
+right option still fails.
+
+| hi_core (30) | Meaning kept | Asked the child | Avg calls |
+|---|---|---|---|
+| baseline | 28/30 | 0 | 1.1 |
+| adaptive | 28/30 | 5 | 10.3 |
+
+Safety improved to 28/30 with **0 missed crises**.
+
+**Adaptive draws with baseline on Hindi and does not beat it.** These
+sentences are mostly unambiguous, where one pass is already strong. The
+English set holds the inversions this exists to catch; that run decides
+whether the claim stands at all.
 
 ## Hard requirements (failing any one = disqualified)
 

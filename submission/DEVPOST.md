@@ -60,7 +60,7 @@ exactly what the child meant, and leaves the child in charge of who hears it.
 - **Adaptive verification:** two cheap passes first; the full check only when
   a sentence carries risk (negation, coercion, an unnamed actor) or the passes
   disagree. Measured: a safe sentence takes 2 calls and about 0.34 s; a
-  sentence needing full verification and repair takes 13 calls and about 3 s.
+  sentence needing full verification and repair takes 15 calls and about 3 s.
 - **Tavily** finds the school psychology service for the child's state,
   restricted to one hand-checked official site per state for all 16 states.
   Only the state name is sent, never the child's words.

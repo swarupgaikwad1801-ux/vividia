@@ -11,7 +11,7 @@ counts are the counts Nebius actually billed.
 
 It SPENDS CREDIT and is never run by CI or by the test suite. pytest does not
 collect it (the filename is not test_*.py). Agree the spend with the team
-first: a full verification is 13 calls, roughly $0.0012 at Super-VL prices.
+first: a full verification is 15 calls, roughly $0.0012 at Super-VL prices.
 
     cd backend
     .venv/Scripts/python tests/record_fixtures.py --list
