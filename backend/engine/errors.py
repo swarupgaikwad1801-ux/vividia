@@ -1,0 +1,133 @@
+"""Turn any failure into something calm, in the child's own language.
+
+A child who has just written down the worst thing that happened to them must
+never meet a stack trace, an HTTP code, or the word "token". They get one calm
+sentence in their language and a way forward.
+
+Three rules shape the copy below.
+
+1. **Say what is still true, and nothing more.** "Your words are still here" is
+   true: the text is in the browser and nothing about the failure removed it.
+   "This keeps you safe" is never said, and nor is anything about history or
+   deletion that quick exit cannot actually do (CLAUDE.md, the privacy rules).
+
+2. **Never imply the child did something wrong.** A model timeout is our
+   problem. The copy says so, in the plainest words available.
+
+3. **A dead translation is not a dead app.** When the failure is one a retry
+   cannot fix, the message still points at people the child can reach, because
+   help does not depend on us being up.
+
+`message` (for logs) and `message_child` (for the child) are deliberately
+separate strings. The developer one may name the model and the status code; the
+child one must contain neither, and a test enforces that.
+
+The German and Hindi wording below needs a native read before submission. Neel
+owns child-facing copy in content/; this lives here because it is produced by
+engine failures, and it should move to content/ if Neel would rather own it.
+"""
+
+from engine.client import EngineError
+
+# ISO 639-1 codes we ship copy for. "en" is the fallback for anything else,
+# because a child with no copy in their language must still get a sentence
+# rather than a blank screen.
+LANGS = ("en", "hi", "de")
+
+FALLBACK_LANG = "en"
+
+# code -> lang -> what the child reads.
+MESSAGES: dict[str, dict[str, str]] = {
+    "upstream_timeout": {
+        "en": "That is taking longer than it should. Your words are still here. Do you want to try again?",
+        "hi": "इसमें ज़्यादा समय लग रहा है। आपके शब्द यहीं हैं। फिर कोशिश करनी है?",
+        "de": "Das dauert länger als es sollte. Deine Worte sind noch da. Willst du es nochmal versuchen?",
+    },
+    "upstream_unavailable": {
+        "en": "Something on our side is not working right now. Your words are still here. Try again in a moment.",
+        "hi": "हमारी तरफ़ कुछ काम नहीं कर रहा है। आपके शब्द यहीं हैं। थोड़ी देर में फिर कोशिश करें।",
+        "de": "Bei uns funktioniert gerade etwas nicht. Deine Worte sind noch da. Versuch es gleich nochmal.",
+    },
+    "rate_limited": {
+        "en": "A lot of people are using this right now. Wait a moment, then try again. Your words are still here.",
+        "hi": "अभी बहुत लोग इसका इस्तेमाल कर रहे हैं। थोड़ा रुककर फिर कोशिश करें। आपके शब्द यहीं हैं।",
+        "de": "Gerade benutzen viele Leute die App. Warte einen Moment und versuch es nochmal. Deine Worte sind noch da.",
+    },
+    # Not retryable: the translation is down until a person tops up the account.
+    # So this one names the people a child can still reach.
+    "credit_exhausted": {
+        "en": "The translation is not working today. Your words are still here. You can write to a person any time at krisenchat.de, or call 116 111.",
+        "hi": "आज अनुवाद काम नहीं कर रहा है। आपके शब्द यहीं हैं। आप किसी से krisenchat.de पर लिख सकते हैं, या 116 111 पर कॉल कर सकते हैं।",
+        "de": "Die Übersetzung funktioniert heute nicht. Deine Worte sind noch da. Du kannst jederzeit auf krisenchat.de mit jemandem schreiben oder 116 111 anrufen.",
+    },
+    "invalid_input": {
+        "en": "That did not go through. Can you try writing it again?",
+        "hi": "यह भेजा नहीं जा सका। क्या आप इसे फिर से लिख सकते हैं?",
+        "de": "Das hat nicht geklappt. Kannst du es nochmal schreiben?",
+    },
+    "internal": {
+        "en": "Something went wrong on our side. Your words are still here, and nothing was shared with anyone.",
+        "hi": "हमारी तरफ़ कुछ गड़बड़ हो गई। आपके शब्द यहीं हैं, और किसी के साथ कुछ साझा नहीं किया गया।",
+        "de": "Bei uns ist etwas schiefgelaufen. Deine Worte sind noch da, und es wurde nichts an jemanden weitergegeben.",
+    },
+}
+
+# Which HTTP status each code answers with, and whether the client should offer
+# a retry button. Kept beside the copy so the two cannot drift apart.
+HTTP_STATUS = {
+    "upstream_timeout": 504,
+    "upstream_unavailable": 503,
+    "rate_limited": 429,
+    "credit_exhausted": 503,
+    "invalid_input": 422,
+    "internal": 500,
+}
+
+RETRYABLE = {
+    "upstream_timeout": True,
+    "upstream_unavailable": True,
+    "rate_limited": True,
+    "credit_exhausted": False,
+    "invalid_input": False,
+    "internal": False,
+}
+
+
+def message_for(code: str, lang: str) -> str:
+    """The calm sentence for this failure, in the child's language."""
+    copy = MESSAGES.get(code) or MESSAGES["internal"]
+    return copy.get(lang) or copy[FALLBACK_LANG]
+
+
+def to_error_response(error: BaseException, lang: str) -> dict:
+    """Map any exception to an ErrorResponse body.
+
+    An EngineError already knows what went wrong and whether a retry is worth
+    offering, so its code is used as-is. Anything else is a bug of ours and
+    becomes "internal": the developer message carries the exception type for the
+    logs, and the child's message mentions none of it.
+    """
+    if isinstance(error, EngineError):
+        code = error.code if error.code in MESSAGES else "internal"
+        retryable = error.retryable
+        message = f"{type(error).__name__}({code}): {error}"
+    elif isinstance(error, TimeoutError):
+        code = "upstream_timeout"
+        retryable = True
+        message = f"{type(error).__name__}: {error}"
+    else:
+        code = "internal"
+        retryable = RETRYABLE["internal"]
+        message = f"{type(error).__name__}: {error}"
+
+    return {
+        "code": code,
+        "message": message,
+        "message_child": message_for(code, lang),
+        "retryable": retryable,
+    }
+
+
+def status_for(error: BaseException) -> int:
+    """The HTTP status that belongs with this failure."""
+    return HTTP_STATUS.get(to_error_response(error, FALLBACK_LANG)["code"], 500)

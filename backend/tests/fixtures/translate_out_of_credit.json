@@ -1,0 +1,11 @@
+{
+  "_comment": "402 from Token Factory: the trial credit is gone. One answer only, because a 402 must not be retried - retrying a final failure just makes the child wait. The child's message points at krisenchat and 116 111 instead of a retry button.",
+  "_provenance": "hand-authored",
+  "scenario": "the account is out of credit and the failure is final",
+  "source_lang": "hi",
+  "text": "उन्होंने मेरा बैग फिर से छीन लिया।",
+  "tokens": {"prompt": 90, "completion": 0},
+  "responses": {
+    "translate": [{"fail": "credit_exhausted"}]
+  }
+}

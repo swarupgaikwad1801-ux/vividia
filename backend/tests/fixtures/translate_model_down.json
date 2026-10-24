@@ -1,0 +1,11 @@
+{
+  "_comment": "Token Factory returning 503 on every attempt. The child should meet one calm sentence with a retry offered, not a 500 page.",
+  "_provenance": "hand-authored",
+  "scenario": "the model is unreachable for all three attempts",
+  "source_lang": "en",
+  "text": "They took my bag again.",
+  "tokens": {"prompt": 90, "completion": 0},
+  "responses": {
+    "translate": [{"fail": "server"}, {"fail": "server"}, {"fail": "server"}]
+  }
+}
