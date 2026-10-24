@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse
 
 from engine.client import ROLES
 from engine.errors import message_for, safe_traceback, status_for, to_error_response
+from app.limits import Guard, client_key
 from app.schemas import (
     ClarifyRequest,
     ErrorResponse,
@@ -58,6 +59,22 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+
+# One guard for the process. Translation is metered; /api/resources and
+# /api/health deliberately are not, because the helplines must stay reachable
+# even on a day when the demo has spent its allowance.
+GUARD = Guard()
+log.info("demo limits: %s, %d requests per %ds per client",
+         GUARD.status(), GUARD.per_ip_requests, int(GUARD.per_ip_window_s))
+
+
+def _metered(request: Request, lang: str) -> None:
+    """Refuse this request if the demo is out of allowance for today."""
+    try:
+        GUARD.check(client_key(request), time.monotonic())
+    except Exception as error:  # noqa: BLE001 - becomes a calm sentence below
+        raise ChildSafeError(error, lang) from error
 
 
 def _usage_of(result: dict, started: float) -> dict:
@@ -147,16 +164,19 @@ async def _unexpected(request: Request, error: Exception) -> JSONResponse:
 async def health() -> HealthResponse:
     live = ENGINE.__name__.endswith("live")
     models = {role: spec.model for role, spec in ROLES.items()} if live else {}
+    # "degraded" is what the contract's status field is for: the app is up and
+    # help is reachable, but translation is not available right now.
     return HealthResponse(
-        status="ok",
+        status="ok" if GUARD.remaining_today() > 0 else "degraded",
         engine="live" if live else "mock",
         models={**models, **getattr(ENGINE, "STATUS", {})},
     )
 
 
 @app.post("/api/translate", response_model=TranslateResponse)
-async def translate(request: TranslateRequest) -> TranslateResponse:
+async def translate(request: TranslateRequest, http: Request) -> TranslateResponse:
     started = time.perf_counter()
+    _metered(http, request.source_lang)
     try:
         # Independent of each other, so run them together: a child in crisis
         # should not wait on the full verification to be shown help.
@@ -183,19 +203,26 @@ async def translate(request: TranslateRequest) -> TranslateResponse:
     for breach in result.get("budget_breaches", []):
         # Logged rather than raised: a slow answer is still the child's answer.
         log.warning("over the latency budget: %s", breach)
+
+    usage = _usage_of(result, started)
+    GUARD.record_spend(usage["estimated_cost_usd"])
+    if GUARD.remaining_today() <= 0:
+        log.warning("daily demo cap reached: %s", GUARD.status())
+
     return TranslateResponse(
         translation=result["translation"],
         confidence=result["confidence"],
         ambiguities=result["ambiguities"],
         safety=safety,
         strategy_used=result.get("strategy_used", request.strategy),
-        usage=_usage_of(result, started),
+        usage=usage,
     )
 
 
 @app.post("/api/clarify", response_model=TranslateResponse)
-async def clarify(request: ClarifyRequest) -> TranslateResponse:
+async def clarify(request: ClarifyRequest, http: Request) -> TranslateResponse:
     started = time.perf_counter()
+    _metered(http, request.source_lang)
     try:
         result, safety = await asyncio.gather(
             ENGINE.translate(
@@ -206,19 +233,23 @@ async def clarify(request: ClarifyRequest) -> TranslateResponse:
     except Exception as error:  # noqa: BLE001
         raise ChildSafeError(error, request.source_lang) from error
 
+    usage = _usage_of(result, started)
+    GUARD.record_spend(usage["estimated_cost_usd"])
+
     return TranslateResponse(
         translation=result["translation"],
         confidence=result["confidence"],
         ambiguities=result["ambiguities"],
         safety=safety,
         strategy_used=Strategy.ADAPTIVE,
-        usage=_usage_of(result, started),
+        usage=usage,
     )
 
 
 @app.post("/api/report", response_model=ReportResponse)
-async def report(request: ReportRequest) -> ReportResponse:
+async def report(request: ReportRequest, http: Request) -> ReportResponse:
     started = time.perf_counter()
+    _metered(http, request.child_lang)
     entries = [entry.model_dump() for entry in request.entries]
     try:
         result = await ENGINE.report(entries, request.child_lang)
