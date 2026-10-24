@@ -64,9 +64,22 @@ Do three things.
    First keep only the translations that say what the child said: same actor,
    same action, same direction, same negation, same severity.
    Among those, choose the one that reads like natural {target_name} a real
-   person would write. Reject word-for-word renderings that are not correct grammar
-   in {target_name}, even when the meaning is right.
+   person would write. Reject word-for-word renderings that are not correct
+   grammar in {target_name}, even when the meaning is right.
    Meaning first, fluency second, but fluency decides every tie.
+
+   Two rules about how children write, which decide most of these:
+
+   - **Never choose a literal rendering of slang or an idiom.** Children write
+     "they roasted me", "he's dead to me", "I died of embarrassment". These
+     describe being mocked, a fallout, and embarrassment. A translation that
+     makes them about fire, death or dying is wrong, however faithful it looks
+     word by word. Choose the version that says what the child meant.
+
+   - **Prefer the reading most of the translations share.** If four say one
+     thing and one says something else, the odd one out is usually a mistake,
+     not an insight. Choose the minority version only when you can say exactly
+     what the others got wrong.
 
 2. REPORT WHERE THE TRANSLATIONS DISAGREE, and say WHY they disagree.
    There are only two reasons, and telling them apart is the important part

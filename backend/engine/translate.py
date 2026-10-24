@@ -44,7 +44,12 @@ MULTI_PASS = "multi_pass"
 ADAPTIVE = "adaptive"
 
 # Independent passes need to be able to differ, or agreement proves nothing.
-FANOUT_TEMPERATURES = [0.2, 0.5, 0.8, 1.0, 0.3]
+# Varied enough that the passes can disagree, which is what makes agreement
+# mean anything, but no further. Temperature 1.0 was measured producing a
+# literal "verbrannt" (burned) for "they roasted me" in 1 run of 3, which the
+# judge then sometimes picked over the correct slang; every value at or below
+# 0.8 produced correct slang in 3 of 3.
+FANOUT_TEMPERATURES = [0.2, 0.4, 0.6, 0.8, 0.3]
 TRIAGE_TEMPERATURES = [0.2, 0.8]
 
 # Markers that make a sentence worth verifying even when two passes agree.
