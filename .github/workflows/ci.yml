@@ -36,6 +36,13 @@ jobs:
         working-directory: backend
         run: python -m pytest -q
 
+      # Catches the change that makes the app serve requests one after another:
+      # against the mock engine, 50 concurrent requests take about 1.5 s and 50
+      # serial ones take 75 s. Mock only, so it spends nothing.
+      - name: Load test (50 parallel, mocked engine)
+        working-directory: backend
+        run: python ../eval/load_test.py --requests 50
+
       - name: Eval dry run
         run: |
           if [ -f eval/run_eval.py ]; then
