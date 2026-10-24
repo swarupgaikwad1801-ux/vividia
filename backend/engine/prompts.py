@@ -440,3 +440,12 @@ ACTOR_THREAT_SCHEMA = {
         },
     },
 }
+
+
+# --- the report ---------------------------------------------------------------
+#
+# There is deliberately no report prompt. An earlier draft had one write a
+# short overview; it produced the German and the child's language as two
+# independent strings, so the German the adult read was never the text the
+# child approved. engine/report_text.py builds the overview from a template
+# instead, and the rules such a prompt would have to obey are recorded there.

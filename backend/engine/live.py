@@ -19,7 +19,7 @@ from engine.translate import translate as _translate
 
 STATUS = {
     "translate": "live",
-    "report": "mock",
+    "report": "live",
     "safety_check": "live",
     "resources": "live",
 }
@@ -39,7 +39,7 @@ async def translate(
 
 
 async def report(entries: list, child_lang: str) -> Report:
-    return await mock.report(entries, child_lang)
+    return await _report(entries, child_lang)
 
 
 async def safety_check(text: str, lang: str) -> SafetyResult:
