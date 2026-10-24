@@ -85,3 +85,29 @@ as we hit things, not reconstructed afterwards. Keep it specific and factual.
 - Zero Data Retention being one checkbox at organization level is excellent.
   It would be even better if the console showed ZDR status somewhere in the
   API key or project view, so a reviewer can confirm it without hunting.
+
+## Documentation (Neel, 24 Oct)
+
+- **The structured-output examples do not run as written.** On
+  `docs.tokenfactory.nebius.com/ai-models-inference/json`, the Python
+  JSON-schema example is missing a comma between `"type": "json_schema"` and
+  `"json_schema": ...` inside `response_format`, so it is a syntax error. The
+  matching cURL example sends the key as `"response format"` (with a space),
+  which the API cannot recognise. Both are easy to fix and both cost time for
+  anyone copying them.
+- **No Nemotron model appears in the structured-output examples.** They use
+  Qwen, Mistral and gpt-oss, and the page says to look for a "JSON mode" tag
+  on each model card. Strict JSON schema output works well on
+  `nemotron-3-super-120b-a12b` in our engine; an example using a Nemotron
+  model would help hackathon participants who must use one.
+
+## Messaging vs. the legal docs
+
+- **The launch announcement and the legal guide say different things about
+  region.** The Token Factory launch post lists "Zero-retention inference in EU
+  or US datacenters, supporting strict data-residency requirements", while the
+  console reports public endpoints as region "Global" and the Legal Quick
+  Guide explains that only dedicated endpoints carry a region commitment. We
+  nearly published an "EU inference" claim based on the announcement. One
+  sentence in the announcement ("region commitment requires a dedicated
+  endpoint") would prevent that for others.
