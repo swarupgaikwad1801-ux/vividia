@@ -1,0 +1,11 @@
+{
+  "_comment": "Strategy A: one call, no verification. The honest comparison point for the benchmark. It reports confidence 0.0 because nothing checked it, which is different from 'we checked and found no disagreement'.",
+  "_provenance": "hand-authored",
+  "scenario": "baseline makes exactly one call and claims no confidence",
+  "source_lang": "en",
+  "text": "They made me give them my money and said not to tell.",
+  "tokens": {"prompt": 96, "completion": 26},
+  "responses": {
+    "translate": ["Sie haben mir mein Geld gegeben und gesagt, ich soll nichts sagen."]
+  }
+}

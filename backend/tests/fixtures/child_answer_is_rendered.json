@@ -1,0 +1,16 @@
+{
+  "_comment": "The promise the product is built on: once the child has said what they meant, the final pass renders THAT, and is not free to decide for itself. The transcript answers with the mocking reading ('ausgelacht'), which is only reachable if the child's choice actually reached the prompt.",
+  "_provenance": "hand-authored",
+  "scenario": "the child's answer reaches the final pass",
+  "source_lang": "en",
+  "text": "They took my bag again and everyone laughed at me.",
+  "tokens": {"prompt": 120, "completion": 30},
+  "responses": {
+    "translate_clarified": [
+      "Sie haben mir wieder meine Tasche weggenommen und alle haben mich ausgelacht."
+    ],
+    "translate": [
+      "Sie haben mir wieder meine Tasche weggenommen und alle haben über mich gelacht."
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "_comment": "Same failure, but the retry echoes too. The engine must give up with an error rather than hand back the child's own words labelled as a translation: untranslated text must never reach a teacher as if it were German.",
+  "_provenance": "hand-authored",
+  "scenario": "a pass echoes the input twice, so the engine refuses",
+  "source_lang": "hi",
+  "text": "उन्होंने मेरा बैग फिर से छीन लिया।",
+  "tokens": {"prompt": 90, "completion": 20},
+  "responses": {
+    "translate": ["उन्होंने मेरा बैग फिर से छीन लिया।"],
+    "translate_retry": ["उन्होंने मेरा बैग फिर से छीन लिया।"]
+  }
+}
