@@ -36,6 +36,29 @@ as we hit things, not reconstructed afterwards. Keep it specific and factual.
   design, but it is not visible from the API, so a client cannot tell what its
   current limit is and has to guess its concurrency.
 
+## Reasoning control on Nemotron models
+
+- **`reasoning_effort: "none"` makes `NVIDIA-Nemotron-3-Nano-30B-A3B` return an
+  empty response.** 7 completion tokens, `finish_reason: "stop"`, empty
+  `content`, empty `reasoning_content`. Reproducible across prompts and with
+  the task in either the system or the user message. `"minimal"` works. On
+  `Nemotron-3_5-Lightning` the same parameter works perfectly (20 tokens,
+  0.33 s, clean translation), so the behaviour is inconsistent between two
+  models in the same family. A silent empty answer is worse than an error: in
+  a pipeline it looks like a successful call.
+- **The documented ways to disable reasoning do not work** on these models
+  through the OpenAI-compatible endpoint. `detailed thinking off` as a system
+  prompt, a `/no_think` prefix, and
+  `chat_template_kwargs: {"thinking": false}` are all accepted without error
+  and all ignored. Only `reasoning_effort` has any effect. A note in the model
+  catalog page for each model, stating which values that model accepts, would
+  have saved us an afternoon.
+- **Default reasoning is expensive for small tasks.** Nano spends ~250
+  completion tokens deliberating over a 12-word translation, roughly 13x the
+  tokens Lightning needs for the same output quality. For a
+  many-small-calls workload the default is a poor fit, and it is not obvious
+  from the catalog that these models reason by default.
+
 ## Privacy
 
 - The Legal Quick Guide is genuinely good: plain language, and it states

@@ -1,0 +1,47 @@
+{
+  "_comment": "Starter test set for the model bake-off. Swarup, 24 Oct 2026. Neel owns the full per-language sets in this folder. Every line is invented for testing; none comes from a real child. 'trap' names the meaning that a weak translation loses, which is exactly what the judge step must catch.",
+  "source_lang": "en",
+  "target_lang": "de",
+  "cases": [
+    {
+      "id": "laughed-at",
+      "text": "They took my bag again and everyone laughed at me.",
+      "trap": "'laughed at me' (auslachen, mocking) must not become 'laughed with me' (mit mir lachen)."
+    },
+    {
+      "id": "left-out",
+      "text": "Nobody wants to sit next to me at lunch. They always leave me out.",
+      "trap": "'leave me out' is deliberate exclusion (ausgrenzen), not 'forget' or 'leave me alone'."
+    },
+    {
+      "id": "pushed-stairs",
+      "text": "He pushed me on the stairs and said it was just a joke.",
+      "trap": "'just a joke' is the excuse the bully used; it must stay reported speech, not become the app's own view."
+    },
+    {
+      "id": "photo-group",
+      "text": "Someone put a photo of me in the class group and they all wrote mean things under it.",
+      "trap": "'class group' is a chat group (Klassenchat), not a school class or a group of people."
+    },
+    {
+      "id": "scared-tell",
+      "text": "I'm scared to tell anyone because last time it got worse.",
+      "trap": "'it got worse' means the bullying worsened after disclosure, the core of our product."
+    },
+    {
+      "id": "called-names",
+      "text": "They call me names about where I come from.",
+      "trap": "'call me names' is insults (beschimpfen), not literally 'say my name'; the racist aspect must survive."
+    },
+    {
+      "id": "took-money",
+      "text": "They made me give them my money and said not to tell.",
+      "trap": "'made me' is coercion (zwingen), not 'asked me'."
+    },
+    {
+      "id": "cant-say",
+      "text": "I don't know how to say it in German and the teacher gets annoyed when I try.",
+      "trap": "'gets annoyed' (genervt) is mild irritation, not anger (wütend); do not escalate the adult's reaction."
+    }
+  ]
+}

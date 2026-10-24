@@ -115,6 +115,54 @@ resources(state, lang) -> list[Resource]
 
 `calls_made` is returned so the UI can show the live check count.
 
+## Engine decisions, measured 24 Oct 2026
+
+Evidence: `eval/bakeoff.py` and `eval/probe_thinking.py` over
+`eval/testset/en_starter.json` (8 sentences, each with a known meaning trap).
+
+### Reasoning must be switched off explicitly
+
+`reasoning_effort` in `extra_body` is the **only** switch that works. The
+documented alternatives (`detailed thinking off`, `/no_think`,
+`chat_template_kwargs`) are all silently ignored.
+
+- **Lightning**: `"none"` works. Any other value floods `content` with
+  "Here's a thinking process:" and never reaches the translation.
+- **Nano**: `"none"` returns an **empty** answer (7 tokens, finish_reason
+  `stop`). `"minimal"` is the lowest usable value.
+
+### Fan-out model: Nemotron 3.5 Lightning
+
+| | Nano (`minimal`) | **Lightning (`none`)** |
+|---|---|---|
+| latency per call | 2.07 s | **0.33 s** |
+| output tokens | 256 | **20** |
+| rate limit | 100 RPM | **600 RPM** |
+| price | $0.06 / $0.24 per 1M | same |
+
+Lightning is ~6x faster, ~13x cheaper per call and has 6x the request
+headroom, at identical quality on our traps. **Nano's reasoning tokens were
+pure waste**: it spent ~250 tokens deliberating over a 12-word sentence.
+Judge model stays `nvidia/nemotron-3-super-120b-a12b`; test Ultra in the eval.
+
+### The fan-out thesis is confirmed
+
+Three passes at different temperatures disagree **precisely at the traps**:
+
+- *"They made me give them my money"* → one pass produced "Sie haben mir mein
+  Geld **gegeben**" (they gave me money: the meaning inverted), another
+  "abgenommen", another "gezwungen". A single pass could ship the inversion.
+- *"everyone laughed at me"* → "über mich gelacht" vs "mich ausgelacht"
+  (2 of 3). Majority lands on the correct, stronger word.
+- *"the teacher gets annoyed"* → "ärgert sich" / "wird sauer" / "wird
+  genervt". Only the last keeps the mild register; "sauer" escalates it.
+
+**Honest limitation to publish:** where the model is *consistently* wrong,
+consensus cannot save us. All three passes rendered "they call me names" as
+"Sie nennen mir Namen", which is not German for insults. This is why the
+judge step and the question to the child exist, and why the README must say
+consensus measures agreement, not correctness.
+
 ## Hard requirements (failing any one = disqualified)
 
 1. Runtime call to **Nebius Token Factory** (we do this in every engine call).
