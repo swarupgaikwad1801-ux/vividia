@@ -1,0 +1,434 @@
+[
+  {
+    "id": "laughed-at",
+    "lang": "ar",
+    "pivot": "أخذوا حقيبتي مرة ثانية وضحك علي الجميع.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German translation provided is actually Arabic: \"أَخَذُوا حَقِيبَتِي مَرَّةً ثَانِيَةً وَضَحِكَ عَلَيَّ الْجَمِيعُ\" which means 'They took my bag again and everyone laughed at me.' However, since it's written in Arabic script instead of German, it does not fulfill the requirement of being a German text. Therefore, no valid German sentence was provided for evaluation.",
+    "baseline": {
+      "german": "Sie nahmen meine Tasche zum zweiten Mal, und alle lachten mich aus.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Sie nahmen meine Tasche ein zweites Mal und alle lachten über mich.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 13,
+      "repaired": 1,
+      "asked": 0,
+      "cost": 0.0011454
+    }
+  },
+  {
+    "id": "left-out",
+    "lang": "ar",
+    "pivot": "ما حدا بدو يقعد جنبي على الغدا. هم دائمًا يستبعدوني.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German translation was replaced with Arabic: 'ما حدا بدو يقعد جنبي على الغدا. هم دائمًا يستبعدوني.' which means 'Nobody wants to sit next to me at lunch. They always exclude me.' Although the meaning of exclusion is preserved, the language is no longer German as required by the task. The instruction explicitly states we are evaluating a German text, but the provided 'German text' is actually in Arabic. Therefore, the detail about deliberate exclusion ('ausgrenzen') is not conveyed in German, and the overall meaning is not expressed in the target language, so both evaluations fail.",
+    "baseline": {
+      "german": "Niemand will neben mir beim Mittagessen sitzen. Sie schließen mich immer aus.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Niemand will neben mir beim Mittagessen sitzen. Sie schließen mich immer aus.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0011544
+    }
+  },
+  {
+    "id": "pushed-stairs",
+    "lang": "ar",
+    "pivot": "دفعني على السلالم وقال إنها مجرد مزحة.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text appears to have been replaced with Arabic script: 'دفعني على السلالم وقالت إنها مجرد مزحة.' which translates back as 'He pushed me on the stairs and she said it was just a joke.' The subject of the reporting verb changed from male ('he') to female ('she'), altering who spoke. Additionally, the original language was German, but the output is in Arabic — violating the requirement that the German text must remain in German. Therefore, both the specific detail (who said it) and the overall meaning are not preserved.",
+    "baseline": {
+      "german": "Er hat mich die Treppe hinuntergestoßen und sagte, es sei nur ein Scherz.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Er hat mich die Treppe hinuntergestoßen und sagte, es sei nur ein Scherz.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 2,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0001482
+    }
+  },
+  {
+    "id": "photo-group",
+    "lang": "ar",
+    "pivot": "واحد نشر صورتي في جروب الصف وكلهم كتبوا أشياء سيئة تحتها.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German translation uses 'جروب الصف' which literally means 'the class group' as in a physical classroom group of students, not a digital chat group (Klassenchat). The critical detail that this refers specifically to an online messaging group was lost.",
+    "baseline": {
+      "german": "Jemand hat mein Foto in der Klassengruppe veröffentlicht, und alle haben schlechte Sachen darunter geschrieben.",
+      "detail_kept": false,
+      "meaning_kept": false,
+      "what_changed": "The term 'class group' was specified to mean a chat group (Klassenchat), but the German translation used 'Klassengruppe', which can ambiguously refer to either a classroom group of students or a chat group. Since the detail hinges on disambiguating 'class group' as specifically a digital chat group, and the German fails to make that distinction clear, the detail is not preserved.",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Jemand hat mein Foto in die Klassengruppe gestellt, und alle haben schlechte Sachen darunter geschrieben.",
+      "detail_kept": false,
+      "meaning_kept": false,
+      "what_changed": "The term 'class group' was specified to mean a chat group (Klassenchat), but the German translation used 'Klassengruppe', which can ambiguously refer to either a chat group or a physical class/group of students. Since the detail hinges on disambiguating that it is specifically a digital chat group—not a physical class—and the German fails to make that distinction clear, the detail is not preserved.",
+      "calls": 2,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.000156
+    }
+  },
+  {
+    "id": "scared-tell",
+    "lang": "ar",
+    "pivot": "أنا خائف أن أخبر أحداً لأن المرة الأخيرة ازدادت الأمور سوءاً.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text was replaced with Arabic: 'أنا خائف أن أخبر أحداً لأن المرة الأخيرة ازدادت الأمور سوءاً.' which translates to 'I am afraid to tell anyone because last time things got worse.' Although the meaning is similar, the language is incorrect per the task (should be German), and thus the detail 'it got worse' is not preserved in German as required.",
+    "baseline": {
+      "german": "Ich habe Angst, jemandem etwas zu erzählen, weil es beim letzten Mal schlimmer wurde.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Ich habe Angst, jemandem etwas zu erzählen, weil es beim letzten Mal noch schlimmer wurde.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 2,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0001524
+    }
+  },
+  {
+    "id": "called-names",
+    "lang": "ar",
+    "pivot": "يسمونني بأسماء بسبب من أين أتيت.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text provided appears to be Arabic ('They call me names because of where I come from'), not German. Since no actual German translation was given, the required detail—'call me names' as insults with racist intent surviving—is not present in a German form. Therefore, the detail is not kept, and the overall meaning cannot be assessed as preserved in German.",
+    "baseline": {
+      "german": "Sie nennen mich mit Namen, wegen woher ich komme.",
+      "detail_kept": false,
+      "meaning_kept": false,
+      "what_changed": "The phrase \"Sie nennen mich mit Namen\" means \"they call me by [my] name\", which reverses the intended meaning: it suggests they are using my actual name, not insulting me. The crucial detail — that \"call me names\" means verbal abuse/insults (beschimpfen) — is completely lost. Additionally, \"wegen woher ich komme\" is grammatically incorrect; proper phrasing would be \"wegen meiner Herkunft\". As a result, both the specific detail (the insulting nature of the name-calling) and the overall racist meaning are not preserved.",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Sie nennen mich mit Namen, wegen woher ich komme.",
+      "detail_kept": false,
+      "meaning_kept": false,
+      "what_changed": "The phrase \"Sie nennen mich mit Namen\" means \"they call me by [my] name\", which reverses the intended meaning: it suggests they are using my actual name, not insulting me. The crucial detail — that \"call me names\" means verbal abuse/insults (beschimpfen) — is completely lost. Additionally, \"wegen woher ich komme\" is grammatically incorrect; proper phrasing would be \"wegen meiner Herkunft\". As a result, both the specific detail (insulting/racist naming) and the overall meaning (being subjected to racist name-calling) are not preserved.",
+      "calls": 2,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0001338
+    }
+  },
+  {
+    "id": "laughed-at",
+    "lang": "uk",
+    "pivot": "Знову взяли мою сумку, і всі посміялися надо мною.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text provided appears to be Ukrainian ('Знову взяли мою сумку, і всі посміялися надо мною.'), not German. Since it is not in German as required by the task, the detail 'laughed at me' cannot be verified as preserved, and thus both 'detail_kept' and 'meaning_kept' must be false.",
+    "baseline": {
+      "german": "Wieder haben sie meine Tasche genommen, und alle haben mich ausgelacht.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Wieder haben sie meine Tasche genommen, und alle haben mich ausgelacht.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0011862
+    }
+  },
+  {
+    "id": "left-out",
+    "lang": "uk",
+    "pivot": "Ніхто не хоче сидіти поруч зі мною на обіді. Вони завжди виключають мене.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German translation uses Ukrainian words ('Ніхто', 'хоче', 'сидіти', etc.) instead of German, making it linguistically incorrect and incomprehensible as German. The phrase 'виключають мене' does translate to 'they exclude me', which matches the meaning of 'leave me out' as deliberate exclusion, but since the entire sentence is not in German, the detail is not preserved in the required language.",
+    "baseline": {
+      "german": "Niemand will neben mir beim Mittagessen sitzen. Sie schließen mich immer aus.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Niemand will neben mir beim Mittagessen sitzen. Sie schließen mich immer aus.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0012327
+    }
+  },
+  {
+    "id": "pushed-stairs",
+    "lang": "uk",
+    "pivot": "Він штовнув мене на сходах і сказав, що це просто жарт.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text appears to be Ukrainian (Cyrillic script), not German. The phrase 'just a joke' is translated as 'просто жарт', which correctly preserves the meaning as reported speech from the bully’s perspective. However, since the language is not German as required, the output fails both criteria: the detail is not conveyed in German, and the overall meaning is not expressed in the target language.",
+    "baseline": {
+      "german": "Er hat mich auf der Treppe geschubst und gesagt, dass es nur ein Scherz war.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Er schubste mich auf der Treppe und sagte, dass es nur ein Scherz war.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0011574
+    }
+  },
+  {
+    "id": "photo-group",
+    "lang": "uk",
+    "pivot": "Хтось виставив моє фото в класовому чаті, а вони всі написали під ним гадкі речі.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text uses Ukrainian language ('Хтось виставив моє фото в класовому чаті...'), not German. The term 'класовому чаті' translates to 'class chat' in Ukrainian, which matches the intended meaning of 'class group' as a chat group — however, since the response must be in German per the task, using Ukrainian means the German text does not exist here. Therefore, no German sentence was provided to evaluate, so neither the detail nor the overall meaning can be considered kept.",
+    "baseline": {
+      "german": "Jemand hat mein Foto im Klassenchat veröffentlicht, und sie alle haben darunter gemeine Sachen geschrieben.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Jemand hat mein Foto im Klassenchat veröffentlicht, und sie alle haben darunter gemeine Sachen geschrieben.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.001281
+    }
+  },
+  {
+    "id": "scared-tell",
+    "lang": "uk",
+    "pivot": "Я боюся це сказати, бо минулого разу стало ще гірше.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text was replaced with Ukrainian: 'Я боюся це сказати, бо минулого разу стало ще гірше.' The word 'worse' (гірше) appears, but the language shift from German to Ukrainian violates the task requirement to evaluate a German translation. Since no German text was provided, the detail cannot be assessed as preserved in German.",
+    "baseline": {
+      "german": "Ich habe Angst, das zu sagen, weil es letzten Mal noch schlimmer wurde.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Ich habe Angst, das zu sagen, weil es letzten Mal noch schlimmer wurde.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0010887
+    }
+  },
+  {
+    "id": "called-names",
+    "lang": "uk",
+    "pivot": "Они кличуть мене іменами про те, звідки я.\n\nWait, that's wrong. Let me think.\n\n\"They call me names about where I come from.\"\n\nIn Ukrainian, a 12-year-old would say something like:\n\n\"Вони кличуть мене іменами через те, звідки я.\" - No, that's not right.\n\n\"Кличуть іменами\" isn't quite right for \"call names\" in the sense of insults.\n\nBetter: \"Вони обзивають мене через те, звідки я.\" or \"Вони кличуть мене поганими іменами через те, звідки я.\"\n\nActually, for a child: \"Вони кличуть мене іменами через те, звідки я приїхав/народився.\" - too long.\n\nSimple and direct: \"Вони обзивають мене через те, звідки я.\"\n\nOr: \"Вони кличуть мене іменами через те, звідки я.\"\n\nHmm, \"call someone names\" = обзивати, кликти поганими іменами.\n\nFor a 12-year-old, simple: \"Вони обзивають мене через те, звідки я.\"\n\nOr even simpler: \"Вони кличуть мене іменами через те, звідки я.\"\n\nLet me go with: \"Вони обзивають мене через те, звідки я.\"\n\nWait, \"where I come from\" - \"звідки я\" is a bit incomplete. \"Звідки я приїхав\" or \"звідки я\" (colloquial).\n\nActually, \"звідки я\" alone can work in context, but \"звідки я приїхав\" is clearer.\n\nFor a child's writing: \"Вони обзивають мене через те, звідки я",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text provided appears to be garbled or incorrect—it contains Cyrillic characters ('Они кличуть мене...') which belong to Ukrainian/Russian, not German. As such, no valid German sentence was presented for evaluation. Since the required German text is missing or nonsensical, it cannot carry the detail ('call me names' as insults, not literal naming) nor preserve the meaning. The core detail—that the verbal abuse is about origin and constitutes insults—is entirely lost due to language confusion.",
+    "baseline": {
+      "german": "Sie nennen mich Namen, woher ich komme.",
+      "detail_kept": false,
+      "meaning_kept": false,
+      "what_changed": "The phrase \"Sie nennen mich Namen\" means \"they say my name\", which loses the idiomatic meaning of \"call me names\" as verbal abuse. The intended sense of racial insults is completely absent.",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Sie beleidigen mich, wegen wo ich herkomme.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 13,
+      "repaired": 1,
+      "asked": 0,
+      "cost": 0.0020793
+    }
+  },
+  {
+    "id": "laughed-at",
+    "lang": "tr",
+    "pivot": "Onu tekrar çantamı aldılar ve herkes bana gülüştü.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German translation uses Turkish ('Onu tekrar çantamı aldılar ve herkes bana gülüştü'), which is completely incorrect for a German language task. The verb 'gülüştü' means 'laughed' in Turkish, but it does not convey the mocking sense of 'laughed at me'. More critically, since the response is not in German at all, it fails both the detail requirement (no mocking laughter conveyed) and the overall meaning (the sentence is not German and thus incomprehensible as such).",
+    "baseline": {
+      "german": "Sie nahmen mir wieder meine Tasche und alle lachten mich aus.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Sie nahmen mir wieder meine Tasche und alle lachten mich aus.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.001107
+    }
+  },
+  {
+    "id": "left-out",
+    "lang": "tr",
+    "pivot": "Öğle yemeğinde yanına oturmak isteyen kimse yok. Her zaman beni dışarı bırakıyorlar.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German text was replaced with Turkish: 'Öğle yemeğinde yanına oturmak isteyen kimse yok. Her zaman beni dışarı bırakıyorlar.' This means 'No one wants to sit next to me at lunch. They always leave me outside.' While 'dışarı bırakmak' can imply exclusion, it is not the standard or precise term for social exclusion like 'ausgrenzen'; moreover, the language shift from German to Turkish means the sentence is no longer German at all, violating the task's requirement. Therefore, the detail about deliberate exclusion ('ausgrenzen') is not preserved in form or precise meaning, and the overall meaning is compromised due to incorrect language.",
+    "baseline": {
+      "german": "Niemand möchte sich mittags neben mich setzen. Sie lassen mich immer außen vor.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Niemand möchte sich mittags neben mich setzen. Sie lassen mich immer außen vor.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0011763
+    }
+  },
+  {
+    "id": "pushed-stairs",
+    "lang": "tr",
+    "pivot": "Merdivende bana itti ve sadece bir şaka dedi.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German translation uses Turkish words ('Merdivende', 'itti', 'şaka') instead of German, making it linguistically incorrect and incomprehensible as German. The phrase 'sadece bir şaka dedi' does translate to 'said it was just a joke' in meaning, but since the language is wrong, it fails as a German sentence entirely. Therefore, the detail is not preserved in the required language, and the overall meaning is not conveyed in German.",
+    "baseline": {
+      "german": "Er hat mich auf der Treppe gestoßen und sagte, es sei nur ein Scherz gewesen.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Er hat mich auf der Treppe gestoßen und sagte, es sei nur ein Scherz gewesen.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 2,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.00015
+    }
+  },
+  {
+    "id": "photo-group",
+    "lang": "tr",
+    "pivot": "Sınıf grubunda benim fotoğrafımı koymuşlar ve altında kötü şeyler yazmışlar.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The German translation uses 'Sınıf grubunda', which means 'in the class group' in Turkish, not German. The word 'Sınıf' is Turkish for 'class', and '-da' is a Turkish locative suffix. This is not German at all—it appears to be Turkish written with German-like spelling or a machine error. Since the language is incorrect, the term 'class group' as a chat group (Klassenchat) is not conveyed. The sentence fails both in language accuracy and in preserving the specific detail about the nature of the group.",
+    "baseline": {
+      "german": "Sie haben mein Foto in die Klassengruppe gestellt und darunter schlechte Sachen geschrieben.",
+      "detail_kept": false,
+      "meaning_kept": false,
+      "what_changed": "The term 'class group' was specified to mean a chat group (Klassenchat), but the German translation used 'Klassengruppe', which can ambiguously refer to a physical class or social group rather than specifically a digital chat group. The precise meaning of 'online chat group' was lost.",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Sie haben mein Foto in die Klassengruppe gestellt und darunter schlechte Dinge geschrieben.",
+      "detail_kept": false,
+      "meaning_kept": false,
+      "what_changed": "The term 'class group' was specified to mean a chat group (Klassenchat), but the German translation used 'Klassengruppe', which can ambiguously refer to either a classroom group of students or a chat group. Since the detail explicitly required the meaning to be a chat group and not just any class-based group, this nuance was lost in translation.",
+      "calls": 2,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0001506
+    }
+  },
+  {
+    "id": "scared-tell",
+    "lang": "tr",
+    "pivot": "Kimseye söylememe korkuyorum çünkü geçen kez daha kötüleşti.",
+    "pivot_kept_trap": true,
+    "pivot_lost": "",
+    "baseline": {
+      "german": "Ich habe Angst, es jemandem zu sagen, weil es beim letzten Mal schlimmer wurde.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Ich habe Angst, es jemandem zu sagen, weil es beim letzten Mal schlimmer wurde.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 2,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0001512
+    }
+  },
+  {
+    "id": "called-names",
+    "lang": "tr",
+    "pivot": "Nereden geldiğim için benimle kötü adlar ediyorlar.",
+    "pivot_kept_trap": false,
+    "pivot_lost": "The Turkish phrase \"kötü adlar ediyorlar\" means they say bad words/names, which does convey verbal abuse, but it lacks the specific idiomatic sense of \"calling someone names\" as personal insults tied to identity/origin. More critically, the subject-object structure is garbled: \"Nereden geldiğim için\" (because of where I come from) is awkwardly placed, and \"benimle\" (with me) incorrectly follows \"kötü adlar ediyorlar\", making it seem like they are saying bad names *accompanied by me* rather than directing the insults at me. The core meaning—that people insult me based on my origin—is severely distorted by incorrect grammar and word order, rendering the sentence nearly incoherent in Turkish.",
+    "baseline": {
+      "german": "Sie nennen mich mit Schimpfnamen, weil ich nicht von hier komme.",
+      "detail_kept": true,
+      "meaning_kept": true,
+      "what_changed": "",
+      "calls": 1
+    },
+    "adaptive": {
+      "german": "Sie nennen mich mit schlechten Namen, weil sie nicht wissen, woher ich komme.",
+      "detail_kept": false,
+      "meaning_kept": false,
+      "what_changed": "The German translation changes the meaning: it says they give bad names because they don't know where I'm from — which implies ignorance as motive, not racism. The original specifies racist name-calling based on origin; the German removes the racist intent and replaces it with a neutral/ignorant reason. Thus both the specific detail ('racist aspect') and overall meaning are lost.",
+      "calls": 12,
+      "repaired": 0,
+      "asked": 0,
+      "cost": 0.0011487
+    }
+  }
+]

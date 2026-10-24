@@ -256,6 +256,52 @@ plainly said the opposite.
 Cost of all this, measured: a safe sentence takes 2 calls and ~340 ms; a
 sentence needing full verification and repair takes 13 calls and ~3 s.
 
+## The language gate: result and what it changed (24 Oct)
+
+`eval/language_gate.py`. Two findings, both of which changed the build.
+
+### 1. The fan-out model could not translate the languages we ship
+
+Lightning with reasoning off returned the **Ukrainian input unchanged in 5 of
+12 runs**, and once replied "Ich bin Nemotron, ein Sprachmodell von NVIDIA".
+It had won the English bake-off, so this was invisible until the gate ran.
+Super-VL and Super both failed 0 of 12. **Fan-out is now
+`nvidia/Nemotron-3.5-Super-VL`** (faster than Super, 10x token budget, reads
+images later). The judge stays a *different* model on purpose: a judge that
+shares the translator's blind spots cannot see its mistakes.
+
+`untranslated()` in `translate.py` now rejects any pass that echoes the input
+or returns the wrong script, retries once, then fails loudly. Untranslated
+text must never reach a teacher labelled as a translation.
+
+### 2. We cannot make our own non-English test data, and that is now the blocker
+
+The gate pivots English through the target language, then grades the German
+against the English. After grading the pivots too, **17 of 18 pivots had
+already lost the detail before our pipeline saw it**. Example: "they call me
+names" became "they call me *by* names" in Arabic and Ukrainian, so the
+insult was gone from our input. Scoring the pipeline on those cases measures
+the pivot translator, not us.
+
+So: **the only honest non-English numbers must come from sentences written by
+native speakers.** Neel's test set is no longer a Tuesday task, it is the
+critical path for the whole benchmark. Until it exists:
+
+- English results are real and reproducible, and are what we report.
+- No claim about Arabic, Ukrainian or Turkish quality goes in the README, the
+  video or Devpost. Not one.
+- The demo may still run in those languages; we simply do not claim a measured
+  quality level for them.
+
+### Also observed
+
+- The triage markers in `looks_risky()` are English only, so for other
+  languages escalation falls back to "did the two passes disagree". That is
+  weaker, and is tracked for Monday.
+- Super-VL leaked its deliberation into the answer on an open-ended
+  generation prompt ("Let me go with: ..."). Our production prompts are tight
+  and have not shown it, but output is guarded rather than trusted.
+
 ## Hard requirements (failing any one = disqualified)
 
 1. Runtime call to **Nebius Token Factory** (we do this in every engine call).

@@ -18,7 +18,7 @@ import asyncio
 import json
 import re
 
-from engine.client import Usage, call
+from engine.client import EngineError, Usage, call
 from engine.contract import Ambiguity, TranslationResult
 from engine.prompts import (
     AMBIGUITY_SCHEMA,
@@ -46,6 +46,10 @@ TRIAGE_TEMPERATURES = [0.2, 0.8]
 # These are the places where a wrong translation changes what happened, which
 # is exactly what our bake-off saw go wrong ("they made me give them my money"
 # became "they gave me money").
+# NOTE: these are English only. For other languages the triage falls back to
+# "do the two passes disagree", which is language-neutral. A child writing
+# Arabic therefore gets verification driven by disagreement alone, which is
+# weaker. Replacing this with a model-based risk check is tracked for Monday.
 RISK_PATTERNS = [
     r"\b(not|никог|لا|değil|kein|nicht|never|nobody|no one|didn'?t|won'?t|can'?t)\b",  # negation
     r"\b(made|forced|threat|hurt|hit|kick|push|touch|afraid|scared|weapon|knife)\w*\b",  # force or threat
@@ -64,11 +68,66 @@ def looks_risky(text: str) -> bool:
     return any(pattern.search(text) for pattern in _RISK)
 
 
+# Scripts we can recognise, so an untranslated answer cannot pass as German.
+_SCRIPTS = {
+    "cyrillic": ("Ѐ", "ӿ"),
+    "arabic": ("؀", "ۿ"),
+    "devanagari": ("ऀ", "ॿ"),
+}
+
+
+def _script_share(text: str) -> dict[str, float]:
+    letters = [ch for ch in text if ch.isalpha()]
+    if not letters:
+        return {}
+    shares = {}
+    for name, (low, high) in _SCRIPTS.items():
+        count = sum(1 for ch in letters if low <= ch <= high)
+        if count:
+            shares[name] = count / len(letters)
+    return shares
+
+
+def untranslated(source: str, output: str, target_lang: str) -> bool:
+    """True when the model echoed the input instead of translating it.
+
+    Seen on Lightning with reasoning off: a Ukrainian sentence came back
+    unchanged, which would have put Cyrillic in front of a German teacher
+    while the UI claimed it was a translation. Cheap to check, and the
+    consequence of missing it is a child's report being unreadable.
+    """
+    if _normalise(source) == _normalise(output):
+        return True
+    if target_lang in ("de", "en"):  # Latin-script targets
+        return any(share > 0.3 for share in _script_share(output).values())
+    return False
+
+
 async def _one_pass(text, source_lang, target_lang, usage, temperature, decisions=None):
     system = TRANSLATE_SYSTEM.format(target_name=language_name(target_lang))
     if decisions:
         system += CLARIFIED_SUFFIX.format(decisions=decisions)
-    return await call("fanout", system, text, usage, temperature=temperature, max_tokens=500)
+    german = await call("fanout", system, text, usage, temperature=temperature, max_tokens=500)
+
+    if untranslated(text, german, target_lang):
+        # One firmer retry at a lower temperature before giving up on this
+        # pass. The other passes carry on regardless.
+        german = await call(
+            "fanout",
+            system + f"\n\nThe reply MUST be written in {language_name(target_lang)}. "
+            f"Do not repeat the {language_name(source_lang)} text.",
+            text,
+            usage,
+            temperature=0.0,
+            max_tokens=500,
+        )
+        if untranslated(text, german, target_lang):
+            raise EngineError(
+                "upstream_unavailable",
+                f"model returned untranslated text for {source_lang}->{target_lang}",
+                True,
+            )
+    return german
 
 
 async def _back(german, source_lang, target_lang, usage):

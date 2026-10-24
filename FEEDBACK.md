@@ -59,6 +59,24 @@ as we hit things, not reconstructed afterwards. Keep it specific and factual.
   many-small-calls workload the default is a poor fit, and it is not obvious
   from the catalog that these models reason by default.
 
+## Model quality varies sharply by input language
+
+- **`Nemotron-3_5-Lightning` with `reasoning_effort: "none"` returned our
+  Ukrainian input unchanged in 5 of 12 runs** instead of translating it, and
+  once answered "Ich bin Nemotron, ein Sprachmodell, das von NVIDIA trainiert
+  wurde" to a plain translation request. The same model and settings are
+  reliable on English, Turkish and Arabic in our tests. Because it fails by
+  returning plausible-looking text rather than an error, a pipeline cannot
+  detect it without an explicit output-language check.
+- `Nemotron-3.5-Super-VL` and `nemotron-3-super-120b-a12b` scored 0 failures
+  on the same 12 runs, so this is specific to Lightning rather than to the
+  family.
+- Suggestion: the model catalog gives one quality impression per model, but
+  for a translation workload the usable answer is per language pair. Even a
+  short note on which languages a model was evaluated for would have saved us
+  from choosing a model that benchmarked best in English and could not do the
+  job we needed.
+
 ## Privacy
 
 - The Legal Quick Guide is genuinely good: plain language, and it states

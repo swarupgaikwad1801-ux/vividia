@@ -30,11 +30,20 @@ class ModelRole:
     usd_per_m_output: float
 
 
-# The fan-out model was chosen by measurement, not by name: see
-# eval/bakeoff.py. Lightning is ~6x faster and ~13x cheaper per call than
-# Nano at equal quality, with 6x the request headroom.
+# Chosen by measurement, not by name.
+#
+# Lightning won the English bake-off (eval/bakeoff.py) and was the fan-out
+# model until eval/language_gate.py tested the languages we actually ship:
+# with reasoning off it returned the Ukrainian input unchanged in 5 of 12
+# runs, and once replied "Ich bin Nemotron, ein Sprachmodell von NVIDIA".
+# Super-VL and Super both scored 0/12 failures; Super-VL is faster (0.43s vs
+# 0.63s), has 10x the token budget, and reads images for a later feature.
+#
+# The judge is deliberately a different model from the translator. A judge
+# that shares the translator's blind spots cannot see the translator's
+# mistakes.
 ROLES = {
-    "fanout": ModelRole("nvidia/Nemotron-3_5-Lightning", "none", 600, 0.06, 0.24),
+    "fanout": ModelRole("nvidia/Nemotron-3.5-Super-VL", "none", 300, 0.30, 0.90),
     "judge": ModelRole("nvidia/nemotron-3-super-120b-a12b", "none", 300, 0.30, 0.90),
 }
 
