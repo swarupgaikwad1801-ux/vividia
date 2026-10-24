@@ -10,6 +10,7 @@ Then open http://127.0.0.1:8000/docs for the generated API docs.
 """
 
 import asyncio
+import json
 import logging
 import os
 import time
@@ -20,10 +21,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from engine.client import ROLES
+from engine.config import REPO_ROOT
 from engine.errors import message_for, safe_traceback, status_for, to_error_response
 from app.limits import Guard, client_key
 from app.schemas import (
     ClarifyRequest,
+    Entry,
     ErrorResponse,
     HealthResponse,
     ReportRequest,
@@ -75,6 +78,9 @@ app.add_middleware(
 # /api/health deliberately are not, because the helplines must stay reachable
 # even on a day when the demo has spent its allowance.
 GUARD = Guard()
+
+# Neel owns this file; this route only reads it.
+DEMO_STORY = REPO_ROOT / "content" / "demo_story.json"
 log.info("demo limits: %s, %d requests per %ds per client",
          GUARD.status(), GUARD.per_ip_requests, int(GUARD.per_ip_window_s))
 
@@ -277,6 +283,38 @@ async def report(request: ReportRequest, http: Request) -> ReportResponse:
             "estimated_cost_usd": 0.0,
         },
     )
+
+
+@app.get("/api/demo")
+async def demo() -> dict:
+    """The one-click demo story, so judges never paste an API key.
+
+    Returns content/demo_story.json: the persona, an already-approved timeline,
+    and the sentence the judge sends themselves. Neel owns that file and its
+    shape, so this route serves it rather than re-describing it in a response
+    model: typing it here would freeze his content into the HTTP contract and
+    mean every wording change needed a schema change too.
+
+    The timeline IS validated against the frozen Entry model before it goes
+    out, because that file claims to "use the exact Entry shape so the app can
+    load them as an already-approved timeline", and a claim like that should
+    fail here rather than in a screen in front of a judge.
+
+    Makes no model calls, so it is deliberately outside the spending cap: on a
+    day the demo has spent its allowance the story must still load, exactly as
+    the helplines must.
+    """
+    try:
+        raw = json.loads(DEMO_STORY.read_text(encoding="utf-8"))
+        timeline = [Entry.model_validate(entry) for entry in raw["timeline"]]
+    except Exception as error:  # noqa: BLE001 - a broken demo file is ours, not the child's
+        raise ChildSafeError(error, "en") from error
+
+    # Keys starting with "_" are notes to the team, not payload.
+    return {
+        **{key: value for key, value in raw.items() if not key.startswith("_")},
+        "timeline": [entry.model_dump() for entry in timeline],
+    }
 
 
 @app.get("/api/resources", response_model=ResourcesResponse)
