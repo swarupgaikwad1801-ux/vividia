@@ -285,8 +285,12 @@ async def resources(
     state: str = Query(default="", description="German state code, e.g. 'BW'; optional"),
 ) -> ResourcesResponse:
     try:
-        found = await ENGINE.resources(state, lang)
+        # "fallback" was hard-coded here. The UI shows the child where a number
+        # came from, so the word has to be earned: "live" means Tavily answered
+        # for their state, "fallback" means this is our curated file.
+        found, source = await ENGINE.resources_with_source(state, lang)
     except Exception as error:  # noqa: BLE001
         raise ChildSafeError(error, lang) from error
 
-    return ResourcesResponse(resources=found, source="fallback")
+    log.info("resources state=%s lang=%s found=%d source=%s", state or "-", lang, len(found), source)
+    return ResourcesResponse(resources=found, source=source)

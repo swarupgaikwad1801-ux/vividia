@@ -61,6 +61,11 @@ async def safety_check(text: str, lang: str) -> SafetyResult:
     return {"urgent": False, "category": "none", "message_child": ""}
 
 
+async def resources_with_source(state: str, lang: str) -> tuple[list[Resource], str]:
+    """Always "fallback": the mock looks nothing up, so it must not claim it did."""
+    return await resources(state, lang), "fallback"
+
+
 async def resources(state: str, lang: str) -> list[Resource]:
     await asyncio.sleep(0.5)
     return [
