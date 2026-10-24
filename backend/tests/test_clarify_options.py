@@ -19,7 +19,16 @@ import recorded
 from app.schemas import Ambiguity as AmbiguitySchema
 from app.schemas import TranslateResponse
 from engine.clarify_text import LABELS, OTHER_ID, label_for, other_option, rewrite_prompt_for
-from engine.translate import ADAPTIVE, _decisions_text, translate
+from engine.translate import ADAPTIVE, MULTI_PASS, _decisions_text, translate
+
+# Some tests below ask for MULTI_PASS rather than ADAPTIVE. They are about the
+# shape of the escape option, not about which sentences get verified, and two
+# of them feed an English fixture in as Hindi to check the option's language.
+# They used to reach the question through ADAPTIVE because an unnamed actor
+# ("he", "they") counted as a risk marker; that marker was removed on main
+# after it was measured firing on 29 of 50 English sentences and escalating
+# almost everything. Asking for the full check directly keeps these tests
+# about their own subject, instead of breaking whenever triage is tuned.
 
 FAST = 100_000
 
@@ -66,7 +75,7 @@ async def test_the_escape_option_is_in_the_childs_language(monkeypatch):
     """A Hindi-speaking child must not meet an English button."""
     transcript = replay(monkeypatch, "get_me_after_school")
 
-    result = await translate(transcript.data["text"], "hi", strategy=ADAPTIVE)
+    result = await translate(transcript.data["text"], "hi", strategy=MULTI_PASS)
     escape = result["ambiguities"][0]["options"][-1]
 
     assert escape["label"] == LABELS["hi"]
@@ -116,7 +125,7 @@ async def test_three_readings_do_not_overflow_the_contract(monkeypatch):
     on its way out, which a child would see as a 500 rather than a question."""
     transcript = replay(monkeypatch, "three_readings")
 
-    result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
+    result = await translate(transcript.data["text"], "en", strategy=MULTI_PASS)
 
     question = result["ambiguities"][0]
     assert len(question["options"]) == 3
@@ -132,7 +141,7 @@ async def test_three_readings_do_not_overflow_the_contract(monkeypatch):
 async def test_option_ids_stay_distinct_so_the_ui_can_tell_them_apart(monkeypatch):
     for name in ("get_me_after_school", "three_readings"):
         transcript = replay(monkeypatch, name)
-        result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
+        result = await translate(transcript.data["text"], "en", strategy=MULTI_PASS)
         for question in result["ambiguities"]:
             ids = [option["id"] for option in question["options"]]
             assert len(ids) == len(set(ids)), f"{name}: duplicate option id in {ids}"
@@ -222,7 +231,7 @@ def test_the_id_is_stable_because_the_client_keys_on_it():
 async def test_the_option_survives_serialisation(monkeypatch):
     """What the browser actually receives, through the real response model."""
     transcript = replay(monkeypatch, "get_me_after_school")
-    result = await translate(transcript.data["text"], "hi", strategy=ADAPTIVE)
+    result = await translate(transcript.data["text"], "hi", strategy=MULTI_PASS)
 
     body = TranslateResponse(
         translation=result["translation"],
