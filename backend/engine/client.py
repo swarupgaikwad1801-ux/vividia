@@ -60,6 +60,10 @@ class Usage:
     input_tokens: int = 0
     output_tokens: int = 0
     estimated_cost_usd: float = 0.0
+    # step name -> how long each call to that step took, in ms. Server-side
+    # only: it is not part of the wire contract, and it holds durations and
+    # step names, never anything the child wrote.
+    steps: dict[str, list[int]] = field(default_factory=dict)
     _started: float = field(default_factory=time.perf_counter)
 
     def record(self, role: ModelRole, prompt_tokens: int, completion_tokens: int) -> None:
@@ -70,9 +74,33 @@ class Usage:
             prompt_tokens * role.usd_per_m_input + completion_tokens * role.usd_per_m_output
         ) / 1_000_000
 
+    def record_step(self, step: str, elapsed_ms: int) -> None:
+        self.steps.setdefault(step, []).append(elapsed_ms)
+
+    def slowest_step(self) -> tuple[str, int]:
+        """The step with the longest single call, which is what to optimise."""
+        if not self.steps:
+            return ("", 0)
+        return max(
+            ((step, max(times)) for step, times in self.steps.items()),
+            key=lambda pair: pair[1],
+        )
+
     @property
     def latency_ms(self) -> int:
         return int((time.perf_counter() - self._started) * 1000)
+
+    def step_summary(self) -> str:
+        """One log line: how long each step took and how often it ran.
+
+        Safe to log by construction. It contains step names, counts and
+        milliseconds, and no part of it is derived from the child's text.
+        """
+        parts = [
+            f"{step}x{len(times)}={sum(times)}ms"
+            for step, times in sorted(self.steps.items())
+        ]
+        return " ".join(parts)
 
     def as_dict(self) -> dict:
         return {
@@ -141,14 +169,20 @@ async def call(
     max_tokens: int = 700,
     response_format: dict | None = None,
     attempts: int = 3,
+    step: str = "",
 ) -> str:
     """Make one model call, respecting the rate limit and counting the cost.
 
     Retries only on the failures that a retry can actually fix: timeouts,
     connection drops, 429 and 5xx. A 401 or 402 is final, and retrying it
     only burns the clock.
+
+    `step` names the pipeline step this call serves ("judge", "repair", ...) so
+    the latency budget can be measured per step. It defaults to the role, which
+    is coarser but never wrong.
     """
     role = ROLES[role_name]
+    step = step or role_name
     client, limiters = _state()
     limiter = limiters.setdefault(role_name, _Limiter(role.rpm))
 
@@ -157,6 +191,7 @@ async def call(
 
     for attempt in range(attempts):
         await limiter.wait()
+        call_started = time.perf_counter()
         try:
             response = await client.chat.completions.create(
                 model=role.model,
@@ -180,7 +215,17 @@ async def call(
                 last_error = error
                 await asyncio.sleep((2**attempt) * 0.5)
                 continue
-            raise EngineError("internal", f"{error.status_code}: {error.message}", False) from error
+            # Only the status code, never error.message: an upstream error body
+            # can quote the request, and we publish that we log no message
+            # content. The original exception is still chained for a debugger.
+            raise EngineError(
+                "internal", f"Token Factory returned HTTP {error.status_code}", False
+            ) from error
+
+        # Timed around the request only. The limiter's own wait is our
+        # throttling rather than the model's latency, and the child-facing
+        # total is Usage.latency_ms, which includes everything.
+        usage.record_step(step, int((time.perf_counter() - call_started) * 1000))
 
         if response.usage:
             usage.record(role, response.usage.prompt_tokens, response.usage.completion_tokens)
@@ -197,4 +242,8 @@ async def call(
         raise EngineError("rate_limited", "Token Factory rate limit", True) from last_error
     if isinstance(last_error, openai.APITimeoutError):
         raise EngineError("upstream_timeout", "Token Factory timed out", True) from last_error
-    raise EngineError("upstream_unavailable", f"model call failed: {last_error}", True) from last_error
+    raise EngineError(
+        "upstream_unavailable",
+        f"model call failed after {attempts} attempts: {type(last_error).__name__}",
+        True,
+    ) from last_error

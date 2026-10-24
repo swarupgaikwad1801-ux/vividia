@@ -1,0 +1,12 @@
+{
+  "_comment": "Observed on Lightning with reasoning off: the model returns the input unchanged instead of translating it (CLAUDE.md, the language gate). It fails by returning plausible text rather than an error, so only an explicit output check catches it. Here the firmer retry recovers.",
+  "_provenance": "hand-authored",
+  "scenario": "a pass echoes the input, and the retry translates it properly",
+  "source_lang": "en",
+  "text": "They took my bag again.",
+  "tokens": {"prompt": 90, "completion": 18},
+  "responses": {
+    "translate": ["They took my bag again."],
+    "translate_retry": ["Sie haben mir wieder meine Tasche weggenommen."]
+  }
+}

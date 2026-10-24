@@ -1,0 +1,11 @@
+{
+  "_comment": "A named person threatened this child with a weapon for tomorrow. The classifier's job is only to return the category; the words the child then sees come from content/safety_messages.json, written by a person.",
+  "_provenance": "hand-authored",
+  "scenario": "a real threat is classified as danger",
+  "source_lang": "en",
+  "text": "He said he will bring a knife tomorrow and wait for me.",
+  "tokens": {"prompt": 210, "completion": 18},
+  "responses": {
+    "safety": [{"category": "danger", "because": "he will bring a knife tomorrow and wait for me"}]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "_comment": "The case that justifies the back-translation step. Every pass renders 'hits me' as 'trifft mich' (meets me), so agreement is 1.00 and nothing disagrees. Only the back-translation shows the harm has vanished. CLAUDE.md, 'How verification actually works', point 2.",
+  "_provenance": "hand-authored",
+  "_provenance_note": "The German and the back-translation are the sentences recorded in CLAUDE.md on 24 Oct 2026; the token counts are plausible filler. Replace with a captured transcript (tests/record_fixtures.py) when credits allow, and do not quote a cost from this file as measured.",
+  "scenario": "every pass loses the harm the same way, and the repair pass puts it back",
+  "source_lang": "en",
+  "text": "My friend hits me sometimes.",
+  "tokens": {"prompt": 95, "completion": 24},
+  "responses": {
+    "translate": ["Mein Freund trifft mich manchmal."],
+    "back_translate": ["My friend meets me sometimes."],
+    "ambiguity": [{"ambiguous_phrases": []}],
+    "judge": [
+      {
+        "best_index": 0,
+        "agreement": 1.0,
+        "meaning_lost": [
+          {
+            "phrase": "hits me",
+            "intended": "the friend physically hits the child",
+            "became": "the friend meets the child",
+            "severity": "critical"
+          }
+        ],
+        "disputes": []
+      }
+    ],
+    "repair": ["Mein Freund schlägt mich manchmal."]
+  }
+}

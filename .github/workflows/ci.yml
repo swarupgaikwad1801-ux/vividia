@@ -1,0 +1,53 @@
+# Runs on every pull request, with no secrets and no network to Token Factory.
+#
+# NEBIUS_API_KEY is deliberately absent, so any test that tried to reach a real
+# model would fail loudly on a missing key rather than quietly spend credit.
+# ENGINE_MODE is pinned to "mock" for the same reason: the live-model tests in
+# tests/test_safety.py skip themselves unless it is "live".
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: backend tests (offline)
+    runs-on: ubuntu-latest
+    env:
+      ENGINE_MODE: mock
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: pytest
+        working-directory: backend
+        run: python -m pytest -q
+
+      # Catches the change that makes the app serve requests one after another:
+      # against the mock engine, 50 concurrent requests take about 1.5 s and 50
+      # serial ones take 75 s. Mock only, so it spends nothing.
+      - name: Load test (50 parallel, mocked engine)
+        working-directory: backend
+        run: python ../eval/load_test.py --requests 50
+
+      - name: Eval dry run
+        run: |
+          if [ -f eval/run_eval.py ]; then
+            python eval/run_eval.py --dry-run
+          else
+            echo "::notice::eval/run_eval.py does not exist yet (Neel owns it, see issue #3)."
+            echo "This step starts running on its own as soon as that file lands."
+          fi

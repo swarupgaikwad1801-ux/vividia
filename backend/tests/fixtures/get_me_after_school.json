@@ -1,0 +1,49 @@
+{
+  "_comment": "The case that justifies the separate ambiguity check. All five passes picked the lift-home reading, so the judge sees nothing to report: agreement 1.00, no meaning lost. The child's own sentence is what carries two readings, and only the child knows which. CLAUDE.md, 'How verification actually works', point 3.",
+  "_provenance": "hand-authored",
+  "_provenance_note": "The sentence and the two readings are the ones recorded in CLAUDE.md on 24 Oct 2026; token counts are plausible filler. Replace with a captured transcript (tests/record_fixtures.py) when credits allow.",
+  "scenario": "the passes all agree, and the child is still asked what they meant",
+  "source_lang": "en",
+  "text": "He said he would get me after school.",
+  "tokens": {"prompt": 102, "completion": 28},
+  "responses": {
+    "translate": ["Er hat gesagt, er holt mich nach der Schule ab."],
+    "back_translate": ["He said he would pick me up after school."],
+    "ambiguity": [
+      {
+        "ambiguous_phrases": [
+          {
+            "phrase": "get me after school",
+            "readings": [
+              {
+                "meaning": "he will come and find the child to hurt them",
+                "target_phrasing": "er kriegt mich nach der Schule"
+              },
+              {
+                "meaning": "he will collect the child to take them home",
+                "target_phrasing": "er holt mich nach der Schule ab"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "judge": [
+      {
+        "best_index": 0,
+        "agreement": 1.0,
+        "meaning_lost": [],
+        "disputes": []
+      }
+    ],
+    "question": [
+      {
+        "question": "When you said \"get me\", did you mean come and hurt you, or pick you up?",
+        "options": [
+          {"label": "Come and hurt me"},
+          {"label": "Pick me up to go home"}
+        ]
+      }
+    ]
+  }
+}

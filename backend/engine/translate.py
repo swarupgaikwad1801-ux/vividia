@@ -18,6 +18,7 @@ import asyncio
 import json
 import re
 
+from engine.budget import over_budget
 from engine.client import EngineError, Usage, call
 from engine.contract import Ambiguity, TranslationResult
 from engine.prompts import (
@@ -139,7 +140,9 @@ async def _one_pass(text, source_lang, target_lang, usage, temperature, decision
     system = TRANSLATE_SYSTEM.format(target_name=language_name(target_lang))
     if decisions:
         system += CLARIFIED_SUFFIX.format(decisions=decisions)
-    german = await call("fanout", system, text, usage, temperature=temperature, max_tokens=500)
+    german = await call(
+        "fanout", system, text, usage, temperature=temperature, max_tokens=500, step="translate"
+    )
 
     if untranslated(text, german, target_lang):
         # One firmer retry at a lower temperature before giving up on this
@@ -152,6 +155,7 @@ async def _one_pass(text, source_lang, target_lang, usage, temperature, decision
             usage,
             temperature=0.0,
             max_tokens=500,
+            step="translate_retry",
         )
         if untranslated(text, german, target_lang):
             raise EngineError(
@@ -166,7 +170,9 @@ async def _back(german, source_lang, target_lang, usage):
     system = BACK_TRANSLATE_SYSTEM.format(
         target_name=language_name(target_lang), source_name=language_name(source_lang)
     )
-    return await call("fanout", system, german, usage, temperature=0.2, max_tokens=500)
+    return await call(
+        "fanout", system, german, usage, temperature=0.2, max_tokens=500, step="back_translate"
+    )
 
 
 async def _repair(text, german, losses, source_lang, target_lang, usage):
@@ -194,6 +200,7 @@ async def _repair(text, german, losses, source_lang, target_lang, usage):
         usage,
         temperature=0.2,
         max_tokens=500,
+        step="repair",
     )
 
 
@@ -213,6 +220,7 @@ async def _find_ambiguity(text, source_lang, target_lang, usage):
         temperature=0.0,
         max_tokens=600,
         response_format=AMBIGUITY_SCHEMA,
+        step="ambiguity",
     )
     try:
         return json.loads(raw).get("ambiguous_phrases", [])
@@ -232,7 +240,14 @@ async def _judge(text, candidates, backs, source_lang, target_lang, usage):
         target_name=language_name(target_lang), source_name=language_name(source_lang)
     )
     raw = await call(
-        "judge", system, user, usage, temperature=0.0, max_tokens=900, response_format=JUDGE_SCHEMA
+        "judge",
+        system,
+        user,
+        usage,
+        temperature=0.0,
+        max_tokens=900,
+        response_format=JUDGE_SCHEMA,
+        step="judge",
     )
     try:
         return json.loads(raw)
@@ -255,6 +270,7 @@ async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
         temperature=0.3,
         max_tokens=300,
         response_format=QUESTION_SCHEMA,
+        step="question",
     )
     try:
         parsed = json.loads(raw)
@@ -348,6 +364,25 @@ async def _verify(text, candidates, source_lang, target_lang, usage, source_ambi
     }
 
 
+def _finish(result: dict, usage: Usage, strategy: str) -> TranslationResult:
+    """Attach the accounting every return path owes the caller.
+
+    `step_summary` and `budget_breaches` are for the log and are built from
+    step names and milliseconds, so neither can carry the child's words. They
+    are not part of the HTTP contract; main.py logs them and drops them.
+    """
+    return {
+        "errors_caught": 0,
+        "meaning_repaired": 0,
+        **result,
+        "calls_made": usage.calls_made,
+        "usage": usage.as_dict(),
+        "strategy_used": strategy,
+        "step_summary": usage.step_summary(),
+        "budget_breaches": over_budget(usage),
+    }
+
+
 async def translate(
     text: str,
     source_lang: str,
@@ -368,15 +403,15 @@ async def translate(
     if clarifications:
         decisions = _decisions_text(_ambiguities or [], clarifications)
         german = await _one_pass(text, source_lang, target_lang, usage, 0.2, decisions)
-        return {"translation": german, "confidence": 1.0, "ambiguities": [],
-                "errors_caught": 0, "calls_made": usage.calls_made,
-                "usage": usage.as_dict(), "strategy_used": strategy}
+        return _finish(
+            {"translation": german, "confidence": 1.0, "ambiguities": []}, usage, strategy
+        )
 
     if strategy == BASELINE:
         german = await _one_pass(text, source_lang, target_lang, usage, 0.2)
-        return {"translation": german, "confidence": 0.0, "ambiguities": [],
-                "errors_caught": 0, "calls_made": usage.calls_made,
-                "usage": usage.as_dict(), "strategy_used": BASELINE}
+        return _finish(
+            {"translation": german, "confidence": 0.0, "ambiguities": []}, usage, BASELINE
+        )
 
     if strategy == MULTI_PASS:
         candidates, ambiguous = await asyncio.gather(
@@ -386,8 +421,7 @@ async def translate(
             _find_ambiguity(text, source_lang, target_lang, usage),
         )
         result = await _verify(text, list(candidates), source_lang, target_lang, usage, ambiguous)
-        return {**result, "calls_made": usage.calls_made, "usage": usage.as_dict(),
-                "strategy_used": MULTI_PASS}
+        return _finish(result, usage, MULTI_PASS)
 
     # Adaptive: two passes first, then decide whether this sentence needs more.
     first = await asyncio.gather(
@@ -395,9 +429,9 @@ async def translate(
     )
     passes_agree = _normalise(first[0]) == _normalise(first[1])
     if passes_agree and not looks_risky(text):
-        return {"translation": first[0], "confidence": 1.0, "ambiguities": [],
-                "errors_caught": 0, "calls_made": usage.calls_made,
-                "usage": usage.as_dict(), "strategy_used": ADAPTIVE}
+        return _finish(
+            {"translation": first[0], "confidence": 1.0, "ambiguities": []}, usage, ADAPTIVE
+        )
 
     extra, ambiguous = await asyncio.gather(
         asyncio.gather(
@@ -406,5 +440,4 @@ async def translate(
         _find_ambiguity(text, source_lang, target_lang, usage),
     )
     result = await _verify(text, [*first, *extra], source_lang, target_lang, usage, ambiguous)
-    return {**result, "calls_made": usage.calls_made, "usage": usage.as_dict(),
-            "strategy_used": ADAPTIVE}
+    return _finish(result, usage, ADAPTIVE)

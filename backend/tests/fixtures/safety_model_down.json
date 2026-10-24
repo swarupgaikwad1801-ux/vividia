@@ -1,0 +1,11 @@
+{
+  "_comment": "The classifier is a prompt, not a gate. When Token Factory is unreachable it must return 'none' and let the child carry on writing, because the always-visible help button is the actual safety net. Three failures, so all three attempts in engine.client.call are used up.",
+  "_provenance": "hand-authored",
+  "scenario": "the model is unreachable and the child is not blocked",
+  "source_lang": "en",
+  "text": "He said he will bring a knife tomorrow and wait for me.",
+  "tokens": {"prompt": 210, "completion": 0},
+  "responses": {
+    "safety": [{"fail": "timeout"}, {"fail": "timeout"}, {"fail": "timeout"}]
+  }
+}

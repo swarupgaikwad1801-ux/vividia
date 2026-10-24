@@ -1,0 +1,11 @@
+{
+  "_comment": "Strategy C has to be able to say no. A plain sentence with no risk marker, where two independent passes agree word for word, must cost 2 calls and stop. If this test ever starts reporting more, C has quietly become B and the cost argument in the README is no longer true.",
+  "_provenance": "hand-authored",
+  "scenario": "adaptive stops at the triage when a sentence does not need verifying",
+  "source_lang": "en",
+  "text": "Today we had maths and then sport.",
+  "tokens": {"prompt": 88, "completion": 14},
+  "responses": {
+    "translate": ["Heute hatten wir Mathe und danach Sport."]
+  }
+}
