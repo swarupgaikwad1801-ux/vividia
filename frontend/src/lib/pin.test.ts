@@ -229,6 +229,34 @@ test("a refused-while-waiting attempt does not count as another wrong try", asyn
   assert.equal(after, first, "hammering during the wait must not extend it");
 });
 
+test("a clock moved backwards never makes the wait longer than the cap", async () => {
+  await setPin("1234", store);
+  let clock = 1_000_000;
+  Date.now = () => clock;
+
+  for (let i = 0; i < FREE_TRIES + 10; i++) {
+    clock += MAX_DELAY_MS + 1;
+    await checkPin("0000", store);
+  }
+  clock -= 60 * 60 * 1000; // the device clock jumps back an hour
+
+  const blocked = refused(await checkPin("1234", store));
+  assert.equal(blocked.reason, "waiting");
+  assert.ok(blocked.retryInMs <= MAX_DELAY_MS, `waited ${blocked.retryInMs} ms, over the cap`);
+
+  clock += MAX_DELAY_MS + 1;
+  assert.deepEqual(await checkPin("1234", store), { ok: true }, "and it opens once the cap has passed");
+});
+
+test("a try count from the future is capped, not an hour-long lock", async () => {
+  await setPin("1234", store);
+  Date.now = () => 1_000_000;
+  store.data.set(TRIES_KEY, JSON.stringify({ fails: FREE_TRIES + 3, at: 1_000_000 + 3_600_000 }));
+
+  const blocked = refused(await checkPin("1234", store));
+  assert.ok(blocked.retryInMs <= MAX_DELAY_MS);
+});
+
 // --- clearing --------------------------------------------------------------
 
 test("clearing removes the PIN and the attempt count", async () => {
@@ -271,6 +299,28 @@ test("corrupt stored data is treated as no PIN, not as an error", async () => {
   assert.equal(pinStatus(store), "none");
   const result = await checkPin("1234", store);
   assert.equal(refused(result).reason, "none");
+});
+
+for (const [label, stored] of [
+  ["an empty object", "{}"],
+  ["a bare string", '"x"'],
+  ["a future version", JSON.stringify({ v: 2, salt: "aa", hash: "bb" })],
+  ["a missing hash", JSON.stringify({ v: 1, salt: "aa" })],
+  ["a number as salt", JSON.stringify({ v: 1, salt: 7, hash: "bb" })],
+] as const) {
+  test(`valid JSON with the wrong shape (${label}) reads as no PIN, not a PIN nothing can open`, async () => {
+    store.data.set(PIN_KEY, stored);
+
+    assert.equal(pinStatus(store), "none");
+    assert.equal(refused(await checkPin("1234", store)).reason, "none");
+  });
+}
+
+test("a damaged try count is ignored rather than trusted", async () => {
+  await setPin("1234", store);
+  store.data.set(TRIES_KEY, JSON.stringify({ fails: "lots", at: "yesterday" }));
+
+  assert.deepEqual(await checkPin("1234", store), { ok: true });
 });
 
 test("storage that throws reads as no PIN set", () => {

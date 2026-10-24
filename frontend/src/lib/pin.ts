@@ -162,10 +162,46 @@ function sameHash(a: string, b: string): boolean {
   return diff === 0;
 }
 
+/**
+ * The stored PIN, only if it has the shape we wrote.
+ *
+ * Valid JSON is not enough: `{}` or `"x"` under PIN_KEY would otherwise read
+ * as "a PIN is set" that no PIN can ever match, which locks the child out of
+ * their own app. Anything else is treated as absent, the same as corrupt.
+ */
+function readPin(from?: PinStore): StoredPin | undefined {
+  const record = read<Partial<StoredPin>>(PIN_KEY, from);
+  if (
+    record &&
+    typeof record === "object" &&
+    record.v === 1 &&
+    typeof record.salt === "string" &&
+    typeof record.hash === "string"
+  ) {
+    return record as StoredPin;
+  }
+  return undefined;
+}
+
+/** The wrong-try count, only if it has the shape we wrote. */
+function readTries(from?: PinStore): StoredTries {
+  const tries = read<Partial<StoredTries>>(TRIES_KEY, from);
+  if (
+    tries &&
+    typeof tries === "object" &&
+    Number.isInteger(tries.fails) &&
+    (tries.fails as number) >= 0 &&
+    Number.isFinite(tries.at)
+  ) {
+    return tries as StoredTries;
+  }
+  return { fails: 0, at: 0 };
+}
+
 /** Is a PIN set on this device, and can we even tell? */
 export function pinStatus(from?: PinStore): PinStatus {
   if (!store(from)) return "unavailable";
-  return read<StoredPin>(PIN_KEY, from) ? "set" : "none";
+  return readPin(from) ? "set" : "none";
 }
 
 /**
@@ -207,16 +243,26 @@ export async function setPin(pin: string, from?: PinStore): Promise<SetResult> {
 export async function checkPin(pin: string, from?: PinStore): Promise<CheckResult> {
   if (!store(from)) return { ok: false, reason: "unavailable", retryInMs: 0 };
 
-  const record = read<StoredPin>(PIN_KEY, from);
+  const record = readPin(from);
   if (!record) return { ok: false, reason: "none", retryInMs: 0 };
   if (!isValidPin(pin)) return { ok: false, reason: "format", retryInMs: 0 };
 
-  const tries = read<StoredTries>(TRIES_KEY, from) ?? { fails: 0, at: 0 };
-  const waited = Date.now() - tries.at;
+  let tries = readTries(from);
+  // A clock moved backwards (set by hand, a bad sync) makes the last wrong try
+  // look like it is in the future. Re-anchor it to now, so the wait runs from
+  // here and ends within the cap; otherwise the child would wait until the
+  // clock caught up, which can be hours. The cap is what keeps this from being
+  // a lockout.
+  const now = Date.now();
+  if (tries.at > now) {
+    tries = { ...tries, at: now };
+    write(TRIES_KEY, tries, from);
+  }
+  const waited = now - tries.at;
   const owed = delayAfter(tries.fails);
   if (owed > 0 && waited < owed) {
     // Refused without hashing, so guessing fast buys nothing.
-    return { ok: false, reason: "waiting", retryInMs: owed - waited };
+    return { ok: false, reason: "waiting", retryInMs: Math.min(owed - waited, MAX_DELAY_MS) };
   }
 
   if (sameHash(await hash(record.salt, pin), record.hash)) {
