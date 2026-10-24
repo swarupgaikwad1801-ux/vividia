@@ -27,6 +27,8 @@ owns child-facing copy in content/; this lives here because it is produced by
 engine failures, and it should move to content/ if Neel would rather own it.
 """
 
+import traceback
+
 from engine.client import EngineError
 
 # ISO 639-1 codes we ship copy for. "en" is the fallback for anything else,
@@ -99,13 +101,31 @@ def message_for(code: str, lang: str) -> str:
     return copy.get(lang) or copy[FALLBACK_LANG]
 
 
+def safe_traceback(error: BaseException) -> str:
+    """Where it broke, without what it broke on.
+
+    `traceback.format_exception` ends with the exception's own text, and
+    `log.exception` prints the same thing. Either would put an arbitrary
+    exception's message in the log, and an exception's message can contain
+    whatever was passed to it, up to and including the child's disclosure.
+    `format_tb` gives the frames only: our files, lines and source, which never
+    hold a child's words.
+    """
+    return "".join(traceback.format_tb(error.__traceback__))
+
+
 def to_error_response(error: BaseException, lang: str) -> dict:
     """Map any exception to an ErrorResponse body.
 
     An EngineError already knows what went wrong and whether a retry is worth
-    offering, so its code is used as-is. Anything else is a bug of ours and
-    becomes "internal": the developer message carries the exception type for the
-    logs, and the child's message mentions none of it.
+    offering, so its code and its message are used as-is: those messages are
+    written in our own source and carry nothing about the child.
+
+    Any other exception contributes its TYPE and nothing else. Its message is
+    dropped on purpose. We publish that the backend logs no message content, and
+    `str(error)` is exactly the hole that claim leaks through: anything that
+    raised with the child's text in it would otherwise reach the response body
+    and the log. Losing a line of debug detail is the cheaper mistake.
     """
     if isinstance(error, EngineError):
         code = error.code if error.code in MESSAGES else "internal"
@@ -114,11 +134,11 @@ def to_error_response(error: BaseException, lang: str) -> dict:
     elif isinstance(error, TimeoutError):
         code = "upstream_timeout"
         retryable = True
-        message = f"{type(error).__name__}: {error}"
+        message = f"{type(error).__name__} (message withheld: may contain the child's text)"
     else:
         code = "internal"
         retryable = RETRYABLE["internal"]
-        message = f"{type(error).__name__}: {error}"
+        message = f"{type(error).__name__} (message withheld: may contain the child's text)"
 
     return {
         "code": code,

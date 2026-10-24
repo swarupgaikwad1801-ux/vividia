@@ -8,14 +8,29 @@ Offline; no model calls.
 """
 
 import json
+import logging
 
 import pytest
 import recorded
+from fastapi.testclient import TestClient
 
+import main
 from app.schemas import ErrorCode, ErrorResponse
 from engine.client import EngineError
-from engine.errors import LANGS, MESSAGES, RETRYABLE, message_for, status_for, to_error_response
+from engine.errors import (
+    LANGS,
+    MESSAGES,
+    RETRYABLE,
+    message_for,
+    safe_traceback,
+    status_for,
+    to_error_response,
+)
 from engine.translate import BASELINE, translate
+
+# raise_server_exceptions=False so the app's own handler answers an unexpected
+# bug, the way it would in production. The default re-raises it into the test.
+client = TestClient(main.app, raise_server_exceptions=False)
 
 
 # --- the copy exists, for every code and every language ----------------------
@@ -174,3 +189,159 @@ async def test_running_out_of_credit_is_final_and_points_at_people(monkeypatch):
     assert "krisenchat.de" in body["message_child"]
     assert "116 111" in body["message_child"]
     assert transcript.count("translate") == 1, "a 402 must not be retried"
+
+
+# --- over the wire: what the browser actually receives -----------------------
+
+CHILD_TEXT = "They took my bag again and everyone laughed at me."
+
+
+def _failing(error):
+    async def _call(*args, **kwargs):  # noqa: ARG001 - stands in for the engine
+        raise error
+
+    return _call
+
+
+def test_a_rejected_request_answers_with_an_error_response_not_a_field_list():
+    """FastAPI's own 422 body is a list of field errors with nothing a child
+    could read. The contract says every non-2xx body IS an ErrorResponse."""
+    response = client.post("/api/translate", json={"source_lang": "hi"})
+
+    assert response.status_code == 422
+    body = ErrorResponse.model_validate(response.json())
+    assert body.code == ErrorCode.INVALID_INPUT
+    assert body.retryable is False
+    # Read from the body that failed validation, so the child gets their own
+    # language even though the request never reached a route.
+    assert body.message_child == MESSAGES["invalid_input"]["hi"]
+
+
+def test_a_rejected_request_with_no_language_still_gets_a_sentence():
+    body = ErrorResponse.model_validate(client.post("/api/translate", json={}).json())
+    assert body.message_child == MESSAGES["invalid_input"]["en"]
+
+
+@pytest.mark.parametrize(
+    "error,status,retryable",
+    [
+        (EngineError("rate_limited", "Token Factory rate limit", True), 429, True),
+        (EngineError("upstream_timeout", "Token Factory timed out", True), 504, True),
+        (EngineError("credit_exhausted", "Nebius credit exhausted", False), 503, False),
+    ],
+)
+def test_an_engine_failure_reaches_the_browser_with_its_own_code(
+    monkeypatch, error, status, retryable
+):
+    """Before this, main.py mapped every failure to internal/500, so the client
+    could not tell a rate limit from an exhausted account."""
+    monkeypatch.setattr(main.ENGINE, "translate", _failing(error))
+
+    response = client.post(
+        "/api/translate", json={"text": CHILD_TEXT, "source_lang": "hi"}
+    )
+
+    assert response.status_code == status
+    body = ErrorResponse.model_validate(response.json())
+    assert body.code.value == error.code
+    assert body.retryable is retryable
+    assert body.message_child == MESSAGES[error.code]["hi"]
+
+
+def test_an_unexpected_bug_is_still_one_calm_sentence(monkeypatch):
+    monkeypatch.setattr(main.ENGINE, "translate", _failing(KeyError("ambiguities")))
+
+    response = client.post(
+        "/api/translate", json={"text": CHILD_TEXT, "source_lang": "en"}
+    )
+
+    assert response.status_code == 500
+    body = ErrorResponse.model_validate(response.json())
+    assert body.code == ErrorCode.INTERNAL
+    assert body.message_child == MESSAGES["internal"]["en"]
+
+
+@pytest.mark.parametrize(
+    "path,payload",
+    [
+        ("/api/translate", {"text": CHILD_TEXT, "source_lang": "hi"}),
+        ("/api/clarify", {"text": CHILD_TEXT, "source_lang": "hi", "choices": {"a": "b"}}),
+    ],
+)
+def test_no_error_body_ever_repeats_what_the_child_wrote(monkeypatch, path, payload):
+    """A disclosure must not come back in an error body, where it could be
+    logged by a proxy or shown in a browser console."""
+    monkeypatch.setattr(main.ENGINE, "translate", _failing(RuntimeError(CHILD_TEXT)))
+
+    response = client.post(path, json=payload)
+
+    assert response.status_code >= 400
+    assert CHILD_TEXT not in response.text
+    assert "my bag" not in response.text.lower()
+
+
+def test_a_failure_body_carries_no_traceback_or_model_name(monkeypatch):
+    monkeypatch.setattr(
+        main.ENGINE,
+        "translate",
+        _failing(EngineError("internal", "nvidia/Nemotron-3.5-Super-VL returned 500", False)),
+    )
+
+    response = client.post(
+        "/api/translate", json={"text": CHILD_TEXT, "source_lang": "en"}
+    )
+    body = ErrorResponse.model_validate(response.json())
+
+    # The developer half keeps the detail the logs need...
+    assert "Nemotron" in body.message
+    # ...and the child's half carries none of it.
+    assert "Nemotron" not in body.message_child
+    assert "Traceback" not in response.text
+
+
+# --- "the backend logs no message content", enforced ------------------------
+
+
+def test_the_frames_are_kept_and_the_exception_text_is_not():
+    """safe_traceback must give us the file and line, and drop the message."""
+    try:
+        raise RuntimeError(CHILD_TEXT)
+    except RuntimeError as error:
+        frames = safe_traceback(error)
+
+    assert "test_errors.py" in frames, "we still need to know where it broke"
+    # The frames quote our own source, so the word "RuntimeError" appears as
+    # code. What must not appear is the exception's message line, which is where
+    # a value the exception was given would show up.
+    assert CHILD_TEXT not in frames
+    assert f"RuntimeError: {CHILD_TEXT}" not in frames
+
+
+def test_nothing_the_child_wrote_reaches_the_log(monkeypatch, caplog):
+    """The README and CLAUDE.md both publish that the backend logs no message
+    content. This is that claim as a test rather than as an intention."""
+    monkeypatch.setattr(main.ENGINE, "translate", _failing(RuntimeError(CHILD_TEXT)))
+
+    with caplog.at_level(logging.DEBUG, logger="vividia"):
+        client.post("/api/translate", json={"text": CHILD_TEXT, "source_lang": "en"})
+
+    logged = "\n".join(record.getMessage() for record in caplog.records)
+    assert logged, "the failure should still be logged somehow"
+    assert CHILD_TEXT not in logged
+    for word in ("bag", "laughed", "took my"):
+        assert word not in logged.lower(), f"the log quotes the child: {word!r}"
+
+
+def test_a_successful_request_logs_no_text_either(caplog):
+    with caplog.at_level(logging.DEBUG, logger="vividia"):
+        response = client.post(
+            "/api/translate", json={"text": CHILD_TEXT, "source_lang": "en"}
+        )
+
+    assert response.status_code == 200
+    logged = "\n".join(record.getMessage() for record in caplog.records)
+    assert CHILD_TEXT not in logged
+    assert "laughed" not in logged.lower()
+    # The shape of a request is fine to log, and useful: it is what tells us a
+    # sentence escalated without recording the sentence.
+    assert "chars=" in logged

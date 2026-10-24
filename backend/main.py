@@ -14,13 +14,15 @@ import logging
 import os
 import time
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Query, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from engine.client import ROLES
+from engine.errors import message_for, safe_traceback, status_for, to_error_response
 from app.schemas import (
     ClarifyRequest,
-    ErrorCode,
     ErrorResponse,
     HealthResponse,
     ReportRequest,
@@ -72,10 +74,73 @@ def _usage_of(result: dict, started: float) -> dict:
     }
 
 
-def _fail(code: ErrorCode, message: str, message_child: str, retryable: bool, status: int):
-    """Raise an HTTP error whose body always matches ErrorResponse."""
-    body = ErrorResponse(code=code, message=message, message_child=message_child, retryable=retryable)
-    raise HTTPException(status_code=status, detail=body.model_dump())
+class ChildSafeError(Exception):
+    """A failure already turned into something a child can read.
+
+    Raised instead of HTTPException because FastAPI wraps an HTTPException's
+    detail in a {"detail": ...} envelope, and the contract says every non-2xx
+    body IS an ErrorResponse. The handler below writes the body unwrapped.
+    """
+
+    def __init__(self, error: BaseException, lang: str):
+        self.body = ErrorResponse.model_validate(to_error_response(error, lang))
+        self.status = status_for(error)
+        super().__init__(self.body.message)
+
+
+@app.exception_handler(ChildSafeError)
+async def _child_safe_error(request: Request, error: ChildSafeError) -> JSONResponse:
+    # The code and whether a retry is worth offering go in the body; only the
+    # developer half is logged, and it never carries the child's text.
+    log.warning("%s %s -> %s: %s", request.method, request.url.path, error.body.code.value, error.body.message)
+    return JSONResponse(status_code=error.status, content=error.body.model_dump(mode="json"))
+
+
+@app.exception_handler(RequestValidationError)
+async def _invalid_input(request: Request, error: RequestValidationError) -> JSONResponse:
+    """FastAPI's own 422 body is a list of field errors, which is not an
+    ErrorResponse and has nothing a child could read. Replace it.
+
+    The child's language is in the body that just failed validation, so read it
+    if it arrived and fall back to English if it did not.
+    """
+    lang = "en"
+    try:
+        body = error.body if isinstance(error.body, dict) else {}
+        lang = body.get("source_lang") or body.get("child_lang") or "en"
+    except Exception:  # noqa: BLE001 - a malformed body must not break the error path
+        pass
+
+    fields = [".".join(str(part) for part in item.get("loc", [])) for item in error.errors()]
+    log.info("%s %s rejected: %s", request.method, request.url.path, ", ".join(fields))
+    body = ErrorResponse(
+        code="invalid_input",
+        message=f"invalid request: {', '.join(fields)}",
+        message_child=message_for("invalid_input", lang),
+        retryable=False,
+    )
+    return JSONResponse(status_code=422, content=body.model_dump(mode="json"))
+
+
+@app.exception_handler(Exception)
+async def _unexpected(request: Request, error: Exception) -> JSONResponse:
+    """Last line of defence: a bug anywhere must still reach the child as one
+    calm sentence rather than as a stack trace.
+
+    log.exception is deliberately not used. It prints the exception's own text
+    as the last line of the traceback, and that text can contain whatever was
+    passed to the exception, including the child's disclosure. safe_traceback
+    gives the frames without it, which is what we actually need to fix a bug.
+    """
+    log.error(
+        "%s %s failed: %s\n%s",
+        request.method,
+        request.url.path,
+        type(error).__name__,
+        safe_traceback(error),
+    )
+    body = ErrorResponse.model_validate(to_error_response(error, "en"))
+    return JSONResponse(status_code=500, content=body.model_dump(mode="json"))
 
 
 @app.get("/api/health", response_model=HealthResponse)
@@ -101,17 +166,10 @@ async def translate(request: TranslateRequest) -> TranslateResponse:
             ),
             ENGINE.safety_check(request.text, request.source_lang),
         )
-    except TimeoutError:
-        _fail(
-            ErrorCode.UPSTREAM_TIMEOUT,
-            "engine timed out",
-            "That took too long. Try again?",
-            retryable=True,
-            status=504,
-        )
     except Exception as error:  # noqa: BLE001 - the child must never see a traceback
-        log.exception("translate failed: %s", type(error).__name__)
-        _fail(ErrorCode.INTERNAL, str(error), "Something went wrong. Your words are safe.", False, 500)
+        # engine/errors.py decides the code, the status and the retry advice, so
+        # a rate limit and an exhausted account no longer both read as "internal".
+        raise ChildSafeError(error, request.source_lang) from error
 
     log.info("translate lang=%s chars=%d calls=%d", request.source_lang, len(request.text), result["calls_made"])
     return TranslateResponse(
@@ -127,12 +185,16 @@ async def translate(request: TranslateRequest) -> TranslateResponse:
 @app.post("/api/clarify", response_model=TranslateResponse)
 async def clarify(request: ClarifyRequest) -> TranslateResponse:
     started = time.perf_counter()
-    result, safety = await asyncio.gather(
-        ENGINE.translate(
-            request.text, request.source_lang, request.target_lang, clarifications=request.choices
-        ),
-        ENGINE.safety_check(request.text, request.source_lang),
-    )
+    try:
+        result, safety = await asyncio.gather(
+            ENGINE.translate(
+                request.text, request.source_lang, request.target_lang, clarifications=request.choices
+            ),
+            ENGINE.safety_check(request.text, request.source_lang),
+        )
+    except Exception as error:  # noqa: BLE001
+        raise ChildSafeError(error, request.source_lang) from error
+
     return TranslateResponse(
         translation=result["translation"],
         confidence=result["confidence"],
@@ -147,7 +209,11 @@ async def clarify(request: ClarifyRequest) -> TranslateResponse:
 async def report(request: ReportRequest) -> ReportResponse:
     started = time.perf_counter()
     entries = [entry.model_dump() for entry in request.entries]
-    result = await ENGINE.report(entries, request.child_lang)
+    try:
+        result = await ENGINE.report(entries, request.child_lang)
+    except Exception as error:  # noqa: BLE001
+        raise ChildSafeError(error, request.child_lang) from error
+
     return ReportResponse(
         child_version=result["child_version"],
         german_version=result["german_version"],
@@ -166,5 +232,9 @@ async def resources(
     lang: str = Query(description="ISO 639-1 code of the child's language"),
     state: str = Query(default="", description="German state code, e.g. 'BW'; optional"),
 ) -> ResourcesResponse:
-    found = await ENGINE.resources(state, lang)
+    try:
+        found = await ENGINE.resources(state, lang)
+    except Exception as error:  # noqa: BLE001
+        raise ChildSafeError(error, lang) from error
+
     return ResourcesResponse(resources=found, source="fallback")

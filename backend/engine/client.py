@@ -180,7 +180,12 @@ async def call(
                 last_error = error
                 await asyncio.sleep((2**attempt) * 0.5)
                 continue
-            raise EngineError("internal", f"{error.status_code}: {error.message}", False) from error
+            # Only the status code, never error.message: an upstream error body
+            # can quote the request, and we publish that we log no message
+            # content. The original exception is still chained for a debugger.
+            raise EngineError(
+                "internal", f"Token Factory returned HTTP {error.status_code}", False
+            ) from error
 
         if response.usage:
             usage.record(role, response.usage.prompt_tokens, response.usage.completion_tokens)
@@ -197,4 +202,8 @@ async def call(
         raise EngineError("rate_limited", "Token Factory rate limit", True) from last_error
     if isinstance(last_error, openai.APITimeoutError):
         raise EngineError("upstream_timeout", "Token Factory timed out", True) from last_error
-    raise EngineError("upstream_unavailable", f"model call failed: {last_error}", True) from last_error
+    raise EngineError(
+        "upstream_unavailable",
+        f"model call failed after {attempts} attempts: {type(last_error).__name__}",
+        True,
+    ) from last_error
