@@ -218,3 +218,16 @@ Thu 29 Oct by 22:00. Day-by-day plan: see `PLAN.md`.
   with `402 credit_balance_exhausted`.
 - **Base URL and model IDs: copy from the Nebius console or run
   `py -m engine.smoke_test --list-models`. Never guess them.**
+- Confirmed 24 Oct 2026 with a working key:
+  - Base URL: `https://api.tokenfactory.nebius.com/v1/`
+  - Nemotron models on our key: `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`
+    (Nano, translation passes), `nvidia/nemotron-3-super-120b-a12b` (judge),
+    `nvidia/Nemotron-3-Ultra-550b-a55b` (judge candidate),
+    `nvidia/Nemotron-3.5-Super-VL` (reads images), `nvidia/Nemotron-3_5-Lightning`.
+  - First Nano call: 4.35 s, 37 tokens in / 232 out for a 12-word answer, so
+    Nano reasons by default. Test reasoning off for the fan-out passes.
+  - Its translation "über mich gelacht" (instead of "mich ausgelacht") is a
+    real example of the meaning drift our pipeline exists to catch.
+- **API keys live only in `.env`.** Never in any other file inside the repo
+  (a txt file of keys in the repo is one `git add .` away from being public).
+  Keep a personal copy outside the repo folder.
