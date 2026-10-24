@@ -55,7 +55,17 @@ app = FastAPI(
 # Tighten this to the deployed origin before submitting.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    # The deployed frontend's origin is set as ALLOWED_ORIGINS on the host,
+    # comma separated. Without it only local development works, which is the
+    # safe default: a wildcard would let any page call this backend and spend
+    # our credits.
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv(
+            "ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+        ).split(",")
+        if origin.strip()
+    ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
