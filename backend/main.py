@@ -266,16 +266,16 @@ async def report(request: ReportRequest, http: Request) -> ReportResponse:
     except Exception as error:  # noqa: BLE001
         raise ChildSafeError(error, request.child_lang) from error
 
+    usage = _usage_of(result, started)
+    GUARD.record_spend(usage["estimated_cost_usd"])
+
+    # calls_made was hard-coded to 1 here. A report makes no model calls at
+    # all now, and the live check counter in the UI reads this number, so it
+    # has to come from the engine's own accounting rather than from a guess.
     return ReportResponse(
         child_version=result["child_version"],
         german_version=result["german_version"],
-        usage={
-            "calls_made": 1,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "latency_ms": int((time.perf_counter() - started) * 1000),
-            "estimated_cost_usd": 0.0,
-        },
+        usage=usage,
     )
 
 

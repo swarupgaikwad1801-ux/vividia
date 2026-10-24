@@ -13,19 +13,27 @@ behalf.
 The timeline used is the five approved entries from `content/demo_story.json`,
 read read-only, so the test and the one-click demo cannot drift apart.
 
-Replays recorded transcripts; no live model calls.
+A report makes no model calls, so there is nothing to replay here.
 """
 
 import json
 
 import pytest
-import recorded
 
 from app.schemas import ReportResponse
 from engine.client import EngineError
 from engine.config import REPO_ROOT
 from engine.report import report
-from engine.report_text import FOOTER, HEADER, LABELS, format_date
+from engine.report_text import (
+    FOOTER,
+    HEADER,
+    LABELS,
+    OVERVIEW_LABELS,
+    PLACES,
+    format_date,
+    overview_for,
+    place_for,
+)
 
 DEMO = json.loads(
     (REPO_ROOT / "content" / "demo_story.json").read_text(encoding="utf-8")
@@ -33,11 +41,9 @@ DEMO = json.loads(
 TIMELINE = DEMO["timeline"]
 CHILD_LANG = DEMO["persona"]["child_lang"]
 
-FAST = 100_000
-
 # Words that would turn a record into an assessment. Checked against the
-# generated overview and the fixed frame, never against the child's own
-# sentences: those are theirs and may say anything.
+# frame and the overview, never against the child's own sentences: those are
+# theirs and may say anything.
 JUDGEMENT = [
     "traumatised", "traumatized", "distressed", "struggling", "vulnerable",
     "isolated", "victim", "bullying", "harassment", "clearly", "obviously",
@@ -47,25 +53,12 @@ JUDGEMENT = [
 ]
 
 
-def replay(monkeypatch, name="report_amara"):
-    transcript = recorded.load(name)
-    recorded.install(monkeypatch, transcript, rpm=FAST)
-    return transcript
-
-
-@pytest.fixture
-def built(monkeypatch):
-    replay(monkeypatch)
-    return None
-
-
 # --- the child's words survive ----------------------------------------------
 
 
-async def test_every_approved_german_sentence_appears_untouched(monkeypatch):
+async def test_every_approved_german_sentence_appears_untouched():
     """The sentences the child confirmed word by word are what the adult reads.
     A summary in their place would be a paraphrase nobody approved."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, CHILD_LANG)
 
@@ -75,10 +68,9 @@ async def test_every_approved_german_sentence_appears_untouched(monkeypatch):
         )
 
 
-async def test_every_sentence_the_child_wrote_appears_in_their_own_version(monkeypatch):
+async def test_every_sentence_the_child_wrote_appears_in_their_own_version():
     """The child approves what they can read, so their version has to carry the
     same entries, or they are approving something they never saw."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, CHILD_LANG)
 
@@ -86,10 +78,9 @@ async def test_every_sentence_the_child_wrote_appears_in_their_own_version(monke
         assert entry["text_child"] in result["child_version"]
 
 
-async def test_the_place_and_the_people_stay_in_the_childs_words(monkeypatch):
+async def test_the_place_and_the_people_stay_in_the_childs_words():
     """"two older boys" is the child's description. It must not be tidied into
     a category by us or by a model."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, CHILD_LANG)
 
@@ -97,8 +88,7 @@ async def test_the_place_and_the_people_stay_in_the_childs_words(monkeypatch):
     assert "some kids in my class" in result["child_version"]
 
 
-async def test_the_entries_are_in_date_order(monkeypatch):
-    replay(monkeypatch)
+async def test_the_entries_are_in_date_order():
 
     result = await report(TIMELINE, CHILD_LANG)
     positions = [
@@ -112,10 +102,9 @@ async def test_the_entries_are_in_date_order(monkeypatch):
 # --- the frame is ours, and says what this is not ---------------------------
 
 
-async def test_the_header_and_footer_are_the_fixed_text(monkeypatch):
+async def test_the_header_and_footer_are_the_fixed_text():
     """An adult reading a tidy German document may assume a professional made
     it. The frame says a child did, and it is not model-generated."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, CHILD_LANG)
 
@@ -125,10 +114,9 @@ async def test_the_header_and_footer_are_the_fixed_text(monkeypatch):
     assert FOOTER[CHILD_LANG] in result["child_version"]
 
 
-async def test_the_report_never_says_any_of_it_is_proven(monkeypatch):
+async def test_the_report_never_says_any_of_it_is_proven():
     """CLAUDE.md: never a judgement that an allegation is true. The footer
     states plainly that this records what the child said happened."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, CHILD_LANG)
 
@@ -136,10 +124,9 @@ async def test_the_report_never_says_any_of_it_is_proven(monkeypatch):
     assert "nicht ist" in result["german_version"], "the German footer is missing its limits"
 
 
-async def test_neither_version_judges_diagnoses_or_labels(monkeypatch):
+async def test_neither_version_judges_diagnoses_or_labels():
     """Checked against everything except the child's own sentences, which are
     theirs and may say anything they like."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, CHILD_LANG)
 
@@ -151,60 +138,103 @@ async def test_neither_version_judges_diagnoses_or_labels(monkeypatch):
             assert word not in text.lower(), f"{version} says {word!r}"
 
 
-async def test_the_overview_is_included_but_is_not_the_report(monkeypatch):
-    transcript = replay(monkeypatch)
-    recorded_overview = transcript.data["responses"]["report"][0]
+# --- the overview: the reason this module has no model in it ---------------
+#
+# Neel's review on PR #19: the first draft asked a model for the German
+# overview and the child's overview as two independent strings in one call.
+# The child can only read and approve the one in their own language, so
+# nothing made the German say the same thing - an unapproved, unverified
+# German paragraph in front of the adult, in the one document whose promise is
+# that the adult reads only what the child approved.
 
+
+async def test_the_two_overviews_say_the_same_thing():
+    """The test the review asked for. Built from the same entries by the same
+    template, so approving one really is approving the other."""
     result = await report(TIMELINE, CHILD_LANG)
 
-    assert recorded_overview["overview_target"] in result["german_version"]
-    assert recorded_overview["overview_child"] in result["child_version"]
-    # and it is a small part of the whole, not a replacement for it
-    assert len(recorded_overview["overview_target"]) < len(result["german_version"]) / 2
+    german = overview_for(TIMELINE, "de")
+    child = overview_for(TIMELINE, CHILD_LANG)
+
+    assert german in result["german_version"]
+    assert child in result["child_version"]
+    # Same number of facts on each side: same places, same people.
+    assert german.count(",") == child.count(",")
+    assert german.count(":") == child.count(":")
 
 
-# --- a model failure must not cost the child the report ---------------------
+async def test_the_people_are_identical_in_both_versions():
+    """They are the child's own words, quoted, so they are the same bytes in
+    both. If these ever differed, one of the two readers would be seeing a
+    description the other is not."""
+    german = overview_for(TIMELINE, "de")
+    child = overview_for(TIMELINE, CHILD_LANG)
+
+    def people(text):
+        line = [l for l in text.splitlines() if ":" in l][-1]
+        return line.split(":", 1)[1].strip()
+
+    assert people(german) == people(child)
+    assert '"two older boys"' in people(german)
 
 
-async def test_a_failed_overview_still_produces_a_whole_report(monkeypatch):
-    """The timeline needs no model at all. Losing the overview costs an adult
-    half a minute of reading; losing the report costs the child the
-    conversation they were building up to."""
-    replay(monkeypatch, "report_model_down")
+async def test_each_place_is_the_same_place_in_both_versions():
+    """The German says Klassenzimmer where the English says classroom. Those
+    have to be the same code, not two independent guesses."""
+    german = overview_for(TIMELINE, "de").splitlines()[0].split(":", 1)[1]
+    child = overview_for(TIMELINE, CHILD_LANG).splitlines()[0].split(":", 1)[1]
 
+    german_places = [p.strip() for p in german.split(",")]
+    child_places = [p.strip() for p in child.split(",")]
+
+    assert len(german_places) == len(child_places)
+    for de_place, child_place in zip(german_places, child_places):
+        code = next(
+            (c for c, by_lang in PLACES.items() if by_lang["de"] == de_place), None
+        )
+        assert code is not None, f"{de_place} is not a known place code"
+        assert PLACES[code][CHILD_LANG] == child_place
+
+
+async def test_the_overview_lists_rather_than_summarises():
+    """It adds what the period line does not carry, and nothing it invents."""
     result = await report(TIMELINE, CHILD_LANG)
 
+    assert OVERVIEW_LABELS["de"]["places"] in result["german_version"]
+    assert OVERVIEW_LABELS["de"]["people"] in result["german_version"]
+    # Every place in the overview came from an entry
     for entry in TIMELINE:
-        assert entry["text_de"] in result["german_version"]
-    assert HEADER["de"] in result["german_version"]
-    assert FOOTER["de"] in result["german_version"]
+        assert place_for(entry["place"], "de") in result["german_version"]
 
 
-async def test_a_failed_overview_leaves_no_gap_or_placeholder(monkeypatch):
-    """No "overview unavailable" line, and no stray blank block: an adult
-    should not be able to tell that a step was skipped."""
-    replay(monkeypatch, "report_model_down")
+async def test_an_entry_the_child_gave_no_place_for_adds_nothing():
+    sparse = [{**TIMELINE[0], "place": None, "people": None}]
 
+    assert overview_for(sparse, "de") == ""
+
+
+async def test_the_overview_never_merges_two_descriptions():
+    """"two older boys" and "the two older boys" stay separate. Merging them
+    would be us deciding they are the same people."""
+    german = overview_for(TIMELINE, "de")
+
+    assert '"two older boys"' in german
+    assert '"the two older boys"' in german
+
+
+async def test_the_report_leaves_no_gap_where_the_model_used_to_be():
+    """No stray blank block, and nothing that reads like a missing step."""
     result = await report(TIMELINE, CHILD_LANG)
 
     assert "\n\n\n" not in result["german_version"]
-    for word in ("unavailable", "error", "none", "null", "nicht verfügbar"):
+    for word in ("unavailable", "error", "null", "nicht verfügbar", "tbd"):
         assert word not in result["german_version"].lower()
-
-
-async def test_all_three_attempts_are_spent_before_giving_up(monkeypatch):
-    transcript = replay(monkeypatch, "report_model_down")
-
-    await report(TIMELINE, CHILD_LANG)
-
-    assert transcript.count("report") == 3
 
 
 # --- shape, cost and edges ---------------------------------------------------
 
 
-async def test_the_result_matches_the_frozen_contract(monkeypatch):
-    replay(monkeypatch)
+async def test_the_result_matches_the_frozen_contract():
 
     result = await report(TIMELINE, CHILD_LANG)
     body = ReportResponse(
@@ -216,28 +246,25 @@ async def test_the_result_matches_the_frozen_contract(monkeypatch):
     assert body.child_version and body.german_version
 
 
-async def test_a_report_costs_one_model_call(monkeypatch):
-    """The entries are assembled locally, so only the overview is paid for."""
-    transcript = replay(monkeypatch)
-
+async def test_a_report_costs_no_model_calls_at_all():
+    """Every part of the document is either the child's approved words or
+    fixed text, so there is nothing to pay for and no outage to handle."""
     result = await report(TIMELINE, CHILD_LANG)
 
-    assert result["usage"]["calls_made"] == 1
-    assert transcript.count("report") == 1
+    assert result["usage"]["calls_made"] == 0
+    assert result["usage"]["estimated_cost_usd"] == 0.0
 
 
-async def test_a_german_speaking_child_is_not_shown_the_same_text_twice(monkeypatch):
-    replay(monkeypatch)
+async def test_a_german_speaking_child_is_not_shown_the_same_text_twice():
 
     result = await report(TIMELINE, "de")
 
     assert result["child_version"] == result["german_version"]
 
 
-async def test_a_language_we_have_no_labels_for_still_gets_a_readable_report(monkeypatch):
+async def test_a_language_we_have_no_labels_for_still_gets_a_readable_report():
     """A child writing Ukrainian today must not get a blank or broken document:
     the labels fall back to English, and their own sentences are still theirs."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, "uk")
 
@@ -246,8 +273,7 @@ async def test_a_language_we_have_no_labels_for_still_gets_a_readable_report(mon
         assert entry["text_child"] in result["child_version"]
 
 
-async def test_one_entry_is_enough(monkeypatch):
-    replay(monkeypatch)
+async def test_one_entry_is_enough():
 
     result = await report(TIMELINE[:1], CHILD_LANG)
 
@@ -255,9 +281,8 @@ async def test_one_entry_is_enough(monkeypatch):
     assert LABELS["de"]["entries"] in result["german_version"]
 
 
-async def test_an_empty_timeline_is_refused_rather_than_handed_over(monkeypatch):
+async def test_an_empty_timeline_is_refused_rather_than_handed_over():
     """An empty report given to a teacher is worse than an error."""
-    replay(monkeypatch)
 
     with pytest.raises(EngineError) as raised:
         await report([], CHILD_LANG)
@@ -265,8 +290,7 @@ async def test_an_empty_timeline_is_refused_rather_than_handed_over(monkeypatch)
     assert raised.value.code == "invalid_input"
 
 
-async def test_an_entry_with_no_place_or_people_still_renders(monkeypatch):
-    replay(monkeypatch)
+async def test_an_entry_with_no_place_or_people_still_renders():
     sparse = [{**TIMELINE[0], "place": None, "people": None}]
 
     result = await report(sparse, CHILD_LANG)
@@ -281,8 +305,7 @@ async def test_an_entry_with_no_place_or_people_still_renders(monkeypatch):
 # --- dates -------------------------------------------------------------------
 
 
-async def test_german_dates_are_written_the_way_a_german_teacher_reads_them(monkeypatch):
-    replay(monkeypatch)
+async def test_german_dates_are_written_the_way_a_german_teacher_reads_them():
 
     result = await report(TIMELINE, CHILD_LANG)
 
@@ -299,10 +322,9 @@ def test_a_date_we_cannot_parse_is_passed_through_not_dropped():
 # --- place and people: translated only where we can do it honestly ----------
 
 
-async def test_a_known_place_is_rendered_in_the_readers_language(monkeypatch):
+async def test_a_known_place_is_rendered_in_the_readers_language():
     """A German teacher should read "Klassenzimmer", not "classroom". Place
     codes are fixed text, so this needs no model and no approval step."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, CHILD_LANG)
 
@@ -313,11 +335,10 @@ async def test_a_known_place_is_rendered_in_the_readers_language(monkeypatch):
     assert "Where: classroom" in result["child_version"]
 
 
-async def test_a_place_the_child_typed_is_quoted_not_translated(monkeypatch):
+async def test_a_place_the_child_typed_is_quoted_not_translated():
     """We have no German for "the corridor behind the gym" that the child ever
     approved. Guessing one and putting it in front of a teacher is the
     unapproved paraphrase this module exists to avoid."""
-    replay(monkeypatch)
     typed = [{**TIMELINE[0], "place": "the corridor behind the gym"}]
 
     result = await report(typed, CHILD_LANG)
@@ -325,10 +346,9 @@ async def test_a_place_the_child_typed_is_quoted_not_translated(monkeypatch):
     assert '"the corridor behind the gym"' in result["german_version"]
 
 
-async def test_who_was_involved_is_always_the_childs_own_words(monkeypatch):
+async def test_who_was_involved_is_always_the_childs_own_words():
     """"two older boys" is the child's description, in both versions, quoted so
     a German reader can see it is verbatim rather than our wording."""
-    replay(monkeypatch)
 
     result = await report(TIMELINE, CHILD_LANG)
 

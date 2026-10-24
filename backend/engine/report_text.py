@@ -129,3 +129,66 @@ def format_date(iso_date: str, lang: str) -> str:
     if lang == "de":
         return f"{day}.{month}.{year}"
     return iso_date
+
+
+# --- the overview ------------------------------------------------------------
+#
+# Built from a template, never by a model, and that is the point.
+#
+# The first draft asked a model for the German overview and the child's
+# overview in one call, as two independent strings. The child can only read and
+# approve the one in their own language, so nothing made the German say the
+# same thing. That put a model-written German paragraph in front of the adult
+# which the child had never approved and which no verification step had seen -
+# in the one document whose whole promise is that the adult reads only what the
+# child approved. Neel caught it in review on PR #19.
+#
+# A template cannot drift from the entries, costs no call, and says the same
+# thing in both versions by construction. If anyone ever reinstates a model
+# here, the rules it would have to obey are: no judgement, no diagnosis, no
+# label for what happened, no claim that any of it is true or doubtful, nothing
+# about the child's feelings or health, and no recommendation. The reason those
+# rules are hard to hold is why there is no model here.
+
+OVERVIEW_LABELS = {
+    "en": {"places": "Places", "people": "People named"},
+    "hi": {"places": "स्थान", "people": "नामित लोग"},
+    "de": {"places": "Orte", "people": "Genannte Personen"},
+}
+
+
+def _distinct(values: list[str]) -> list[str]:
+    """Order-preserving dedupe on EXACT matches only.
+
+    "two older boys" and "the two older boys" stay as two entries. Merging them
+    would be us deciding they are the same people, which is an interpretation
+    of the child's account and not ours to make.
+    """
+    seen: set[str] = set()
+    out = []
+    for value in values:
+        if value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
+def overview_for(entries: list[dict], lang: str) -> str:
+    """Where it happened and who the child named, gathered from the entries.
+
+    Deliberately literal: it lists, it does not summarise. The count and the
+    date span are already on the period line, so this adds only what that line
+    does not carry.
+    """
+    labels = OVERVIEW_LABELS.get(lang) or OVERVIEW_LABELS[FALLBACK_LANG]
+    places = _distinct([place_for(e["place"], lang) for e in entries if e.get("place")])
+    # Quoted in both versions, because this is the child's own description and
+    # a reader should see that it is verbatim rather than our wording.
+    people = _distinct([f'"{e["people"]}"' for e in entries if e.get("people")])
+
+    lines = []
+    if places:
+        lines.append(f"{labels['places']}: {', '.join(places)}")
+    if people:
+        lines.append(f"{labels['people']}: {', '.join(people)}")
+    return "\n".join(lines)
