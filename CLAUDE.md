@@ -400,6 +400,9 @@ from depth and finish, not from a long feature list:
 ## Working agreement
 
 - Branch per feature (`feat/...`), PR into `main`. `main` is always deployable.
+  Exception taken on 24 Oct: the engine groundwork was committed straight to
+  `main` while no one else had cloned yet. From the moment a second person
+  pushes, branches and PRs are the rule for everyone, including Swarup.
 - **Never commit API keys.** Keys go in `.env` (gitignored). If one is ever
   committed, rotate it; deleting the line is not enough.
 - Public demo needs a **spending cap and rate limit** so credits last until

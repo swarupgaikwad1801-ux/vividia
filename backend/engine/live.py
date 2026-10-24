@@ -10,12 +10,13 @@ STATUS in the same commit.
 
 from engine import mock
 from engine.contract import Report, Resource, SafetyResult, TranslationResult
+from engine.safety import safety_check as _safety_check
 from engine.translate import translate as _translate
 
 STATUS = {
     "translate": "live",
     "report": "mock",
-    "safety_check": "mock",
+    "safety_check": "live",
     "resources": "mock",
 }
 
@@ -38,7 +39,7 @@ async def report(entries: list, child_lang: str) -> Report:
 
 
 async def safety_check(text: str, lang: str) -> SafetyResult:
-    return await mock.safety_check(text, lang)
+    return await _safety_check(text, lang)
 
 
 async def resources(state: str, lang: str) -> list[Resource]:

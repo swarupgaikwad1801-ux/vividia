@@ -9,6 +9,7 @@ Run from backend/:
 Then open http://127.0.0.1:8000/docs for the generated API docs.
 """
 
+import asyncio
 import logging
 import os
 import time
@@ -92,10 +93,14 @@ async def health() -> HealthResponse:
 async def translate(request: TranslateRequest) -> TranslateResponse:
     started = time.perf_counter()
     try:
-        result = await ENGINE.translate(
-            request.text, request.source_lang, request.target_lang, strategy=request.strategy.value
+        # Independent of each other, so run them together: a child in crisis
+        # should not wait on the full verification to be shown help.
+        result, safety = await asyncio.gather(
+            ENGINE.translate(
+                request.text, request.source_lang, request.target_lang, strategy=request.strategy.value
+            ),
+            ENGINE.safety_check(request.text, request.source_lang),
         )
-        safety = await ENGINE.safety_check(request.text, request.source_lang)
     except TimeoutError:
         _fail(
             ErrorCode.UPSTREAM_TIMEOUT,
@@ -122,10 +127,12 @@ async def translate(request: TranslateRequest) -> TranslateResponse:
 @app.post("/api/clarify", response_model=TranslateResponse)
 async def clarify(request: ClarifyRequest) -> TranslateResponse:
     started = time.perf_counter()
-    result = await ENGINE.translate(
-        request.text, request.source_lang, request.target_lang, clarifications=request.choices
+    result, safety = await asyncio.gather(
+        ENGINE.translate(
+            request.text, request.source_lang, request.target_lang, clarifications=request.choices
+        ),
+        ENGINE.safety_check(request.text, request.source_lang),
     )
-    safety = await ENGINE.safety_check(request.text, request.source_lang)
     return TranslateResponse(
         translation=result["translation"],
         confidence=result["confidence"],

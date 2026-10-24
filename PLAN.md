@@ -24,10 +24,26 @@ is not shown.
 |------|-------|
 | Picture incident builder, read-aloud, PWA/offline, design system | Vernika |
 | Engine tests with recorded responses, GitHub Actions CI, load test, latency budget, spending cap | Swarup |
-| 4th language test set, onboarding text, accessibility audit, `SAFETY.md` threat model, data-flow diagram | Neel |
+| Hindi test set + review, verifying safety contacts, onboarding text, accessibility audit, `SAFETY.md` threat model, data-flow diagram | Neel |
 | Witness mode (Tier B) | Vernika (screens), Swarup (engine) |
 | Encrypted share link + printable report (Tier B) | Swarup (crypto), Vernika (UI) |
 | Anonymous school signal (Tier C) | decided at the Wed 12:00 gate |
+
+## Done on Sat 24 Oct (do not redo)
+
+- Nebius verified; base URL and model IDs in CLAUDE.md. Credits: $1 trial,
+  the $25 promo had not arrived.
+- Fan-out model chosen by measurement, then **changed** after the language
+  gate: now `Nemotron-3.5-Super-VL`. Judge: `nemotron-3-super-120b-a12b`.
+- HTTP contract frozen (`backend/app/schemas.py` + `frontend/src/types/api.ts`),
+  FastAPI app serving mock or live via `ENGINE_MODE`, 11 offline contract tests.
+- Engine: strategies A/B/C, back-translation, meaning repair, source-ambiguity
+  questions, rate limiting, cost accounting, untranslated-output guard.
+- Safety check: live, with 14 regression cases covering crises and the
+  everyday exaggerations that must not fire. `ENGINE_MODE=live pytest` = 27 passing.
+- Languages settled: **Hindi + English -> German.**
+
+Still mock: `report`, `resources`. `/api/health` reports which is which.
 
 ## Sat 24 Oct: foundations
 
@@ -39,8 +55,7 @@ is not shown.
   `FEEDBACK.md` notes.
 - **Vernika:** Vite + React scaffold, design direction (colours, type),
   wireframes for check-in, write, handoff card. Calm, not childish.
-- **Neel:** Tavily key. Find native speakers (Ukrainian, Arabic, Turkish, and
-  one language the team can check itself). Start the test set.
+- **Neel:** Tavily key. Start the **Hindi** test set (see Sunday).
 
 ## Sun 25 Oct: the risky part first
 
@@ -48,10 +63,15 @@ is not shown.
   (fan-out, back-translation, judge).
 - **Vernika:** FastAPI `main.py` on the mocks; screens 1 and 2; i18n with RTL
   working from the start.
-- **Neel:** test set of 50 sentences per language (slang and insults
-  included) in `eval/testset/`; safety content drafts with sources.
-- 🚩 **Gate, Sun night:** if Nemotron is weak in a language, swap that
-  language.
+- **Neel:** **the critical path.** 30 Hindi sentences a bullied child might
+  write, in `eval/testset/hi_*.json`, written as a Hindi speaker would write
+  them, not translated from English. Include slang, misspellings, and the
+  idioms that must NOT trigger the safety check ("maa mujhe maar daalegi").
+  Swarup and Vernika each review every sentence independently.
+  Then verify every number and URL in `content/safety_messages.json` and set
+  `_review_status` to `verified`.
+- 🚩 Gate already run on Sat 24: languages are settled (Hindi + English),
+  fan-out model switched to Super-VL. See CLAUDE.md.
 
 ## Mon 26 Oct: end-to-end
 

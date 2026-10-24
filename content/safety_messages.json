@@ -1,0 +1,61 @@
+{
+  "_comment": "Fixed text and contacts shown when the safety check fires. NEVER model-generated: a model must not invent emergency guidance for a child. Neel owns this file and verifies every number and URL against its official source before submission. Phone numbers here are long-standing German public services, but each still needs its source_url checked and the checked_on date updated.",
+  "_review_status": "DRAFT - numbers are well known but not yet verified against official pages by a human. Do not ship or demo as verified until Neel sets _review_status to 'verified' and fills every source_url.",
+  "contacts": [
+    {
+      "id": "police",
+      "name": "Polizei",
+      "contact": "110",
+      "when": "immediate_danger",
+      "hours": "24/7",
+      "source_url": "TODO: polizei.de",
+      "checked_on": null
+    },
+    {
+      "id": "emergency",
+      "name": "Notruf (Rettungsdienst, Feuerwehr)",
+      "contact": "112",
+      "when": "immediate_danger",
+      "hours": "24/7",
+      "source_url": "TODO: 112.eu",
+      "checked_on": null
+    },
+    {
+      "id": "nummer_gegen_kummer",
+      "name": "Nummer gegen Kummer (Kinder- und Jugendtelefon)",
+      "contact": "116 111",
+      "when": "talk_to_someone",
+      "hours": "TODO: verify current opening hours",
+      "source_url": "TODO: nummergegenkummer.de",
+      "checked_on": null
+    },
+    {
+      "id": "krisenchat",
+      "name": "krisenchat",
+      "contact": "https://krisenchat.de",
+      "when": "talk_to_someone",
+      "hours": "TODO: verify",
+      "note": "Text chat, so a child who cannot speak aloud can still reach a person.",
+      "source_url": "TODO: krisenchat.de",
+      "checked_on": null
+    }
+  ],
+  "messages": {
+    "danger": {
+      "en": "If someone can hurt you right now, call 110. You do not have to write anything else first.",
+      "hi": "अगर कोई अभी आपको चोट पहुँचा सकता है, तो 110 पर कॉल करें। पहले कुछ और लिखने की ज़रूरत नहीं है।",
+      "de": "Wenn dir gerade jemand wehtun kann, ruf 110 an. Du musst vorher nichts weiter schreiben."
+    },
+    "self_harm": {
+      "en": "What you wrote sounds heavy. You can talk to someone right now at krisenchat.de, by text. You do not have to be in danger to write to them.",
+      "hi": "आपने जो लिखा वह भारी लगता है। आप अभी krisenchat.de पर किसी से बात कर सकते हैं, लिखकर। बात करने के लिए खतरे में होना ज़रूरी नहीं है।",
+      "de": "Was du geschrieben hast, klingt schwer. Du kannst gerade jetzt mit jemandem schreiben, auf krisenchat.de. Du musst nicht in Gefahr sein, um dort zu schreiben."
+    }
+  },
+  "ui_always_visible": {
+    "_comment": "The real safety net is not detection. Help must be reachable on every screen whether or not the check fires, including when it fails.",
+    "en": "Need help now?",
+    "hi": "अभी मदद चाहिए?",
+    "de": "Brauchst du jetzt Hilfe?"
+  }
+}
