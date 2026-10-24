@@ -228,6 +228,33 @@ Thu 29 Oct by 22:00. Day-by-day plan: see `PLAN.md`.
     Nano reasons by default. Test reasoning off for the fan-out passes.
   - Its translation "über mich gelacht" (instead of "mich ausgelacht") is a
     real example of the meaning drift our pipeline exists to catch.
+- Console facts, read 24 Oct 2026 (tenant `aitenant-e00a22yvbd5fv0xpg3`):
+  - **Rate limits** (default; auto-scale up to 20x once usage passes 80%):
+    Nano 800k TPM but only **100 RPM** (the lowest of any model on the
+    platform), Lightning 400k TPM / **600 RPM**, Super 200k TPM / 300 RPM,
+    Ultra 200k TPM / 300 RPM, Super-VL 2M TPM / 300 RPM.
+    → **Nano cannot be hammered in parallel.** Every fan-out needs a
+    concurrency limiter, and Lightning is the better fan-out candidate at the
+    same price. Decide with the Sunday eval.
+  - **Prices** per 1M tokens (input / output): Nano $0.06 / $0.24, Lightning
+    $0.06 / $0.24, Super $0.30 / $0.90, Super-VL $0.30 / $0.90, Ultra
+    $1.00 / $3.00. Cached input is ~5x cheaper; the Batch API is half price
+    (use it for eval runs, never for the live demo).
+  - **Zero Data Retention is ENABLED** on our organization (Settings →
+    Organization → Other settings). Prompts and completions are not stored
+    after processing, and are never used to train any model in either mode.
+    This is the privacy claim we can actually make.
+  - **Region: do NOT claim "EU inference".** Public endpoints report region
+    "Global"; the processing location is dynamic and can change without
+    notice. Only dedicated endpoints carry a region commitment, and they cost
+    $4.70+ per GPU-hour, which is out of budget. Retained data (ZDR off)
+    would sit in Finland. Say "nothing is retained", not "runs in the EU".
+  - Compliance we may cite: GDPR, ISO 27001, ISO 27701, SOC 2 Type II,
+    EU-US Data Privacy Framework.
+  - **Credits: $1.00 trial, 29 days. Account balance $0.00.** The $25 promo
+    code had not arrived by email as of 24 Oct. Redeem it at Billing →
+    Payments → + → "With promo code". The demo must stay up until 15 Dec, so
+    chase this; $1 is roughly 2,000 translated messages.
 - **API keys live only in `.env`.** Never in any other file inside the repo
   (a txt file of keys in the repo is one `git add .` away from being public).
   Keep a personal copy outside the repo folder.
