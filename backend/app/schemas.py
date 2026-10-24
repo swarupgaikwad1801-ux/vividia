@@ -160,6 +160,24 @@ class ResourcesResponse(BaseModel):
     )
 
 
+# --- GET /api/emergency ------------------------------------------------------
+
+
+class EmergencyResponse(BaseModel):
+    """110 and 112, so no screen ever hard-codes an emergency number.
+
+    Separate from ResourcesResponse because there is nothing to look up and
+    nothing that can fall back: these come from content/helplines.json and
+    never from the network, which is why the safety screen can show them with
+    no key, no credit and no connection to Nebius.
+
+    Each carries its source and check date like any other contact, so a child
+    is never shown an emergency number the app cannot say where it got.
+    """
+
+    contacts: list[Resource] = Field(min_length=1)
+
+
 # --- GET /api/health ---------------------------------------------------------
 
 

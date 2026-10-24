@@ -127,6 +127,18 @@ export interface ResourcesResponse {
   source: "live" | "fallback";
 }
 
+/**
+ * GET /api/emergency
+ *
+ * 110 and 112, so no screen hard-codes an emergency number. There is nothing
+ * to look up and nothing that can fall back: these come from the curated file
+ * and never from the network, so this endpoint answers with no key and on a
+ * day the demo has spent its allowance.
+ */
+export interface EmergencyResponse {
+  contacts: Resource[];
+}
+
 /** GET /api/health */
 export interface HealthResponse {
   status: "ok" | "degraded";

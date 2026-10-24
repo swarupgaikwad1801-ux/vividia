@@ -21,9 +21,11 @@ from fastapi.responses import JSONResponse
 
 from engine.client import ROLES
 from engine.errors import message_for, safe_traceback, status_for, to_error_response
+from engine.resources import emergency_numbers
 from app.limits import Guard, client_key
 from app.schemas import (
     ClarifyRequest,
+    EmergencyResponse,
     ErrorResponse,
     HealthResponse,
     ReportRequest,
@@ -277,6 +279,30 @@ async def report(request: ReportRequest, http: Request) -> ReportResponse:
             "estimated_cost_usd": 0.0,
         },
     )
+
+
+@app.get("/api/emergency", response_model=EmergencyResponse)
+async def emergency() -> EmergencyResponse:
+    """110 and 112, read from the one file that defines them.
+
+    Imported straight from engine.resources rather than through ENGINE. That
+    indirection exists so a model-backed function can be mocked, and there is
+    no model here: emergency_numbers() only reads content/helplines.json. It
+    also means mock mode serves the REAL numbers, which is the only acceptable
+    behaviour - a mock showing a made-up emergency number is worse than one
+    showing none.
+
+    Outside the spending cap and needing no key, for the same reason
+    /api/resources is: on a day the demo has spent its allowance, or before
+    anyone has pasted a key, 110 is the one thing that still has to work.
+    """
+    try:
+        contacts = emergency_numbers()
+    except Exception as error:  # noqa: BLE001 - a broken content file is ours
+        raise ChildSafeError(error, "en") from error
+
+    log.info("emergency contacts=%d", len(contacts))
+    return EmergencyResponse(contacts=contacts)
 
 
 @app.get("/api/resources", response_model=ResourcesResponse)
