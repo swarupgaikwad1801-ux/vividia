@@ -19,6 +19,7 @@ import json
 import re
 
 from engine.budget import over_budget
+from engine.clarify_text import is_other, other_option
 from engine.client import EngineError, Usage, call
 from engine.contract import Ambiguity, TranslationResult
 from engine.prompts import (
@@ -259,7 +260,18 @@ async def _judge(text, candidates, backs, source_lang, target_lang, usage):
 
 
 async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
-    """Turn one disputed phrase into a question a child can actually answer."""
+    """Turn one disputed phrase into a question a child can actually answer.
+
+    The answer always ends with the fixed "something else" option, so a child
+    whose meaning is neither of the readings is never cornered into picking one.
+
+    The readings are capped at two because the frozen contract allows at most
+    three options (`schemas.Ambiguity.options`, max_length=3) and the escape
+    option now takes the third slot. Without the cap, a three-reading ambiguity
+    would build four options and the response would fail validation on its way
+    out, which the child would see as a 500 rather than a question.
+    """
+    readings = readings[:2]
     options_text = "\n".join(f"- {r['meaning']}" for r in readings)
     user = f'Phrase from the child: "{phrase}"\n\nPossible meanings:\n{options_text}'
     raw = await call(
@@ -284,19 +296,33 @@ async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
         "phrase": phrase,
         "question": parsed["question"],
         "options": [
-            {"id": f"opt{i}", "label": label, "meaning_de": readings[i]["target_phrasing"]}
-            for i, label in enumerate(labels)
+            *(
+                {"id": f"opt{i}", "label": label, "meaning_de": readings[i]["target_phrasing"]}
+                for i, label in enumerate(labels)
+            ),
+            # Fixed text, never model-generated: this is the one option that
+            # has to read identically every time, because it is the way out.
+            other_option(source_lang),
         ],
         "severity": "critical",
     }
 
 
 def _decisions_text(ambiguities, choices) -> str:
-    """Render the child's answers as instructions for the final pass."""
+    """Render the child's answers as instructions for the final pass.
+
+    The "something else" option is skipped. Picking it says neither reading was
+    right, so there is no decision to render and nothing to tell the
+    translator; the child is asked to write the sentence again instead. Passing
+    it through would put an empty meaning in the prompt, which reads to the
+    model as an instruction to render nothing.
+    """
     lines = []
     for ambiguity in ambiguities:
         chosen = choices.get(ambiguity["phrase"])
         for option in ambiguity["options"]:
+            if is_other(option["id"]):
+                continue
             if option["id"] == chosen or option["label"] == chosen:
                 lines.append(f'- "{ambiguity["phrase"]}" means: {option["meaning_de"]}')
     return "\n".join(lines)
