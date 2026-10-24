@@ -1,0 +1,58 @@
+{
+  "_comment": "THE single source of truth for every contact the app shows: emergency numbers, helplines, and the crisis screen. Nothing may copy these values into another file; two copies of a phone number drift apart silently and a child ends up with stale emergency information. Crisis wording lives in safety_messages.json and refers to these by id. Neel owns this file. Every entry checked by hand on the service's own site or an official government page on the date in verified_on. Re-check before the demo and before 15 Dec. Hours and contact are copied from the source, not paraphrased.",
+  "verified_on": "2026-10-24",
+  "helplines": [
+    {
+      "name": "Nummer gegen Kummer – Kinder- und Jugendtelefon",
+      "contact": "116 111",
+      "hours": "Mo–Sa 14–20 Uhr",
+      "languages": [
+        "de"
+      ],
+      "notes": "Free and anonymous, for children and young people up to 19.",
+      "source_url": "https://www.nummergegenkummer.de/",
+      "id": "nummer_gegen_kummer",
+      "checked_on": "2026-10-24"
+    },
+    {
+      "name": "krisenchat",
+      "contact": "https://krisenchat.de/",
+      "hours": "24/7",
+      "languages": [
+        "de",
+        "uk"
+      ],
+      "notes": "Free chat counselling (web or WhatsApp) for everyone under 25. No chatbots, according to the service. A Ukrainian page exists at krisenchat.de/uk.",
+      "source_url": "https://krisenchat.de/",
+      "id": "krisenchat",
+      "checked_on": "2026-10-24"
+    }
+  ],
+  "emergency": [
+    {
+      "name": "Polizei (Notruf)",
+      "contact": "110",
+      "hours": "24/7",
+      "languages": [
+        "de"
+      ],
+      "notes": "Free from any phone, without an area code.",
+      "source_url": "https://im.baden-wuerttemberg.de/de/sicherheit/wichtige-rufnummern-fuer-den-notfall",
+      "id": "police",
+      "checked_on": "2026-10-24"
+    },
+    {
+      "name": "Feuerwehr und Rettungsdienst (Notruf)",
+      "contact": "112",
+      "hours": "24/7",
+      "languages": [
+        "de"
+      ],
+      "notes": "Free, works across Europe, landline or mobile.",
+      "source_url": "https://im.baden-wuerttemberg.de/de/sicherheit/wichtige-rufnummern-fuer-den-notfall",
+      "id": "emergency",
+      "checked_on": "2026-10-24"
+    }
+  ],
+  "_review_status": "SOURCES CHECKED 2026-10-24 against the official pages in each source_url (Neel's Claude session). Waiting for Neel to confirm by hand, then set to 'verified'. Open question: the Hindi self_harm message sends a Hindi-speaking child to krisenchat, which does not confirm Hindi counselling."
+}

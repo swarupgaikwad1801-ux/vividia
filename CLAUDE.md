@@ -326,6 +326,54 @@ critical path for the whole benchmark. Until it exists:
   generation prompt ("Let me go with: ..."). Our production prompts are tight
   and have not shown it, but output is guarded rather than trusted.
 
+## Content files: one fact, one place
+
+- `content/helplines.json` is **the only** place a contact may be defined:
+  emergency numbers, helplines, name, hours, languages, source and check
+  date. `engine/resources.py` and `engine/safety.py` both read it.
+- `content/safety_messages.json` holds **wording only** and refers to
+  contacts by id.
+- Nothing may copy a contact into a second file. Two copies agree on the day
+  they are written and drift apart afterwards, and the version a child sees
+  in a crisis is whichever one nobody remembered to update. A test enforces
+  this and runs offline, so a duplicate fails the build rather than waiting
+  for someone to run the live suite.
+
+### Both helplines we can offer are German-only
+
+`116 111` is German; krisenchat is German and Ukrainian. Neither confirms
+Hindi or English counselling. So in a crisis we currently hand a
+Hindi-speaking child a number nobody will answer them on.
+
+`safety.py` exposes `language_warning(category, lang)` and orders contacts so
+a service the child can actually use comes first. **The crisis screen must
+print each service's languages**; hiding this is worse than the gap itself.
+
+This is also the clearest statement of why the product exists. German support
+for children is German-only, so a child without German is locked out of it.
+The handoff card gives them German words to show a person. That argument
+belongs in the Devpost write-up, sourced, not as a complaint.
+
+## The test sets are drafted, not yet reviewed
+
+`eval/testset/*.json` was drafted by the team with Claude's help. That is a
+legitimate way to build a benchmark, and it is not the same as "written by
+people", which the README briefly claimed and no longer does.
+
+**Gate before any benchmark number is published anywhere** (README, Devpost,
+video, this file):
+
+1. A team member who speaks the language reads every sentence and every
+   `trap`, and fixes anything a real child would not write.
+2. For Hindi that is two independent reviews, recorded in the `_review` field
+   of `hi_core.json` (`swarup`, `vernika`), because Hindi is the language we
+   make claims about.
+3. Only then may a result be reported, and it is reported as what it is:
+   model-scored against a team-written reference, with the review named.
+
+Until then `eval/run_eval.py` may be run freely, but its output stays in
+`eval/results/` and does not go in front of a judge.
+
 ## Hard requirements (failing any one = disqualified)
 
 1. Runtime call to **Nebius Token Factory** (we do this in every engine call).

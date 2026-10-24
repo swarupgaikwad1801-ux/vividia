@@ -6,22 +6,44 @@ track **Best Apps and Agents**.
 > **Status:** in development (24–30 Oct 2026). Sections marked _TBD_ are
 > filled in as features land; nothing is claimed here before it works.
 
+## Why this exists
+
+Some children never tell anyone they are being bullied. They freeze, they
+don't have the words, or they have just arrived in Germany and don't speak
+German yet. When they do try, the translation often comes from a classmate or
+an app that guesses, and one wrong word changes everything: "my friend hits
+me" read as "my friend meets me" is the difference between help and no help.
+
 ## What it does
 
-An app for children who can't speak up about bullying or harm: because they
-freeze, don't have the words, or don't speak German yet. A child checks in
-without words, writes in their own language, sees a German version that has
-been checked by several independent model passes, answers a short question
-when the passes disagree about what they meant, builds a timeline they
-approve, and chooses whether to show it to one trusted adult.
+A child checks in without words, writes in their own language, and sees a
+German version that has been checked by several independent Nemotron passes.
+When a sentence has two honest readings ("he said he would get me after
+school": a threat or a lift home?), the app asks the child instead of
+guessing, and always offers "something else". The child builds a timeline
+they approve word by word, and chooses whether to show it to one trusted
+adult, who also gets a short, sourced guide on how to respond.
 
 **The child's words. The child's story. The child's choice.**
 
-Nothing is ever shared automatically.
+- Nothing is ever shared automatically. No monitoring, no automatic alerts,
+  no AI "friend", no diagnosis.
+- If the child says it happens at home, the app never suggests family members
+  as the trusted adult.
+- "Need help now?" is on every screen: 116 111, krisenchat and 110/112, each
+  checked against its official source, plus the school psychology service in
+  the child's state, looked up live and only from that state's official site.
 
 It is a communication tool. It does not diagnose, decide whether an
 allegation is true, counsel, or replace a safeguarding professional. It is a
 hackathon research prototype.
+
+### Languages
+
+**English and Hindi (including Hinglish), into German.** We only ship and
+measure languages our team can read: machine-made test data in other
+languages had already lost the meaning in 17 of 18 cases, so we make no
+quality claim for them. The architecture itself is language-independent.
 
 ### How your data is handled
 
@@ -33,6 +55,9 @@ device**. We will not pretend otherwise. What we do:
 - Nebius Zero Data Retention is enabled on our account: prompts and outputs
   are not stored after processing, and are never used to train any model.
 - Quick exit leaves the page. It does not, and cannot, erase browser history.
+
+Who could misuse the app or the phone, what we do about it, and our known
+limitations are in [SAFETY.md](SAFETY.md).
 
 ## Architecture
 
@@ -229,8 +254,14 @@ English**, and that the architecture is language-independent.
 
 ## Demo
 
-- Live demo: _TBD_
+- Live demo: _TBD_. No API key needed: press **"Try the demo story"** to load
+  Amara's timeline, then send the prefilled sentence and watch the app ask
+  what she meant. Amara is a made-up example; no real child is shown.
 - Video: _TBD_
+- Benchmark: 50 English and 30 Hindi sentences, drafted by the team with
+  Claude's help and then read line by line by a team member who speaks the
+  language, scored against a reference meaning with `eval/run_eval.py`.
+  Results: _TBD; no number is published here until that review is signed off._
 
 ## Team
 

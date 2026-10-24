@@ -1,45 +1,6 @@
 {
-  "_comment": "Fixed text and contacts shown when the safety check fires. NEVER model-generated: a model must not invent emergency guidance for a child. Neel owns this file and verifies every number and URL against its official source before submission. Phone numbers here are long-standing German public services, but each still needs its source_url checked and the checked_on date updated.",
-  "_review_status": "DRAFT - numbers are well known but not yet verified against official pages by a human. Do not ship or demo as verified until Neel sets _review_status to 'verified' and fills every source_url.",
-  "contacts": [
-    {
-      "id": "police",
-      "name": "Polizei",
-      "contact": "110",
-      "when": "immediate_danger",
-      "hours": "24/7",
-      "source_url": "TODO: polizei.de",
-      "checked_on": null
-    },
-    {
-      "id": "emergency",
-      "name": "Notruf (Rettungsdienst, Feuerwehr)",
-      "contact": "112",
-      "when": "immediate_danger",
-      "hours": "24/7",
-      "source_url": "TODO: 112.eu",
-      "checked_on": null
-    },
-    {
-      "id": "nummer_gegen_kummer",
-      "name": "Nummer gegen Kummer (Kinder- und Jugendtelefon)",
-      "contact": "116 111",
-      "when": "talk_to_someone",
-      "hours": "TODO: verify current opening hours",
-      "source_url": "TODO: nummergegenkummer.de",
-      "checked_on": null
-    },
-    {
-      "id": "krisenchat",
-      "name": "krisenchat",
-      "contact": "https://krisenchat.de",
-      "when": "talk_to_someone",
-      "hours": "TODO: verify",
-      "note": "Text chat, so a child who cannot speak aloud can still reach a person.",
-      "source_url": "TODO: krisenchat.de",
-      "checked_on": null
-    }
-  ],
+  "_comment": "Only the words a child in crisis sees. NEVER model-generated: a model must not invent emergency guidance for a child. Contacts are NOT duplicated here; they live once in helplines.json and engine/safety.py reads them from there.",
+  "_review_status": "Message wording is a draft written by the team, not reviewed by a safeguarding professional. Contact details and their verification status live in helplines.json.",
   "messages": {
     "danger": {
       "en": "If someone can hurt you right now, call 110. You do not have to write anything else first.",
