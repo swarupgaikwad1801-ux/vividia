@@ -58,6 +58,7 @@ _KINDS = [
     ("question", "You write one short question that asks a child what they meant"),
     ("repair", "You correct a translation that lost part of its meaning"),
     ("safety", "You read one message from a child and decide whether they"),
+    ("report", "You write the opening of a report that a child is about to"),
 ]
 
 

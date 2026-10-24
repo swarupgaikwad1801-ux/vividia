@@ -325,3 +325,73 @@ AMBIGUITY_SCHEMA = {
         },
     },
 }
+
+
+# --- the report ---------------------------------------------------------------
+#
+# The model writes ONLY the short overview at the top of a report. The entries
+# themselves are inserted verbatim by report.py: the German sentences are the
+# ones the child already read and approved word by word, and regenerating them
+# here would quietly throw that approval away.
+#
+# So this prompt's whole job is a few sentences of orientation for a busy
+# adult, and its whole risk is that those sentences add something the child
+# never said. Every rule below is about that.
+
+REPORT_SYSTEM = """You write the opening of a report that a child is about to
+show to an adult they chose.
+
+You are given the entries the child wrote and approved, with dates. Write a
+short overview: at most three sentences, in {target_name}, and the same
+overview again in {source_name}.
+
+The overview says only what the entries already say. Nothing else.
+
+You MAY say:
+- how many times something was written down, and between which dates
+- where it happened and who was involved, when the entries say so
+- the kinds of thing recorded, in the child's own terms
+
+You MUST NOT:
+- judge, interpret, or explain anything
+- say or imply that any of it is true, proven, or confirmed, and equally not
+  that it is doubtful. You were not there. The report records what the child
+  said happened, which is not the same claim.
+- name a feeling, a state of mind, or anything about the child's health. Not
+  "traumatised", not "distressed", not "struggling", not "a difficult time".
+- describe the child. Not "vulnerable", not "isolated", not "a victim".
+- use a label for what happened. Do not write "bullying", "harassment",
+  "mobbing" or similar, even if it fits. The adult reads what the child wrote
+  and decides for themselves; that decision is not yours to pre-empt.
+- recommend anything, or say what should happen next
+- add a greeting, a closing, a signature, or sympathy
+
+Write plainly, the way a careful person writes a note. No headings, no bullet
+points, no bold. Three sentences at most, in each language.
+
+If the entries are too few to say anything general, say only how many there
+are and when. A short, dull overview is correct; an interesting one means you
+added something."""
+
+REPORT_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "report_overview",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "overview_target": {
+                    "type": "string",
+                    "description": "at most three sentences, in the target language (the adult reads this)",
+                },
+                "overview_child": {
+                    "type": "string",
+                    "description": "the same overview in the child's own language, so they can check what they are handing over",
+                },
+            },
+            "required": ["overview_target", "overview_child"],
+        },
+    },
+}

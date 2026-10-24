@@ -1,0 +1,17 @@
+{
+  "_comment": "The five approved entries from content/demo_story.json, which is the one-click demo. The model writes only the overview; report.py inserts the entries verbatim because their German is what the child already approved word by word. This recorded overview deliberately obeys the rules in REPORT_SYSTEM: it counts, dates and locates, and it does not judge, diagnose, label the account as bullying, or claim any of it is true.",
+  "_provenance": "hand-authored",
+  "_provenance_note": "Written to match REPORT_SYSTEM's rules so the tests check report.py's assembly rather than the model's obedience. A captured transcript would also test whether the model actually follows the prompt, which is a different and still-unanswered question; see tests/record_fixtures.py.",
+  "scenario": "the demo timeline becomes a report that keeps the child's approved words",
+  "source_lang": "en",
+  "text": "(uses the demo_story timeline, not a single sentence)",
+  "tokens": {"prompt": 420, "completion": 120},
+  "responses": {
+    "report": [
+      {
+        "overview_target": "Zwischen dem 06.10.2026 und dem 21.10.2026 hat das Kind fünf Einträge geschrieben. Sie betreffen das Klassenzimmer, die Mensa, den Flur, den Schulhof und einen Gruppenchat. Das Kind nennt Mitschülerinnen und Mitschüler sowie zwei älteren Jungen.",
+        "overview_child": "Between 6 October 2026 and 21 October 2026 the child wrote five entries. They are about the classroom, the canteen, the corridor, the schoolyard and a group chat. The child names classmates and two older boys."
+      }
+    ]
+  }
+}
