@@ -354,6 +354,26 @@ for children is German-only, so a child without German is locked out of it.
 The handoff card gives them German words to show a person. That argument
 belongs in the Devpost write-up, sourced, not as a complaint.
 
+## The test sets are drafted, not yet reviewed
+
+`eval/testset/*.json` was drafted by the team with Claude's help. That is a
+legitimate way to build a benchmark, and it is not the same as "written by
+people", which the README briefly claimed and no longer does.
+
+**Gate before any benchmark number is published anywhere** (README, Devpost,
+video, this file):
+
+1. A team member who speaks the language reads every sentence and every
+   `trap`, and fixes anything a real child would not write.
+2. For Hindi that is two independent reviews, recorded in the `_review` field
+   of `hi_core.json` (`swarup`, `vernika`), because Hindi is the language we
+   make claims about.
+3. Only then may a result be reported, and it is reported as what it is:
+   model-scored against a team-written reference, with the review named.
+
+Until then `eval/run_eval.py` may be run freely, but its output stays in
+`eval/results/` and does not go in front of a judge.
+
 ## Hard requirements (failing any one = disqualified)
 
 1. Runtime call to **Nebius Token Factory** (we do this in every engine call).

@@ -95,8 +95,10 @@ python -m engine.smoke_test                 # one Nemotron call
   Amara's timeline, then send the prefilled sentence and watch the app ask
   what she meant. Amara is a made-up example; no real child is shown.
 - Video: _TBD_
-- Benchmark: 50 English and 30 Hindi sentences written by people, scored
-  against a human answer key with `eval/run_eval.py`. Results: _TBD_.
+- Benchmark: 50 English and 30 Hindi sentences, drafted by the team with
+  Claude's help and then read line by line by a team member who speaks the
+  language, scored against a reference meaning with `eval/run_eval.py`.
+  Results: _TBD; no number is published here until that review is signed off._
 
 ## Team
 
