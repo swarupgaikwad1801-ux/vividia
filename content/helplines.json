@@ -6,15 +6,20 @@
       "name": "Nummer gegen Kummer – Kinder- und Jugendtelefon",
       "contact": "116 111",
       "hours": "Mo–Sa 14–20 Uhr",
-      "languages": ["de"],
-      "notes": "Free and anonymous, for children and young people up to 19.",
+      "languages": [
+        "de"
+      ],
+      "notes": "Free and anonymous, by phone. The same site also offers a text chat Mon–Thu 14–20.",
       "source_url": "https://www.nummergegenkummer.de/"
     },
     {
       "name": "krisenchat",
       "contact": "https://krisenchat.de/",
       "hours": "24/7",
-      "languages": ["de", "uk"],
+      "languages": [
+        "de",
+        "uk"
+      ],
       "notes": "Free chat counselling (web or WhatsApp) for everyone under 25. No chatbots, according to the service. A Ukrainian page exists at krisenchat.de/uk.",
       "source_url": "https://krisenchat.de/"
     }
@@ -24,7 +29,9 @@
       "name": "Polizei (Notruf)",
       "contact": "110",
       "hours": "24/7",
-      "languages": ["de"],
+      "languages": [
+        "de"
+      ],
       "notes": "Free from any phone, without an area code.",
       "source_url": "https://im.baden-wuerttemberg.de/de/sicherheit/wichtige-rufnummern-fuer-den-notfall"
     },
@@ -32,7 +39,9 @@
       "name": "Feuerwehr und Rettungsdienst (Notruf)",
       "contact": "112",
       "hours": "24/7",
-      "languages": ["de"],
+      "languages": [
+        "de"
+      ],
       "notes": "Free, works across Europe, landline or mobile.",
       "source_url": "https://im.baden-wuerttemberg.de/de/sicherheit/wichtige-rufnummern-fuer-den-notfall"
     }
