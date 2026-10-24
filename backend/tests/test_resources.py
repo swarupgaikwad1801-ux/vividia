@@ -28,6 +28,7 @@ def tavily_returning(results, seen=None):
 def no_real_network(monkeypatch):
     monkeypatch.setenv("TAVILY_API_KEY", "test-key")
     monkeypatch.setattr(res, "_transport", tavily_returning([]))
+    res._cache.clear()
 
 
 def test_helplines_are_shown_without_any_lookup(monkeypatch):
@@ -94,6 +95,25 @@ def test_a_failed_search_falls_back_quietly(monkeypatch):
     found, source = run(res.resources_with_source("BE", "de"))
     assert source == "fallback"
     assert any(r["contact"] == "116 111" for r in found)
+
+
+def test_a_state_is_searched_once_a_day(monkeypatch):
+    seen = []
+    monkeypatch.setattr(res, "_transport", tavily_returning([
+        {"title": "Staatliche Schulberatung in Bayern", "url": "https://www.schulberatung.bayern.de/"},
+    ], seen))
+    first, _ = run(res.resources_with_source("BY", "de"))
+    second, source = run(res.resources_with_source("by", "de"))
+    assert len(seen) == 1
+    assert source == "live" and second == first
+
+
+def test_a_failed_search_is_not_cached(monkeypatch):
+    seen = []
+    monkeypatch.setattr(res, "_transport", tavily_returning([], seen))
+    run(res.resources_with_source("BE", "de"))
+    run(res.resources_with_source("BE", "de"))
+    assert len(seen) == 2
 
 
 def test_resources_keeps_the_contract_signature():

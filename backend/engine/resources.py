@@ -19,6 +19,7 @@ dependency either.
 
 import json
 import os
+import time
 from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Literal
@@ -56,6 +57,12 @@ STATE_SITES: dict[str, tuple[str, str]] = {
 
 # Tests swap this for httpx.MockTransport so they never touch the network.
 _transport: httpx.AsyncBaseTransport | None = None
+
+# One live search per state per day is plenty: school counselling services do
+# not move overnight, and the public demo must not burn Tavily credits before
+# 15 Dec. Only successful lookups are cached, so a failure is retried.
+CACHE_SECONDS = 24 * 60 * 60
+_cache: dict[str, tuple[float, list[Resource]]] = {}
 
 
 @lru_cache(maxsize=1)
@@ -133,6 +140,17 @@ async def _search_local(state: str) -> list[Resource]:
     return found
 
 
+async def _cached_local(state: str) -> list[Resource]:
+    key = state.upper()
+    hit = _cache.get(key)
+    if hit and hit[0] > time.monotonic():
+        return hit[1]
+    found = await _search_local(key)
+    if found:
+        _cache[key] = (time.monotonic() + CACHE_SECONDS, found)
+    return found
+
+
 async def resources_with_source(
     state: str, lang: str
 ) -> tuple[list[Resource], Literal["live", "fallback"]]:
@@ -141,7 +159,7 @@ async def resources_with_source(
     main.py needs the second value for ResourcesResponse.source; resources()
     keeps the frozen contract signature.
     """
-    local = await _search_local(state) if state else []
+    local = await _cached_local(state) if state else []
     # Helplines that speak the child's language first; order is otherwise kept.
     helplines = sorted(national_helplines(), key=lambda r: lang not in r["languages"])
     return helplines + local, ("live" if local else "fallback")
