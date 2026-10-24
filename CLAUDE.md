@@ -36,8 +36,21 @@ school, who can't explain it in German.
 | + | **Safety floor**: if the child writes about danger or self-harm, show 110/112 and krisenchat at once. Nothing is sent to anyone | Must |
 | + | **Quick exit + PIN lock** | Must |
 | + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
-| 5 | **Witness mode**: report for someone else | Only if every Must passes the quality checklist by Wed 28 Oct 20:00 |
-| 6 | Anonymous school signal | Out. Future work |
+| + | **Picture incident builder**: tap icons for what happened, where and who (pushed, hit, names, things taken, online, left out). For children who can't write either | Tier A |
+| + | **Read-aloud** of every screen and question in the child's language, using the device's own speech engine (nothing leaves the phone) | Tier A |
+| + | **4 languages** (from: Ukrainian, Arabic, Turkish, Dari/Farsi; final set decided at the Sunday gate) | Tier A |
+| + | **Installable PWA, offline-first**: everything except translation works without network | Tier A |
+| + | **Accessibility**: WCAG 2.2 AA, screen-reader labels, large-text and dyslexia-friendly mode | Tier A |
+| + | **Onboarding** that explains, in the child's language, what the app does and never does | Tier A |
+| 5 | **Witness mode**: report for someone else | Tier B |
+| + | **Encrypted share link** for the trusted adult (key in the URL fragment, expires) + printable report | Tier B |
+| 6 | **Anonymous school signal**: where/when only, shown to the school only after several independent reports agree | Tier C |
+
+**Tiers.** Must + Tier A = the product we submit. Tier B starts only when every
+Must and Tier A item passes the quality checklist (gate: Tue 27 Oct 22:00).
+Tier C starts only when Tier B passes (gate: Wed 28 Oct 12:00). Feature
+freeze for everything: Wed 28 Oct 20:00. A feature that misses its gate is
+not shown; it goes in "future work".
 
 ### What we never build
 
@@ -149,6 +162,29 @@ child is our difference; **a real benchmark is required, not optional**.
 - Quick exit works in under 1 s.
 - Every claim in README/video has a source or is removed.
 - Eval numbers are real and reproducible.
+
+## The 30-day standard
+
+We have 6 days; the app must look and work like 30 days of work. That comes
+from depth and finish, not from a long feature list:
+
+- **Parallel work:** each person runs several Claude Code sessions at once on
+  separate branches (git worktrees), e.g. engine + eval + tests in parallel.
+  Long jobs (eval runs, test suites) run while people sleep.
+- **Engineering:** automated tests for the engine (recorded model responses,
+  no live calls in CI), GitHub Actions on every PR, a load test for ~50
+  parallel calls, a latency budget per step, structured error handling.
+- **Proof:** an eval of 50 sentences per language rated by native speakers,
+  baseline vs pipeline, reproducible with one command; numbers in the README
+  and the Devpost tagline.
+- **Design:** one design system (colour, type, spacing, illustration style,
+  motion), every state designed (empty, loading, error, offline, success),
+  micro-interactions, and a hand-tested pass on a real cheap Android phone.
+- **Trust:** `SAFETY.md` with a threat model (who could misuse the app or the
+  phone, and what we do about it), a privacy/data-flow diagram, a GDPR-style
+  data protection summary, and documented limitations.
+- **Story:** storyboarded video with voice-over and captions, architecture
+  diagram, polished Devpost page with real screenshots.
 
 ## Working agreement
 

@@ -3,8 +3,31 @@
 Deadline: **Fri 30 Oct 2026, 18:00 German time.** Full draft on Devpost by
 **Thu 29 Oct 22:00.** Friday is buffer only.
 
-Rule: no compromise on quality; scope is fixed by the clock. A feature either
-passes the quality checklist in `CLAUDE.md` or it is not shown.
+Rule: the app must look and work like 30 days of work (see "The 30-day
+standard" in `CLAUDE.md`). A feature either passes the quality checklist or it
+is not shown.
+
+## How 30 days fit into 6
+
+- **Parallel sessions:** each person runs 2–3 Claude Code sessions on separate
+  branches/worktrees. One builds, one writes tests, one reviews.
+- **Shifts:** stagger sleep so someone is building around the clock; start
+  long jobs (eval runs, test suites, deploys) before sleeping.
+- **Daily rhythm:** 10:00 sync (15 min, blockers only) · 22:00 merge to
+  `main`, deploy, everyone tests the live URL on their phone.
+- **Gates:** Must + Tier A by Tue 22:00 → Tier B until Wed 12:00 → Tier C
+  until Wed 20:00 freeze. Missed gate = not shown.
+
+## Tier owners
+
+| Item | Owner |
+|------|-------|
+| Picture incident builder, read-aloud, PWA/offline, design system | Vernika |
+| Engine tests with recorded responses, GitHub Actions CI, load test, latency budget, spending cap | Swarup |
+| 4th language test set, onboarding text, accessibility audit, `SAFETY.md` threat model, data-flow diagram | Neel |
+| Witness mode (Tier B) | Vernika (screens), Swarup (engine) |
+| Encrypted share link + printable report (Tier B) | Swarup (crypto), Vernika (UI) |
+| Anonymous school signal (Tier C) | decided at the Wed 12:00 gate |
 
 ## Sat 24 Oct: foundations
 
@@ -25,7 +48,7 @@ passes the quality checklist in `CLAUDE.md` or it is not shown.
   (fan-out, back-translation, judge).
 - **Vernika:** FastAPI `main.py` on the mocks; screens 1 and 2; i18n with RTL
   working from the start.
-- **Neel:** test set of 30 sentences per language (slang and insults
+- **Neel:** test set of 50 sentences per language (slang and insults
   included) in `eval/testset/`; safety content drafts with sources.
 - 🚩 **Gate, Sun night:** if Nemotron is weak in a language, swap that
   language.
