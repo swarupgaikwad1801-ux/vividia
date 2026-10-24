@@ -1,0 +1,45 @@
+{
+  "_comment": "Hindi starter set, Neel, 24 Oct 2026. DRAFT: written with Claude and not yet reviewed. A native Hindi speaker on the team must read every line and every trap before this set is used for any reported number. Every line is invented; none comes from a real child. Each case appears twice: in Devanagari ('Deva') and as children actually type on phones, Hindi in Latin letters mixed with English ('Latn', Hinglish). Ids 1-8 mirror en_starter.json so results can be compared across languages; ids from 'maarta' onward are traps that exist in Hindi itself.",
+  "source_lang": "hi",
+  "target_lang": "de",
+  "cases": [
+    {"id": "laughed-at", "script": "Deva", "text": "उन्होंने फिर से मेरा बैग ले लिया और सब मुझ पर हँसे।", "trap": "'मुझ पर हँसे' is laughing at me (auslachen), not with me (mit mir lachen)."},
+    {"id": "laughed-at", "script": "Latn", "text": "unhone phir se mera bag le liya aur sab mujh pe hanse", "trap": "Same as Deva. 'mujh pe' vs 'mere saath' carries the whole meaning."},
+
+    {"id": "left-out", "script": "Deva", "text": "लंच में कोई मेरे पास नहीं बैठना चाहता। वो हमेशा मुझे अलग कर देते हैं।", "trap": "'अलग कर देते हैं' is deliberate exclusion (ausgrenzen), not 'leave me alone'."},
+    {"id": "left-out", "script": "Latn", "text": "lunch mein koi mere paas nahi baithna chahta. woh hamesha mujhe alag kar dete hain", "trap": "Same as Deva."},
+
+    {"id": "pushed-stairs", "script": "Deva", "text": "उसने मुझे सीढ़ियों पर धक्का दिया और बोला कि बस मज़ाक था।", "trap": "'बस मज़ाक था' is the bully's excuse; it must stay reported speech, not become the app's view."},
+    {"id": "pushed-stairs", "script": "Latn", "text": "usne mujhe seedhiyon pe dhakka diya aur bola bas mazaak tha", "trap": "Same as Deva."},
+
+    {"id": "photo-group", "script": "Deva", "text": "किसी ने क्लास ग्रुप में मेरी फोटो डाल दी और सबने उसके नीचे गंदी बातें लिखीं।", "trap": "'क्लास ग्रुप' is a chat group (Klassenchat), not the class itself."},
+    {"id": "photo-group", "script": "Latn", "text": "kisi ne class group mein meri photo daal di aur sabne uske neeche gandi baatein likhi", "trap": "Same as Deva."},
+
+    {"id": "scared-tell", "script": "Deva", "text": "मुझे किसी को बताने में डर लगता है क्योंकि पिछली बार और बुरा हो गया था।", "trap": "'और बुरा हो गया था' means the bullying got worse after telling, the core of our product."},
+    {"id": "scared-tell", "script": "Latn", "text": "mujhe kisi ko batane mein dar lagta hai kyunki pichhli baar aur bura ho gaya tha", "trap": "Same as Deva."},
+
+    {"id": "called-names", "script": "Deva", "text": "वो मुझे मेरे देश को लेकर गालियाँ देते हैं।", "trap": "'गालियाँ देना' is verbal abuse (beschimpfen); the link to where the child comes from must survive."},
+    {"id": "called-names", "script": "Latn", "text": "woh mujhe mere desh ko lekar gaaliyan dete hain", "trap": "Same as Deva."},
+
+    {"id": "took-money", "script": "Deva", "text": "उन्होंने मुझसे ज़बरदस्ती पैसे लिए और बोला किसी को मत बताना।", "trap": "'ज़बरदस्ती' is coercion (zwingen); 'मत बताना' is a threat-backed instruction and the negation must survive."},
+    {"id": "took-money", "script": "Latn", "text": "unhone mujhse zabardasti paise liye aur bola kisi ko mat batana", "trap": "Same as Deva."},
+
+    {"id": "cant-say", "script": "Deva", "text": "मुझे नहीं पता जर्मन में कैसे बोलूँ और जब मैं कोशिश करता हूँ तो टीचर चिढ़ जाती हैं।", "trap": "'चिढ़ जाती हैं' is mild irritation (genervt), not anger (wütend)."},
+    {"id": "cant-say", "script": "Latn", "text": "mujhe nahi pata german mein kaise bolun aur jab main try karta hun to teacher chidh jaati hain", "trap": "Same as Deva."},
+
+    {"id": "maarta", "script": "Deva", "text": "वो मुझे रोज़ मारता है।", "trap": "'मारना' here is hitting or beating (schlagen); it must never become killing (töten)."},
+    {"id": "maarta", "script": "Latn", "text": "woh mujhe roz maarta hai", "trap": "Same as Deva."},
+
+    {"id": "chhedte", "script": "Deva", "text": "वो लड़के मुझे रास्ते में छेड़ते हैं।", "trap": "'छेड़ना' ranges from teasing to harassment, including sexual harassment. Genuinely two readings: expect source_ambiguous and a question to the child, never a silent pick."},
+    {"id": "chhedte", "script": "Latn", "text": "woh ladke mujhe raaste mein chhedte hain", "trap": "Same as Deva."},
+
+    {"id": "dekh-lunga", "script": "Deva", "text": "उसने कहा छुट्टी के बाद देख लूँगा।", "trap": "'देख लूँगा' is a threat (I'll get you), not 'I will see / look'. Mirrors 'he said he would get me after school'."},
+    {"id": "dekh-lunga", "script": "Latn", "text": "usne bola chhutti ke baad dekh lunga", "trap": "Same as Deva."},
+
+    {"id": "bhaiya", "script": "Deva", "text": "एक भैया ने मेरा फोन छीन लिया।", "trap": "'भैया' is an older boy, usually not the child's brother; 'छीन लिया' is snatched by force, not borrowed."},
+    {"id": "bhaiya", "script": "Latn", "text": "ek bhaiya ne mera phone chheen liya", "trap": "Same as Deva."},
+
+    {"id": "kuch-nahi-kiya", "script": "Deva", "text": "मैंने कुछ नहीं किया था, फिर भी उन्होंने मुझे सज़ा दिलवाई।", "trap": "The negation 'कुछ नहीं किया' (I did nothing) must survive; 'सज़ा दिलवाई' means they got me punished, the actor is 'they', not the teacher."},
+    {"id": "kuch-nahi-kiya", "script": "Latn", "text": "maine kuch nahi kiya tha, phir bhi unhone mujhe saza dilwayi", "trap": "Same as Deva."}
+  ]
+}
