@@ -11,6 +11,7 @@ import asyncio
 from datetime import datetime, timezone
 
 from engine.contract import Entry, Report, Resource, SafetyResult, TranslationResult
+from engine.resources import national_helplines
 
 
 async def translate(
@@ -68,13 +69,13 @@ async def resources_with_source(state: str, lang: str) -> tuple[list[Resource], 
 
 async def resources(state: str, lang: str) -> list[Resource]:
     await asyncio.sleep(0.5)
-    return [
-        {
-            "name": "Nummer gegen Kummer (example entry, not yet verified)",
-            "contact": "116 111",
-            "hours": "TBD",
-            "languages": ["de"],
-            "source_url": "TBD",
-            "retrieved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        }
-    ]
+    # Read the curated list rather than keeping a second copy of a phone
+    # number. helplines.json is the single source of truth, and two copies of
+    # an emergency number drift apart silently. This entry used to hold
+    # "116 111" with hours and source_url set to "TBD", which is exactly the
+    # drift that file's comment forbids, and a mock showing an unsourced
+    # emergency number is worse than one showing none.
+    #
+    # national_helplines() only reads that file: no network, no key, nothing
+    # to pay for, so the mock stays usable with nothing configured.
+    return national_helplines()
