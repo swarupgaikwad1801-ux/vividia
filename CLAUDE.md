@@ -494,6 +494,49 @@ sentences are mostly unambiguous, where one pass is already strong. The
 English set holds the inversions this exists to catch; that run decides
 whether the claim stands at all.
 
+## Benchmark result (24 Oct 2026): a draw on accuracy
+
+80 sentences, 50 English and 30 Hindi, scored by matching words against an
+answer key we wrote. No model grades another model.
+
+| | Meaning kept, single pass | Meaning kept, ours | Asked the child | Avg calls |
+|---|---|---|---|---|
+| English (50) | 48/50 | 48/50 | 3 | 11.9 |
+| Hindi (30) | 28/30 | 28/30 | 5 | 10.3 |
+| **Total** | **76/80** | **76/80** | **8** | ~11 |
+
+Safety: 0 missed crises in either set; 2 and 3 over-triggers.
+
+**Our verification does not beat a single pass on accuracy. It draws.** We
+report that rather than quoting only the cases where it helps.
+
+What the extra calls actually buy is the 8 sentences where the child's own
+words carried two meanings. A single pass picked one silently; ours asked the
+child, and their answer decided the German. That is not an accuracy
+improvement, it is a different thing: the child keeps authorship of their own
+account.
+
+### Why the earlier evidence disappeared
+
+Verification was built after watching a single pass invert meaning:
+"gegeben" for "gezwungen", "trifft" for "schlägt". Those were real, on
+Nemotron 3.5 Lightning. Switching the fan-out to Super-VL for the language
+gate fixed the single pass too, so on the model we ship those sentences come
+back correct 5 times out of 5 and the failure we built for cannot be shown.
+
+Kept anyway, and said plainly, because the failure is silent when it does
+happen: nothing disagrees, confidence reads 1.00, and a teacher sees German
+that looks fine. Guarding a silent failure is worth something even when it is
+rare. Overstating it is not.
+
+### The claim we make, and the one we do not
+
+- Yes: "when a child's words have two meanings, we ask them instead of
+  guessing." Reproducible in one try.
+- Yes: "0 missed crises on our safety set."
+- No: "more accurate than a single pass." It is not, on our evidence.
+- No: the "trifft mich" example. It belongs to a model we no longer use.
+
 ## Hard requirements (failing any one = disqualified)
 
 1. Runtime call to **Nebius Token Factory** (we do this in every engine call).

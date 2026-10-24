@@ -265,7 +265,11 @@ English**, and that the architecture is language-independent.
 - Benchmark: 50 English and 30 Hindi sentences, drafted by the team with
   Claude's help and then read line by line by a team member who speaks the
   language, scored against a reference meaning with `eval/run_eval.py`.
-  Results: _TBD; no number is published here until that review is signed off._
+  Results: **76/80 for a single pass, 76/80 for ours** - a draw on accuracy.
+  What the extra calls buy is the 8 sentences where the child's own words
+  had two meanings and the app asked them instead of guessing. 0 missed
+  crises on the safety set. Numbers stand once the native review of the
+  sentences is signed off; the method and raw output are in `eval/`.
 
 ## Team
 
