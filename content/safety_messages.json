@@ -1,6 +1,6 @@
 {
   "_comment": "Fixed text and contacts shown when the safety check fires. NEVER model-generated: a model must not invent emergency guidance for a child. Neel owns this file and verifies every number and URL against its official source before submission. Phone numbers here are long-standing German public services, but each still needs its source_url checked and the checked_on date updated.",
-  "_review_status": "DRAFT - numbers are well known but not yet verified against official pages by a human. Do not ship or demo as verified until Neel sets _review_status to 'verified' and fills every source_url.",
+  "_review_status": "SOURCES CHECKED 2026-10-24 against the official pages in each source_url (Neel's Claude session). Waiting for Neel to confirm by hand, then set to 'verified'. Open question: the Hindi self_harm message sends a Hindi-speaking child to krisenchat, which does not confirm Hindi counselling.",
   "contacts": [
     {
       "id": "police",
@@ -8,8 +8,8 @@
       "contact": "110",
       "when": "immediate_danger",
       "hours": "24/7",
-      "source_url": "TODO: polizei.de",
-      "checked_on": null
+      "source_url": "https://im.baden-wuerttemberg.de/de/sicherheit/wichtige-rufnummern-fuer-den-notfall",
+      "checked_on": "2026-10-24"
     },
     {
       "id": "emergency",
@@ -17,27 +17,28 @@
       "contact": "112",
       "when": "immediate_danger",
       "hours": "24/7",
-      "source_url": "TODO: 112.eu",
-      "checked_on": null
+      "source_url": "https://im.baden-wuerttemberg.de/de/sicherheit/wichtige-rufnummern-fuer-den-notfall",
+      "checked_on": "2026-10-24"
     },
     {
       "id": "nummer_gegen_kummer",
       "name": "Nummer gegen Kummer (Kinder- und Jugendtelefon)",
       "contact": "116 111",
       "when": "talk_to_someone",
-      "hours": "TODO: verify current opening hours",
-      "source_url": "TODO: nummergegenkummer.de",
-      "checked_on": null
+      "hours": "Mo–Sa 14–20 Uhr",
+      "source_url": "https://www.nummergegenkummer.de/",
+      "checked_on": "2026-10-24",
+      "note": "Free and anonymous, for children and young people up to 19 (per the service's site)."
     },
     {
       "id": "krisenchat",
       "name": "krisenchat",
       "contact": "https://krisenchat.de",
       "when": "talk_to_someone",
-      "hours": "TODO: verify",
-      "note": "Text chat, so a child who cannot speak aloud can still reach a person.",
-      "source_url": "TODO: krisenchat.de",
-      "checked_on": null
+      "hours": "24/7",
+      "note": "Text chat, so a child who cannot speak aloud can still reach a person. Free, for everyone under 25. The site confirms German and a Ukrainian page; it does NOT confirm Hindi or English counselling.",
+      "source_url": "https://krisenchat.de/",
+      "checked_on": "2026-10-24"
     }
   ],
   "messages": {
