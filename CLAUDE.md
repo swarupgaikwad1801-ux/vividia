@@ -38,7 +38,7 @@ school, who can't explain it in German.
 | + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
 | + | **Picture incident builder**: tap icons for what happened, where and who (pushed, hit, names, things taken, online, left out). For children who can't write either | Tier A |
 | + | **Read-aloud** of every screen and question in the child's language, using the device's own speech engine (nothing leaves the phone) | Tier A |
-| + | **4 languages** (from: Ukrainian, Arabic, Turkish, Dari/Farsi; final set decided at the Sunday gate) | Tier A |
+| + | **Hindi and English** as source languages, German as target (decided 24 Oct, see the language gate) | Tier A |
 | + | **Installable PWA, offline-first**: everything except translation works without network | Tier A |
 | + | **Accessibility**: WCAG 2.2 AA, screen-reader labels, large-text and dyslexia-friendly mode | Tier A |
 | + | **Onboarding** that explains, in the child's language, what the app does and never does | Tier A |
@@ -255,6 +255,30 @@ plainly said the opposite.
 
 Cost of all this, measured: a safe sentence takes 2 calls and ~340 ms; a
 sentence needing full verification and repair takes 13 calls and ~3 s.
+
+## Shipped languages: Hindi and English (decided 24 Oct)
+
+Arabic, Ukrainian and Turkish are **out**. Not because a child speaking them
+matters less, but because we could not verify quality in them: see the
+language gate below, where 17 of 18 machine-made test sentences were already
+broken and none of us can read the output.
+
+Hindi replaces them. On the first five Hindi sentences the pipeline kept
+every critical detail, including the two that broke other languages
+(*mara* -> "schlaegt" not "trifft"; *jabardasti* -> "gewaltsam abgenommen").
+
+What this unblocks: **all three of us read Hindi**, so the benchmark no
+longer waits on finding strangers. Neel writes the Hindi test set himself,
+and two teammates review every sentence independently. That is real human
+validation by native speakers, which is stronger evidence than a
+machine-graded score in a language nobody on the team can check.
+
+Honesty rule that follows: we say the system is **built and measured for
+Hindi and English**, and that the architecture is language-independent. We do
+not claim it works in Arabic, Ukrainian or Turkish, and we do not demo them.
+
+The demo child is Hindi-speaking. Pick the name with the team; "Amira" no
+longer fits.
 
 ## The language gate: result and what it changed (24 Oct)
 

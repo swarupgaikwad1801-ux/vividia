@@ -153,7 +153,7 @@ async def run_case(case, lang, overhead, semaphore):
 
 async def main() -> int:
     parser = argparse.ArgumentParser(description="Check the pipeline in the languages we ship.")
-    parser.add_argument("--languages", default="ar,uk,tr", help="comma-separated ISO 639-1 codes")
+    parser.add_argument("--languages", default="hi", help="comma-separated ISO 639-1 codes")
     parser.add_argument("--cases", type=int, default=6, help="how many sentences from the starter set")
     parser.add_argument("--concurrency", type=int, default=3)
     args = parser.parse_args()
