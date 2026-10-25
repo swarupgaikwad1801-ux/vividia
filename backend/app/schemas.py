@@ -128,6 +128,13 @@ class Entry(BaseModel):
     text_de: str
     place: str | None = None
     people: str | None = None
+    note: str | None = Field(
+        default=None,
+        description=(
+            "The child's own answer to a clarification question, in their own "
+            "words. Printed verbatim beside the entry and never paraphrased."
+        ),
+    )
 
 
 class ReportRequest(BaseModel):
