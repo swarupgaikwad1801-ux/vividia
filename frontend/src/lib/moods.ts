@@ -30,8 +30,12 @@
  * test holds that every code that file uses still exists here.
  */
 
-/** ISO 639-1 codes we ship copy for. */
-export type Lang = "en" | "de" | "hi";
+import { HINDI_REVIEWED, STRINGS, type Lang } from "./strings.ts";
+
+// The labels live in strings.ts with the rest of the screen text, so one
+// Hindi review and one flag cover all of it. Re-exported so callers of this
+// module keep working.
+export { HINDI_REVIEWED, type Lang };
 
 export interface Mood {
   /** Stored in the timeline. Stable: changing one orphans existing entries. */
@@ -42,24 +46,14 @@ export interface Mood {
   label: Record<Lang, string>;
 }
 
-/**
- * The Hindi labels have NOT been read by a native speaker.
- *
- * Kept as an exported flag rather than only a comment so a screen can show
- * the same caveat the rest of our Hindi copy carries, and so a test fails if
- * someone deletes the marker without doing the review. Flip it in the same
- * commit as the review, naming who read it.
- */
-export const HINDI_REVIEWED = false;
-
 export const MOODS: readonly Mood[] = [
-  { code: "good", emoji: "🙂", label: { en: "Good", de: "Gut", hi: "अच्छा" } },
-  { code: "ok", emoji: "😐", label: { en: "OK", de: "Geht so", hi: "ठीक है" } },
-  { code: "sad", emoji: "😢", label: { en: "Sad", de: "Traurig", hi: "दुखी" } },
-  { code: "scared", emoji: "😨", label: { en: "Scared", de: "Angst", hi: "डर लग रहा है" } },
-  { code: "angry", emoji: "😠", label: { en: "Angry", de: "Wütend", hi: "गुस्सा" } },
-  { code: "alone", emoji: "😞", label: { en: "Alone", de: "Allein", hi: "अकेला" } },
-] as const;
+  { code: "good", emoji: "🙂", label: STRINGS["mood.good"] },
+  { code: "ok", emoji: "😐", label: STRINGS["mood.ok"] },
+  { code: "sad", emoji: "😢", label: STRINGS["mood.sad"] },
+  { code: "scared", emoji: "😨", label: STRINGS["mood.scared"] },
+  { code: "angry", emoji: "😠", label: STRINGS["mood.angry"] },
+  { code: "alone", emoji: "😞", label: STRINGS["mood.alone"] },
+];
 
 /** Codes that `content/demo_story.json` relies on; a test checks the file itself. */
 export const REQUIRED_CODES = ["sad", "scared"] as const;
