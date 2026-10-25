@@ -396,6 +396,13 @@ async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
 
     labels = [o["label"] for o in parsed.get("options", [])][: len(readings)]
     if len(labels) < 2:
+        # The model returned a question with too few options. The schema now
+        # demands two, which fixed it in testing, but dropping the question
+        # silently is the worst possible failure here: the app would pick a
+        # reading of the child's words without telling them, which is the one
+        # thing it exists not to do. Fall back to the readings themselves.
+        labels = [reading["meaning"] for reading in readings]
+    if len(labels) < 2 or not parsed.get("question", "").strip():
         return None
     return {
         "phrase": phrase,
