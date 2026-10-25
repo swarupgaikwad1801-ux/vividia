@@ -41,7 +41,11 @@ export default function App() {
             aria-pressed={lang === code}
             className={`min-h-tap flex-1 rounded-card border text-sm font-medium transition-colors ${
               lang === code
-                ? "border-calm bg-calm text-white"
+                // `text-page`, never `text-white`: in dark mode --color-calm is a
+                // light teal, and white on it measures about 2.3:1 — unreadable, and
+                // well under the 4.5:1 this app owes a child. --color-page flips with
+                // the theme, giving ~5.7:1 light and ~8:1 dark.
+                ? "border-calm bg-calm text-page"
                 : "border-line bg-surface text-ink hover:border-calm"
             }`}
           >
