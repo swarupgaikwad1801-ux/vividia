@@ -219,6 +219,12 @@ QUESTION_SCHEMA = {
                 "question": {"type": "string"},
                 "options": {
                     "type": "array",
+                    # Measured: without minItems the model returned a perfectly
+                    # good question with an empty options array in 3 runs out
+                    # of 5, which is schema-valid and useless. The question was
+                    # then dropped and the child was asked nothing.
+                    "minItems": 2,
+                    "maxItems": 2,
                     "items": {
                         "type": "object",
                         "additionalProperties": False,
@@ -440,3 +446,12 @@ ACTOR_THREAT_SCHEMA = {
         },
     },
 }
+
+
+# --- the report ---------------------------------------------------------------
+#
+# There is deliberately no report prompt. An earlier draft had one write a
+# short overview; it produced the German and the child's language as two
+# independent strings, so the German the adult read was never the text the
+# child approved. engine/report_text.py builds the overview from a template
+# instead, and the rules such a prompt would have to obey are recorded there.

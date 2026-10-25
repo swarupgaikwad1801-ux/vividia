@@ -1,0 +1,73 @@
+{
+  "_comment": "The ambiguity check is free to report three readings, and nothing in its schema caps it. The frozen contract allows at most three options per question (schemas.Ambiguity, max_length=3), and the fixed \"something else\" option now takes the third slot. Without a cap this would build four options and the response would fail validation on the way out, which the child would see as a 500 instead of a question. The actor/threat answer is a pass: this sentence's problem is three readings, not a flipped direction, and that check has its own fixtures on main.",
+  "_provenance": "hand-authored",
+  "scenario": "a three-reading ambiguity still fits the contract once the escape option is added",
+  "source_lang": "en",
+  "text": "He was messing with me at break.",
+  "tokens": {
+    "prompt": 104,
+    "completion": 26
+  },
+  "responses": {
+    "translate": [
+      "Er hat in der Pause mit mir herumgemacht."
+    ],
+    "back_translate": [
+      "He was fooling around with me at break."
+    ],
+    "ambiguity": [
+      {
+        "ambiguous_phrases": [
+          {
+            "phrase": "messing with me",
+            "readings": [
+              {
+                "meaning": "he was playing around in a friendly way",
+                "target_phrasing": "hat mit mir herumgealbert"
+              },
+              {
+                "meaning": "he was picking on the child on purpose",
+                "target_phrasing": "hat mich absichtlich geärgert"
+              },
+              {
+                "meaning": "he was touching the child in a way they did not want",
+                "target_phrasing": "hat mich unerwünscht angefasst"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "judge": [
+      {
+        "best_index": 0,
+        "agreement": 1.0,
+        "meaning_lost": [],
+        "disputes": []
+      }
+    ],
+    "actor_threat": [
+      {
+        "direction_kept": true,
+        "threat_kept": true,
+        "what_changed": ""
+      }
+    ],
+    "question": [
+      {
+        "question": "When you said \"messing with me\", what did he do?",
+        "options": [
+          {
+            "label": "Playing around, friendly"
+          },
+          {
+            "label": "Picking on me on purpose"
+          },
+          {
+            "label": "Touching me when I did not want it"
+          }
+        ]
+      }
+    ]
+  }
+}

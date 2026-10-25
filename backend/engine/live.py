@@ -8,16 +8,20 @@ As Swarup and Neel finish a module, replace the mock line here and update
 STATUS in the same commit.
 """
 
+from typing import Literal
+
 from engine import mock
 from engine.contract import Report, Resource, SafetyResult, TranslationResult
+from engine.resources import resources as _resources
+from engine.resources import resources_with_source as _resources_with_source
 from engine.safety import safety_check as _safety_check
 from engine.translate import translate as _translate
 
 STATUS = {
     "translate": "live",
-    "report": "mock",
+    "report": "live",
     "safety_check": "live",
-    "resources": "mock",
+    "resources": "live",
 }
 
 
@@ -35,7 +39,7 @@ async def translate(
 
 
 async def report(entries: list, child_lang: str) -> Report:
-    return await mock.report(entries, child_lang)
+    return await _report(entries, child_lang)
 
 
 async def safety_check(text: str, lang: str) -> SafetyResult:
@@ -43,4 +47,17 @@ async def safety_check(text: str, lang: str) -> SafetyResult:
 
 
 async def resources(state: str, lang: str) -> list[Resource]:
-    return await mock.resources(state, lang)
+    return await _resources(state, lang)
+
+
+async def resources_with_source(
+    state: str, lang: str
+) -> tuple[list[Resource], Literal["live", "fallback"]]:
+    """The same list, plus whether the local lookup actually reached Tavily.
+
+    main.py needs the second value so ResourcesResponse.source stops being a
+    hard-coded "fallback". The child is shown that word, so it has to be true:
+    it is the difference between a number we looked up today and one we are
+    serving from our own curated file.
+    """
+    return await _resources_with_source(state, lang)

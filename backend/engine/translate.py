@@ -21,6 +21,7 @@ import re
 from functools import lru_cache
 
 from engine.budget import over_budget
+from engine.clarify_text import is_other, other_option
 from engine.client import EngineError, Usage, call
 from engine.config import REPO_ROOT
 from engine.contract import Ambiguity, TranslationResult
@@ -385,7 +386,18 @@ async def _actor_and_threat_kept(text, german, back, source_lang, target_lang, u
 
 
 async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
-    """Turn one disputed phrase into a question a child can actually answer."""
+    """Turn one disputed phrase into a question a child can actually answer.
+
+    The answer always ends with the fixed "something else" option, so a child
+    whose meaning is neither of the readings is never cornered into picking one.
+
+    The readings are capped at two because the frozen contract allows at most
+    three options (`schemas.Ambiguity.options`, max_length=3) and the escape
+    option now takes the third slot. Without the cap, a three-reading ambiguity
+    would build four options and the response would fail validation on its way
+    out, which the child would see as a 500 rather than a question.
+    """
+    readings = readings[:2]
     options_text = "\n".join(f"- {r['meaning']}" for r in readings)
     user = f'Phrase from the child: "{phrase}"\n\nPossible meanings:\n{options_text}'
     raw = await call(
@@ -405,24 +417,45 @@ async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
 
     labels = [o["label"] for o in parsed.get("options", [])][: len(readings)]
     if len(labels) < 2:
+        # The model returned a question with too few options. The schema now
+        # demands two, which fixed it in testing, but dropping the question
+        # silently is the worst possible failure here: the app would pick a
+        # reading of the child's words without telling them, which is the one
+        # thing it exists not to do. Fall back to the readings themselves.
+        labels = [reading["meaning"] for reading in readings]
+    if len(labels) < 2 or not parsed.get("question", "").strip():
         return None
     return {
         "phrase": phrase,
         "question": parsed["question"],
         "options": [
-            {"id": f"opt{i}", "label": label, "meaning_de": readings[i]["target_phrasing"]}
-            for i, label in enumerate(labels)
+            *(
+                {"id": f"opt{i}", "label": label, "meaning_de": readings[i]["target_phrasing"]}
+                for i, label in enumerate(labels)
+            ),
+            # Fixed text, never model-generated: this is the one option that
+            # has to read identically every time, because it is the way out.
+            other_option(source_lang),
         ],
         "severity": "critical",
     }
 
 
 def _decisions_text(ambiguities, choices) -> str:
-    """Render the child's answers as instructions for the final pass."""
+    """Render the child's answers as instructions for the final pass.
+
+    The "something else" option is skipped. Picking it says neither reading was
+    right, so there is no decision to render and nothing to tell the
+    translator; the child is asked to write the sentence again instead. Passing
+    it through would put an empty meaning in the prompt, which reads to the
+    model as an instruction to render nothing.
+    """
     lines = []
     for ambiguity in ambiguities:
         chosen = choices.get(ambiguity["phrase"])
         for option in ambiguity["options"]:
+            if is_other(option["id"]):
+                continue
             if option["id"] == chosen or option["label"] == chosen:
                 lines.append(f'- "{ambiguity["phrase"]}" means: {option["meaning_de"]}')
     return "\n".join(lines)
@@ -573,6 +606,69 @@ def _finish(result: dict, usage: Usage, strategy: str) -> TranslationResult:
     }
 
 
+async def _same_language(text, source_lang, usage, clarifications, strategy):
+    """The child already writes the language the adult reads.
+
+    A German-speaking child is the majority of bullied children in Germany,
+    and until 25 Oct this function did not exist, so their path through the
+    app was broken in the worst way available:
+
+    `untranslated()` treats output identical to the input as a failed pass,
+    which is right for Hindi->German and exactly wrong for German->German,
+    where the correct answer IS the input. So the first pass "failed", the
+    retry told the model "Do not repeat the German text", and the child got
+    either an `upstream_unavailable` error or **their own words paraphrased
+    by a model**. A paraphrase is the one thing this app must never put in
+    front of a teacher: report.py exists to stop precisely that, and it was
+    being handed one from upstream.
+
+    So nothing is translated here. The text the adult reads is the text the
+    child wrote, character for character, and no model is asked to improve it.
+
+    What still runs is the part that was never about translation: the check
+    for a phrase that can honestly be read two ways, and the question to the
+    child about it. "Er hat mich angemacht" is two different events to the
+    adult who acts on it, and only the child knows which. That check reads
+    the child's own sentence and never needed a translation to work.
+
+    Cost: one call instead of about ten.
+
+    `strategy_used` still reports the strategy the caller asked for. A
+    `same_language` member would describe this path honestly, but Strategy is
+    in the frozen HTTP contract that all three of us have to agree on, so it
+    is proposed in the PR rather than taken here.
+    """
+    if clarifications:
+        # The child has answered. Their answer does not change their own
+        # words - there is nothing to re-render - so it belongs in the report
+        # as a note beside the entry, which is a contract change and Vernika's
+        # call. Until then the answer is recorded by the caller and the text
+        # stays exactly as the child wrote it.
+        return _finish({"translation": text, "confidence": 1.0, "ambiguities": []}, usage, strategy)
+
+    if strategy == BASELINE:
+        # The honest comparison point: a single pass has nothing to do here
+        # either, so neither path spends a call and the benchmark stays fair.
+        return _finish({"translation": text, "confidence": 1.0, "ambiguities": []}, usage, BASELINE)
+
+    ambiguous = await _find_ambiguity(text, source_lang, source_lang, usage)
+    questions = await asyncio.gather(
+        *[_question(item["phrase"], item["readings"], source_lang, usage) for item in ambiguous[:2]]
+    )
+    return _finish(
+        {
+            "translation": text,
+            # Nothing was translated, so no meaning can have been lost in
+            # translation. This is not a claim that the app understood the
+            # child - that is what the question is for.
+            "confidence": 1.0,
+            "ambiguities": [q for q in questions if q],
+        },
+        usage,
+        strategy,
+    )
+
+
 async def translate(
     text: str,
     source_lang: str,
@@ -589,6 +685,11 @@ async def translate(
     """
     usage = Usage()
     text = text.strip()
+
+    if source_lang == target_lang:
+        # Not a translation problem. See _same_language: translating German
+        # into German made the app paraphrase the child or fail outright.
+        return await _same_language(text, source_lang, usage, clarifications, strategy)
 
     if clarifications:
         decisions = _decisions_text(_ambiguities or [], clarifications)
