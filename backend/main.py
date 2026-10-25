@@ -81,8 +81,10 @@ app.add_middleware(
 # even on a day when the demo has spent its allowance.
 GUARD = Guard()
 
-# Neel owns this file; this route only reads it.
+# Neel owns these files; the routes below only read them.
 DEMO_STORY = REPO_ROOT / "content" / "demo_story.json"
+ADULT_GUIDE = REPO_ROOT / "content" / "adult_guide.json"
+ONBOARDING = REPO_ROOT / "content" / "onboarding.json"
 log.info("demo limits: %s, %d requests per %ds per client",
          GUARD.status(), GUARD.per_ip_requests, int(GUARD.per_ip_window_s))
 
@@ -319,6 +321,7 @@ async def demo() -> dict:
     }
 
 
+
 @app.get("/api/emergency", response_model=EmergencyResponse)
 async def emergency() -> EmergencyResponse:
     """110 and 112, so no screen ever types a phone number itself.
@@ -334,6 +337,54 @@ async def emergency() -> EmergencyResponse:
     except Exception as error:  # noqa: BLE001 - a broken content file is ours, not the child's
         raise ChildSafeError(error, "en") from error
     return EmergencyResponse(contacts=contacts)
+
+
+def _without_notes(value):
+    """Drop every key starting with "_", at any depth: notes to the team, not payload."""
+    if isinstance(value, dict):
+        return {key: _without_notes(item) for key, item in value.items() if not key.startswith("_")}
+    if isinstance(value, list):
+        return [_without_notes(item) for item in value]
+    return value
+
+
+def _content_file(path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as error:  # noqa: BLE001 - a broken content file is ours, not the child's
+        raise ChildSafeError(error, "en") from error
+
+
+@app.get("/api/guide")
+async def guide() -> dict:
+    """The trusted adult's 5-minute guide and the escalation ladder.
+
+    Served as content/adult_guide.json is, for the same reason /api/demo has
+    no response model: the wording is Neel's and changes without a schema
+    change. Every step keeps its source key, and `sources` maps those keys to
+    the pages they come from, so the handoff card can link each one.
+
+    No model call, outside the spending cap: the adult has to be able to read
+    this on the day the demo has spent its allowance.
+    """
+    return _without_notes(_content_file(ADULT_GUIDE))
+
+
+@app.get("/api/onboarding")
+async def onboarding() -> dict:
+    """First-run screens, in the child's language, served as the file has them.
+
+    The file's `_review` note says whether a native speaker has read the Hindi.
+    That one note is turned into `hindi_reviewed`, so the screen can carry the
+    same "not yet reviewed" caveat as the rest of the Hindi copy rather than
+    presenting a draft as final. No model call, outside the spending cap.
+    """
+    raw = _content_file(ONBOARDING)
+    return {
+        **_without_notes(raw),
+        "hindi_reviewed": bool((raw.get("_review") or {}).get("hi")),
+    }
+
 
 
 @app.get("/api/resources", response_model=ResourcesResponse)
