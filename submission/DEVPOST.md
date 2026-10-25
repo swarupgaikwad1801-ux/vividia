@@ -44,6 +44,10 @@ exactly what the child meant, and leaves the child in charge of who hears it.
   Tavily, only from official state sites.
 - **Never behind the child's back:** no monitoring, no automatic alerts, no AI
   "friend", no diagnosis.
+- **Never a guess about the child:** the app does not work out from anything
+  the child does whether they are being bullied, and gives no risk score.
+  Every word passed on was written by the child and confirmed by the child;
+  we add nothing.
 
 ## How we built it
 
@@ -58,8 +62,9 @@ exactly what the child meant, and leaves the child in charge of who hears it.
   - Safety check: the model only classifies; the words a child in crisis sees
     are fixed text written and source-checked by people.
 - **Adaptive verification:** two cheap passes first; the full check only when
-  a sentence carries risk (negation, coercion, an unnamed actor) or the passes
-  disagree. Measured: a safe sentence takes 2 calls and about 0.34 s; a
+  a sentence carries risk (negation, coercion or threat wording, slang) or the
+  passes disagree. An unnamed actor ("they", "he") used to count too; removing
+  it cut escalation from 37 to 19 of 50 English sentences and raised the score. Measured: a safe sentence takes 2 calls and about 0.34 s; a
   sentence needing full verification and repair takes 15 calls and about 3 s.
 - **Tavily** finds the school psychology service for the child's state,
   restricted to one hand-checked official site per state for all 16 states.
@@ -69,13 +74,20 @@ exactly what the child meant, and leaves the child in charge of who hears it.
   lives only in the child's browser.
 - **Stack:** React + Vite + TypeScript + Tailwind, FastAPI, Python.
 - **Benchmark:** `eval/run_eval.py` compares a single translation with our
-  pipeline on 50 English and 30 Hindi sentences written by people, scored
-  against a human answer key with plain string matching, so no model grades
+  pipeline on 50 English and 30 Hindi sentences drafted by the team with
+  Claude's help and reviewed by native speakers, scored against a
+  team-written answer key with plain string matching, so no model grades
   another model. Results: **level: 76/80 and 77/80**, a margin too small
   on 80 sentences to claim. What the extra
-  calls buy is the 8 of 80 sentences where the child's own words carried
+  calls buy is the sentences where the child's own words carried
   two meanings: a single pass picked one silently, ours asked the child.
   0 missed crises on the safety set.
+  <!-- NOT FINAL. Before this goes public: (1) the Hindi review must be done,
+  so "reviewed by native speakers" is true; (2) the scores and the number of
+  sentences where the app asked come from the new eval run. The old "8 of 80"
+  was undercounted, and #52 found the real figure is 11, so no count is given
+  until the re-run. -->
+
 
 ## Challenges we ran into
 
