@@ -41,7 +41,9 @@ exactly what the child meant, and leaves the child in charge of who hears it.
   it happens at home, the app never suggests family members.
 - **Help on every screen:** 116 111, krisenchat and 110/112, verified against
   official sources, plus the local school psychology service found live with
-  Tavily, only from official state sites.
+  Tavily, only from official state sites. These services answer in German
+  (krisenchat also in Ukrainian), none confirms Hindi or English, and the app
+  prints each service's languages on screen so a child is not surprised.
 - **Never behind the child's back:** no monitoring, no automatic alerts, no AI
   "friend", no diagnosis.
 - **Never a guess about the child:** the app does not work out from anything
