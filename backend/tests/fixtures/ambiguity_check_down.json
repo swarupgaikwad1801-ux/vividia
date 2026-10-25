@@ -1,0 +1,58 @@
+{
+  "_comment": "The model's ambiguity check failing on every attempt. It used to be gathered with the fan-out, so its failure took the whole translation down; now it cannot. And the reviewed word list in content/ambiguous_words.json needs no model at all, so 'get me' is still asked about. That is the half of this check that matters most for a threat.",
+  "_provenance": "hand-authored",
+  "scenario": "the ambiguity call fails and the reviewed list still asks the child",
+  "source_lang": "en",
+  "text": "He said he would get me after school.",
+  "tokens": {
+    "prompt": 102,
+    "completion": 28
+  },
+  "responses": {
+    "translate": [
+      "Er hat gesagt, er holt mich nach der Schule ab."
+    ],
+    "back_translate": [
+      "He said he would pick me up after school."
+    ],
+    "ambiguity": [
+      {
+        "fail": "server"
+      },
+      {
+        "fail": "server"
+      },
+      {
+        "fail": "server"
+      }
+    ],
+    "judge": [
+      {
+        "best_index": 0,
+        "agreement": 1.0,
+        "meaning_lost": [],
+        "disputes": []
+      }
+    ],
+    "question": [
+      {
+        "question": "When you said \"get me\", did you mean come and hurt you, or pick you up?",
+        "options": [
+          {
+            "label": "Come and hurt me"
+          },
+          {
+            "label": "Pick me up to go home"
+          }
+        ]
+      }
+    ],
+    "actor_threat": [
+      {
+        "direction_kept": true,
+        "threat_kept": true,
+        "what_changed": ""
+      }
+    ]
+  }
+}
