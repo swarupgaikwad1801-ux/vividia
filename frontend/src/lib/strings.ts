@@ -134,6 +134,31 @@ export const STRINGS = {
     de: "Bei uns ist etwas schiefgegangen. Deine Worte sind nicht verloren.",
     hi: "हमारी तरफ़ से कुछ गड़बड़ हो गई। आपके शब्द खोए नहीं हैं।",
   },
+
+  // The emoji check-in (lib/moods.ts). The codes after "mood." are stored in
+  // the timeline, so they must not change.
+  "mood.good": { en: "Good", de: "Gut", hi: "अच्छा" },
+  "mood.ok": { en: "OK", de: "Geht so", hi: "ठीक है" },
+  "mood.sad": { en: "Sad", de: "Traurig", hi: "दुखी" },
+  "mood.scared": { en: "Scared", de: "Angst", hi: "डर लग रहा है" },
+  "mood.angry": { en: "Angry", de: "Wütend", hi: "गुस्सा" },
+  "mood.alone": { en: "Alone", de: "Allein", hi: "अकेला" },
+
+  // Languages a helpline speaks (lib/help.ts). Only the codes that appear in
+  // content/helplines.json, plus the two we ship as source languages.
+  "lang.de": { en: "German", de: "Deutsch", hi: "जर्मन" },
+  "lang.en": { en: "English", de: "Englisch", hi: "अंग्रेज़ी" },
+  "lang.hi": { en: "Hindi", de: "Hindi", hi: "हिंदी" },
+  "lang.uk": { en: "Ukrainian", de: "Ukrainisch", hi: "यूक्रेनी" },
+
+  // The language note next to each helpline. {list} is the languages joined
+  // with help.and; "only" is added when the child's language is not among them.
+  "help.and": { en: " and ", de: " und ", hi: " और " },
+  "help.speaks": { en: "Speaks {list}", de: "Spricht {list}", hi: "{list} बोलते हैं" },
+  "help.speaksOnly": { en: "Speaks {list} only", de: "Spricht nur {list}", hi: "सिर्फ़ {list} बोलते हैं" },
+  "help.checkedToday": { en: "checked today", de: "heute geprüft", hi: "आज जाँचा गया" },
+  "help.checkedYesterday": { en: "checked yesterday", de: "gestern geprüft", hi: "कल जाँचा गया" },
+  "help.checkedDays": { en: "checked {n} days ago", de: "vor {n} Tagen geprüft", hi: "{n} दिन पहले जाँचा गया" },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;
@@ -142,6 +167,13 @@ export type StringKey = keyof typeof STRINGS;
 export function t(key: StringKey, lang: string): string {
   const entry: Text = STRINGS[key];
   return (isLang(lang) && entry[lang]) || entry[FALLBACK_LANG];
+}
+
+/** `t()` with `{name}` placeholders filled in, e.g. fill("help.checkedDays", "de", { n: 3 }). */
+export function fill(key: StringKey, lang: string, values: Record<string, string | number>): string {
+  return t(key, lang).replace(/\{(\w+)\}/g, (whole, name: string) =>
+    name in values ? String(values[name]) : whole,
+  );
 }
 
 export function isLang(lang: string): lang is Lang {
