@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ContactCard } from "../components/ContactCard";
 import { emergency, resources } from "../lib/api";
-import { helpView, type HelpView } from "../lib/helpView";
+import { settledHelpView, type HelpView } from "../lib/helpView";
 import { t } from "../lib/strings";
 
 /**
@@ -24,11 +24,12 @@ export function SafetyScreen({ lang, message, onBack }: { lang: string; message:
 
   useEffect(() => {
     let live = true;
-    Promise.all([emergency(lang), resources(lang)])
-      .then(([numbers, found]) => live && setView(helpView(numbers, found.resources, found.source, lang)))
-      .catch(() => {
-        // The fixed message already names 110; the screen must not fail with it.
-      });
+    // Whatever loaded is shown: a failed live lookup must not hide 110/112.
+    // If both fail, the fixed message already names 110.
+    void Promise.allSettled([emergency(lang), resources(lang)]).then(([numbers, found]) => {
+      const loaded = settledHelpView(numbers, found, lang);
+      if (live && loaded.status === "ready") setView(loaded.view);
+    });
     return () => {
       live = false;
     };

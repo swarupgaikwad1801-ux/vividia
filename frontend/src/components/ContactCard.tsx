@@ -40,10 +40,12 @@ export function ContactCard({ contact, lang, urgent = false }: { contact: Contac
       <p className="text-sm font-medium">{contact.languages}</p>
       <p className="text-xs text-ink-soft">
         {contact.checked}
-        {contact.checked && " · "}
-        <a href={contact.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
-          {t("help.sourceLink", lang)}
-        </a>
+        {contact.checked && contact.sourceUrl && " · "}
+        {contact.sourceUrl && (
+          <a href={contact.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
+            {t("help.sourceLink", lang)}
+          </a>
+        )}
       </p>
     </li>
   );

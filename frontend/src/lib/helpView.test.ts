@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import type { Resource } from "../types/api.ts";
-import { contactLink, helpView } from "./helpView.ts";
+import { contactLink, helpView, settledHelpView } from "./helpView.ts";
 
 const NOW = new Date("2026-10-26T12:00:00Z");
 
@@ -85,4 +85,43 @@ test("an https site gets a link; anything else gets none rather than a guess", (
 test("nothing is lost: every service passed in appears exactly once", () => {
   const view = helpView([POLICE, AMBULANCE], [PHONE_LINE, CHAT, ENGLISH_SERVICE], "live", "hi", NOW);
   assert.equal(view.danger.length + view.talk.length, 5);
+});
+
+test("a source link is only ever https", () => {
+  const view = helpView(
+    [POLICE],
+    [{ ...PHONE_LINE, source_url: "javascript:alert(1)" }, { ...CHAT, source_url: "http://krisenchat.de/" }],
+    "live",
+    "en",
+    NOW,
+  );
+  assert.equal(view.danger[0]!.sourceUrl, "https://example.org/");
+  assert.deepEqual(view.talk.map((c) => c.sourceUrl), [null, null]);
+});
+
+const ok = <T,>(value: T): PromiseSettledResult<T> => ({ status: "fulfilled", value });
+const failed = (reason: unknown): PromiseRejectedResult => ({ status: "rejected", reason });
+
+test("a failed live lookup does not hide 110 and 112", () => {
+  const loaded = settledHelpView(ok([POLICE, AMBULANCE]), failed(new Error("offline")), "en", NOW);
+  assert.equal(loaded.status, "ready");
+  if (loaded.status !== "ready") return;
+  assert.deepEqual(loaded.view.danger.map((c) => c.contact), ["110", "112"]);
+  assert.deepEqual(loaded.view.talk, []);
+  assert.ok(loaded.talkError instanceof Error);
+  assert.equal(loaded.dangerError, undefined);
+});
+
+test("a failed emergency call does not hide the services that loaded", () => {
+  const loaded = settledHelpView(failed("down"), ok({ resources: [PHONE_LINE], source: "fallback" as const }), "en", NOW);
+  assert.equal(loaded.status, "ready");
+  if (loaded.status !== "ready") return;
+  assert.deepEqual(loaded.view.talk.map((c) => c.contact), ["116 111"]);
+  assert.equal(loaded.dangerError, "down");
+  assert.equal(loaded.talkError, undefined);
+});
+
+test("only when both fail is there nothing to show", () => {
+  const loaded = settledHelpView(failed("a"), failed("b"), "en", NOW);
+  assert.deepEqual(loaded, { status: "error", error: "a" });
 });

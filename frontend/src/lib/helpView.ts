@@ -21,7 +21,7 @@
  *   the child decides.
  */
 
-import type { Resource } from "../types/api.ts";
+import type { Resource, ResourcesResponse } from "../types/api.ts";
 import { freshness, languageNote, sortForChild } from "./help.ts";
 
 export interface ContactView {
@@ -36,7 +36,8 @@ export interface ContactView {
   languages: string;
   /** "checked 2 days ago"; "" if the date cannot be read. */
   checked: string;
-  sourceUrl: string;
+  /** The page it was checked against; null unless it is an https link. */
+  sourceUrl: string | null;
 }
 
 export interface HelpView {
@@ -66,7 +67,9 @@ function toView(resource: Resource, lang: string, now: Date): ContactView {
     hours: resource.hours,
     languages: languageNote(resource, lang),
     checked: freshness(resource.retrieved_at, lang, now),
-    sourceUrl: resource.source_url,
+    // A live result's source comes from a Tavily answer, not from our reviewed
+    // file, so it gets the same https-only rule as the contact link.
+    sourceUrl: /^https:\/\//i.test(resource.source_url.trim()) ? resource.source_url.trim() : null,
   };
 }
 
@@ -91,5 +94,43 @@ export function helpView(
     danger: emergency.map((resource) => toView(resource, lang, now)),
     talk: sortForChild(others, lang).map((resource) => toView(resource, lang, now)),
     source,
+  };
+}
+
+export type HelpLoad =
+  | { status: "ready"; view: HelpView; dangerError?: unknown; talkError?: unknown }
+  | { status: "error"; error: unknown };
+
+/**
+ * The view from two fetches that settled separately, so one failing never
+ * hides the other.
+ *
+ * `emergency()` reads a local file and almost never fails; `resources()` may
+ * do a live lookup and fails far more often. With `Promise.all` the fragile
+ * one took the robust one down, and a child on a bad connection got no 110.
+ * Here each list shows if it loaded, and the screen says which one did not.
+ * Only when both failed is there nothing to show.
+ */
+export function settledHelpView(
+  numbers: PromiseSettledResult<readonly Resource[]>,
+  found: PromiseSettledResult<ResourcesResponse>,
+  lang: string,
+  now: Date = new Date(),
+): HelpLoad {
+  if (numbers.status === "rejected" && found.status === "rejected") {
+    return { status: "error", error: numbers.reason };
+  }
+  const view = helpView(
+    numbers.status === "fulfilled" ? numbers.value : [],
+    found.status === "fulfilled" ? found.value.resources : [],
+    found.status === "fulfilled" ? found.value.source : "fallback",
+    lang,
+    now,
+  );
+  return {
+    status: "ready",
+    view,
+    ...(numbers.status === "rejected" ? { dangerError: numbers.reason } : {}),
+    ...(found.status === "rejected" ? { talkError: found.reason } : {}),
   };
 }

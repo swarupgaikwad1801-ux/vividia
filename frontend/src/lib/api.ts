@@ -133,20 +133,17 @@ export function resources(lang: string, state = ""): Promise<ResourcesResponse> 
 }
 
 /**
- * 110 and 112, from content/helplines.json through GET /api/emergency.
- *
- * The response field is `numbers` in #30 and `contacts` in #34, and Vernika
- * picks one. Until then this reads either, so the screens never wait on it.
- * Once one PR is closed, drop the other name here.
+ * 110 and 112, from content/helplines.json through GET /api/emergency (#30;
+ * the field is `contacts`).
  */
 export async function emergency(lang = "en"): Promise<Resource[]> {
-  const body = await request<{ numbers?: Resource[]; contacts?: Resource[] }>(
+  const body = await request<{ contacts?: Resource[] }>(
     "/api/emergency",
     lang,
     { method: "GET" },
     QUICK_MS,
   );
-  return body.numbers ?? body.contacts ?? [];
+  return body.contacts ?? [];
 }
 
 export function health(): Promise<HealthResponse> {
