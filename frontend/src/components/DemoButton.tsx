@@ -101,7 +101,9 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
           onClick={press}
           disabled={loading}
           aria-busy={loading}
-          className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-white transition-colors hover:bg-calm-strong disabled:opacity-60"
+          // text-page, not text-white: --color-calm is a light teal in dark
+          // mode, where white measures about 2.3:1 against the 4.5:1 floor.
+          className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong disabled:opacity-60"
         >
           {loading ? tp("demo.loading", lang) : t("demo.button", lang)}
         </button>
