@@ -539,6 +539,69 @@ def _finish(result: dict, usage: Usage, strategy: str) -> TranslationResult:
     }
 
 
+async def _same_language(text, source_lang, usage, clarifications, strategy):
+    """The child already writes the language the adult reads.
+
+    A German-speaking child is the majority of bullied children in Germany,
+    and until 25 Oct this function did not exist, so their path through the
+    app was broken in the worst way available:
+
+    `untranslated()` treats output identical to the input as a failed pass,
+    which is right for Hindi->German and exactly wrong for German->German,
+    where the correct answer IS the input. So the first pass "failed", the
+    retry told the model "Do not repeat the German text", and the child got
+    either an `upstream_unavailable` error or **their own words paraphrased
+    by a model**. A paraphrase is the one thing this app must never put in
+    front of a teacher: report.py exists to stop precisely that, and it was
+    being handed one from upstream.
+
+    So nothing is translated here. The text the adult reads is the text the
+    child wrote, character for character, and no model is asked to improve it.
+
+    What still runs is the part that was never about translation: the check
+    for a phrase that can honestly be read two ways, and the question to the
+    child about it. "Er hat mich angemacht" is two different events to the
+    adult who acts on it, and only the child knows which. That check reads
+    the child's own sentence and never needed a translation to work.
+
+    Cost: one call instead of about ten.
+
+    `strategy_used` still reports the strategy the caller asked for. A
+    `same_language` member would describe this path honestly, but Strategy is
+    in the frozen HTTP contract that all three of us have to agree on, so it
+    is proposed in the PR rather than taken here.
+    """
+    if clarifications:
+        # The child has answered. Their answer does not change their own
+        # words - there is nothing to re-render - so it belongs in the report
+        # as a note beside the entry, which is a contract change and Vernika's
+        # call. Until then the answer is recorded by the caller and the text
+        # stays exactly as the child wrote it.
+        return _finish({"translation": text, "confidence": 1.0, "ambiguities": []}, usage, strategy)
+
+    if strategy == BASELINE:
+        # The honest comparison point: a single pass has nothing to do here
+        # either, so neither path spends a call and the benchmark stays fair.
+        return _finish({"translation": text, "confidence": 1.0, "ambiguities": []}, usage, BASELINE)
+
+    ambiguous = await _find_ambiguity(text, source_lang, source_lang, usage)
+    questions = await asyncio.gather(
+        *[_question(item["phrase"], item["readings"], source_lang, usage) for item in ambiguous[:2]]
+    )
+    return _finish(
+        {
+            "translation": text,
+            # Nothing was translated, so no meaning can have been lost in
+            # translation. This is not a claim that the app understood the
+            # child - that is what the question is for.
+            "confidence": 1.0,
+            "ambiguities": [q for q in questions if q],
+        },
+        usage,
+        strategy,
+    )
+
+
 async def translate(
     text: str,
     source_lang: str,
@@ -555,6 +618,11 @@ async def translate(
     """
     usage = Usage()
     text = text.strip()
+
+    if source_lang == target_lang:
+        # Not a translation problem. See _same_language: translating German
+        # into German made the app paraphrase the child or fail outright.
+        return await _same_language(text, source_lang, usage, clarifications, strategy)
 
     if clarifications:
         decisions = _decisions_text(_ambiguities or [], clarifications)
