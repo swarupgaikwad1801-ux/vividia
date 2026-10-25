@@ -219,6 +219,12 @@ QUESTION_SCHEMA = {
                 "question": {"type": "string"},
                 "options": {
                     "type": "array",
+                    # Measured: without minItems the model returned a perfectly
+                    # good question with an empty options array in 3 runs out
+                    # of 5, which is schema-valid and useless. The question was
+                    # then dropped and the child was asked nothing.
+                    "minItems": 2,
+                    "maxItems": 2,
                     "items": {
                         "type": "object",
                         "additionalProperties": False,
@@ -236,8 +242,23 @@ QUESTION_SCHEMA = {
 # the meaning; the model only renders the decision they already made.
 CLARIFIED_SUFFIX = """
 
-The child has told you what they meant. Use exactly these meanings:
+The child has already told you which reading is theirs. This is their own
+answer about their own words: it is not a hint to weigh against the rest of
+the sentence, and it is not yours to overrule or soften.
 {decisions}"""
+
+# Sent only when a clarified pass came back WITHOUT the wording the child
+# chose. It names the exact phrase rather than repeating the instruction,
+# because the instruction was already given and was not followed: told
+# `"dekh lena" means: du wirst schon sehen`, the model wrote "wird er es schon
+# richten" - "he'll sort it out" - which is reassurance, not a threat.
+CLARIFIED_REPAIR = """The previous attempt left out wording the child chose. \
+These phrases must appear in the German, word for word:
+{phrases}
+
+Rewrite the translation so each one is present. Change nothing else about the
+child's meaning, and do not soften the sentence: if the child chose a threat,
+the German has to read as a threat."""
 
 LANGUAGE_NAMES = {
     "de": "German",
