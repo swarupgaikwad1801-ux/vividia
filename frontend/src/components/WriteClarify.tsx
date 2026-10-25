@@ -14,14 +14,20 @@ import { tt } from "./WriteStrings.ts";
  *
  * Design decisions and why:
  *
- * - **There is always a third option.** The backend returns two readings, and
- *   two readings are a trap when neither is what happened: a child who is
- *   already struggling to be heard would pick the nearest one and end up
- *   handing a teacher a sentence they did not mean. So `SOMETHING_ELSE` is
- *   appended to every question here, by this component, whatever the backend
- *   sent. It is never sent back to the backend — there is no field for it in
- *   `ClarifyRequest` (see Write.tsx) — it routes the child back to their own
- *   words instead, which is the only answer that is really theirs.
+ * - **There is always a third option, and the engine provides it.** Two
+ *   readings are a trap when neither is what happened: a child already
+ *   struggling to be heard would pick the nearest one and end up handing a
+ *   teacher a sentence they did not mean. So every question carries a third
+ *   choice - but it arrives from the backend, which appends
+ *   `{id: "other"}` in the child's own language
+ *   (`engine/clarify_text.py`). This component used to add a SECOND one of
+ *   its own, so the child saw the same choice twice.
+ *
+ *   It is recognised by `id === OTHER_ID` and routes the child back to their
+ *   own words. It is filtered out of `choices` before /api/clarify: "neither
+ *   of those" has no German to render, which is why the engine gives it an
+ *   empty `meaning_de`. Sending it would ask the server to translate a
+ *   decision the child declined to make.
  * - **Nothing is pre-selected.** A default would be the app deciding.
  * - **`meaning_de` is shown under each option**, quietly and tagged `lang="de"`,
  *   because the child is choosing what a German-speaking adult will read. It
@@ -37,12 +43,20 @@ import { tt } from "./WriteStrings.ts";
  * Our own option, never a backend id. Double underscores so it cannot collide
  * with an id the engine invents.
  */
-export const SOMETHING_ELSE = "__something_else__";
+// The engine appends this option to every ambiguity itself, already in
+// the child's language (`clarify_text.other_option`, and `translate.py`
+// around the question builder). It is a convention, not a contract field.
+//
+// This screen used to add a SECOND "something else" of its own, so the child
+// saw the same choice twice - and picking the engine's one was then sent to
+// /api/clarify as if "other" were a meaning. There is only one now, and it
+// is the engine's.
+export const OTHER_ID = "other";
 
 export interface WriteClarifyProps {
   lang: string;
   ambiguities: readonly Ambiguity[];
-  /** phrase -> chosen option id, possibly `SOMETHING_ELSE`. */
+  /** phrase -> chosen option id, possibly the engine's `OTHER_ID`. */
   choices: Readonly<Record<string, string>>;
   onChoose: (phrase: string, optionId: string) => void;
   /** Send the answers through `clarify()`. */
@@ -60,7 +74,7 @@ export default function WriteClarify({
   onRewrite,
 }: WriteClarifyProps) {
   const answered = ambiguities.filter((item) => choices[item.phrase]);
-  const rejectedAll = answered.some((item) => choices[item.phrase] === SOMETHING_ELSE);
+  const rejectedAll = answered.some((item) => choices[item.phrase] === OTHER_ID);
 
   return (
     <section
@@ -118,30 +132,6 @@ export default function WriteClarify({
                 </span>
               </label>
             ))}
-
-            {/* The third option. Added here, always: see the note at the top. */}
-            <label
-              className={`flex min-h-tap cursor-pointer items-start gap-3 rounded-card border p-3 ${
-                choices[item.phrase] === SOMETHING_ELSE
-                  ? "border-calm bg-calm-soft"
-                  : "border-line bg-surface"
-              }`}
-            >
-              <input
-                type="radio"
-                name={group}
-                value={SOMETHING_ELSE}
-                checked={choices[item.phrase] === SOMETHING_ELSE}
-                onChange={() => onChoose(item.phrase, SOMETHING_ELSE)}
-                className="mt-1 size-5 accent-calm"
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-base">{tt("clarify.somethingElse", lang)}</span>
-                <span className="text-sm text-ink-soft">
-                  {tt("clarify.somethingElseHint", lang)}
-                </span>
-              </span>
-            </label>
           </fieldset>
         );
       })}

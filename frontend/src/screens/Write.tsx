@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, clarify, translate } from "../lib/api.ts";
 import type { TranslateResponse } from "../types/api.ts";
 import { t } from "../lib/strings.ts";
-import WriteClarify, { SOMETHING_ELSE } from "../components/WriteClarify.tsx";
+import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
 import WriteSafetyNote from "../components/WriteSafetyNote.tsx";
@@ -179,11 +179,14 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
   }
 
   function answerAmbiguities() {
-    // SOMETHING_ELSE is ours, not the engine's: it must never reach the
-    // backend as an option id. A phrase the child answered that way is left
-    // out of `choices` entirely and handled by `rewrite()` instead.
+    // "other" means "neither of those", so there is no meaning to send and
+    // nothing for the final pass to render: the engine's own option carries
+    // an empty `meaning_de` for exactly that reason. A phrase answered that
+    // way is left out of `choices` and handled by a rewrite instead. Sending
+    // it would ask the server to translate a decision the child declined to
+    // make.
     const sendable = Object.fromEntries(
-      Object.entries(choices).filter(([, id]) => id !== SOMETHING_ELSE),
+      Object.entries(choices).filter(([, id]) => id !== OTHER_ID),
     );
     if (Object.keys(sendable).length === 0) return;
     void run({ kind: "clarify", text: checkedText, choices: sendable });
@@ -206,7 +209,7 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
       text_de: result.translation,
       confidence: result.confidence,
       clarifications: Object.fromEntries(
-        Object.entries(choices).filter(([, id]) => id !== SOMETHING_ELSE),
+        Object.entries(choices).filter(([, id]) => id !== OTHER_ID),
       ),
     });
   }
@@ -330,7 +333,16 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
           )}
 
           <div className="flex flex-col gap-2 sm:flex-row">
-            {onApproved && (
+            {/* No approving while a question is still open. The German on
+                screen is one reading of a phrase the child has not settled
+                yet, and "the child confirms the meaning; the model never
+                decides it" is the promise the whole product rests on - a
+                child who misses the question, or cannot read it, must not be
+                able to confirm a meaning nobody chose. `clarify` comes back
+                with `ambiguities` empty, and the button appears then.
+                "Change it" stays available throughout: a way back is never
+                something to withhold. */}
+            {onApproved && ambiguities.length === 0 && (
               <button
                 type="button"
                 onClick={approve}
