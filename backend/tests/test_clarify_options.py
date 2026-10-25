@@ -247,3 +247,30 @@ async def test_the_option_survives_serialisation(monkeypatch):
     assert escape["id"] == OTHER_ID
     assert escape["label"] == LABELS["hi"]
     assert escape["meaning_de"] == ""
+
+
+async def test_a_question_is_never_dropped_for_want_of_options(monkeypatch):
+    """A question with no options must never silently become no question.
+
+    Measured on the live model: the question step returned a good question
+    with an empty `options` array in 3 runs out of 5. That is valid against a
+    schema that only says "options is an array", and the code then dropped the
+    whole question. The app picked a reading of the child's words without
+    telling them, which is the one thing it exists not to do. End to end the
+    flagship sentence asked the child in 2 runs out of 5.
+
+    The schema now requires exactly two options. This pins the second guard:
+    even if a model returns none, the readings themselves become the options.
+    """
+    transcript = replay(monkeypatch, "get_me_after_school")
+    transcript.data["responses"]["question"] = [
+        {"question": "Did you mean one thing or the other?", "options": []}
+    ]
+
+    result = await translate(transcript.data["text"], "en", strategy=MULTI_PASS)
+
+    assert result["ambiguities"], "the question was dropped instead of being salvaged"
+    options = result["ambiguities"][0]["options"]
+    assert len(options) == 3, "two readings plus the way out"
+    assert options[-1]["id"] == OTHER_ID
+    assert all(option["label"].strip() for option in options)
