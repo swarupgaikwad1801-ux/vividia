@@ -70,6 +70,11 @@ export interface TranslateResponse {
 /**
  * POST /api/clarify — re-translate with the child's answers applied.
  * The child decides the meaning; the model never resolves an ambiguity alone.
+ *
+ * The server bounds both collections, because every answered decision is
+ * rendered into a prompt: at most 3 `ambiguities` (it never offers more than
+ * 2) and at most 10 `choices`. Over either, it answers 422. Echo back what you
+ * were given and neither limit can be reached.
  */
 export interface ClarifyRequest {
   text: string;
