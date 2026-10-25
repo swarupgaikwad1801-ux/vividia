@@ -19,9 +19,9 @@ filled in after the live eval or cut. App name: **Vividia**. Always write it as 
 Some children never tell anyone they are being bullied. They freeze, they
 don't have the words, or they have just arrived in Germany and don't speak
 German yet. When they do try, the translation is often done by a classmate or
-an app that guesses, and a single wrong word changes everything. "My friend
-hits me" becoming "my friend meets me" is the difference between help and no
-help.
+an app that guesses, and a single word can carry two meanings. "He said he
+would get me after school" is a threat or a lift home, and a translator picks
+one without telling anyone.
 
 We wanted a tool that gives the child the words, makes sure the adult reads
 exactly what the child meant, and leaves the child in charge of who hears it.
@@ -31,6 +31,9 @@ exactly what the child meant, and leaves the child in charge of who hears it.
 - **Check-in without words:** the child starts with an emoji.
 - **Write in your own language:** English or Hindi (including Hinglish, the
   way kids actually type). A German version appears side by side.
+- **Also for a child who already writes German:** we don't translate for
+  them. Their words stay exactly as they wrote them, and the app still asks
+  when something could mean two things.
 - **Asks instead of guessing:** when a sentence has two honest readings
   ("he said he would get me after school": a threat or a lift home?), the app
   asks the child, and always offers "something else".

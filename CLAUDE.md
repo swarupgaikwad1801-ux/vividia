@@ -47,6 +47,18 @@ Say it this way, and only this way: *a child who already speaks German is
 still a child who cannot say it. We do not translate for them, because they
 need no translation — we do the other thing we do, which is ask.*
 
+**Pitch decision, Sun 25 Oct (Neel, after #41):** the engine serves every
+child, but **the pitch, the demo and the video stay newcomer-first**, with
+Amara as the hero. German support is one line in the pitch, not its frame:
+*"Vividia is built for the child who can't say it in German. It also works
+for a German-speaking child who freezes: we keep their words exactly as they
+wrote them and ask when something could mean two things."* Reasons: the demo
+must show Nemotron translating, verifying and asking, and a German child's
+story shows only the asking; and one concrete user is easier for a judge to
+remember than "every child". The figures above are verified (#45, Sources
+below); the one most worth a line on Devpost is "40% of bullied children in
+Germany asked nobody", because it holds for every child the app serves.
+
 #### Sources for the bullying figures (checked 25 Oct 2026)
 
 Every number above was read out of the source document, not a search result.
@@ -120,7 +132,6 @@ available: for most of a child's week, it is not.
   German-specific and better sourced; it does this job.
 - *"Erhart et al. — no difference"* and *"Oertel et al. — SES the stronger
   predictor."* Not verified. The migration claim is gone, so neither is needed.
-
 
 > The problem isn't that kids won't talk. It's that they've learned what
 > happens when they do.
