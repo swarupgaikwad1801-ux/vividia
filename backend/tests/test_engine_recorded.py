@@ -306,3 +306,32 @@ def test_every_transcript_says_where_it_came_from():
         data = json.loads(path.read_text(encoding="utf-8"))
         assert data.get("_provenance") in ("hand-authored", "captured"), path.name
         assert data.get("scenario"), f"{path.name} does not say what it pins down"
+
+
+# --- a failed ambiguity check costs a question, not the translation --------
+
+
+async def test_a_failed_ambiguity_check_does_not_lose_the_translation(monkeypatch):
+    """It used to be gathered with the fan-out, so a failure took the whole
+    request down. One of three defences should not be able to do that: losing
+    it costs a question the child might have been asked, while raising costs
+    them the translation they were building up to."""
+    transcript = replay(monkeypatch, "ambiguity_check_down")
+
+    result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
+
+    assert result["translation"], "the translation was lost with the check"
+    assert transcript.count("ambiguity") == 3, "all three attempts were spent"
+
+
+async def test_the_reviewed_word_list_still_asks_when_the_model_call_fails(monkeypatch):
+    """The list in content/ambiguous_words.json needs no model at all, so it
+    must survive the call that does. "get me" is on it, and for a threat that
+    is the half of this check that matters most."""
+    transcript = replay(monkeypatch, "ambiguity_check_down")
+
+    result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
+
+    assert result["ambiguities"], "the child was asked nothing, despite a listed word"
+    phrases = [a["phrase"].lower() for a in result["ambiguities"]]
+    assert any("get me" in phrase for phrase in phrases), phrases
