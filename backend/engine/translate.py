@@ -17,11 +17,16 @@ disagreement; the child chooses; the final pass renders that choice.
 import asyncio
 import json
 import re
+from functools import lru_cache
 
 from engine.budget import over_budget
+from engine.clarify_text import is_other, other_option
 from engine.client import EngineError, Usage, call
+from engine.config import REPO_ROOT
 from engine.contract import Ambiguity, TranslationResult
 from engine.prompts import (
+    ACTOR_THREAT_SCHEMA,
+    ACTOR_THREAT_SYSTEM,
     AMBIGUITY_SCHEMA,
     AMBIGUITY_SYSTEM,
     BACK_TRANSLATE_SYSTEM,
@@ -40,7 +45,12 @@ MULTI_PASS = "multi_pass"
 ADAPTIVE = "adaptive"
 
 # Independent passes need to be able to differ, or agreement proves nothing.
-FANOUT_TEMPERATURES = [0.2, 0.5, 0.8, 1.0, 0.3]
+# Varied enough that the passes can disagree, which is what makes agreement
+# mean anything, but no further. Temperature 1.0 was measured producing a
+# literal "verbrannt" (burned) for "they roasted me" in 1 run of 3, which the
+# judge then sometimes picked over the correct slang; every value at or below
+# 0.8 produced correct slang in 3 of 3.
+FANOUT_TEMPERATURES = [0.2, 0.4, 0.6, 0.8, 0.3]
 TRIAGE_TEMPERATURES = [0.2, 0.8]
 
 # Markers that make a sentence worth verifying even when two passes agree.
@@ -54,7 +64,12 @@ TRIAGE_TEMPERATURES = [0.2, 0.8]
 RISK_PATTERNS = [
     r"\b(not|никог|لا|değil|kein|nicht|never|nobody|no one|didn'?t|won'?t|can'?t)\b",  # negation
     r"\b(made|forced|threat|hurt|hit|kick|push|touch|afraid|scared|weapon|knife)\w*\b",  # force or threat
-    r"\b(they|them|he|she|someone|somebody)\b",  # who did it is not named
+    # An unnamed actor was a marker here until it was measured: it fired on
+    # 29 of 50 English sentences and was the only reason 19 of them
+    # escalated. Almost every disclosure says "they" or "he", so it selected
+    # for "a child is describing other children", which is the whole corpus
+    # rather than a risk. Disagreement between the first two passes is the
+    # better signal, and unlike these patterns it works in every language.
 ]
 _RISK = [re.compile(pattern, re.IGNORECASE | re.UNICODE) for pattern in RISK_PATTERNS]
 
@@ -204,6 +219,40 @@ async def _repair(text, german, losses, source_lang, target_lang, usage):
     )
 
 
+@lru_cache(maxsize=1)
+def _ambiguous_words() -> dict:
+    path = REPO_ROOT / "content" / "ambiguous_words.json"
+    return json.loads(path.read_text(encoding="utf-8"))["languages"]
+
+
+def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
+    """Known two-meaning words, matched in code rather than asked of a model.
+
+    The model knows these ambiguities when asked about them directly, but
+    reports them inconsistently inside a judging task: in testing the same
+    sentence sometimes produced a question and sometimes nothing. A knife
+    threat losing its timing is not something to leave to that. The model
+    check still runs alongside this and catches words the list does not have.
+    """
+    haystack = _normalise(text)
+    found = []
+    for entry in _ambiguous_words().get(source_lang, []):
+        # Some words are only ambiguous without their context. Hindi "kal" is
+        # both tomorrow and yesterday, but a future or past verb settles it,
+        # and asking anyway spends a question the child does not owe us.
+        skip = entry.get("skip_when", {}).get("patterns", [])
+        if any(re.search(pattern, text, re.IGNORECASE | re.UNICODE) for pattern in skip):
+            continue
+        if any(_normalise(form) in haystack for form in entry["forms"]):
+            found.append({
+                "phrase": entry["word"],
+                "readings": entry["readings"],
+                "severity": "critical",
+                "source": "lexicon",
+            })
+    return found
+
+
 async def _find_ambiguity(text, source_lang, target_lang, usage):
     """Ask whether the child's own sentence has more than one honest reading.
 
@@ -223,9 +272,33 @@ async def _find_ambiguity(text, source_lang, target_lang, usage):
         step="ambiguity",
     )
     try:
-        return json.loads(raw).get("ambiguous_phrases", [])
+        found = json.loads(raw).get("ambiguous_phrases", [])
     except json.JSONDecodeError:
         return []
+
+    # Only ask about words the child actually wrote. The model has offered
+    # phrases that appear nowhere in the sentence, and asking a child what
+    # they meant by words they never used is worse than asking nothing.
+    haystack = _normalise(text)
+    from_model = [
+        item for item in found
+        if item.get("phrase") and _normalise(item["phrase"]) in haystack
+    ]
+
+    # The list is a safety net for what the model misses, not a second voice.
+    # Where both describe the same words - the list has "get me", the model
+    # has "get me after school" - the model's version wins, because it quotes
+    # what the child actually wrote and reads better back to them. Asking the
+    # same question twice in different words is its own harm.
+    from_model_norm = [(_normalise(item["phrase"]), item) for item in from_model]
+    known = [
+        item for item in lexicon_ambiguities(text, source_lang)
+        if not any(
+            _normalise(item["phrase"]) in model_phrase or model_phrase in _normalise(item["phrase"])
+            for model_phrase, _ in from_model_norm
+        )
+    ]
+    return [item for _, item in from_model_norm] + known
 
 
 async def _judge(text, candidates, backs, source_lang, target_lang, usage):
@@ -258,8 +331,52 @@ async def _judge(text, candidates, backs, source_lang, target_lang, usage):
         return {"best_index": 0, "agreement": 0.5, "meaning_lost": [], "disputes": []}
 
 
+async def _actor_and_threat_kept(text, german, back, source_lang, target_lang, usage):
+    """Last line of defence on the chosen translation.
+
+    Choosing between candidates can make things worse, not only better: the
+    benchmark caught the judge turning "he said you'll see" into "I'll show
+    him", which kept the threat but pointed it at the wrong person. A single
+    focused question is far more reliable here than another clause in the
+    judge's prompt, which already has three jobs.
+    """
+    user = (
+        f"The child wrote ({language_name(source_lang)}):\n{text}\n\n"
+        f"{language_name(target_lang)} translation:\n{german}\n\n"
+        f"That translated back into {language_name(source_lang)}:\n{back}"
+    )
+    raw = await call(
+        "judge",
+        ACTOR_THREAT_SYSTEM.format(
+            target_name=language_name(target_lang), source_name=language_name(source_lang)
+        ),
+        user,
+        usage,
+        temperature=0.0,
+        max_tokens=300,
+        response_format=ACTOR_THREAT_SCHEMA,
+    )
+    try:
+        verdict = json.loads(raw)
+    except json.JSONDecodeError:
+        return True, ""
+    ok = verdict.get("direction_kept", True) and verdict.get("threat_kept", True)
+    return ok, verdict.get("what_changed", "")
+
+
 async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
-    """Turn one disputed phrase into a question a child can actually answer."""
+    """Turn one disputed phrase into a question a child can actually answer.
+
+    The answer always ends with the fixed "something else" option, so a child
+    whose meaning is neither of the readings is never cornered into picking one.
+
+    The readings are capped at two because the frozen contract allows at most
+    three options (`schemas.Ambiguity.options`, max_length=3) and the escape
+    option now takes the third slot. Without the cap, a three-reading ambiguity
+    would build four options and the response would fail validation on its way
+    out, which the child would see as a 500 rather than a question.
+    """
+    readings = readings[:2]
     options_text = "\n".join(f"- {r['meaning']}" for r in readings)
     user = f'Phrase from the child: "{phrase}"\n\nPossible meanings:\n{options_text}'
     raw = await call(
@@ -279,13 +396,25 @@ async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
 
     labels = [o["label"] for o in parsed.get("options", [])][: len(readings)]
     if len(labels) < 2:
+        # The model returned a question with too few options. The schema now
+        # demands two, which fixed it in testing, but dropping the question
+        # silently is the worst possible failure here: the app would pick a
+        # reading of the child's words without telling them, which is the one
+        # thing it exists not to do. Fall back to the readings themselves.
+        labels = [reading["meaning"] for reading in readings]
+    if len(labels) < 2 or not parsed.get("question", "").strip():
         return None
     return {
         "phrase": phrase,
         "question": parsed["question"],
         "options": [
-            {"id": f"opt{i}", "label": label, "meaning_de": readings[i]["target_phrasing"]}
-            for i, label in enumerate(labels)
+            *(
+                {"id": f"opt{i}", "label": label, "meaning_de": readings[i]["target_phrasing"]}
+                for i, label in enumerate(labels)
+            ),
+            # Fixed text, never model-generated: this is the one option that
+            # has to read identically every time, because it is the way out.
+            other_option(source_lang),
         ],
         "severity": "critical",
     }
@@ -311,6 +440,12 @@ def _decisions_text(ambiguities, choices) -> str:
     trusted: each phrase and meaning is flattened to one line and truncated.
     An option the child did not choose contributes nothing, and an option that
     is not in the list we were given cannot be chosen at all.
+
+    The "something else" option is skipped. Picking it says neither reading was
+    right, so there is no decision to render and nothing to tell the
+    translator; the child is asked to write the sentence again instead. Passing
+    it through would put an empty meaning in the prompt, which reads to the
+    model as an instruction to render nothing.
     """
     lines = []
     for ambiguity in ambiguities:
@@ -318,6 +453,8 @@ def _decisions_text(ambiguities, choices) -> str:
         if chosen is None:
             continue
         for option in ambiguity.get("options", []):
+            if is_other(option["id"]):
+                continue
             if option["id"] == chosen or option["label"] == chosen:
                 meaning = _one_line(option.get("meaning_de", ""))
                 if not meaning:
@@ -364,6 +501,31 @@ async def _verify(text, candidates, source_lang, target_lang, usage, source_ambi
     if losses:
         best = await _repair(text, best, losses, source_lang, target_lang, usage)
         repaired = True
+
+    # Choosing between candidates can make a translation worse, not only
+    # better: the Hindi benchmark caught the judge turning "he said you'll
+    # see" into "I'll show him", pointing the threat at the wrong person.
+    # Nothing above would notice, because every candidate kept a threat; only
+    # its direction moved. So the chosen text gets one focused check, and if
+    # it fails, the same repair path that fixes lost meaning fixes this.
+    chosen_back = await _back(best, source_lang, target_lang, usage) if repaired else backs[best_index]
+    direction_ok, moved = await _actor_and_threat_kept(
+        text, best, chosen_back, source_lang, target_lang, usage
+    )
+    if not direction_ok:
+        best = await _repair(
+            text,
+            best,
+            [{
+                "phrase": text,
+                "intended": "who did what to whom, and any threat, exactly as the child wrote it",
+                "became": moved or "the direction of the action or the threat changed",
+            }],
+            source_lang,
+            target_lang,
+            usage,
+        )
+        repaired = True
     # Questions for the child come from the dedicated check on the original
     # sentence, plus any genuine ambiguity the judge noticed while comparing.
     ask_about = list(source_ambiguities or [])
@@ -409,6 +571,69 @@ def _finish(result: dict, usage: Usage, strategy: str) -> TranslationResult:
     }
 
 
+async def _same_language(text, source_lang, usage, clarifications, strategy):
+    """The child already writes the language the adult reads.
+
+    A German-speaking child is the majority of bullied children in Germany,
+    and until 25 Oct this function did not exist, so their path through the
+    app was broken in the worst way available:
+
+    `untranslated()` treats output identical to the input as a failed pass,
+    which is right for Hindi->German and exactly wrong for German->German,
+    where the correct answer IS the input. So the first pass "failed", the
+    retry told the model "Do not repeat the German text", and the child got
+    either an `upstream_unavailable` error or **their own words paraphrased
+    by a model**. A paraphrase is the one thing this app must never put in
+    front of a teacher: report.py exists to stop precisely that, and it was
+    being handed one from upstream.
+
+    So nothing is translated here. The text the adult reads is the text the
+    child wrote, character for character, and no model is asked to improve it.
+
+    What still runs is the part that was never about translation: the check
+    for a phrase that can honestly be read two ways, and the question to the
+    child about it. "Er hat mich angemacht" is two different events to the
+    adult who acts on it, and only the child knows which. That check reads
+    the child's own sentence and never needed a translation to work.
+
+    Cost: one call instead of about ten.
+
+    `strategy_used` still reports the strategy the caller asked for. A
+    `same_language` member would describe this path honestly, but Strategy is
+    in the frozen HTTP contract that all three of us have to agree on, so it
+    is proposed in the PR rather than taken here.
+    """
+    if clarifications:
+        # The child has answered. Their answer does not change their own
+        # words - there is nothing to re-render - so it belongs in the report
+        # as a note beside the entry, which is a contract change and Vernika's
+        # call. Until then the answer is recorded by the caller and the text
+        # stays exactly as the child wrote it.
+        return _finish({"translation": text, "confidence": 1.0, "ambiguities": []}, usage, strategy)
+
+    if strategy == BASELINE:
+        # The honest comparison point: a single pass has nothing to do here
+        # either, so neither path spends a call and the benchmark stays fair.
+        return _finish({"translation": text, "confidence": 1.0, "ambiguities": []}, usage, BASELINE)
+
+    ambiguous = await _find_ambiguity(text, source_lang, source_lang, usage)
+    questions = await asyncio.gather(
+        *[_question(item["phrase"], item["readings"], source_lang, usage) for item in ambiguous[:2]]
+    )
+    return _finish(
+        {
+            "translation": text,
+            # Nothing was translated, so no meaning can have been lost in
+            # translation. This is not a claim that the app understood the
+            # child - that is what the question is for.
+            "confidence": 1.0,
+            "ambiguities": [q for q in questions if q],
+        },
+        usage,
+        strategy,
+    )
+
+
 async def translate(
     text: str,
     source_lang: str,
@@ -425,6 +650,11 @@ async def translate(
     """
     usage = Usage()
     text = text.strip()
+
+    if source_lang == target_lang:
+        # Not a translation problem. See _same_language: translating German
+        # into German made the app paraphrase the child or fail outright.
+        return await _same_language(text, source_lang, usage, clarifications, strategy)
 
     if clarifications:
         decisions = _decisions_text(_ambiguities or [], clarifications)
@@ -453,8 +683,14 @@ async def translate(
     first = await asyncio.gather(
         *[_one_pass(text, source_lang, target_lang, usage, t) for t in TRIAGE_TEMPERATURES]
     )
+    # A word from the reviewed list always earns the full check, because the
+    # two passes agreeing proves nothing here: they can agree on one reading
+    # of a word that has two. Costs nothing to test, and it is what keeps
+    # "he said he would get me after school" asking the child rather than
+    # quietly choosing the lift home.
     passes_agree = _normalise(first[0]) == _normalise(first[1])
-    if passes_agree and not looks_risky(text):
+    known_ambiguous = bool(lexicon_ambiguities(text, source_lang))
+    if passes_agree and not known_ambiguous and not looks_risky(text):
         return _finish(
             {"translation": first[0], "confidence": 1.0, "ambiguities": []}, usage, ADAPTIVE
         )

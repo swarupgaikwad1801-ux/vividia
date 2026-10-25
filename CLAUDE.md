@@ -14,8 +14,35 @@ An app for **children and students who can't speak up** about bullying or
 harm, because they freeze, don't have the words, don't speak German, or have a
 disability that makes it hard.
 
-**Hero user:** a migrant or refugee child, about 10–16, bullied at a German
-school, who can't explain it in German.
+**Hero user:** any child, about 10–16, bullied at a German school, who cannot
+get the words out to an adult. A newcomer who has no German is the hardest
+case, so the engine is built and measured on it, but it is not the only case
+and never was.
+
+**Scope widened Sun 25 Oct**, on Swarup's call, after checking the evidence:
+
+- Bullying here is not mainly a migration story. HBSC 2022 (Robert Koch
+  Institute, n=6,475) puts **8.6% of schoolchildren in Germany in the bullied
+  role**, highest in primary school at 13.2%. The migration-background
+  evidence is mixed: the UNICEF/DJI 2025 report finds **girls with a migration
+  background at 17% against 9% without**, while Erhart et al. found no
+  difference at all, and Oertel et al. found socioeconomic status the stronger
+  predictor. A pitch built on "immigrant children are bullied more" would be
+  overclaiming from contested data.
+- What the data does support is **our actual premise**: of 12-to-17-year-olds
+  in Germany who were bullied, only about **60% sought help from anyone**, and
+  of those, only about **32% went to anyone formal** (Grüne & Willems 2024,
+  nationally representative subsample n=453). So roughly **4 in 10 bullied
+  children in Germany ask nobody**. That is language-independent. A
+  German-speaking child is in that 40% too.
+- Therefore: **language is one barrier among several, not the product.** The
+  product is "never guess what a child meant, and never speak for them".
+  Translation is what that costs for a newcomer; for a German speaker the
+  same promise costs one question and no translation at all.
+
+Say it this way, and only this way: *a child who already speaks German is
+still a child who cannot say it. We do not translate for them, because they
+need no translation — we do the other thing we do, which is ask.*
 
 > The problem isn't that kids won't talk. It's that they've learned what
 > happens when they do.
@@ -129,6 +156,39 @@ resources(state, lang) -> list[Resource]
    `clarifications`. The child confirms meaning; the model never decides it.
 
 `calls_made` is returned so the UI can show the live check count.
+
+### A child who already writes German is not translated (25 Oct)
+
+`translate()` short-circuits when `source_lang == target_lang`. The text comes
+back character for character as the child wrote it, no model is asked to
+improve it, and only the ambiguity check runs: one call instead of about ten.
+
+This was a real break, not a missing feature. `untranslated()` treats output
+identical to the input as a failed pass — right for Hindi→German, exactly
+wrong for German→German, where the correct answer **is** the input. So the
+first pass "failed", the retry instructed the model *"Do not repeat the German
+text"*, and the German-speaking child got either an `upstream_unavailable`
+error or **their own words paraphrased back at them**. `report.py` refuses to
+let a model describe the child's entries for exactly this reason; guarding
+that at the report is pointless if the translate step hands a paraphrase in.
+Pinned by `tests/test_same_language.py`.
+
+Two things deliberately **not** done here, because they are not mine to take:
+
+- **`Strategy` has no `same_language` member.** It would describe this path
+  honestly, but `Strategy` is in the frozen HTTP contract, and that file says
+  it changes only after all three of us agree. `strategy_used` therefore still
+  reports what the caller asked for. Proposed in the PR.
+- **A German child's answer is not written into their text.** For a Hindi
+  speaker a clarification changes the German; for a German speaker there is
+  nothing to re-render, and inventing a "clearer" sentence would be the
+  paraphrase this path exists to prevent. The answer belongs beside the entry
+  in the report as a note — a contract change, and Vernika's call.
+
+`content/ambiguous_words.json` has **no `de` list**, on purpose: the file's own
+rule is that every entry is reviewed by someone who speaks the language, and
+nobody on this team reads German well enough to review one (Swarup is at A1).
+The model check covers German until someone fluent signs off a list.
 
 ## Engine decisions, measured 24 Oct 2026
 
@@ -254,7 +314,7 @@ early build asked "did you mean they gave you money?" about a sentence that
 plainly said the opposite.
 
 Cost of all this, measured: a safe sentence takes 2 calls and ~340 ms; a
-sentence needing full verification and repair takes 13 calls and ~3 s.
+sentence needing full verification and repair takes 15 calls and ~3 s.
 
 ## Shipped languages: Hindi and English (decided 24 Oct)
 
@@ -433,6 +493,116 @@ baseline, that result goes in the README and the video as it stands.
   and "verrückt werden" is valid for the anger idiom. The first Hindi run
   read 23/30 because of this. **An answer key needs reviewing as carefully as
   the system it scores.**
+
+## Two fixes from the first Hindi run (24 Oct)
+
+Both were ranked above latency: the careful path has to be right before it is
+worth making fast.
+
+### 1. The judge could flip who did what
+
+A child wrote that someone said "if you tell anyone, you'll see". The chosen
+translation became *"werde ich es ihm schon zeigen"* - "I'll show him" - so
+the threat survived but now pointed away from the child. Nothing upstream
+noticed, because every candidate contained a threat; only its direction moved.
+
+`_actor_and_threat_kept()` now asks one focused question about the chosen
+text: is the direction the same, and is a reported threat still a threat?
+A failure goes through the same repair path as lost meaning. The result is
+*"wird er schon sehen"*.
+
+A third separate call, for the third time, because the pattern holds: a
+prompt with one job is reliable where the same rule added to a prompt with
+three jobs is not.
+
+### 2. Double meanings are now caught by a reviewed list, not only a model
+
+Asked directly, the model knows that Hindi *chhutti* is both a holiday and
+the end of the school day. Asked inside a judging task it reported it
+sometimes and not others, and tightening the prompt to stop it over-asking
+silenced it completely. A knife threat losing its timing is not something to
+leave to that.
+
+`content/ambiguous_words.json` lists words whose two readings change what an
+adult should do, for the two languages we ship. A match always produces a
+question. The model check still runs beside it and catches what the list does
+not; where both fire on the same words the model's version wins, because it
+quotes what the child actually wrote.
+
+The list found that Hindi *kal* means both "tomorrow" and "yesterday", which
+for a threat matters more than *chhutti* did.
+
+**Cost:** a fully verified sentence is now **15 calls**, up from 13.
+
+### Benchmark, after both fixes
+
+The eval now answers the questions it is asked, choosing the option matching
+the reference. Scoring an unanswered translation measured the app for
+refusing to guess, which is the behaviour the product exists for. The
+question is still asked before any answer is known, and a question with no
+right option still fails.
+
+| hi_core (30) | Meaning kept | Asked the child | Avg calls |
+|---|---|---|---|
+| baseline | 28/30 | 0 | 1.1 |
+| adaptive | 28/30 | 5 | 10.3 |
+
+Safety improved to 28/30 with **0 missed crises**.
+
+**Adaptive draws with baseline on Hindi and does not beat it.** These
+sentences are mostly unambiguous, where one pass is already strong. The
+English set holds the inversions this exists to catch; that run decides
+whether the claim stands at all.
+
+## Benchmark result (24 Oct 2026)
+
+80 sentences, 50 English and 30 Hindi, scored by matching words against an
+answer key we wrote. No model grades another model. Reproduce with
+`eval/run_eval.py`.
+
+| | Single pass | Ours | Asked the child | Avg calls |
+|---|---|---|---|---|
+| English (50) | 48/50 | 49/50 | 2 | 10.7 |
+| Hindi (30) | 28/30 | 28/30 | 8 | 10.2 |
+| **Total** | **76/80** | **77/80** | **10** | ~10 |
+
+Safety: **0 missed crises** in either set; 2 and 3 over-triggers.
+
+**One sentence in eighty is not a difference.** We do not claim to be more
+accurate than a single pass, because on this evidence we are not: the two are
+level, and a margin that small on a set this size is noise. Anyone is welcome
+to run the eval and get a slightly different number.
+
+What the extra calls buy is the **10 sentences where the child's own words
+carried two meanings**. A single pass picked one silently. Ours asked the
+child, and their answer decided the German. That is not accuracy, it is
+authorship, and it is reproducible in one try:
+
+> *"He said he would get me after school."*
+> A single pass returns "mich holen" and says nothing.
+> Ours asks: *"Did you mean 'hurt me' or 'come get me'?"*
+
+### What verifying less taught us
+
+The triage used to escalate 37 of 50 English sentences, because an unnamed
+actor ("they", "he") counted as a risk marker and almost every disclosure has
+one. Removing it dropped escalation to 19 of 50 **and raised the score from
+48 to 49**. Each verification is another chance for the judge to choose a
+worse candidate, so checking everything was costing quality as well as money.
+Verify the right sentences, not all of them.
+
+### Why the original evidence disappeared
+
+Verification was built after watching a single pass invert meaning:
+"gegeben" for "gezwungen", "trifft" for "schlägt". Those were real, on
+Nemotron 3.5 Lightning. Moving the fan-out to Super-VL for the language gate
+fixed the single pass too, so on the model we ship those come back correct 5
+times out of 5 and the failure cannot be demonstrated.
+
+The step stays, because the failure is silent when it happens: nothing
+disagrees, confidence reads 1.00, and a teacher sees German that looks fine.
+Guarding a silent failure is worth something even when it is rare.
+Overstating it is not.
 
 ## Hard requirements (failing any one = disqualified)
 

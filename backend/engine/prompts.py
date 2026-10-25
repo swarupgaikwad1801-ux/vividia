@@ -64,9 +64,22 @@ Do three things.
    First keep only the translations that say what the child said: same actor,
    same action, same direction, same negation, same severity.
    Among those, choose the one that reads like natural {target_name} a real
-   person would write. Reject word-for-word renderings that are not correct grammar
-   in {target_name}, even when the meaning is right.
+   person would write. Reject word-for-word renderings that are not correct
+   grammar in {target_name}, even when the meaning is right.
    Meaning first, fluency second, but fluency decides every tie.
+
+   Two rules about how children write, which decide most of these:
+
+   - **Never choose a literal rendering of slang or an idiom.** Children write
+     "they roasted me", "he's dead to me", "I died of embarrassment". These
+     describe being mocked, a fallout, and embarrassment. A translation that
+     makes them about fire, death or dying is wrong, however faithful it looks
+     word by word. Choose the version that says what the child meant.
+
+   - **Prefer the reading most of the translations share.** If four say one
+     thing and one says something else, the odd one out is usually a mistake,
+     not an insight. Choose the minority version only when you can say exactly
+     what the others got wrong.
 
 2. REPORT WHERE THE TRANSLATIONS DISAGREE, and say WHY they disagree.
    There are only two reasons, and telling them apart is the important part
@@ -206,6 +219,12 @@ QUESTION_SCHEMA = {
                 "question": {"type": "string"},
                 "options": {
                     "type": "array",
+                    # Measured: without minItems the model returned a perfectly
+                    # good question with an empty options array in 3 runs out
+                    # of 5, which is schema-valid and useless. The question was
+                    # then dropped and the child was asked nothing.
+                    "minItems": 2,
+                    "maxItems": 2,
                     "items": {
                         "type": "object",
                         "additionalProperties": False,
@@ -268,7 +287,7 @@ You are not translating and not checking anyone's work. You are only asking:
 if two careful adults read this sentence, could they reasonably disagree
 about what happened?
 
-Report a phrase only when the two readings would change how serious this is:
+Report a phrase when the two readings would change how serious this is:
 - a threat, or an ordinary arrangement
   ("he said he would get me after school")
 - playing together, or being picked on
@@ -278,15 +297,53 @@ Report a phrase only when the two readings would change how serious this is:
 - an accident, or something done on purpose
 - teasing between friends, or being hurt
 
+Also report a phrase when the child DID say something and the word they used
+has two meanings, so that the two readings change **when** it happens or
+**who** did it:
+- a word that can mean two different times. Hindi "chhutti" is both a holiday
+  and the end of the school day, so "kal chhutti ke baad" is either tomorrow
+  after school or after the holidays. For a threat, that is the difference
+  between tomorrow and weeks away.
+- a word that can name two different people, or a pronoun whose person the
+  child's language leaves open but the target language must choose.
+- a word that can mean a relative or an unrelated older child, like Hindi
+  "bhaiya" or "didi".
+
+Urgency and identity matter as much as severity. A threat that loses its
+timing has lost the part an adult would act on.
+
 Do NOT report:
 - a sentence that is simply clear, however upsetting it is. "He punched me in
   the face" has one meaning. Most sentences have one meaning.
-- vagueness about details the child did not mention, like when or where.
+- a detail the child never mentioned at all. If they did not say when, that
+  is simply missing, not ambiguous, and you must not ask them for it. The
+  test is whether the child's OWN WORDS carry two readings.
 - anything you could settle yourself by reading the sentence again.
 
+Work in this order, and fill "words_considered" first.
+
+1. List every word or short phrase in the sentence that has more than one
+   meaning in the child's language, with those meanings. Do this even when
+   the sentence looks obvious, and even when one meaning is far more likely.
+   This is a vocabulary question, not a judgement about the child.
+2. Then decide which of those, if any, pass ALL THREE of these:
+   a. the phrase appears in the child's sentence word for word, exactly as
+      they typed it;
+   b. both readings are genuinely plausible for a child writing about school,
+      not merely possible in a dictionary;
+   c. picking the wrong one would change what an adult should do: how serious
+      it is, when it happens, or who did it.
+3. Put only those in "ambiguous_phrases". Usually that is none or one.
+
+Every question costs the child something. A child asked to explain their own
+words three times learns that the app does not understand them, and stops
+writing. When in doubt, leave it out.
+
+Step 1 is not optional. Listing a word there and leaving it out of step 2 is
+a normal and useful answer.
+
 Never guess which reading is right, and never treat one as more likely. Only
-the child knows. Return an empty list when the sentence is clear; that is the
-normal answer."""
+the child knows."""
 
 AMBIGUITY_SCHEMA = {
     "type": "json_schema",
@@ -297,6 +354,19 @@ AMBIGUITY_SCHEMA = {
             "type": "object",
             "additionalProperties": False,
             "properties": {
+                "words_considered": {
+                    "type": "array",
+                    "description": "Every word in the sentence with more than one meaning, listed before deciding. Forces the vocabulary question to be asked explicitly; an obvious-looking sentence can still contain a word like Hindi 'chhutti' (holiday / end of the school day).",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "word": {"type": "string"},
+                            "meanings": {"type": "array", "items": {"type": "string"}},
+                        },
+                        "required": ["word", "meanings"],
+                    },
+                },
                 "ambiguous_phrases": {
                     "type": "array",
                     "items": {
@@ -321,7 +391,67 @@ AMBIGUITY_SCHEMA = {
                     },
                 }
             },
-            "required": ["ambiguous_phrases"],
+            "required": ["words_considered", "ambiguous_phrases"],
         },
     },
 }
+
+
+# Asked about one chosen translation only. Measured failure this exists for:
+# a child wrote that someone said "if you tell anyone, you'll see", and the
+# chosen translation became "I'll show him" - the threat survived but changed
+# direction, so the child now appeared to be threatening someone else.
+ACTOR_THREAT_SYSTEM = """You check two things about a translation, and nothing else.
+
+You are given the child's original sentence, the {target_name} translation,
+and that translation turned back into {source_name}.
+
+1. DIRECTION. In the child's sentence, who does what to whom? Is that the
+   same in the translation? Answer false if anyone has swapped places: if
+   something done TO the child now reads as done BY the child, if a threat
+   made against the child now reads as a threat the child is making, or if
+   the person responsible has changed.
+
+2. THREAT. If the child reported that someone threatened them, warned them,
+   or told them what would happen if they spoke, is that still a threat in
+   the translation? Answer false if it became a neutral remark, an offer, a
+   favour, or advice.
+
+Judge only these. Clumsy wording, a different word order, or a slightly
+formal tone are not failures here.
+
+Base your answer on the back-translation compared with the child's own
+sentence, not on whether the translation reads well."""
+
+ACTOR_THREAT_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "actor_threat",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "direction_kept": {"type": "boolean"},
+                "threat_kept": {
+                    "type": "boolean",
+                    "description": "true when the original carried no threat at all",
+                },
+                "what_changed": {
+                    "type": "string",
+                    "description": "empty when both are true; otherwise what moved, in one line",
+                },
+            },
+            "required": ["direction_kept", "threat_kept", "what_changed"],
+        },
+    },
+}
+
+
+# --- the report ---------------------------------------------------------------
+#
+# There is deliberately no report prompt. An earlier draft had one write a
+# short overview; it produced the German and the child's language as two
+# independent strings, so the German the adult read was never the text the
+# child approved. engine/report_text.py builds the overview from a template
+# instead, and the rules such a prompt would have to obey are recorded there.

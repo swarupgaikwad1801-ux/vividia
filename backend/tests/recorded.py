@@ -57,6 +57,7 @@ _KINDS = [
     ("ambiguity", "You read one sentence written by a child and decide"),
     ("question", "You write one short question that asks a child what they meant"),
     ("repair", "You correct a translation that lost part of its meaning"),
+    ("actor_threat", "You check two things about a translation, and nothing else"),
     ("safety", "You read one message from a child and decide whether they"),
 ]
 
