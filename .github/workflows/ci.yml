@@ -51,3 +51,48 @@ jobs:
             echo "::notice::eval/run_eval.py does not exist yet (Neel owns it, see issue #3)."
             echo "This step starts running on its own as soon as that file lands."
           fi
+
+  # The screens and their lib/ modules. Plain node:test for lib/, then a full
+  # typecheck and production build, so a change that breaks the app fails here
+  # rather than in front of a judge. No secrets and no network to the backend.
+  #
+  # Skips itself until frontend/package-lock.json is on main (Vernika's app
+  # setup), so it can never fail for want of a package.json.
+  frontend:
+    name: frontend tests and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Is the app set up yet?
+        id: setup
+        working-directory: .
+        run: |
+          if [ -f frontend/package-lock.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::frontend/package-lock.json is not on this branch yet, so the frontend job skips."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.setup.outputs.ready == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install (exact versions from the lock file)
+        if: steps.setup.outputs.ready == 'true'
+        run: npm ci
+
+      - name: lib/ tests
+        if: steps.setup.outputs.ready == 'true'
+        run: npm test
+
+      - name: Typecheck and production build
+        if: steps.setup.outputs.ready == 'true'
+        run: npm run build
