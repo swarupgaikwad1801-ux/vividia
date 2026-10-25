@@ -54,6 +54,8 @@ interface StoredTries {
 
 export const PIN_KEY = "vividia.pin.v1";
 export const TRIES_KEY = "vividia.pin.tries.v1";
+/** When the PIN was last removed; see `clearPin()`. */
+export const REMOVED_KEY = "vividia.pin.removed.v1";
 
 export const MIN_DIGITS = 4;
 export const MAX_DIGITS = 6;
@@ -284,8 +286,26 @@ export async function checkPin(pin: string, from?: PinStore): Promise<CheckResul
  * that costs is that anyone holding the phone can also clear the lock, which
  * is the honest limit of a client-side PIN and is written down here rather
  * than hidden.
+ *
+ * So it leaves a trace: the time it ran, which the timeline shows
+ * (`PinRemovedNotice`). A sibling who taps "I forgot my PIN", reads
+ * everything and sets a new PIN cannot do it silently; the child sees the
+ * date and can tell whether it was them (SAFETY.md, threat 2).
  */
 export function clearPin(from?: PinStore): void {
   drop(PIN_KEY, from);
   drop(TRIES_KEY, from);
+  write(REMOVED_KEY, { at: Date.now() }, from);
+}
+
+/** When the PIN was last removed, ms since epoch, or undefined if never. */
+export function pinRemovedAt(from?: PinStore): number | undefined {
+  const record = read<{ at?: unknown }>(REMOVED_KEY, from);
+  const at = record?.at;
+  return typeof at === "number" && Number.isFinite(at) && at > 0 ? at : undefined;
+}
+
+/** Forget the trace. Only for "delete everything", never on its own. */
+export function forgetPinRemoved(from?: PinStore): void {
+  drop(REMOVED_KEY, from);
 }
