@@ -14,12 +14,15 @@ be taken from it.
 Offline; no model calls.
 """
 
+import asyncio
+import time
+
 import pytest
 import recorded
 
 from engine.budget import STEP_MS, TOTAL_MS, over_budget
 from engine.client import ROLES, Usage
-from engine.translate import ADAPTIVE, translate
+from engine.translate import ADAPTIVE, FANOUT_TEMPERATURES, translate
 
 # Deliberately slower than we expect in production, so passing means there is
 # headroom. The judge and the ambiguity check are larger models answering under
@@ -30,6 +33,11 @@ PESSIMISTIC_MS = {
     "back_translate": 700,
     "ambiguity": 1_800,
     "judge": 2_500,
+    # The focused check on the chosen text. It had NO entry here, so it was
+    # simulated as instant and this suite reported the pipeline well inside
+    # budget while the real 15-call path was over it. Same model as the judge,
+    # so the same figure.
+    "actor_threat": 2_500,
     "question": 1_500,
     "repair": 1_200,
     "safety": 1_200,
@@ -43,6 +51,9 @@ SEQUENTIAL_MS = (
     + PESSIMISTIC_MS["ambiguity"]
     + PESSIMISTIC_MS["judge"]
     + PESSIMISTIC_MS["repair"]
+    # the back-translation of the repaired text, then the direction check
+    + PESSIMISTIC_MS["back_translate"]
+    + PESSIMISTIC_MS["actor_threat"]
 )
 
 
@@ -177,3 +188,81 @@ def test_every_step_the_pipeline_labels_has_a_budget(step):
     """STEP_MS and the step= names in translate.py must not drift apart."""
     assert STEP_MS[step] > 0
     assert STEP_MS[step] <= TOTAL_MS
+
+
+# --- the scheduling the budget depends on ----------------------------------
+#
+# These are the shape of the pipeline, not its speed. Each pins an overlap
+# that the 10 s bar now relies on, so undoing one fails here rather than
+# showing up as a slow demo.
+
+
+def test_the_fan_out_size_the_limiter_assumes_is_the_real_one():
+    """client.FANOUT_PASSES is declared there because client.py cannot import
+    translate.py. This is what stops the two drifting apart."""
+    from engine.client import FANOUT_PASSES
+
+    assert FANOUT_PASSES == len(FANOUT_TEMPERATURES)
+
+
+async def test_the_limiter_serves_a_fan_out_without_spacing_it_out():
+    """The old limiter put a fixed 250 ms between calls at 300 RPM, turning a
+    five-call fan-out into a second of our own throttling. A burst that size
+    is nothing against 300 requests a minute."""
+    from engine.client import FANOUT_PASSES, _Limiter
+
+    limiter = _Limiter(300)
+    started = time.perf_counter()
+    await asyncio.gather(*[limiter.wait() for _ in range(FANOUT_PASSES)])
+    elapsed_ms = (time.perf_counter() - started) * 1000
+
+    assert elapsed_ms < 100, f"a fan-out still waits {elapsed_ms:.0f} ms on our own limiter"
+
+
+async def test_the_limiter_still_enforces_the_average_it_promises():
+    """The burst is allowed; the rate is not. Past the bucket's capacity the
+    calls are paced, or the 300 RPM cap would be a suggestion."""
+    from engine.client import _Limiter
+
+    limiter = _Limiter(300)  # 4 requests/second after the safety factor
+    started = time.perf_counter()
+    await asyncio.gather(*[limiter.wait() for _ in range(16)])
+    elapsed = time.perf_counter() - started
+
+    # 16 calls at 4/s cannot finish in under a second however big the burst.
+    assert elapsed > 0.8, f"16 calls took {elapsed:.2f}s; the rate is not being enforced"
+
+
+async def test_the_ambiguity_check_overlaps_the_judge(monkeypatch):
+    """It reads the child's sentence alone, so it depends on neither the
+    fan-out nor the judge. Gathered with the fan-out it delayed everything
+    behind it; as a task it hides inside the back-translations and the judge."""
+    transcript = replay(monkeypatch, "hits_trifft_repair")
+
+    result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
+
+    assert transcript.count("ambiguity") == 1
+    # If it were serial, the total would have to include its full 1.8 s on top
+    # of everything else. This is the headroom that overlap buys.
+    serial_floor = (
+        2 * PESSIMISTIC_MS["translate"]
+        + PESSIMISTIC_MS["ambiguity"]
+        + PESSIMISTIC_MS["back_translate"] * 2
+        + PESSIMISTIC_MS["judge"]
+        + PESSIMISTIC_MS["repair"]
+        + PESSIMISTIC_MS["actor_threat"]
+    )
+    assert result["usage"]["latency_ms"] < serial_floor
+
+
+async def test_the_questions_overlap_the_chosen_text_chain(monkeypatch):
+    """A question is about the child's own sentence and the judge's disputes,
+    so it needs nothing the repair or the direction check produces."""
+    transcript = replay(monkeypatch, "get_me_after_school")
+
+    result = await translate(transcript.data["text"], "en", strategy=ADAPTIVE)
+
+    assert transcript.count("question") >= 1, "no question was asked, so nothing is being tested"
+    assert result["ambiguities"], "the question did not survive being run concurrently"
+    # The question's own time is hidden inside the actor/threat check.
+    assert result["usage"]["latency_ms"] < 10_000 - PESSIMISTIC_MS["question"]
