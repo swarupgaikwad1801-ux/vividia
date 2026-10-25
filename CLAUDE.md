@@ -52,13 +52,25 @@ need no translation — we do the other thing we do, which is ask.*
 Every number above was read out of the source document, not a search result.
 Neel asked for link and page on each (#41 review); this is that.
 
-**HBSC 2022** — Fischer SM, Bilz L (2024). *Mobbing und Cybermobbing an
-Schulen in Deutschland: Ergebnisse der HBSC-Studie 2022 und Trends von
-2009/10 bis 2022.* Journal of Health Monitoring 9(1).
-DOI [10.25646/11871](https://doi.org/10.25646/11871) ·
-[PDF](https://edoc.rki.de/bitstream/handle/176904/11545/JHealthMonit_2024_01_Mobbing.pdf)
-Roughly 6,500 pupils in grades 5, 7 and 9 (ages 11, 13, 15); the bullying
-table is N = 5,793.
+**HBSC 2022** — Fischer SM, Bilz L (2024). Journal of Health Monitoring 9(1),
+pp. 42–61. Roughly 6,500 pupils in grades 5, 7 and 9 (ages 11, 13, 15); the
+school-bullying table is N = 5,793.
+
+The article exists in two editions with **different DOIs**, and the page
+numbers below are the German one's. Check which you have open:
+
+- **German** (the page numbers here): *Mobbing und Cybermobbing an Schulen in
+  Deutschland.* DOI [10.25646/11871](https://doi.org/10.25646/11871) ·
+  [PDF](https://edoc.rki.de/bitstream/handle/176904/11545/JHealthMonit_2024_01_Mobbing.pdf)
+- **English**: *Traditional bullying and cyberbullying at schools in Germany.*
+  DOI [10.25646/11872](https://doi.org/10.25646/11872) ·
+  [HTML](https://www.rki.de/SharedDocs/Journal/EN/johm-9-1-42/johm-9-1-42.html)
+  — no page numbers; Table 1 is in section 3.1.
+
+**Both editions were read, and they agree** on 8.6% bullied, 23.5%
+gender-diverse, 13.2% Grundschule and 3.0% cyberbullied. So those four do not
+rest on one extraction: the German PDF and the English HTML were checked
+separately and match.
 
 | Figure | Value | Where |
 |---|---|---|
