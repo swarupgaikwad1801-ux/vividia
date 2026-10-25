@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { LANGS, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
+import { HelpButton } from "./components/HelpButton";
+import { HelpScreen } from "./screens/HelpScreen";
 
 /**
  * Scaffold check, not a screen.
@@ -16,6 +18,9 @@ import type { Lang } from "./lib/strings";
  */
 export default function App() {
   const [lang, setLang] = useState<Lang>("en");
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  if (helpOpen) return <HelpScreen lang={lang} onBack={() => setHelpOpen(false)} />;
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-6 px-4 py-8">
@@ -54,12 +59,7 @@ export default function App() {
         <p className="text-sm text-ink-soft">{t("quickExit.note", lang)}</p>
       </section>
 
-      <button
-        type="button"
-        className="min-h-tap rounded-card bg-help-soft px-4 text-base font-semibold text-help"
-      >
-        {t("help.button", lang)}
-      </button>
+      <HelpButton lang={lang} onOpen={() => setHelpOpen(true)} />
 
       <p className="mt-auto text-xs text-ink-soft">
         Setup check only. The real screens replace this; see issue #4.
