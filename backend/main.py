@@ -23,9 +23,11 @@ from fastapi.responses import JSONResponse
 from engine.client import ROLES
 from engine.config import REPO_ROOT
 from engine.errors import message_for, safe_traceback, status_for, to_error_response
+from engine.resources import emergency_numbers
 from app.limits import Guard, client_key
 from app.schemas import (
     ClarifyRequest,
+    EmergencyResponse,
     Entry,
     ErrorResponse,
     HealthResponse,
@@ -315,6 +317,23 @@ async def demo() -> dict:
         **{key: value for key, value in raw.items() if not key.startswith("_")},
         "timeline": [entry.model_dump() for entry in timeline],
     }
+
+
+@app.get("/api/emergency", response_model=EmergencyResponse)
+async def emergency() -> EmergencyResponse:
+    """110 and 112, so no screen ever types a phone number itself.
+
+    Read straight from content/helplines.json, the only place a contact may be
+    defined. Not routed through ENGINE: these numbers are the same in mock and
+    live mode, and must be. No Tavily and no model call, so it sits outside
+    the spending cap: the emergency numbers have to load on a day the demo has
+    spent its allowance, and with no API key at all.
+    """
+    try:
+        contacts = emergency_numbers()
+    except Exception as error:  # noqa: BLE001 - a broken content file is ours, not the child's
+        raise ChildSafeError(error, "en") from error
+    return EmergencyResponse(contacts=contacts)
 
 
 @app.get("/api/resources", response_model=ResourcesResponse)
