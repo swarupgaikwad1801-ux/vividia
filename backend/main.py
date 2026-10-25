@@ -330,10 +330,10 @@ async def emergency() -> EmergencyResponse:
     spent its allowance, and with no API key at all.
     """
     try:
-        numbers = emergency_numbers()
+        contacts = emergency_numbers()
     except Exception as error:  # noqa: BLE001 - a broken content file is ours, not the child's
         raise ChildSafeError(error, "en") from error
-    return EmergencyResponse(numbers=numbers)
+    return EmergencyResponse(contacts=contacts)
 
 
 @app.get("/api/resources", response_model=ResourcesResponse)

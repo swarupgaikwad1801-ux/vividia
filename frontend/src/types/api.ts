@@ -130,7 +130,7 @@ export interface ResourcesResponse {
 /** GET /api/emergency */
 export interface EmergencyResponse {
   /** 110 and 112 from content/helplines.json, in file order; never Tavily, never a model */
-  numbers: Resource[];
+  contacts: Resource[];
 }
 
 /** GET /api/health */
