@@ -15,6 +15,7 @@ disagreement; the child chooses; the final pass renders that choice.
 """
 
 import asyncio
+import inspect
 import json
 import re
 from functools import lru_cache
@@ -254,6 +255,25 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
 
 
 async def _find_ambiguity(text, source_lang, target_lang, usage):
+    """The ambiguity check, wrapped so its failure cannot lose the translation.
+
+    It used to be gathered with the fan-out, which meant a failed check took
+    the whole request down with it. It is one of three defences: losing it
+    costs the child a question they might have been asked, while raising costs
+    them the translation entirely.
+
+    The reviewed word list needs no model at all, so a model outage still
+    asks about a word known to carry two readings. That is the half of this
+    check that matters most for a threat, and there is no reason to lose it
+    because a call failed.
+    """
+    try:
+        return await _find_ambiguity_inner(text, source_lang, target_lang, usage)
+    except EngineError:
+        return lexicon_ambiguities(text, source_lang)
+
+
+async def _find_ambiguity_inner(text, source_lang, target_lang, usage):
     """Ask whether the child's own sentence has more than one honest reading.
 
     Deliberately given the original only. The judge, once it has candidates in
@@ -355,6 +375,7 @@ async def _actor_and_threat_kept(text, german, back, source_lang, target_lang, u
         temperature=0.0,
         max_tokens=300,
         response_format=ACTOR_THREAT_SCHEMA,
+        step="actor_threat",
     )
     try:
         verdict = json.loads(raw)
@@ -396,6 +417,13 @@ async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
 
     labels = [o["label"] for o in parsed.get("options", [])][: len(readings)]
     if len(labels) < 2:
+        # The model returned a question with too few options. The schema now
+        # demands two, which fixed it in testing, but dropping the question
+        # silently is the worst possible failure here: the app would pick a
+        # reading of the child's words without telling them, which is the one
+        # thing it exists not to do. Fall back to the readings themselves.
+        labels = [reading["meaning"] for reading in readings]
+    if len(labels) < 2 or not parsed.get("question", "").strip():
         return None
     return {
         "phrase": phrase,
@@ -433,6 +461,33 @@ def _decisions_text(ambiguities, choices) -> str:
     return "\n".join(lines)
 
 
+async def _ask_the_child(text, disputes, source_ambiguities, source_lang, usage):
+    """Turn what only the child can settle into at most two questions.
+
+    Split out of _verify so it can run alongside the actor/threat check and
+    any repair that follows: the questions are about the child's own sentence
+    and the judge's disputes, so they depend on nothing that chain produces.
+    """
+    # source_ambiguities arrives as the task started before the judge; await
+    # it only here, where its result is finally needed.
+    found = source_ambiguities
+    if inspect.isawaitable(found):
+        found = await found
+
+    ask_about = list(found or [])
+    seen = {a["phrase"].lower() for a in ask_about}
+    for dispute in disputes:
+        if dispute.get("kind") == "source_ambiguous" and dispute["phrase"].lower() not in seen:
+            ask_about.append(dispute)
+            seen.add(dispute["phrase"].lower())
+    ask_about = ask_about[:2]  # never interrupt a child with more than two questions
+
+    questions = await asyncio.gather(
+        *[_question(d["phrase"], d["readings"], source_lang, usage) for d in ask_about]
+    )
+    return [q for q in questions if q]
+
+
 async def _verify(text, candidates, source_lang, target_lang, usage, source_ambiguities=None):
     """Back-translate, judge, repair what was lost, and ask the child what only they know."""
     backs = await asyncio.gather(*[_back(c, source_lang, target_lang, usage) for c in candidates])
@@ -464,6 +519,29 @@ async def _verify(text, candidates, source_lang, target_lang, usage, source_ambi
         loss for loss in verdict.get("meaning_lost", [])
         if loss.get("severity") == "critical"
     ]
+    # Everything the questions need is known now: the child's own sentence and
+    # the judge's disputes. Start them here so they overlap the repair, the
+    # back-translation of the chosen text and the actor/threat check, none of
+    # which they depend on.
+    questions_running = asyncio.ensure_future(
+        _ask_the_child(text, disputes, source_ambiguities, source_lang, usage)
+    )
+
+    try:
+        return await _finish_verify(
+            text, candidates, backs, verdict, best_index, disputes, losses,
+            errors_caught, questions_running, source_lang, target_lang, usage,
+        )
+    finally:
+        if not questions_running.done():
+            questions_running.cancel()
+
+
+async def _finish_verify(
+    text, candidates, backs, verdict, best_index, disputes, losses,
+    errors_caught, questions_running, source_lang, target_lang, usage,
+):
+    """The chosen-text chain: repair, check the direction, repair again."""
     best = candidates[best_index]
     repaired = False
     if losses:
@@ -494,19 +572,8 @@ async def _verify(text, candidates, source_lang, target_lang, usage, source_ambi
             usage,
         )
         repaired = True
-    # Questions for the child come from the dedicated check on the original
-    # sentence, plus any genuine ambiguity the judge noticed while comparing.
-    ask_about = list(source_ambiguities or [])
-    seen = {a["phrase"].lower() for a in ask_about}
-    for dispute in disputes:
-        if dispute.get("kind") == "source_ambiguous" and dispute["phrase"].lower() not in seen:
-            ask_about.append(dispute)
-            seen.add(dispute["phrase"].lower())
-    ask_about = ask_about[:2]  # never interrupt a child with more than two questions
 
-    questions = await asyncio.gather(
-        *[_question(d["phrase"], d["readings"], source_lang, usage) for d in ask_about]
-    )
+    questions = await questions_running
     # Agreement between passes is worthless as a confidence signal when the
     # passes agreed on something wrong, so cap it when meaning had to be
     # repaired. Confidence must never overstate what we actually know.
@@ -514,7 +581,7 @@ async def _verify(text, candidates, source_lang, target_lang, usage, source_ambi
     return {
         "translation": best,
         "confidence": min(agreement, 0.6) if repaired else agreement,
-        "ambiguities": [q for q in questions if q],
+        "ambiguities": questions,
         "errors_caught": errors_caught + len(losses),
         "meaning_repaired": len(losses),
     }
@@ -539,6 +606,69 @@ def _finish(result: dict, usage: Usage, strategy: str) -> TranslationResult:
     }
 
 
+async def _same_language(text, source_lang, usage, clarifications, strategy):
+    """The child already writes the language the adult reads.
+
+    A German-speaking child is the majority of bullied children in Germany,
+    and until 25 Oct this function did not exist, so their path through the
+    app was broken in the worst way available:
+
+    `untranslated()` treats output identical to the input as a failed pass,
+    which is right for Hindi->German and exactly wrong for German->German,
+    where the correct answer IS the input. So the first pass "failed", the
+    retry told the model "Do not repeat the German text", and the child got
+    either an `upstream_unavailable` error or **their own words paraphrased
+    by a model**. A paraphrase is the one thing this app must never put in
+    front of a teacher: report.py exists to stop precisely that, and it was
+    being handed one from upstream.
+
+    So nothing is translated here. The text the adult reads is the text the
+    child wrote, character for character, and no model is asked to improve it.
+
+    What still runs is the part that was never about translation: the check
+    for a phrase that can honestly be read two ways, and the question to the
+    child about it. "Er hat mich angemacht" is two different events to the
+    adult who acts on it, and only the child knows which. That check reads
+    the child's own sentence and never needed a translation to work.
+
+    Cost: one call instead of about ten.
+
+    `strategy_used` still reports the strategy the caller asked for. A
+    `same_language` member would describe this path honestly, but Strategy is
+    in the frozen HTTP contract that all three of us have to agree on, so it
+    is proposed in the PR rather than taken here.
+    """
+    if clarifications:
+        # The child has answered. Their answer does not change their own
+        # words - there is nothing to re-render - so it belongs in the report
+        # as a note beside the entry, which is a contract change and Vernika's
+        # call. Until then the answer is recorded by the caller and the text
+        # stays exactly as the child wrote it.
+        return _finish({"translation": text, "confidence": 1.0, "ambiguities": []}, usage, strategy)
+
+    if strategy == BASELINE:
+        # The honest comparison point: a single pass has nothing to do here
+        # either, so neither path spends a call and the benchmark stays fair.
+        return _finish({"translation": text, "confidence": 1.0, "ambiguities": []}, usage, BASELINE)
+
+    ambiguous = await _find_ambiguity(text, source_lang, source_lang, usage)
+    questions = await asyncio.gather(
+        *[_question(item["phrase"], item["readings"], source_lang, usage) for item in ambiguous[:2]]
+    )
+    return _finish(
+        {
+            "translation": text,
+            # Nothing was translated, so no meaning can have been lost in
+            # translation. This is not a claim that the app understood the
+            # child - that is what the question is for.
+            "confidence": 1.0,
+            "ambiguities": [q for q in questions if q],
+        },
+        usage,
+        strategy,
+    )
+
+
 async def translate(
     text: str,
     source_lang: str,
@@ -556,6 +686,11 @@ async def translate(
     usage = Usage()
     text = text.strip()
 
+    if source_lang == target_lang:
+        # Not a translation problem. See _same_language: translating German
+        # into German made the app paraphrase the child or fail outright.
+        return await _same_language(text, source_lang, usage, clarifications, strategy)
+
     if clarifications:
         decisions = _decisions_text(_ambiguities or [], clarifications)
         german = await _one_pass(text, source_lang, target_lang, usage, 0.2, decisions)
@@ -570,13 +705,19 @@ async def translate(
         )
 
     if strategy == MULTI_PASS:
-        candidates, ambiguous = await asyncio.gather(
-            asyncio.gather(
-                *[_one_pass(text, source_lang, target_lang, usage, t) for t in FANOUT_TEMPERATURES]
-            ),
-            _find_ambiguity(text, source_lang, target_lang, usage),
+        ambiguity = asyncio.ensure_future(
+            _find_ambiguity(text, source_lang, target_lang, usage)
         )
-        result = await _verify(text, list(candidates), source_lang, target_lang, usage, ambiguous)
+        try:
+            candidates = await asyncio.gather(
+                *[_one_pass(text, source_lang, target_lang, usage, t) for t in FANOUT_TEMPERATURES]
+            )
+            result = await _verify(
+                text, list(candidates), source_lang, target_lang, usage, ambiguity
+            )
+        finally:
+            if not ambiguity.done():
+                ambiguity.cancel()
         return _finish(result, usage, MULTI_PASS)
 
     # Adaptive: two passes first, then decide whether this sentence needs more.
@@ -595,11 +736,21 @@ async def translate(
             {"translation": first[0], "confidence": 1.0, "ambiguities": []}, usage, ADAPTIVE
         )
 
-    extra, ambiguous = await asyncio.gather(
-        asyncio.gather(
+    # The ambiguity check reads the child's sentence alone: it needs nothing
+    # from the fan-out and nothing from the judge. Gathered with the extra
+    # passes, it made _verify wait for the slower of the two, so the judge
+    # queued behind a check it does not depend on. As a task it overlaps the
+    # back-translations and the judge instead, and is awaited only where its
+    # result is used - building the questions.
+    ambiguity = asyncio.ensure_future(_find_ambiguity(text, source_lang, target_lang, usage))
+    try:
+        extra = await asyncio.gather(
             *[_one_pass(text, source_lang, target_lang, usage, t) for t in FANOUT_TEMPERATURES[2:]]
-        ),
-        _find_ambiguity(text, source_lang, target_lang, usage),
-    )
-    result = await _verify(text, [*first, *extra], source_lang, target_lang, usage, ambiguous)
+        )
+        result = await _verify(text, [*first, *extra], source_lang, target_lang, usage, ambiguity)
+    finally:
+        # A failed fan-out pass means we never reach the await, and a task
+        # nobody awaits logs a warning at interpreter exit.
+        if not ambiguity.done():
+            ambiguity.cancel()
     return _finish(result, usage, ADAPTIVE)

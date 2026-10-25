@@ -51,6 +51,13 @@ ROLES = {
 # costs more time than the requests we give up.
 SAFETY_FACTOR = 0.8
 
+# How many requests a fan-out issues at once. Declared here rather than
+# imported from translate.py, which imports this module, and pinned to
+# len(translate.FANOUT_TEMPERATURES) by a test so the two cannot drift.
+# The limiter uses it as a floor on its burst capacity: our own throttle
+# should never be the reason the shape of work we actually do is slowed.
+FANOUT_PASSES = 5
+
 
 @dataclass
 class Usage:
@@ -113,20 +120,51 @@ class Usage:
 
 
 class _Limiter:
-    """Spaces calls out so we stay under a model's requests-per-minute cap."""
+    """Keeps us under a model's requests-per-minute cap, but allows a burst.
+
+    The first version spaced every call a fixed gap apart: at 300 RPM with our
+    0.8 safety factor, 250 ms. That is correct about the average and wrong
+    about the shape of our traffic. A fan-out is five requests at once, and a
+    fixed gap turned that into five requests over a second, so the fifth
+    translation started a second after the first for no reason the rate limit
+    required. Measured on the full verification path, our own spacing cost
+    1.25 s of the 10 s budget.
+
+    A token bucket is the usual answer and fits exactly: tokens refill at the
+    allowed rate, so the per-minute average is still respected, and a short
+    burst is served immediately as long as there are tokens for it. 300 RPM is
+    five requests a second; a burst of five against that is nothing, and the
+    bucket refills while the model is thinking.
+
+    One bucket per role per event loop, so it is global across concurrent
+    requests rather than per caller: ten children translating at once share
+    the same allowance, which is the behaviour the cap actually needs.
+    """
 
     def __init__(self, rpm: int):
-        self._min_gap = 60.0 / (rpm * SAFETY_FACTOR)
-        self._next_slot = 0.0
+        # Requests per second we are willing to average.
+        self._rate = max(rpm * SAFETY_FACTOR / 60.0, 0.1)
+        # Two seconds' worth, and never less than one fan-out, so the shape of
+        # work we actually do is not throttled by our own limiter.
+        self._capacity = max(self._rate * 2.0, float(FANOUT_PASSES))
+        self._tokens = self._capacity
+        self._updated = time.monotonic()
         self._lock = asyncio.Lock()
 
     async def wait(self) -> None:
-        async with self._lock:
-            now = time.monotonic()
-            slot = max(now, self._next_slot)
-            self._next_slot = slot + self._min_gap
-        delay = slot - now
-        if delay > 0:
+        while True:
+            async with self._lock:
+                now = time.monotonic()
+                self._tokens = min(
+                    self._capacity, self._tokens + (now - self._updated) * self._rate
+                )
+                self._updated = now
+                if self._tokens >= 1.0:
+                    self._tokens -= 1.0
+                    return
+                # Sleep only as long as the next token needs, and recheck:
+                # another caller may have taken it in the meantime.
+                delay = (1.0 - self._tokens) / self._rate
             await asyncio.sleep(delay)
 
 

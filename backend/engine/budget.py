@@ -33,6 +33,11 @@ STEP_MS = {
     "back_translate": 2_500,
     "ambiguity": 4_000,
     "judge": 5_000,
+    # One focused question about the chosen text, on the judge model under a
+    # JSON schema, so it gets the judge's ceiling. It had no entry at all
+    # until now, which meant over_budget() ignored it and the 10 s bar was
+    # measured without the step that pushed the full path past it.
+    "actor_threat": 5_000,
     "question": 4_000,
     "repair": 4_000,
     "safety": 4_000,
