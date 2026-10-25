@@ -24,12 +24,12 @@
         ],
         "note": "Hindi uses one word for both. With a threat this is the difference between something about to happen and something already over. Only asked when the sentence carries no tense marker: with one, the tense decides, and asking anyway spends a question the child does not owe us. Since a list match also forces the full check, asking about every 'kal' cost latency as well.",
         "skip_when": {
-          "_comment": "Tense decides 'kal' nearly always: a future verb makes it tomorrow, a past one yesterday. Only ask when neither is present.",
+          "_comment": "Tense decides 'kal' nearly always: a future verb makes it tomorrow, a past one yesterday. Only ask when neither is present. The Devanagari patterns use lookarounds, not \\b: a vowel sign such as ा (U+093E) is not a word character in Python's re, so \\b never matches after one and those patterns silently never fired. The Devanagari future pattern needs the vowel a future ending carries before ग (मारेगा, आएगा, आएंगे, करूँगा, करोगे): ending in -गा/-गी/-गे alone also matches nouns such as ज़िंदगी (life) and मुर्गी (hen), and a skip that fires on a noun makes the app silently choose between yesterday and tomorrow. The listed words have that vowel and are still not verbs, so they never count; गूंगा (mute) is listed because a child may be called it.",
           "patterns": [
             "\\b\\w+(ega|egi|enge|oge|unga|ungi)\\b",
-            "[ीे]?ग[ाीे]\\b",
+            "(?<![\\w\\u0900-\\u097F])(?!(?:रोगी|योगी|उपयोगी|सहयोगी|गूंगा|गूँगा|गूंगी|गूँगी|गूंगे|गूँगे)(?![\\w\\u0900-\\u097F]))[\\w\\u0900-\\u097F]*(?:[ेएूऊ][ंँ]?ग[ाीे]|[ोओ]ग[ेी])(?![\\w\\u0900-\\u097F])",
             "\\b(tha|thi|the|aaya|aayi|gaya|gayi|kiya|hua|hui)\\b",
-            "\\b(था|थी|थे|आया|गया|किया)\\b"
+            "(?<![\\w\\u0900-\\u097F])(था|थी|थे|आया|आई|गया|गई|किया|हुआ|हुई)(?![\\w\\u0900-\\u097F])"
           ]
         }
       },

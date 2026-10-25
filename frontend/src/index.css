@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. One place for colour, type and spacing, so a screen never
+ * invents a hex code (CLAUDE.md, "one design system").
+ *
+ * Direction: calm, plain and a little serious. The user is 10-16 and may be
+ * frightened; bright primaries and cartoon rounding would read as a toy and
+ * make the app harder to trust with something this big. Deep teal rather than
+ * institutional blue, warm off-white rather than clinical white.
+ */
+@theme {
+  /* Surfaces and text */
+  --color-page: #faf9f6;
+  --color-surface: #ffffff;
+  --color-ink: #1c2b2d;
+  --color-ink-soft: #566366;
+  --color-line: #e2e5e3;
+
+  /* Primary: used for the child's own actions (write, save, continue) */
+  --color-calm: #2e6e68;
+  --color-calm-strong: #22544f;
+  --color-calm-soft: #e3eeec;
+
+  /* Help and crisis. Serious, never an alarm colour: a child reaching for
+     this is already scared, and neon red adds to that. */
+  --color-help: #9e2b2b;
+  --color-help-soft: #f7e8e8;
+
+  /* Type. 17px base, because this is read on a cheap phone held low, often
+     in a hurry. */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Noto Sans Devanagari", "Helvetica Neue", Arial, sans-serif;
+  --text-base: 1.0625rem;
+
+  /* The smallest thing a thumb may have to hit. WCAG 2.2 target size. */
+  --spacing-tap: 2.75rem;
+
+  --radius-card: 0.875rem;
+}
+
+/*
+ * Dark mode. Tailwind v4 compiles utilities to var(--color-*), so redefining
+ * the variables here re-themes every utility without a second set of classes.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-page: #14191a;
+    --color-surface: #1d2325;
+    --color-ink: #e8edec;
+    --color-ink-soft: #a3b0b1;
+    --color-line: #2f3739;
+    --color-calm: #74b8b0;
+    --color-calm-strong: #9ad2cb;
+    --color-calm-soft: #1f3331;
+    --color-help: #e98a8a;
+    --color-help-soft: #33201f;
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    /* Mobile-first: the layout is designed at 360px and grows from there. */
+    min-height: 100dvh;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* A visible focus ring is how this app is usable by keyboard and by screen
+     reader. Never remove it. */
+  :focus-visible {
+    outline: 2px solid var(--color-calm);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
