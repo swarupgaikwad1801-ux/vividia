@@ -208,6 +208,52 @@ export const STRINGS = {
   "help.checkedToday": { en: "checked today", de: "heute geprüft", hi: "आज जाँचा गया" },
   "help.checkedYesterday": { en: "checked yesterday", de: "gestern geprüft", hi: "कल जाँचा गया" },
   "help.checkedDays": { en: "checked {n} days ago", de: "vor {n} Tagen geprüft", hi: "{n} दिन पहले जाँचा गया" },
+
+  // Picture incident builder (lib/pictures.ts): the tiles.
+  "pic.what.pushed": { en: "Pushed me", de: "Geschubst", hi: "धक्का दिया" },
+  "pic.what.hit": { en: "Hit me", de: "Geschlagen", hi: "मारा" },
+  "pic.what.names": { en: "Called me names", de: "Beschimpft", hi: "बुरे नाम बुलाए" },
+  "pic.what.taken": { en: "Took my things", de: "Sachen weggenommen", hi: "मेरी चीज़ें लीं" },
+  "pic.what.online": { en: "Online", de: "Online", hi: "ऑनलाइन" },
+  "pic.what.left_out": { en: "Left me out", de: "Ausgeschlossen", hi: "शामिल नहीं किया" },
+  "pic.where.classroom": { en: "Classroom", de: "Klassenzimmer", hi: "क्लास" },
+  "pic.where.corridor": { en: "Corridor", de: "Flur", hi: "गलियारा" },
+  "pic.where.schoolyard": { en: "Schoolyard", de: "Schulhof", hi: "स्कूल का मैदान" },
+  "pic.where.toilets": { en: "Toilets", de: "Toiletten", hi: "टॉयलेट" },
+  "pic.where.online": { en: "Online", de: "Online", hi: "ऑनलाइन" },
+  "pic.where.way_to_school": { en: "Way to school", de: "Schulweg", hi: "स्कूल का रास्ता" },
+  "pic.howMany.one": { en: "One person", de: "Eine Person", hi: "एक व्यक्ति" },
+  "pic.howMany.several": { en: "Several people", de: "Mehrere", hi: "कई लोग" },
+  "pic.howOld.older": { en: "Older than me", de: "Älter als ich", hi: "मुझसे उम्र में बड़े" },
+  "pic.howOld.same_age": { en: "My age", de: "So alt wie ich", hi: "मेरी उम्र के" },
+
+  // The sentence for each tap when the child said how many. {S} is pic.doer.*;
+  // German {hat} becomes "hat" or "haben".
+  "pic.doer.one": { en: "Someone", de: "Jemand", hi: "किसी" },
+  "pic.doer.several": { en: "Several people", de: "Mehrere", hi: "कुछ लोगों" },
+  "pic.say.pushed": { en: "{S} pushed me.", de: "{S} {hat} mich geschubst.", hi: "{S} ने मुझे धक्का दिया।" },
+  "pic.say.hit": { en: "{S} hit me.", de: "{S} {hat} mich geschlagen.", hi: "{S} ने मुझे मारा।" },
+  "pic.say.names": { en: "{S} called me names.", de: "{S} {hat} mich beschimpft.", hi: "{S} ने मुझे बुरे नामों से बुलाया।" },
+  "pic.say.taken": { en: "{S} took my things.", de: "{S} {hat} mir Sachen weggenommen.", hi: "{S} ने मेरी चीज़ें ले लीं।" },
+  "pic.say.online": {
+    en: "{S} wrote mean things about me online.",
+    de: "{S} {hat} online gemeine Dinge über mich geschrieben.",
+    hi: "{S} ने ऑनलाइन मेरे बारे में बुरी बातें लिखीं।",
+  },
+  "pic.say.left_out": { en: "{S} left me out.", de: "{S} {hat} mich ausgeschlossen.", hi: "{S} ने मुझे शामिल नहीं किया।" },
+
+  // The same sentences when the child did not say how many: passive, so no
+  // doer and no count is added that the child never gave.
+  "pic.passive.pushed": { en: "I was pushed.", de: "Ich wurde geschubst.", hi: "मुझे धक्का दिया गया।" },
+  "pic.passive.hit": { en: "I was hit.", de: "Ich wurde geschlagen.", hi: "मुझे मारा गया।" },
+  "pic.passive.names": { en: "I was called names.", de: "Ich wurde beschimpft.", hi: "मुझे बुरे नामों से बुलाया गया।" },
+  "pic.passive.taken": { en: "My things were taken.", de: "Mir wurden Sachen weggenommen.", hi: "मेरी चीज़ें ले ली गईं।" },
+  "pic.passive.online": {
+    en: "Mean things were written about me online.",
+    de: "Über mich wurden online gemeine Dinge geschrieben.",
+    hi: "ऑनलाइन मेरे बारे में बुरी बातें लिखी गईं।",
+  },
+  "pic.passive.left_out": { en: "I was left out.", de: "Ich wurde ausgeschlossen.", hi: "मुझे शामिल नहीं किया गया।" },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;

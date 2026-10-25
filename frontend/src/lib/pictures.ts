@@ -35,19 +35,21 @@
  * - The doer is "someone" or "several people", never "he" or "she", because a
  *   tap does not tell us, and Hindi verbs with ने agree with the object, so
  *   the same Hindi template works for one person or several.
+ * - **No count the child did not give.** If they skip "how many", the sentence
+ *   is passive ("Ich wurde geschubst"), because German "Jemand hat" commits to
+ *   one person where English "someone" stays vague.
  * - Nothing about the child is gendered: no अकेला/अकेली, no बड़ा/बड़ी.
  * - German uses Perfekt, as a child would say it aloud, with `hat`/`haben`
  *   chosen by the count.
  *
- * The Hindi and German have NOT been read by a native speaker.
+ * All the text lives in strings.ts (`pic.*`), so the one Hindi review and the
+ * one `HINDI_REVIEWED` flag cover it. Not yet read by a native speaker.
  */
 
 import type { Entry } from "../types/api.ts";
+import { HINDI_REVIEWED, STRINGS, type Lang } from "./strings.ts";
 
-/** Languages we ship copy for. */
-export type Lang = "en" | "de" | "hi";
-
-export const HINDI_REVIEWED = false;
+export { HINDI_REVIEWED, type Lang };
 
 type Copy = Record<Lang, string>;
 
@@ -64,29 +66,25 @@ export interface Choice {
 export type WhatCode = "pushed" | "hit" | "names" | "taken" | "online" | "left_out";
 
 export const WHAT: readonly Choice[] = [
-  { code: "pushed", emoji: "🫸", label: { en: "Pushed me", de: "Geschubst", hi: "धक्का दिया" } },
-  { code: "hit", emoji: "👊", label: { en: "Hit me", de: "Geschlagen", hi: "मारा" } },
-  { code: "names", emoji: "🗯️", label: { en: "Called me names", de: "Beschimpft", hi: "बुरे नाम बुलाए" } },
-  { code: "taken", emoji: "🎒", label: { en: "Took my things", de: "Sachen weggenommen", hi: "मेरी चीज़ें लीं" } },
-  { code: "online", emoji: "📱", label: { en: "Online", de: "Online", hi: "ऑनलाइन" } },
-  { code: "left_out", emoji: "🚪", label: { en: "Left me out", de: "Ausgeschlossen", hi: "शामिल नहीं किया" } },
+  { code: "pushed", emoji: "🫸", label: STRINGS["pic.what.pushed"] },
+  { code: "hit", emoji: "👊", label: STRINGS["pic.what.hit"] },
+  { code: "names", emoji: "🗯️", label: STRINGS["pic.what.names"] },
+  { code: "taken", emoji: "🎒", label: STRINGS["pic.what.taken"] },
+  { code: "online", emoji: "📱", label: STRINGS["pic.what.online"] },
+  { code: "left_out", emoji: "🚪", label: STRINGS["pic.what.left_out"] },
 ];
 
 /**
- * One sentence per thing that happened. `{S}` is the doer; German also has
- * `{hat}`, which becomes "hat" or "haben".
+ * One sentence per thing that happened. `say` has `{S}` for the doer, and
+ * German `{hat}`, which becomes "hat" or "haben"; `passive` names no doer.
  */
-const WHAT_SENTENCE: Record<WhatCode, Copy> = {
-  pushed: { en: "{S} pushed me.", de: "{S} {hat} mich geschubst.", hi: "{S} ने मुझे धक्का दिया।" },
-  hit: { en: "{S} hit me.", de: "{S} {hat} mich geschlagen.", hi: "{S} ने मुझे मारा।" },
-  names: { en: "{S} called me names.", de: "{S} {hat} mich beschimpft.", hi: "{S} ने मुझे बुरे नामों से बुलाया।" },
-  taken: { en: "{S} took my things.", de: "{S} {hat} mir Sachen weggenommen.", hi: "{S} ने मेरी चीज़ें ले लीं।" },
-  online: {
-    en: "{S} wrote mean things about me online.",
-    de: "{S} {hat} online gemeine Dinge über mich geschrieben.",
-    hi: "{S} ने ऑनलाइन मेरे बारे में बुरी बातें लिखीं।",
-  },
-  left_out: { en: "{S} left me out.", de: "{S} {hat} mich ausgeschlossen.", hi: "{S} ने मुझे शामिल नहीं किया।" },
+const WHAT_SENTENCE: Record<WhatCode, { say: Copy; passive: Copy }> = {
+  pushed: { say: STRINGS["pic.say.pushed"], passive: STRINGS["pic.passive.pushed"] },
+  hit: { say: STRINGS["pic.say.hit"], passive: STRINGS["pic.passive.hit"] },
+  names: { say: STRINGS["pic.say.names"], passive: STRINGS["pic.passive.names"] },
+  taken: { say: STRINGS["pic.say.taken"], passive: STRINGS["pic.passive.taken"] },
+  online: { say: STRINGS["pic.say.online"], passive: STRINGS["pic.passive.online"] },
+  left_out: { say: STRINGS["pic.say.left_out"], passive: STRINGS["pic.passive.left_out"] },
 };
 
 // --- where -----------------------------------------------------------------
@@ -95,12 +93,12 @@ const WHAT_SENTENCE: Record<WhatCode, Copy> = {
 export type WhereCode = "classroom" | "corridor" | "schoolyard" | "toilets" | "online" | "way_to_school";
 
 export const WHERE: readonly Choice[] = [
-  { code: "classroom", emoji: "🏫", label: { en: "Classroom", de: "Klassenzimmer", hi: "क्लास" } },
-  { code: "corridor", emoji: "🚶", label: { en: "Corridor", de: "Flur", hi: "गलियारा" } },
-  { code: "schoolyard", emoji: "⛹️", label: { en: "Schoolyard", de: "Schulhof", hi: "स्कूल का मैदान" } },
-  { code: "toilets", emoji: "🚻", label: { en: "Toilets", de: "Toiletten", hi: "टॉयलेट" } },
-  { code: "online", emoji: "💻", label: { en: "Online", de: "Online", hi: "ऑनलाइन" } },
-  { code: "way_to_school", emoji: "🛣️", label: { en: "Way to school", de: "Schulweg", hi: "स्कूल का रास्ता" } },
+  { code: "classroom", emoji: "🏫", label: STRINGS["pic.where.classroom"] },
+  { code: "corridor", emoji: "🚶", label: STRINGS["pic.where.corridor"] },
+  { code: "schoolyard", emoji: "⛹️", label: STRINGS["pic.where.schoolyard"] },
+  { code: "toilets", emoji: "🚻", label: STRINGS["pic.where.toilets"] },
+  { code: "online", emoji: "💻", label: STRINGS["pic.where.online"] },
+  { code: "way_to_school", emoji: "🛣️", label: STRINGS["pic.where.way_to_school"] },
 ];
 
 // --- who -------------------------------------------------------------------
@@ -109,19 +107,19 @@ export type HowMany = "one" | "several";
 export type HowOld = "older" | "same_age";
 
 export const HOW_MANY: readonly Choice[] = [
-  { code: "one", emoji: "🧍", label: { en: "One person", de: "Eine Person", hi: "एक व्यक्ति" } },
-  { code: "several", emoji: "👥", label: { en: "Several people", de: "Mehrere", hi: "कई लोग" } },
+  { code: "one", emoji: "🧍", label: STRINGS["pic.howMany.one"] },
+  { code: "several", emoji: "👥", label: STRINGS["pic.howMany.several"] },
 ];
 
 export const HOW_OLD: readonly Choice[] = [
-  { code: "older", emoji: "⬆️", label: { en: "Older than me", de: "Älter als ich", hi: "मुझसे उम्र में बड़े" } },
-  { code: "same_age", emoji: "↔️", label: { en: "My age", de: "So alt wie ich", hi: "मेरी उम्र के" } },
+  { code: "older", emoji: "⬆️", label: STRINGS["pic.howOld.older"] },
+  { code: "same_age", emoji: "↔️", label: STRINGS["pic.howOld.same_age"] },
 ];
 
 /** The doer at the start of a sentence, by count. */
 const DOER: Record<HowMany, Copy> = {
-  one: { en: "Someone", de: "Jemand", hi: "किसी" },
-  several: { en: "Several people", de: "Mehrere", hi: "कुछ लोगों" },
+  one: STRINGS["pic.doer.one"],
+  several: STRINGS["pic.doer.several"],
 };
 
 const HAT: Record<HowMany, string> = { one: "hat", several: "haben" };
@@ -150,17 +148,20 @@ function label(list: readonly Choice[], code: string, lang: Lang): string {
  * Duplicate taps collapse to one sentence. An empty `what` gives empty
  * strings, so a screen can keep the "save" button disabled until the child
  * has picked something rather than saving an entry that says nothing.
- * "Someone" is the doer when the child has not said how many.
+ * When the child has not said how many, the sentence is passive and names
+ * no doer.
  */
 export function sentenceFor(choices: Choices, lang: string): { text_child: string; text_de: string } {
   const child = pick(lang);
-  const count: HowMany = choices.howMany ?? "one";
+  const count = choices.howMany ?? null;
   const what = [...new Set(choices.what)].filter((code) => code in WHAT_SENTENCE);
 
   const render = (into: Lang) =>
     what
       .map((code) =>
-        WHAT_SENTENCE[code][into].replace("{S}", DOER[count][into]).replace("{hat}", HAT[count]),
+        count
+          ? WHAT_SENTENCE[code].say[into].replace("{S}", DOER[count][into]).replace("{hat}", HAT[count])
+          : WHAT_SENTENCE[code].passive[into],
       )
       .join(" ");
 

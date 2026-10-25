@@ -25,10 +25,19 @@ const LANGS: Lang[] = ["en", "de", "hi"];
 // --- the sentences ---------------------------------------------------------
 
 test("one tap gives one sentence, in the child's language and in German", () => {
-  assert.deepEqual(sentenceFor({ what: ["pushed"] }, "en"), {
+  assert.deepEqual(sentenceFor({ what: ["pushed"], howMany: "one" }, "en"), {
     text_child: "Someone pushed me.",
     text_de: "Jemand hat mich geschubst.",
   });
+});
+
+test("no count tapped means no doer and no count in the sentence", () => {
+  // German "Jemand hat" says one person; the child never said that.
+  assert.deepEqual(sentenceFor({ what: ["pushed"] }, "en"), {
+    text_child: "I was pushed.",
+    text_de: "Ich wurde geschubst.",
+  });
+  assert.equal(sentenceFor({ what: ["taken"], howMany: null }, "hi").text_child, "मेरी चीज़ें ले ली गईं।");
 });
 
 test("several people changes the German verb, not just the subject", () => {
@@ -42,14 +51,14 @@ test("Hindi uses the same verb for one person or several, because ने agrees 
 });
 
 test("several taps give several sentences, in tap order, and a repeat counts once", () => {
-  const { text_child } = sentenceFor({ what: ["names", "pushed", "names"] }, "en");
+  const { text_child } = sentenceFor({ what: ["names", "pushed", "names"], howMany: "one" }, "en");
   assert.equal(text_child, "Someone called me names. Someone pushed me.");
 });
 
 test("every 'what' has a sentence in every language, with nothing left unfilled", () => {
   for (const choice of WHAT) {
     for (const lang of LANGS) {
-      for (const howMany of ["one", "several"] as const) {
+      for (const howMany of ["one", "several", null] as const) {
         const { text_child, text_de } = sentenceFor({ what: [choice.code as never], howMany }, lang);
         for (const text of [text_child, text_de]) {
           assert.ok(text.trim(), `${choice.code}/${lang} is empty`);
@@ -66,8 +75,8 @@ test("nothing tapped means nothing to save, not a sentence that says nothing", (
 
 test("an unknown language falls back to English for the child, German stays German", () => {
   assert.deepEqual(sentenceFor({ what: ["left_out"] }, "uk"), {
-    text_child: "Someone left me out.",
-    text_de: "Jemand hat mich ausgeschlossen.",
+    text_child: "I was left out.",
+    text_de: "Ich wurde ausgeschlossen.",
   });
 });
 
