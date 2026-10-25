@@ -32,6 +32,7 @@ from engine.prompts import (
     AMBIGUITY_SYSTEM,
     BACK_TRANSLATE_SYSTEM,
     REPAIR_SYSTEM,
+    CLARIFIED_REPAIR,
     CLARIFIED_SUFFIX,
     JUDGE_SCHEMA,
     JUDGE_SYSTEM,
@@ -441,8 +442,13 @@ async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
     }
 
 
-def _decisions_text(ambiguities, choices) -> str:
-    """Render the child's answers as instructions for the final pass.
+def _decided_pairs(ambiguities, choices) -> list[tuple[str, str]]:
+    """(phrase, the German the child chose for it) for every answered phrase.
+
+    The one place that decides what the child picked. Both the prompt and the
+    check that the prompt was obeyed read it, because a check with its own
+    second copy of this rule would eventually disagree with the instruction it
+    is checking - and would then pass the exact output it exists to catch.
 
     The "something else" option is skipped. Picking it says neither reading was
     right, so there is no decision to render and nothing to tell the
@@ -450,15 +456,44 @@ def _decisions_text(ambiguities, choices) -> str:
     it through would put an empty meaning in the prompt, which reads to the
     model as an instruction to render nothing.
     """
-    lines = []
+    pairs = []
     for ambiguity in ambiguities:
         chosen = choices.get(ambiguity["phrase"])
         for option in ambiguity["options"]:
             if is_other(option["id"]):
                 continue
             if option["id"] == chosen or option["label"] == chosen:
-                lines.append(f'- "{ambiguity["phrase"]}" means: {option["meaning_de"]}')
-    return "\n".join(lines)
+                pairs.append((ambiguity["phrase"], option["meaning_de"]))
+    return pairs
+
+
+def _decisions_text(ambiguities, choices) -> str:
+    """Render the child's answers as instructions for the final pass.
+
+    Worded as an instruction about the OUTPUT, not as a gloss of the Hindi.
+    "means:" invited a paraphrase, and the model took the invitation: told
+    `"dekh lena" means: du wirst schon sehen`, it wrote "wird er es schon
+    richten" - "he'll sort it out" - which is not a threat at all. The child
+    had already said which reading was theirs, and the one thing this step
+    must not do is lose it.
+    """
+    pairs = _decided_pairs(ambiguities, choices)
+    return "\n".join(
+        f'- Where the child wrote "{phrase}", the German must say exactly: {meaning}'
+        for phrase, meaning in pairs
+    )
+
+
+def _decisions_kept(german: str, pairs: list[tuple[str, str]]) -> list[str]:
+    """Which of the child's chosen phrasings are missing from the output.
+
+    The decision reaches the prompt correctly - verified - and the model still
+    drops it, so being told is not the same as being obeyed. This is the same
+    stance the engine already takes with `untranslated()`: check the output
+    rather than trust the instruction.
+    """
+    haystack = _normalise(german)
+    return [meaning for _, meaning in pairs if _normalise(meaning) not in haystack]
 
 
 async def _ask_the_child(text, disputes, source_ambiguities, source_lang, usage):
@@ -692,10 +727,42 @@ async def translate(
         return await _same_language(text, source_lang, usage, clarifications, strategy)
 
     if clarifications:
+        pairs = _decided_pairs(_ambiguities or [], clarifications)
         decisions = _decisions_text(_ambiguities or [], clarifications)
         german = await _one_pass(text, source_lang, target_lang, usage, 0.2, decisions)
+
+        # Being told is not being obeyed. On "dekh lena" the model was handed
+        # the child's chosen wording and answered "wird er es schon richten" -
+        # "he'll sort it out" - turning a threat into reassurance. The child
+        # had already said which reading was theirs, so a pass that loses it
+        # is worse than one that never asked. One repair, naming the phrase.
+        missing = _decisions_kept(german, pairs)
+        repaired_count = 0
+        if missing:
+            candidate = await _one_pass(
+                text, source_lang, target_lang, usage, 0.0,
+                decisions + "\n\n" + CLARIFIED_REPAIR.format(
+                    phrases="\n".join(f"- {phrase}" for phrase in missing)
+                ),
+            )
+            # Keep the repair only if it actually kept what was missing.
+            # Otherwise the first answer stands: a second guess that also lost
+            # the child's wording is not an improvement on the first.
+            if not _decisions_kept(candidate, pairs):
+                german = candidate
+                repaired_count = len(missing)
         return _finish(
-            {"translation": german, "confidence": 1.0, "ambiguities": []}, usage, strategy
+            {
+                "translation": german,
+                # Capped, not 1.0, when the child's own wording had to be put
+                # back: the pass did not do what it was told the first time,
+                # and confidence must never overstate what we know.
+                "confidence": 0.6 if repaired_count else 1.0,
+                "ambiguities": [],
+                "meaning_repaired": repaired_count,
+            },
+            usage,
+            strategy,
         )
 
     if strategy == BASELINE:
