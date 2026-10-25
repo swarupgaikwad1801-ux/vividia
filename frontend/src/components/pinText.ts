@@ -60,6 +60,8 @@ export const PIN_TEXT = {
   "pin.unlock.forgot": "I forgot my PIN",
   "pin.unlock.forgotHelp":
     "You can remove the PIN and get back in. Nothing you saved is deleted. Anyone holding this phone could do the same, which is the honest limit of a PIN like this.",
+  "pin.removed.notice":
+    "The PIN was removed on {when}. If that was not you, someone else may have opened the app.",
 
   "pin.keypad.empty": "No numbers typed yet",
   "pin.keypad.entered": "{count} numbers typed",
