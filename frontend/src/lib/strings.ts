@@ -38,6 +38,112 @@ export const STRINGS = {
     hi: "अमारा एक काल्पनिक उदाहरण है। कोई असली बच्चा नहीं दिखाया गया है।",
   },
 
+  // --- help-a-character story (lib/story.ts) ---
+  // Kim is gender-neutral in all three languages: no he/she in English or
+  // German, and the Hindi avoids verbs that agree with Kim's gender.
+  "story.button": { en: "Help Kim", de: "Hilf Kim", hi: "किम की मदद करें" },
+  "story.buttonNote": {
+    en: "A short story. No writing needed.",
+    de: "Eine kurze Geschichte. Ohne Schreiben.",
+    hi: "एक छोटी कहानी। कुछ लिखना नहीं है।",
+  },
+  "story.title": { en: "Kim's day", de: "Kims Tag", hi: "किम का दिन" },
+  "story.intro": {
+    en: "This is Kim. It is Kim's first year at this school. Walk through Kim's day and choose what happens.",
+    de: "Das ist Kim. Es ist Kims erstes Jahr an dieser Schule. Geh mit Kim durch den Tag und wähl aus, was passiert.",
+    hi: "यह किम है। इस स्कूल में किम का पहला साल है। किम के दिन में साथ चलें और चुनें कि क्या होता है।",
+  },
+  "story.private": {
+    en: "This is only a story. Nothing you tap here is saved or sent.",
+    de: "Das ist nur eine Geschichte. Nichts, was du hier antippst, wird gespeichert oder verschickt.",
+    hi: "यह सिर्फ़ एक कहानी है। यहाँ आप जो भी चुनेंगे, वह न सेव होगा, न कहीं भेजा जाएगा।",
+  },
+  "story.start": { en: "Start", de: "Los geht's", hi: "शुरू करें" },
+  "story.next": { en: "Next", de: "Weiter", hi: "आगे" },
+  "story.question": { en: "What happens to Kim here?", de: "Was passiert Kim hier?", hi: "यहाँ किम के साथ क्या होता है?" },
+
+  "story.scene.way": { en: "On the way to school", de: "Auf dem Schulweg", hi: "स्कूल के रास्ते में" },
+  "story.scene.classroom": { en: "In class", de: "Im Unterricht", hi: "क्लास में" },
+  // Not "छुट्टी": in Hindi that also means a holiday (see content/ambiguous_words.json).
+  "story.scene.break": { en: "At break time", de: "In der Pause", hi: "ब्रेक के समय" },
+  "story.scene.evening": { en: "In the evening, on the phone", de: "Abends am Handy", hi: "शाम को, फ़ोन पर" },
+
+  "story.happens.nothing": { en: "Nothing bad", de: "Nichts Schlimmes", hi: "कुछ बुरा नहीं" },
+  "story.happens.pushed": { en: "Someone pushes Kim", de: "Jemand schubst Kim", hi: "कोई किम को धक्का देता है" },
+  "story.happens.hit": { en: "Someone hits Kim", de: "Jemand schlägt Kim", hi: "कोई किम को मारता है" },
+  "story.happens.names": {
+    en: "Someone calls Kim names",
+    de: "Jemand beschimpft Kim",
+    hi: "कोई किम को बुरे नामों से बुलाता है",
+  },
+  "story.happens.taken": {
+    en: "Someone takes Kim's things",
+    de: "Jemand nimmt Kim Sachen weg",
+    hi: "कोई किम की चीज़ें ले लेता है",
+  },
+  "story.happens.left_out": { en: "Kim is left out", de: "Kim wird ausgeschlossen", hi: "किम को शामिल नहीं किया जाता" },
+  "story.happens.online": {
+    en: "Someone writes mean things about Kim",
+    de: "Jemand schreibt gemeine Dinge über Kim",
+    hi: "कोई किम के बारे में बुरी बातें लिखता है",
+  },
+
+  "story.calmDay": { en: "Kim had a calm day.", de: "Kim hatte einen ruhigen Tag.", hi: "किम का दिन शांति से बीता।" },
+  "story.hardDay": {
+    en: "Kim had a hard day. What could help?",
+    de: "Kim hatte einen schweren Tag. Was könnte helfen?",
+    hi: "किम का दिन मुश्किल रहा। क्या मदद कर सकता है?",
+  },
+  "story.noWrong": { en: "There is no wrong answer.", de: "Es gibt keine falsche Antwort.", hi: "इसमें कोई ग़लत जवाब नहीं है।" },
+  "story.help.teacher": { en: "Tell a teacher", de: "Einer Lehrkraft sagen", hi: "टीचर को बताना" },
+  "story.help.friend": {
+    en: "Tell a friend",
+    de: "Einem Freund oder einer Freundin sagen",
+    hi: "किसी दोस्त को बताना",
+  },
+  "story.help.write": { en: "Write it down", de: "Aufschreiben", hi: "लिख लेना" },
+  "story.help.keep": { en: "Keep it secret", de: "Für sich behalten", hi: "किसी को न बताना" },
+  "story.reply.teacher": {
+    en: "Telling a teacher is a good step. Words written down first make it easier.",
+    de: "Es einer Lehrkraft zu sagen, ist ein guter Schritt. Vorher aufgeschriebene Worte machen es leichter.",
+    hi: "टीचर को बताना एक अच्छा कदम है। पहले से लिखे हुए शब्दों से बताना आसान हो जाता है।",
+  },
+  "story.reply.friend": {
+    en: "A friend can listen, and can come along to an adult.",
+    de: "Ein Freund oder eine Freundin kann zuhören und mit zu einem Erwachsenen kommen.",
+    hi: "दोस्त सुन सकते हैं, और किसी बड़े के पास साथ चल सकते हैं।",
+  },
+  "story.reply.write": {
+    en: "Writing it down helps to remember what happened, and when.",
+    de: "Aufschreiben hilft, sich zu merken, was wann passiert ist.",
+    hi: "लिख लेने से याद रहता है कि क्या हुआ, और कब।",
+  },
+  "story.reply.keep": {
+    en: "Many children do that at first. That's okay. Telling someone later is still possible, any time.",
+    de: "Das machen viele Kinder am Anfang. Das ist okay. Später kann man es immer noch jemandem sagen.",
+    hi: "कई बच्चे शुरू में ऐसा ही करते हैं। कोई बात नहीं। बाद में भी किसी को बताया जा सकता है, कभी भी।",
+  },
+
+  "story.bridge": {
+    en: "Sometimes things like this happen to real children too. Has something like this happened to you?",
+    de: "Manchmal passiert so etwas auch echten Kindern. Ist dir so etwas auch passiert?",
+    hi: "कभी-कभी असली बच्चों के साथ भी ऐसा होता है। क्या आपके साथ भी ऐसा कुछ हुआ है?",
+  },
+  "story.bridgeYes": { en: "Yes, I want to tell", de: "Ja, ich möchte es erzählen", hi: "हाँ, मुझे बताना है" },
+  "story.bridgeNotNow": { en: "Not now", de: "Jetzt nicht", hi: "अभी नहीं" },
+  "story.how": {
+    en: "How do you want to tell it? It can be like Kim's story, or different.",
+    de: "Wie möchtest du es erzählen? Es kann wie bei Kim sein oder ganz anders.",
+    hi: "आप इसे कैसे बताना चाहेंगे? यह किम की कहानी जैसा हो सकता है, या अलग।",
+  },
+  "story.howWrite": { en: "Write it in my words", de: "In meinen Worten schreiben", hi: "अपने शब्दों में लिखना" },
+  "story.howPictures": { en: "Tap pictures", de: "Bilder antippen", hi: "तस्वीरें चुनना" },
+  "story.notNow": {
+    en: "That's okay. Kim's story is here whenever you want. The help button is on every screen.",
+    de: "Das ist okay. Kims Geschichte ist da, wann immer du willst. Den Hilfe-Knopf gibt es auf jeder Seite.",
+    hi: "कोई बात नहीं। किम की कहानी जब चाहें यहाँ है। मदद का बटन हर स्क्रीन पर है।",
+  },
+
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "अभी मदद चाहिए?" },
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "जो लोग मदद कर सकते हैं" },
   "help.source": { en: "Checked on", de: "Geprüft am", hi: "जाँचा गया" },

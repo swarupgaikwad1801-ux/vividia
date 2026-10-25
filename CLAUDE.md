@@ -142,6 +142,7 @@ available: for most of a child's week, it is not.
 | + | **Quick exit + PIN lock** | Must |
 | + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
 | + | **Picture incident builder**: tap icons for what happened, where and who (pushed, hit, names, things taken, online, left out). For children who can't write either | Tier A |
+| + | **"Help Kim" story** (added 25 Oct, Neel): the child walks a made-up character through a school day and picks what happens, then is asked once whether something like this happened to them; yes opens writing or the picture builder **empty**. Nothing from Kim's day is stored, scored, sent or read as a sign about the child; it is a way in, not an assessment. Logic and text: `lib/story.ts`, `strings.ts` `story.*` | Tier A (entry to the picture builder) |
 | + | **Read-aloud** of every screen and question in the child's language, using the device's own speech engine (nothing leaves the phone) | Tier A |
 | + | **Hindi and English** as source languages, German as target (decided 24 Oct, see the language gate) | Tier A |
 | + | **Installable PWA, offline-first**: everything except translation works without network | Tier A |
