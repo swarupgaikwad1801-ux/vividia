@@ -219,6 +219,12 @@ QUESTION_SCHEMA = {
                 "question": {"type": "string"},
                 "options": {
                     "type": "array",
+                    # Measured: without minItems the model returned a perfectly
+                    # good question with an empty options array in 3 runs out
+                    # of 5, which is schema-valid and useless. The question was
+                    # then dropped and the child was asked nothing.
+                    "minItems": 2,
+                    "maxItems": 2,
                     "items": {
                         "type": "object",
                         "additionalProperties": False,
