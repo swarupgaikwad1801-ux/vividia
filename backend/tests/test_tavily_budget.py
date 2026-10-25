@@ -285,3 +285,70 @@ async def test_the_state_file_holds_no_key_and_no_child_text():
     raw = R.STATE_FILE.read_text(encoding="utf-8")
     assert "test-key-not-real" not in raw
     assert set(json.loads(raw)) == {"day", "spent", "entries"}
+
+
+# --- decoys from Neel's review of #61 ---------------------------------------
+
+
+@pytest.mark.parametrize("prose", [
+    "Termine gibt es also nach Vereinbarung ab 8 Uhr",
+    "Die Direktion ist bis 16 Uhr erreichbar",
+])
+async def test_prose_is_never_shown_to_a_child_as_opening_hours(monkeypatch, prose):
+    """The day names need word boundaries, and that is not tidiness.
+
+    With IGNORECASE and no \b, the two-letter days matched inside ordinary
+    words: "Di" in "Die", "Mi" in "Termine", "So" in "also". Before the fix
+    the first sentence was read as the helpline's hours, as
+    "mine gibt es also nach Vereinbarung ab 8 Uhr". Both of these are Neel's,
+    from the review, and they stay here so the boundaries cannot be lost.
+    """
+    page = "Schulpsychologische Beratungsstelle\n" + prose + "\n"
+    transport(serve(search=SEARCH_HIT, extract={"results": [{"raw_content": page}]}))
+
+    found, _ = await R.resources_with_source("BW", "de")
+
+    assert found[-1]["hours"] == "Siehe Webseite", (
+        f"prose was shown as opening hours: {found[-1]['hours']!r}"
+    )
+
+
+async def test_real_hours_still_read():
+    """The guard must not have closed the door on the thing it is for."""
+    page = "Schulpsychologische Beratung\nSprechzeiten: Mo-Fr 8-12 Uhr\n"
+    transport(serve(search=SEARCH_HIT, extract={"results": [{"raw_content": page}]}))
+
+    found, _ = await R.resources_with_source("BW", "de")
+
+    assert "Mo-Fr 8-12 Uhr" in found[-1]["hours"]
+
+
+async def test_a_number_far_from_the_service_is_not_taken():
+    """A correct number for the wrong office is still the wrong number.
+
+    berlin.de, hamburg.de, saarland.de and schleswig-holstein.de are whole
+    state portals: one page can carry the press office, the switchboard and
+    several departments. A child who rings the wrong one is turned away by
+    someone who has never heard of them.
+    """
+    page = (
+        "Pressestelle\nTelefon: 0711 1111-0\n"
+        + "Weitere Informationen. " * 40
+        + "\nSchulpsychologische Beratung\n"
+    )
+    transport(serve(search=SEARCH_HIT, extract={"results": [{"raw_content": page}]}))
+
+    found, _ = await R.resources_with_source("BW", "de")
+
+    assert found[-1]["contact"] == "https://zsl-bw.de/beratung", (
+        f"a press-office number was handed to a child: {found[-1]['contact']!r}"
+    )
+
+
+async def test_a_number_beside_the_service_is_taken():
+    page = "Schulpsychologische Beratungsstelle\nTelefon: 0711 6642-0\n"
+    transport(serve(search=SEARCH_HIT, extract={"results": [{"raw_content": page}]}))
+
+    found, _ = await R.resources_with_source("BW", "de")
+
+    assert found[-1]["contact"] == "0711 6642-0"

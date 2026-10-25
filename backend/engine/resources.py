@@ -224,22 +224,72 @@ _PHONE_LABEL = re.compile(
 # Opening hours have to name a day and say "Uhr"; anything looser matches
 # prose. Kept as the page writes it, never reformatted into our own words.
 _HOURS = re.compile(
-    r"((?:Mo|Di|Mi|Do|Fr|Sa|So|Montag|Dienstag|Mittwoch|Donnerstag|Freitag)"
-    r"[^.;\n]{3,70}?Uhr)",
+    # \b on the day names is load-bearing, not tidiness. Without it, and
+    # with IGNORECASE, the two-letter days match INSIDE ordinary words:
+    # "Di" in "Die", "Mi" in "Termine", "So" in "also". Measured before the
+    # boundaries went in:
+    #
+    #   "Termine gibt es also nach Vereinbarung ab 8 Uhr"
+    #       -> "mine gibt es also nach Vereinbarung ab 8 Uhr"
+    #   "Die Direktion ist bis 16 Uhr erreichbar"
+    #       -> "Die Direktion ist bis 16 Uhr"
+    #
+    # Both would have been shown to a child as a helpline's opening hours.
+    # The phone pattern was guarded against exactly this; this one was not.
+    r"(\b(?:Mo|Di|Mi|Do|Fr|Sa|So|Montag|Dienstag|Mittwoch|Donnerstag"
+    r"|Freitag|Samstag|Sonntag)\b[^.;\n]{3,70}?Uhr)",
     re.IGNORECASE,
 )
 
+# A state portal (berlin.de, hamburg.de, saarland.de, schleswig-holstein.de)
+# carries the press office, the switchboard and other departments on one
+# page, and _phone_from takes the first number it sees. A correct number for
+# the wrong office is the same failure as a wrong number, reached from the
+# other direction, so a number only counts when the page puts it near the
+# service we were actually looking for.
+_NEAR_CHARS = 300
+_SERVICE_WORDS = re.compile(r"Schulpsycholog|Beratung", re.IGNORECASE)
+
+
+def _near_service(text: str, position: int) -> bool:
+    """Does the page mention the service we searched for, near this number?
+
+    Judged on the window around the number rather than on the page as a
+    whole: a state portal mentions "Beratung" somewhere on almost every page,
+    so a whole-page test would pass everything and close nothing.
+    """
+    window = text[max(0, position - _NEAR_CHARS): position + _NEAR_CHARS]
+    return bool(_SERVICE_WORDS.search(window))
+
 
 def _phone_from(text: str) -> str | None:
-    """A labelled German phone number, or None. Never a guess."""
+    """A labelled German phone number near the service, or None.
+
+    Two separate guards, because they catch different mistakes:
+
+    - the LABEL stops a postcode, a house number, an Aktenzeichen or a year
+      being read as a phone number at all;
+    - the PROXIMITY stops a real, correctly-read number belonging to the
+      press office or the switchboard of a state portal
+      (berlin.de, hamburg.de, saarland.de, schleswig-holstein.de all serve
+      the whole state) being handed to a child as the counselling service.
+
+    A child who rings the wrong office is turned away by someone who has
+    never heard of them, which is worse than being shown a link.
+    """
     for match in _PHONE_LABEL.finditer(text):
-        raw = match.group(1).strip(" –-/()")
+        raw = match.group(1).strip(" \u2013-/()")
         digits = re.sub(r"\D", "", raw)
         # 116 111 and 110 are short codes; a full German number runs to 15
         # digits with the country code. Below 6 it is not a number, above 15
         # the regex has run into the next paragraph.
-        if 3 <= len(digits) <= 15 and not (len(digits) < 6 and not digits.startswith("11")):
-            return " ".join(raw.split())
+        if not (3 <= len(digits) <= 15):
+            continue
+        if len(digits) < 6 and not digits.startswith("11"):
+            continue
+        if not _near_service(text, match.start()):
+            continue
+        return " ".join(raw.split())
     return None
 
 
