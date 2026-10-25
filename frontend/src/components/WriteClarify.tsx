@@ -152,7 +152,9 @@ export default function WriteClarify({
           <button
             type="button"
             onClick={onRewrite}
-            className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-white"
+            // text-page, not text-white: white on dark-mode --color-calm is
+            // ~2.3:1, under the 4.5:1 floor. text-page flips with the theme.
+            className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
           >
             {tt("clarify.rewrite", lang)}
           </button>
@@ -165,7 +167,7 @@ export default function WriteClarify({
           // is never compulsory: the German already on screen stands if they
           // would rather not.
           disabled={answered.length === 0}
-          className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-white disabled:opacity-50"
+          className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50"
         >
           {tt("clarify.send", lang)}
         </button>

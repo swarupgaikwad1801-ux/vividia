@@ -256,7 +256,9 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
             type="button"
             onClick={send}
             disabled={!draft || !online}
-            className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-white disabled:opacity-50"
+            // text-page, not text-white: --color-calm is a light teal in dark
+            // mode, where white measures ~2.3:1 against the 4.5:1 floor.
+            className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50"
           >
             {t("write.send", lang)}
           </button>
@@ -280,7 +282,7 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
                 type="button"
                 onClick={() => void run(lastRun)}
                 disabled={!online}
-                className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-white disabled:opacity-50 sm:flex-1"
+                className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50 sm:flex-1"
               >
                 {tt("write.retry", lang)}
               </button>
@@ -332,7 +334,7 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
               <button
                 type="button"
                 onClick={approve}
-                className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-white sm:flex-1"
+                className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page sm:flex-1"
               >
                 {t("approve.yes", lang)}
               </button>

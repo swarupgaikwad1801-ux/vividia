@@ -45,7 +45,11 @@ export default function WriteSafetyNote({ lang, safety, onNeedHelp }: WriteSafet
       <button
         type="button"
         onClick={onNeedHelp}
-        className="min-h-tap rounded-card bg-help px-4 text-base font-semibold text-white"
+        // text-page, not text-white: --color-help is a LIGHT red in dark mode
+        // (#e98a8a), where white reads at about 2.5:1. text-page flips with the
+        // theme, giving ~7:1 in both. This is the button a child presses when
+        // they have written about danger, so it is the last one to let go dim.
+        className="min-h-tap rounded-card bg-help px-4 text-base font-semibold text-page"
       >
         {t("help.button", lang)}
       </button>
