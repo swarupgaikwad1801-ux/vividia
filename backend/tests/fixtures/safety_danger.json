@@ -1,11 +1,20 @@
 {
   "_comment": "A named person threatened this child with a weapon for tomorrow. The classifier's job is only to return the category; the words the child then sees come from content/safety_messages.json, written by a person.",
-  "_provenance": "hand-authored",
+  "_provenance": "captured",
+  "_provenance_note": "Captured from Token Factory by tests/record_fixtures.py. 1 calls; token counts are the ones Nebius billed.",
   "scenario": "a real threat is classified as danger",
   "source_lang": "en",
   "text": "He said he will bring a knife tomorrow and wait for me.",
-  "tokens": {"prompt": 210, "completion": 18},
+  "tokens": {
+    "prompt": 336,
+    "completion": 42
+  },
   "responses": {
-    "safety": [{"category": "danger", "because": "he will bring a knife tomorrow and wait for me"}]
+    "safety": [
+      {
+        "category": "danger",
+        "because": "The child reports an explicit future threat involving a weapon (a knife) and intent to cause physical harm ('wait for me'), which constitutes imminent danger."
+      }
+    ]
   }
 }
