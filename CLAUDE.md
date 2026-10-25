@@ -14,8 +14,35 @@ An app for **children and students who can't speak up** about bullying or
 harm, because they freeze, don't have the words, don't speak German, or have a
 disability that makes it hard.
 
-**Hero user:** a migrant or refugee child, about 10–16, bullied at a German
-school, who can't explain it in German.
+**Hero user:** any child, about 10–16, bullied at a German school, who cannot
+get the words out to an adult. A newcomer who has no German is the hardest
+case, so the engine is built and measured on it, but it is not the only case
+and never was.
+
+**Scope widened Sun 25 Oct**, on Swarup's call, after checking the evidence:
+
+- Bullying here is not mainly a migration story. HBSC 2022 (Robert Koch
+  Institute, n=6,475) puts **8.6% of schoolchildren in Germany in the bullied
+  role**, highest in primary school at 13.2%. The migration-background
+  evidence is mixed: the UNICEF/DJI 2025 report finds **girls with a migration
+  background at 17% against 9% without**, while Erhart et al. found no
+  difference at all, and Oertel et al. found socioeconomic status the stronger
+  predictor. A pitch built on "immigrant children are bullied more" would be
+  overclaiming from contested data.
+- What the data does support is **our actual premise**: of 12-to-17-year-olds
+  in Germany who were bullied, only about **60% sought help from anyone**, and
+  of those, only about **32% went to anyone formal** (Grüne & Willems 2024,
+  nationally representative subsample n=453). So roughly **4 in 10 bullied
+  children in Germany ask nobody**. That is language-independent. A
+  German-speaking child is in that 40% too.
+- Therefore: **language is one barrier among several, not the product.** The
+  product is "never guess what a child meant, and never speak for them".
+  Translation is what that costs for a newcomer; for a German speaker the
+  same promise costs one question and no translation at all.
+
+Say it this way, and only this way: *a child who already speaks German is
+still a child who cannot say it. We do not translate for them, because they
+need no translation — we do the other thing we do, which is ask.*
 
 > The problem isn't that kids won't talk. It's that they've learned what
 > happens when they do.
@@ -129,6 +156,39 @@ resources(state, lang) -> list[Resource]
    `clarifications`. The child confirms meaning; the model never decides it.
 
 `calls_made` is returned so the UI can show the live check count.
+
+### A child who already writes German is not translated (25 Oct)
+
+`translate()` short-circuits when `source_lang == target_lang`. The text comes
+back character for character as the child wrote it, no model is asked to
+improve it, and only the ambiguity check runs: one call instead of about ten.
+
+This was a real break, not a missing feature. `untranslated()` treats output
+identical to the input as a failed pass — right for Hindi→German, exactly
+wrong for German→German, where the correct answer **is** the input. So the
+first pass "failed", the retry instructed the model *"Do not repeat the German
+text"*, and the German-speaking child got either an `upstream_unavailable`
+error or **their own words paraphrased back at them**. `report.py` refuses to
+let a model describe the child's entries for exactly this reason; guarding
+that at the report is pointless if the translate step hands a paraphrase in.
+Pinned by `tests/test_same_language.py`.
+
+Two things deliberately **not** done here, because they are not mine to take:
+
+- **`Strategy` has no `same_language` member.** It would describe this path
+  honestly, but `Strategy` is in the frozen HTTP contract, and that file says
+  it changes only after all three of us agree. `strategy_used` therefore still
+  reports what the caller asked for. Proposed in the PR.
+- **A German child's answer is not written into their text.** For a Hindi
+  speaker a clarification changes the German; for a German speaker there is
+  nothing to re-render, and inventing a "clearer" sentence would be the
+  paraphrase this path exists to prevent. The answer belongs beside the entry
+  in the report as a note — a contract change, and Vernika's call.
+
+`content/ambiguous_words.json` has **no `de` list**, on purpose: the file's own
+rule is that every entry is reviewed by someone who speaks the language, and
+nobody on this team reads German well enough to review one (Swarup is at A1).
+The model check covers German until someone fluent signs off a list.
 
 ## Engine decisions, measured 24 Oct 2026
 
