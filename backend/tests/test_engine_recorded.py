@@ -131,14 +131,16 @@ async def test_the_child_is_asked_even_though_every_pass_agreed(monkeypatch):
     question = result["ambiguities"][0]
     assert question["phrase"] == "get me after school"
     assert question["question"].strip()
-    assert len(question["options"]) == 2
+    # Two readings plus the fixed "something else" option, which is covered in
+    # its own file (tests/test_clarify_options.py).
+    assert len(question["options"]) == 3
 
     ids = [option["id"] for option in question["options"]]
-    assert len(set(ids)) == 2, "option ids must be distinct to be selectable"
+    assert len(set(ids)) == 3, "option ids must be distinct to be selectable"
 
-    # Each option carries the German it would produce, so the child's choice
+    # Each reading carries the German it would produce, so the child's choice
     # decides the wording rather than the model deciding it afterwards.
-    assert [option["meaning_de"] for option in question["options"]] == [
+    assert [option["meaning_de"] for option in question["options"][:-1]] == [
         "er kriegt mich nach der Schule",
         "er holt mich nach der Schule ab",
     ]
