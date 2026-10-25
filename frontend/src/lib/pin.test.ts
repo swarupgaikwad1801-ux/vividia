@@ -20,13 +20,16 @@ import {
   MAX_DIGITS,
   MIN_DIGITS,
   PIN_KEY,
+  REMOVED_KEY,
   TRIES_KEY,
   type CheckResult,
   type PinStore,
   checkPin,
   clearPin,
   delayAfter,
+  forgetPinRemoved,
   isValidPin,
+  pinRemovedAt,
   pinStatus,
   setPin,
 } from "./pin.ts";
@@ -265,8 +268,43 @@ test("clearing removes the PIN and the attempt count", async () => {
 
   clearPin(store);
 
-  assert.equal(store.data.size, 0);
+  assert.equal(store.data.has(PIN_KEY), false);
+  assert.equal(store.data.has(TRIES_KEY), false);
   assert.equal(pinStatus(store), "none");
+});
+
+test("clearing leaves a trace of when, so a removal by someone else is visible", async () => {
+  await setPin("1234", store);
+  const before = Date.now();
+
+  clearPin(store);
+
+  const at = pinRemovedAt(store);
+  assert.ok(at !== undefined && at >= before && at <= Date.now());
+});
+
+test("no trace when the PIN was never removed, and setting one leaves none", async () => {
+  assert.equal(pinRemovedAt(store), undefined);
+  await setPin("1234", store);
+  assert.equal(pinRemovedAt(store), undefined);
+});
+
+test("setting a new PIN afterwards does not erase the trace", async () => {
+  await setPin("1234", store);
+  clearPin(store);
+  await setPin("5678", store);
+
+  assert.notEqual(pinRemovedAt(store), undefined);
+});
+
+test("a garbled trace reads as none, and only delete-everything forgets it", () => {
+  store.data.set(REMOVED_KEY, JSON.stringify({ at: "yesterday" }));
+  assert.equal(pinRemovedAt(store), undefined);
+
+  clearPin(store);
+  assert.notEqual(pinRemovedAt(store), undefined);
+  forgetPinRemoved(store);
+  assert.equal(pinRemovedAt(store), undefined);
 });
 
 test("clearing needs no PIN, because a child must not be locked out of their own app", async () => {
