@@ -1,69 +1,85 @@
 import { useState } from "react";
+import CheckIn from "./screens/CheckIn";
 import { LANGS, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
+import { moodEmoji, moodLabel } from "./lib/moods";
 
 /**
- * Scaffold check, not a screen.
+ * The app shell, holding what little state exists so far.
  *
- * This exists so the setup can be proved end to end before any real screen is
- * built on it: React renders, Tailwind applies the design tokens, and the
- * wording really does come from lib/strings.ts in all three languages rather
- * than being typed into a component.
+ * Two parts of this are temporary and marked as such on screen:
  *
- * It is replaced by the emoji check-in (issue #4, item 3). Nothing here is a
- * product screen, and no text here is written by hand: if a sentence below
- * looks wrong, the fix belongs in lib/strings.ts, which Neel owns.
+ * - The language row. Item 5 replaces it with real language setup; until then
+ *   it is how the three of us check Hindi and German copy on a phone.
+ * - The panel after a check-in. The writing screen (item 4) is what comes
+ *   next; this stands in so the step is testable end to end rather than
+ *   leading nowhere.
+ *
+ * There is no router yet, on purpose: one piece of state is not a routing
+ * problem, and the choice of router is worth making once there are screens to
+ * route between.
  */
 export default function App() {
   const [lang, setLang] = useState<Lang>("en");
+  const [checkedIn, setCheckedIn] = useState(false);
+  const [mood, setMood] = useState<string | null>(null);
+
+  function handleChoose(chosen: string | null) {
+    setMood(chosen);
+    setCheckedIn(true);
+  }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-6 px-4 py-8">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("app.name", lang)}</h1>
-        <p className="text-sm text-ink-soft">{t("app.poweredBy", lang)}</p>
-      </header>
+    <div className="mx-auto flex min-h-dvh max-w-sm flex-col gap-8 px-4 py-6">
+      {/* Temporary: replaced by the language setup in #4 item 5. */}
+      <nav aria-label="Language (temporary)" className="flex gap-2">
+        {LANGS.map((code) => (
+          <button
+            key={code}
+            type="button"
+            onClick={() => setLang(code)}
+            aria-pressed={lang === code}
+            className={`min-h-tap flex-1 rounded-card border text-sm font-medium transition-colors ${
+              lang === code
+                ? "border-calm bg-calm text-white"
+                : "border-line bg-surface text-ink hover:border-calm"
+            }`}
+          >
+            {code.toUpperCase()}
+          </button>
+        ))}
+      </nav>
 
-      <section aria-label="Language" className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium text-ink-soft">Language</h2>
-        <div className="flex gap-2">
-          {LANGS.map((code) => (
+      <main className="flex flex-1 flex-col">
+        {checkedIn ? (
+          <section className="flex flex-col gap-4" aria-live="polite">
+            <p className="text-lg">
+              {mood ? (
+                <>
+                  <span aria-hidden="true" className="mr-2 text-2xl">
+                    {moodEmoji(mood)}
+                  </span>
+                  {moodLabel(mood, lang)}
+                </>
+              ) : (
+                t("checkin.skip", lang)
+              )}
+            </p>
+            <p className="text-sm text-ink-soft">
+              Placeholder. The writing screen (#4 item 4) comes next; nothing is saved yet.
+            </p>
             <button
-              key={code}
               type="button"
-              onClick={() => setLang(code)}
-              aria-pressed={lang === code}
-              className={`min-h-tap flex-1 rounded-card border px-3 text-base font-medium transition-colors ${
-                lang === code
-                  ? "border-calm bg-calm text-white"
-                  : "border-line bg-surface text-ink hover:border-calm"
-              }`}
+              onClick={() => setCheckedIn(false)}
+              className="min-h-tap self-start rounded-card border border-line px-4 text-base font-medium"
             >
-              {code.toUpperCase()}
+              Back
             </button>
-          ))}
-        </div>
-      </section>
-
-      <section
-        aria-label="Wording check"
-        className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
-      >
-        <p className="text-lg font-medium">{t("checkin.title", lang)}</p>
-        <p className="text-base text-ink-soft">{t("write.hint", lang)}</p>
-        <p className="text-sm text-ink-soft">{t("quickExit.note", lang)}</p>
-      </section>
-
-      <button
-        type="button"
-        className="min-h-tap rounded-card bg-help-soft px-4 text-base font-semibold text-help"
-      >
-        {t("help.button", lang)}
-      </button>
-
-      <p className="mt-auto text-xs text-ink-soft">
-        Setup check only. The real screens replace this; see issue #4.
-      </p>
-    </main>
+          </section>
+        ) : (
+          <CheckIn lang={lang} onChoose={handleChoose} />
+        )}
+      </main>
+    </div>
   );
 }
