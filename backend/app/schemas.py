@@ -167,6 +167,15 @@ class HealthResponse(BaseModel):
     status: Literal["ok", "degraded"]
     engine: Literal["mock", "live"]
     models: dict[str, str] = Field(description="role -> model id, e.g. {'fanout': '...', 'judge': '...'}")
+    budget: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Spend to watch while the demo is public, values as strings: "
+            "tavily_spent_today, tavily_daily_cap, tavily_cached_states. "
+            "Empty in mock mode, which spends nothing. Optional, so an older "
+            "client is unaffected."
+        ),
+    )
 
 
 # --- errors ------------------------------------------------------------------

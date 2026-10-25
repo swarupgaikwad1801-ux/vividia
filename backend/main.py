@@ -186,6 +186,10 @@ async def health() -> HealthResponse:
         status="ok" if GUARD.remaining_today() > 0 else "degraded",
         engine="live" if live else "mock",
         models={**models, **getattr(ENGINE, "STATUS", {})},
+        # Watchable while the demo is public: the Tavily allowance has to last
+        # until judging closes on 15 Dec, and a cap nobody can see is a cap
+        # nobody notices hitting.
+        budget=getattr(ENGINE, "tavily_status", dict)(),
     )
 
 
