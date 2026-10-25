@@ -30,6 +30,10 @@ def asks_about_kal(text: str) -> bool:
         "कल उसने मेरा बैग छीन लिया था",  # past perfect
         "कल वो लोग आएंगे",  # future plural: ends in ग + े
         "कल बहुत बुरा हुआ",  # past, हुआ
+        "कल वो आएगा",  # future after a vowel stem: ए before गा
+        "कल वो जाएँगी",  # future plural feminine, with chandrabindu
+        "कल मैं बताऊँगी",  # first person: ऊँ before गी
+        "कल तुम करोगे",  # second person: ो before गे
     ],
 )
 def test_a_tense_marker_settles_kal_so_the_child_is_not_asked(text):
@@ -43,6 +47,14 @@ def test_a_tense_marker_settles_kal_so_the_child_is_not_asked(text):
         "कल वाली बात",  # "the kal thing": no verb at all
         "कल स्कूल के बाद",  # "kal after school": a threat's timing, unsettled
         "woh kal",
+        # Nouns ending in -गी/-गा are not future verbs (found by Swarup, #35).
+        # Skipping on them makes the app silently pick yesterday or tomorrow.
+        "कल ज़िंदगी",  # zindagi, life
+        "कल मुर्गी",  # murgi, hen
+        "कल ज़िंदगी बुरी है",  # present tense: nothing settles kal
+        "कल रोगी",  # rogi, a sick person: has the ो a future ending has
+        "कल उपयोगी",  # upyogi, useful
+        "कल उन्होंने मुझे गूंगा बोला",  # "called me mute": गूंगा is an insult, not a verb
     ],
 )
 def test_without_a_tense_marker_kal_is_asked_about(text):
