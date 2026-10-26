@@ -38,6 +38,27 @@ export const STRINGS = {
     hi: "अमारा एक काल्पनिक उदाहरण है। कोई असली बच्चा नहीं दिखाया गया है।",
   },
 
+  // Shown on every screen when the backend reports engine: "mock", and once
+  // more in place of the agreement score. ENGINE_MODE defaults to mock, so a
+  // deploy that forgets it serves a fixed German sentence about a bag being
+  // taken, whatever the child wrote, under an invented 82%. See
+  // lib/engineMode.ts.
+  "example.title": {
+    en: "Example mode",
+    de: "Beispiel-Modus",
+    hi: "उदाहरण मोड",
+  },
+  "example.body": {
+    en: "The app is not checking your words right now. The German it shows is a fixed example, not a translation of what you wrote.",
+    de: "Die App prüft deine Worte gerade nicht. Das Deutsche, das sie zeigt, ist ein festes Beispiel und keine Übersetzung von dem, was du geschrieben hast.",
+    hi: "ऐप अभी तुम्हारे शब्द नहीं जाँच रहा। यह जो जर्मन दिखा रहा है वह एक तय उदाहरण है, तुम्हारे लिखे का अनुवाद नहीं।",
+  },
+  "example.resultNote": {
+    en: "Example numbers. Nothing was checked, and the German above is not your words.",
+    de: "Beispielzahlen. Es wurde nichts geprüft, und das Deutsche oben sind nicht deine Worte.",
+    hi: "उदाहरण के आँकड़े। कुछ भी जाँचा नहीं गया, और ऊपर का जर्मन तुम्हारे शब्द नहीं हैं।",
+  },
+
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "अभी मदद चाहिए?" },
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "जो लोग मदद कर सकते हैं" },
   "help.source": { en: "Checked on", de: "Geprüft am", hi: "जाँचा गया" },
