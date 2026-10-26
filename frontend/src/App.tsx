@@ -5,6 +5,7 @@ import Escalation from "./screens/Escalation";
 import FollowUp from "./screens/FollowUp";
 import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
+import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
 import Onboarding from "./screens/Onboarding";
 import {
@@ -226,11 +227,12 @@ export default function App() {
     [refreshEntries, setStep],
   );
 
-  // Until #47's HelpScreen lands. One place to repoint when it does.
+  // The red Need help button, from every screen: the calm list of people who
+  // can help (screens/HelpScreen.tsx). Back returns to where the child was.
   //
-  // NOT used by the lock any more. While locked, help is `EmergencyHelp`
-  // below, which never moves `step` - that is what the leak was.
-  const needHelp = useCallback(() => setStep("timeline"), [setStep]);
+  // NOT used by the lock. While locked, help is `EmergencyHelp` below, which
+  // never moves `step` - a lock with a button that navigates was the leak.
+  const needHelp = useCallback(() => setStep("help"), [setStep]);
 
   // The lock, before anything else and with its own return. An early return
   // is the point: while a PIN is outstanding there is no code path below this
@@ -268,8 +270,10 @@ export default function App() {
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
-          quieter, so a child reaching for Leave now does not hit it. */}
-      <div className="flex items-start justify-between gap-4 px-4 pt-3">
+          quieter, so a child reaching for Leave now does not hit it. Need
+          help (red) sits left of Leave now (dark outline), a gap apart. */}
+      <div className="flex items-center justify-between gap-2 px-4 pt-1">
+
         {canGoBack(trail) ? (
           <button
             type="button"
@@ -278,7 +282,7 @@ export default function App() {
             // onto its own line at 360px. `headline`: the titles' face (Neel,
             // 26 Oct), but small, in the softer ink and with no outline, so
             // it stays quieter than Leave now.
-            className="headline min-h-tap shrink-0 whitespace-nowrap rounded-card px-2 text-base text-ink-soft hover:text-ink"
+            className="headline min-h-tap shrink-0 whitespace-nowrap rounded-card text-base text-ink-soft hover:text-ink"
           >
             <span aria-hidden="true">← </span>
             {t("nav.back", lang)}
@@ -286,7 +290,21 @@ export default function App() {
         ) : (
           <span />
         )}
-        <QuickExitButton lang={lang} />
+        <QuickExitButton
+          lang={lang}
+          beside={
+            step === "help" ? null : (
+              <button
+                type="button"
+                onClick={needHelp}
+                // need-help: pulses while a danger line is on screen (index.css).
+                className="need-help min-h-tap shrink-0 whitespace-nowrap rounded-full border-[3px] border-help bg-help px-2.5 text-sm font-bold text-page"
+              >
+                {t("help.short", lang)}
+              </button>
+            )
+          }
+        />
       </div>
 
       {onMap !== null && (
@@ -360,7 +378,6 @@ export default function App() {
           onSave={keepPictures}
           onChange={() => setStep("picWhat")}
           onNext={() => setStep("picMore")}
-          onNeedHelp={needHelp}
         />
       )}
       {step === "picMore" && (
@@ -373,7 +390,6 @@ export default function App() {
           initialText={draft}
           onTextChange={setDraft}
           onApproved={keepWords}
-          onNeedHelp={needHelp}
         />
       )}
 
@@ -430,6 +446,8 @@ export default function App() {
       )}
 
       {step === "pinSet" && <PinSet lang={lang} onDone={() => setStep("timeline")} />}
+
+      {step === "help" && <HelpScreen lang={lang} />}
       </div>
     </div>
     </div>

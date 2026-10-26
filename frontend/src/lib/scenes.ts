@@ -35,6 +35,7 @@ export const SCENE: Record<Step, Scene> = {
   followUp: "quiet",
   escalation: "quiet",
   pinSet: "quiet",
+  help: "quiet",
 };
 
 /** The little drawing on a stop. */

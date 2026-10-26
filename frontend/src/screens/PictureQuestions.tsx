@@ -40,7 +40,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import Face from "../art/Face";
 import QuestionPicture, { type QuestionKind } from "../art/Questions";
-import WriteSafetyNote from "../components/WriteSafetyNote";
+import DangerLine from "../components/DangerLine";
 import { MOODS } from "../lib/moods";
 import {
   HOW_MANY,
@@ -326,7 +326,6 @@ export interface PictureReviewProps {
   onChange: () => void;
   /** Nothing to save: go on to the offer to write. */
   onNext: () => void;
-  onNeedHelp: () => void;
 }
 
 /**
@@ -334,7 +333,7 @@ export interface PictureReviewProps {
  * check before anything is saved: the same "is this right?" as a written
  * entry gets.
  */
-export function PictureReview({ lang, choices, onSave, onChange, onNext, onNeedHelp }: PictureReviewProps) {
+export function PictureReview({ lang, choices, onSave, onChange, onNext }: PictureReviewProps) {
   const what = sentenceFor(choices, lang).text_child;
   const lines = [...(what ? [what] : []), ...linesFor(choices, lang)];
   const help = needsHelpRoute(choices.what);
@@ -342,14 +341,9 @@ export function PictureReview({ lang, choices, onSave, onChange, onNext, onNeedH
   return (
     <Screen id="q-review" title={t("approve.title", lang)} hint={lines.length ? t("q.review.hint", lang) : undefined}>
       {/* First, before anything else: the safety floor, as on the writing
-          screen. Built here, with no model call: the taps already say it. */}
-      {help && (
-        <WriteSafetyNote
-          lang={lang}
-          safety={{ urgent: true, category: "danger", message_child: t("q.safety", lang) }}
-          onNeedHelp={onNeedHelp}
-        />
-      )}
+          screen: one red line, and Need help pulses. Built here, with no
+          model call: the taps already say it. */}
+      {help && <DangerLine lang={lang} />}
 
       {lines.length > 0 ? (
         <>

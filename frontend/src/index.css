@@ -100,6 +100,16 @@
   30% { opacity: 1; }
   100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(90deg); }
 }
+/* Need help pulses gently while a danger line is on screen (DangerLine sets
+   data-danger on the root). A soft ring, not a flash; reduced motion stops it. */
+@keyframes help-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(158 43 43 / 0.55); }
+  50% { box-shadow: 0 0 0 8px rgb(158 43 43 / 0); }
+}
+:root[data-danger] .need-help {
+  animation: help-pulse 1.6s ease-in-out infinite;
+}
+
 @keyframes wiggle {
   0%, 88%, 100% { transform: rotate(0deg); }
   92% { transform: rotate(-3deg); }

@@ -38,7 +38,8 @@ export type Step =
   | "handoffDone" // "in a few days, the app will ask how things are"
   | "followUp" // has anything changed?
   | "escalation" // the next door, if the first one did not open
-  | "pinSet"; // set or change the PIN
+  | "pinSet" // set or change the PIN
+  | "help"; // the people who can help, behind the red Need help button
 
 export const HOME: Step = "checkIn";
 

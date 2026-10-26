@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { NEUTRAL_URL, bindQuickExit, quickExit } from "../lib/quickExit";
 import { t } from "../lib/strings";
@@ -26,7 +26,7 @@ import { t } from "../lib/strings";
  * history and a child must never read it as though it could. Neel removed it
  * from under the button (26 Oct): repeated on every screen it was noise. The
  * fact is kept where it is read once and on purpose: the "Leave now"
- * onboarding card, and the help panel shown for danger (WriteSafetyNote). The
+ * onboarding card, and the help on the PIN lock screen. The
  * label "Leave now" alone implies nothing about history, so it is honest by
  * itself (CLAUDE.md forbids implying erasure, not omitting the note).
  *
@@ -48,13 +48,18 @@ export interface QuickExitButtonProps {
   /** The child's language, for `lib/strings.ts`. */
   lang: string;
   /**
+   * Shown to the left of Leave now in the same sticky bar: the red Need help
+   * button. Leave now stays rightmost, where a thumb finds it.
+   */
+  beside?: ReactNode;
+  /**
    * Where the browser lands. Defaults to the dull, plausible page
    * `lib/quickExit.ts` picked; a screen should almost never override it.
    */
   url?: string;
 }
 
-export default function QuickExitButton({ lang, url = NEUTRAL_URL }: QuickExitButtonProps) {
+export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: QuickExitButtonProps) {
   // Returns the unbind function, so the listener goes when the shell does.
   useEffect(() => bindQuickExit(document, url), [url]);
 
@@ -62,13 +67,18 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL }: QuickExitBu
     // bg-scene: the bar takes the colour of the place it sits in (index.css),
     // so it stays readable when the page scrolls under it without looking
     // like a white box pasted on top.
-    <div className="sticky top-0 z-40 bg-scene px-4 py-2">
+    // No side padding of its own: the app's top row already has it, and at
+    // 360px Back, Need help and Leave now need every pixel to stay on one line.
+    <div className="sticky top-0 z-40 bg-scene py-2">
       <div className="mx-auto flex max-w-sm flex-col gap-1">
-        <div className="flex justify-end">
+        {/* gap-3: room between the red Need help and Leave now, so a thumb
+            reaching for one does not land on the other. */}
+        <div className="flex items-center justify-end gap-3">
+          {beside}
           <button
             type="button"
             onClick={() => quickExit(url)}
-            className="min-h-tap inline-flex items-center gap-2 rounded-full border-[3px] border-ink bg-surface px-4 text-base font-bold text-ink"
+            className="min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-[3px] border-ink bg-surface px-3 text-base font-bold text-ink"
           >
             {/* An arrow out of a door, for a child who reads the shape faster
                 than the word, or reads no German or English at all. */}

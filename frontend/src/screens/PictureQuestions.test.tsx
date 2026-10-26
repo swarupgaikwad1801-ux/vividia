@@ -83,24 +83,27 @@ test("no question is a yes/no question, and none asks why", () => {
   }
 });
 
-test("'hit' or 'threatened' shows the help panel on the check screen; other taps do not", () => {
-  const danger = render(PictureReview, { lang: "en", choices: { what: ["threatened"] }, onSave: noop, onChange: noop, onNext: noop, onNeedHelp: noop });
-  assert.ok(danger.includes(STRINGS["q.safety"].en));
-  assert.ok(danger.includes(STRINGS["help.button"].en));
-  const calm = render(PictureReview, { lang: "en", choices: { what: ["names"] }, onSave: noop, onChange: noop, onNext: noop, onNeedHelp: noop });
-  assert.ok(!calm.includes(STRINGS["q.safety"].en));
+test("'hit' or 'threatened' shows the one red danger line, not the whole help panel", () => {
+  const danger = render(PictureReview, { lang: "en", choices: { what: ["threatened"] }, onSave: noop, onChange: noop, onNext: noop });
+  // Before /api/emergency answers, the line points at Need help.
+  assert.ok(danger.includes(STRINGS["help.dangerLineNoNumber"].en));
+  assert.match(danger, /role="alert"/);
+  assert.ok(!danger.includes(STRINGS["help.title"].en), "the full help list is not inline");
+  assert.ok(!danger.includes(STRINGS["handoff.youDecide"].en), "no duplicate promise lines");
+  const calm = render(PictureReview, { lang: "en", choices: { what: ["names"] }, onSave: noop, onChange: noop, onNext: noop });
+  assert.doesNotMatch(calm, /role="alert"/);
 });
 
 test("the check screen shows the lines the card will carry, and offers nothing to save when empty", () => {
   const some = render(PictureReview, {
     lang: "en",
     choices: { what: ["names"], where: "schoolyard", often: "daily" },
-    onSave: noop, onChange: noop, onNext: noop, onNeedHelp: noop,
+    onSave: noop, onChange: noop, onNext: noop,
   });
   assert.ok(some.includes("I was called names."));
   assert.ok(some.includes("Where: Schoolyard"));
   assert.ok(some.includes(STRINGS["approve.yes"].en));
-  const none = render(PictureReview, { lang: "en", choices: { what: [] }, onSave: noop, onChange: noop, onNext: noop, onNeedHelp: noop });
+  const none = render(PictureReview, { lang: "en", choices: { what: [] }, onSave: noop, onChange: noop, onNext: noop });
   assert.ok(none.includes(STRINGS["q.review.nothing"].en));
   assert.ok(!none.includes(STRINGS["approve.yes"].en));
 });

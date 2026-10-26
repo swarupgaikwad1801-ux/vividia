@@ -1,7 +1,7 @@
 /**
- * The Leave-now bar: the button only, no note under it (Neel, 26 Oct). The
- * history caveat is kept where it is read once: the onboarding card and the
- * help panel for danger.
+ * The top bar: Leave now with the red Need help beside it, and no note under
+ * either (Neel, 26 Oct). The history caveat is kept where it is read once:
+ * the onboarding card and the help on the PIN lock screen.
  */
 
 import { test } from "node:test";
@@ -10,7 +10,6 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import QuickExitButton from "./QuickExitButton.tsx";
-import WriteSafetyNote from "./WriteSafetyNote.tsx";
 import { LANGS, STRINGS } from "../lib/strings.ts";
 
 test("the top bar shows Leave now and not the history note, in every language", () => {
@@ -21,13 +20,13 @@ test("the top bar shows Leave now and not the history note, in every language", 
   }
 });
 
-test("the help panel for danger still says Leave now does not delete history", () => {
+test("Need help sits in the same bar, before Leave now", () => {
   const markup = renderToStaticMarkup(
-    createElement(WriteSafetyNote, {
-      lang: "en",
-      safety: { urgent: true, category: "danger", message_child: "x" },
-      onNeedHelp: () => {},
-    }),
+    createElement(QuickExitButton, { lang: "en", beside: createElement("button", { className: "need-help" }, "Need help") }),
   );
-  assert.ok(markup.includes(STRINGS["quickExit.note"].en));
+  assert.ok(markup.indexOf("need-help") < markup.indexOf(STRINGS["quickExit.button"].en));
+});
+
+test("the history fact is still said once, on the Leave now onboarding card", () => {
+  assert.match(STRINGS["onboarding.leaveNow"].en, /does not delete your browser history/);
 });

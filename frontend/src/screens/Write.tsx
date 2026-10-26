@@ -5,7 +5,7 @@ import { t } from "../lib/strings.ts";
 import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
-import WriteSafetyNote from "../components/WriteSafetyNote.tsx";
+import DangerLine from "../components/DangerLine.tsx";
 
 
 /**
@@ -74,10 +74,11 @@ export interface WriteProps {
    */
   onApproved?: (approved: ApprovedWords) => void;
   /**
-   * Route to the help list. Required, because the safety floor must have
-   * somewhere to go: see WriteSafetyNote.
+   * Route to the help list. The safety floor now points at the red Need help
+   * button in the top bar (DangerLine), so this screen no longer calls it;
+   * kept so callers need not change.
    */
-  onNeedHelp: () => void;
+  onNeedHelp?: () => void;
 }
 
 type Phase = "writing" | "checking" | "result" | "error";
@@ -87,7 +88,7 @@ type Run =
   | { kind: "translate"; text: string }
   | { kind: "clarify"; text: string; choices: Record<string, string> };
 
-export default function Write({ lang, initialText, onTextChange, onApproved, onNeedHelp }: WriteProps) {
+export default function Write({ lang, initialText, onTextChange, onApproved }: WriteProps) {
   const [text, setText] = useState(initialText ?? "");
   const [phase, setPhase] = useState<Phase>("writing");
   const [result, setResult] = useState<TranslateResponse | null>(null);
@@ -316,9 +317,9 @@ export default function Write({ lang, initialText, onTextChange, onApproved, onN
           {/* First, before the German: the safety floor (CLAUDE.md). Shown
               because the text said something urgent — not because anyone was
               told anything. Nothing was sent. */}
-          {result.safety.urgent && result.safety.message_child && (
-            <WriteSafetyNote lang={lang} safety={result.safety} onNeedHelp={onNeedHelp} />
-          )}
+          {/* One red line and the Need help button pulses (Neel, 26 Oct):
+              the full list is behind that button, not inline here. */}
+          {result.safety.urgent && <DangerLine lang={lang} />}
 
           <WriteResult
             lang={lang}

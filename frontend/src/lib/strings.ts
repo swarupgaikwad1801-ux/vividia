@@ -74,6 +74,17 @@ export const STRINGS = {
 
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "अभी मदद चाहिए?" },
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "ये लोग मदद कर सकते हैं" },
+  // The red pill in the top bar: short, so it fits beside Leave now at 360px.
+  "help.short": { en: "Need help", de: "Hilfe", hi: "मदद" },
+  // The one red line on danger. Split around the number, which comes from
+  // /api/emergency (content/helplines.json), never typed here.
+  "help.dangerBefore": { en: "In danger right now? Call", de: "Gerade in Gefahr? Ruf die", hi: "अभी ख़तरे में हो?" },
+  "help.dangerAfter": { en: ".", de: " an.", hi: " पर कॉल करो।" },
+  "help.dangerLineNoNumber": {
+    en: "In danger right now? Tap Need help at the top.",
+    de: "Gerade in Gefahr? Tipp oben auf Hilfe.",
+    hi: "अभी ख़तरे में हो? ऊपर मदद दबाओ।",
+  },
   "help.source": { en: "Checked on", de: "Geprüft am", hi: "जाँचा गया" },
 
   "quickExit.button": { en: "Leave now", de: "Schnell raus", hi: "तुरंत निकलो" },
@@ -637,13 +648,6 @@ export const STRINGS = {
   },
   "q.more.yes": { en: "Yes, I'll write", de: "Ja, ich schreibe", hi: "हाँ, लिखना है" },
   "q.more.no": { en: "No thanks", de: "Nein, danke", hi: "नहीं, धन्यवाद" },
-  // Shown with 110/112 when "hit" or "threatened" is picked: the same panel
-  // the writing screen shows for danger. No diagnosis, no "you are safe".
-  "q.safety": {
-    en: "Some of what you picked can be serious. If you are not safe right now, you can call for help at any time.",
-    de: "Manches, was du ausgewählt hast, kann ernst sein. Wenn du gerade nicht sicher bist, kannst du jederzeit Hilfe rufen.",
-    hi: "तुमने जो चुना, उसमें से कुछ बातें गंभीर हो सकती हैं। अगर तुम अभी सुरक्षित नहीं हो, तो कभी भी मदद बुलाई जा सकती है।",
-  },
 
   // Picture incident builder (lib/pictures.ts): the tiles, in their fixed order.
   "pic.what.pushed": { en: "Pushed me", de: "Geschubst", hi: "धक्का दिया" },
