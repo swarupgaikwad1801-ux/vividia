@@ -21,8 +21,12 @@
  *   every screen already, through the help button. Offering them as the
  *   natural follow-up to a teacher not acting would turn "it keeps
  *   happening" into "call the police", which is not ours to decide.
- * - **It never nags.** At most one check-in suggestion per gap; a child who
- *   ignores it is not reminded again until they write something new.
+ * - **It never nags** - but this file cannot keep that promise alone.
+ *   `checkInDue()` has no memory: once a gap has passed it is true every day
+ *   until the child writes something new. "Asked once per gap, then quiet"
+ *   needs the caller to remember that the question was already shown, and
+ *   that memory lives in `lib-followups-ui/checkInState.ts#shouldAsk()`
+ *   (#60). Never show the check-in straight off `checkInDue()`.
  *
  * The ladder's rungs come from `content/adult_guide.json`; the ids here must
  * match it, and a test reads the file to keep the two in sync.
@@ -90,7 +94,10 @@ function lastDay(entries: readonly Entry[]): number | null {
  * the answer is `today`: the check-in is due now, once, rather than piling up
  * a reminder for every day missed. Null when there are no entries, because
  * there is nothing to follow up on and the first check-in is the app's
- * normal start screen.
+ * normal start screen. Also null when `today` cannot be read: "never due"
+ * is the safe direction for a bad date. `ladderStep()` instead skips
+ * unreadable entries and carries on, because one bad row should not hide
+ * the ladder.
  */
 export function nextCheckIn(entries: readonly Entry[], today: string): string | null {
   const last = lastDay(entries);
@@ -99,7 +106,11 @@ export function nextCheckIn(entries: readonly Entry[], today: string): string | 
   return isoFromDay(Math.max(last + CHECK_IN_AFTER_DAYS, now));
 }
 
-/** True when the check-in is due on `today`. */
+/**
+ * True when the gap since the last entry has passed. Stays true on every
+ * later day until a new entry: not "show the question now". See "It never
+ * nags" above for who remembers that it was already asked.
+ */
 export function checkInDue(entries: readonly Entry[], today: string): boolean {
   const next = nextCheckIn(entries, today);
   return next !== null && next <= today;
