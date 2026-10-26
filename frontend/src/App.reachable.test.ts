@@ -20,11 +20,12 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SOURCE = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "App.tsx"), "utf-8");
+const SRC = dirname(fileURLToPath(import.meta.url));
+const SOURCE = readFileSync(join(SRC, "App.tsx"), "utf-8");
 
 /** The members of the `Step` union, read out of the type declaration. */
 function declaredSteps(): string[] {
@@ -87,4 +88,70 @@ test("no screen is rendered for a step that does not exist", () => {
 
   const orphans = [...new Set(rendered)].filter((s) => !declared.has(s));
   assert.deepEqual(orphans, [], `rendered for a step that is not in the union: ${orphans.join(", ")}`);
+});
+
+/**
+ * The blind spot the four tests above have, found the hard way.
+ *
+ * All of them read `App.tsx` and reason about the `Step` union, so they catch
+ * a screen that is in the union with no door. They are blind to a screen or
+ * component file that **nothing imports at all**: it is not a member of
+ * anything, so there is nothing for them to notice. `tsc` is blind to it too -
+ * an unused module is not an error - and so is the bundler, which simply
+ * leaves it out.
+ *
+ * That cost us `DemoButton`. "Try Amara's story" was written, tested, styled
+ * and never mounted, and the way it surfaced was `/api/demo` missing from a
+ * production bundle while the test suite was green. A **Must** item, the first
+ * thing a judge presses, invisible to every check we had.
+ *
+ * So this test asks the cruder question the others cannot: does any
+ * non-test file import this one?
+ */
+
+/** Every non-test source file under `src/`, as absolute paths. */
+function sourceFiles(): string[] {
+  return readdirSync(SRC, { recursive: true, encoding: "utf-8" })
+    .filter((rel) => /\.tsx?$/.test(rel) && !/\.test\.tsx?$/.test(rel))
+    .map((rel) => join(SRC, rel));
+}
+
+test("every screen and component file is imported by something", () => {
+  const files = sourceFiles();
+  assert.ok(files.length > 10, `read only ${files.length} source files; the walk has stopped working`);
+
+  const everything = files.map((path) => readFileSync(path, "utf-8")).join("\n");
+
+  // Known and accepted, with a reason. Anything else here should be a question
+  // asked of whoever owns the file, not a line added to this list.
+  //
+  // `screens/SafetyScreen.tsx` arrived with #47 and has no caller on any
+  // branch. It is Neel's file and CLAUDE.md says not to edit someone else's,
+  // so it is flagged to him in #85 rather than deleted or wired by me: the
+  // safety floor is already served by `EmergencyHelp` and the help screen, so
+  // this may be a duplicate to remove rather than a screen to mount. Delete
+  // this entry the moment he decides either way.
+  const KNOWN_ORPHANS = new Set(["screens/SafetyScreen.tsx"]);
+
+  const orphans: string[] = [];
+  for (const path of files) {
+    const dir = path.slice(SRC.length + 1).replace(/\\/g, "/");
+    if (!/^(screens|components)\//.test(dir)) continue;
+
+    // Matches `from "./Foo"`, `from "../components/Foo"` and the `.tsx` form.
+    // The file's own text is in `everything`, but a file cannot import itself,
+    // so there is nothing to exclude.
+    const base = dir.replace(/^.*\//, "").replace(/\.tsx?$/, "");
+    const imported = new RegExp(`from\\s+"[^"]*/${base}(\\.tsx?)?"`).test(everything);
+
+    if (!imported && !KNOWN_ORPHANS.has(dir)) orphans.push(dir);
+  }
+
+  assert.deepEqual(
+    orphans,
+    [],
+    `nothing imports: ${orphans.join(", ")}. A file nothing imports is not in the ` +
+      `bundle, so the feature does not exist however well it is written. Mount it, ` +
+      `or delete it, or add it to KNOWN_ORPHANS with a reason.`,
+  );
 });

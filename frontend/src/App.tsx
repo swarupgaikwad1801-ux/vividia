@@ -12,8 +12,11 @@ import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
 import Write from "./screens/Write";
 
+import DemoButton from "./components/DemoButton";
 import { HelpButton } from "./components/HelpButton";
 import QuickExitButton from "./components/QuickExitButton";
+
+import type { DemoSession } from "./lib-demo/demoStory";
 
 import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
@@ -141,7 +144,10 @@ export default function App() {
   // approved; it survives a trip to help and back, because losing a sentence
   // a frightened child has just managed to write is the one thing this app
   // must never do.
-  const [draft] = useState("");
+  // Written by exactly two things: the demo button, which prefills Amara's
+  // sentence, and `keepWords`, which empties it once those words are an entry.
+  // Nothing else may put text in a child's mouth.
+  const [draft, setDraft] = useState("");
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
 
@@ -178,10 +184,55 @@ export default function App() {
         text_de: approved.text_de,
       });
       refreshEntries();
+      // Those words are an entry now. Leaving them in `draft` would refill the
+      // writing screen with a sentence the child has already filed the next
+      // time they open it.
+      setDraft("");
       setStep("timeline");
     },
     [refreshEntries],
   );
+
+  /**
+   * "Try Amara's story": the judge's way in, and the first button pressed on
+   * the demo URL.
+   *
+   * `DemoButton` has already fetched the story and seeded the timeline by the
+   * time this runs, so all that is left is the part only the shell can do:
+   * show the five entries it added, put the live sentence in the writing
+   * screen, and go there. Nothing is translated and nothing is sent - the
+   * judge presses send themselves, which is the moment the demo exists for.
+   *
+   * The language follows the story rather than the other way round. Amara
+   * writes English, so `Write` would otherwise be told to translate an English
+   * sentence *from* whatever the UI happened to be set to, and a Hindi or
+   * German source language on English text is a wrong answer we asked for.
+   * `saveLang` is deliberately not called: this is the example's language for
+   * as long as the example is loaded, not a choice the child made.
+   */
+  const startDemo = useCallback(
+    (session: DemoSession) => {
+      const storyLang = session.draft.lang;
+      if (storyLang === "en" || storyLang === "de" || storyLang === "hi") {
+        setLang(storyLang);
+      }
+      refreshEntries();
+      setDraft(session.draft.text);
+      setStep("write");
+    },
+    [refreshEntries],
+  );
+
+  /**
+   * The example has been taken back out, so the app has to look like it never
+   * ran: the seeded entries are gone from storage and the prefilled sentence
+   * must go with them, or the writing screen still holds Amara's words.
+   */
+  const endDemo = useCallback(() => {
+    refreshEntries();
+    setDraft("");
+    setStep("checkIn");
+  }, [refreshEntries]);
 
   /**
    * Open the help screen, and remember where to put the child back.
@@ -265,6 +316,12 @@ export default function App() {
               back, not waiting for them to go looking for the question. */}
           <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
           <CheckIn lang={lang} onChoose={afterCheckIn} />
+
+          {/* Below the check-in, not above it: a child who opens the app gets
+              their own question first, and the example is for the visitor.
+              It is on this screen because this is where both of them land, and
+              a judge should not have to find it. */}
+          <DemoButton lang={lang} onLoaded={startDemo} onCleared={endDemo} />
         </main>
       )}
 
