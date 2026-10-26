@@ -27,6 +27,15 @@ test("Need help sits in the same bar, before Leave now", () => {
   assert.ok(markup.indexOf("need-help") < markup.indexOf(STRINGS["quickExit.button"].en));
 });
 
+test("a Hinglish line that says to press Need help names it as the button shows it", () => {
+  // The button stays English on Hinglish screens (ENGLISH_IN_HINGLISH), so a
+  // line saying "press Madad chahiye" would name a button that is not there.
+  const label = t("help.short", "hi");
+  for (const key of ["help.dangerLineNoNumber", "ladder.dangerNow", "ladder.contactsElsewhere"] as const) {
+    assert.ok(t(key, "hi").includes(`“${label}”`), `${key} does not name “${label}”: ${t(key, "hi")}`);
+  }
+});
+
 test("the history fact is still said once, on the Leave now onboarding card", () => {
   assert.match(STRINGS["onboarding.leaveNow"].en, /does not delete your browser history/);
 });

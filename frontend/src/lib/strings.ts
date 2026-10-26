@@ -86,7 +86,7 @@ export const STRINGS = {
   "help.dangerLineNoNumber": {
     en: "In danger right now? Tap Need help at the top.",
     de: "Gerade in Gefahr? Tipp oben auf Hilfe.",
-    hi: "Abhi khatra hai? Upar “Madad chahiye” dabao.",
+    hi: "Abhi khatra hai? Upar “Need help” dabao.",
   },
   "help.source": { en: "Checked on", de: "Geprüft am", hi: "Check kiya" },
 
@@ -549,12 +549,12 @@ export const STRINGS = {
   "ladder.dangerNow": {
     en: "If you are in danger right now, press the help button in this app.",
     de: "Bist du gerade in Gefahr? Dann drück den Hilfe-Knopf in dieser App.",
-    hi: "Agar abhi khatra hai, to is app mein “Madad chahiye” dabao.",
+    hi: "Agar abhi khatra hai, to is app mein “Need help” dabao.",
   },
   "ladder.contactsElsewhere": {
     en: "To see how to reach them, press the help button.",
     de: "Wie du sie erreichst, siehst du unter dem Hilfe-Knopf.",
-    hi: "Inse kaise baat karein, yeh “Madad chahiye” mein hai.",
+    hi: "Inse kaise baat karein, yeh “Need help” mein hai.",
   },
   "ladder.rung.head": { en: "The head of the school", de: "Die Schulleitung", hi: "School ke principal" },
   "ladder.rung.schoolPsychology": {
