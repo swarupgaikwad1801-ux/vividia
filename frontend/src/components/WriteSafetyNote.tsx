@@ -109,6 +109,13 @@ export default function WriteSafetyNote({ lang, safety, onNeedHelp }: WriteSafet
             <li key={`${contact.name}-${contact.contact}`} className="flex flex-col gap-0.5">
               <span className="text-base font-medium text-help">{contact.contact}</span>
               <span className="text-sm text-help">{contact.name}</span>
+              {/* Hours, next to the number, because 116 111 answers Mon-Sat
+                  14:00-20:00 and nothing else - CLAUDE.md: "this is why the
+                  app never says 'call someone' as if that were always
+                  available: for most of a child's week, it is not." A child
+                  who has just written about danger and dials into silence
+                  learns the wrong thing from it. */}
+              <span className="text-sm text-ink-soft">{contact.hours}</span>
               <span className="text-sm text-ink-soft">{languageNote(contact, lang)}</span>
             </li>
           ))}
