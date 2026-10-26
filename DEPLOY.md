@@ -161,15 +161,28 @@ curl -i -X OPTIONS https://<api>.onrender.com/api/translate \
   -H "Origin: https://<app>.vercel.app" \
   -H "Access-Control-Request-Method: POST"
 #    -> 200, with access-control-allow-origin echoing your frontend URL
+
+# 5. A model actually answers. This is the only step that spends money
+#    (about 3 cents) and the only one that proves the thing judges will do.
+curl -s -X POST https://<api>.onrender.com/api/translate \
+  -H "Content-Type: application/json" \
+  -d '{"text":"They took my bag","source_lang":"en"}'
+#    -> German that corresponds to what you sent
 ```
+
+**Step 5 is not optional, and step 1 does not replace it.** `/api/health`
+reports which engine module was imported; it never calls a model, on purpose,
+so that checking it is free. That means it can say `"engine":"live"` while
+every translation fails — which is exactly what happened on 26 Oct 2026, when
+`NEBIUS_BASE_URL` had been pasted with a character missing. Health was green
+throughout. (Neel, #73 and #5.)
 
 Then open the app and send one sentence. **Read the German.** If it comes back
 unrelated to what you typed, the backend is in mock mode: `engine/mock.py`
 returns a fixed sentence and ignores its input entirely. Typing "they took my
 bag and pushed me in the corridor" and getting "...weggenommen und alle haben
 über mich gelacht" is the mock, not a translation failure — and it is the
-centrepiece of the demo, so it must not happen in front of a judge. Step 1 is
-what catches it; this is the symptom if you skip step 1.
+centrepiece of the demo, so it must not happen in front of a judge.
 
 ### What this shape was tested against
 
@@ -200,8 +213,13 @@ other. It does **not** prove anything about Render, Vercel or live models.
 
 Judging runs to 15 Dec and the balance is small, so:
 
-- A fully verified sentence costs about $0.06; the demo story is a handful of
-  sentences.
+- **A checked sentence costs about $0.027**, measured on the 24 Oct benchmark
+  (adaptive path, about 10 calls). So the **$1 trial is 35-40 sentences** and
+  the **$25 promo about 900** (#73). CLAUDE.md's "roughly 2,000 translated
+  messages" predates the full pipeline and is wrong by about 50x; do not plan
+  a budget on it.
+- **Redeem the $25 promo before the demo goes public.** The balance was $0.00
+  as of 26 Oct, and 35-40 sentences is a few judges, not a month of judging.
 - `app/limits.py` caps requests per IP. Keep it on in production.
 - Watch **Billing → Usage** in the Token Factory console in the first days
   after submission. If spend climbs, lower the cap rather than taking the
