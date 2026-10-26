@@ -9,7 +9,9 @@
  *
  * And approval is not the same as sending. Nothing leaves this phone towards
  * an adult here: approving marks the words as the child's own, so that a later
- * screen can offer to show them.
+ * screen can offer to show them. Neel removed the "nothing gets sent" lines
+ * (26 Oct), so neither `handoff.youDecide` nor #81's `approve.nothingGoes`
+ * is shown here.
  *
  * ## "Change it" stays available after approval
  *

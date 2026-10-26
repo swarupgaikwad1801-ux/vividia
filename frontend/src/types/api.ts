@@ -133,6 +133,74 @@ export interface EmergencyResponse {
   contacts: Resource[];
 }
 
+/** One step of the 5-minute guide, with the page it came from. */
+export interface GuideStep {
+  /** The step, in the language the server actually served. */
+  text: string;
+  /**
+   * The page this step is drawn from, resolved server-side from the file's
+   * own `sources` map.
+   *
+   * `null` when the step cites nothing. A claim about how to treat a child
+   * who has just disclosed should carry its source, and a missing one should
+   * be visible rather than implied - so render the absence, do not hide it.
+   */
+  source_url?: string | null;
+}
+
+/**
+ * One rung of the escalation ladder - shown to the CHILD, not the adult.
+ *
+ * It travels with the adult's guide because it lives in the same content
+ * file. Different audience, same route: worth splitting one day, not worth
+ * splitting in freeze week.
+ */
+export interface LadderRung {
+  /** Stable id. `lib/followups.ts` matches on these. */
+  id: string;
+  /** In the language the server served. */
+  text: string;
+}
+
+/**
+ * GET /api/guide?lang=de - the 5-minute guide for the adult the child chose.
+ *
+ * One language, picked by the server. The adult reads one, and sending both
+ * would put the choice in the component that knows least about it.
+ */
+export interface GuideResponse {
+  /**
+   * The language actually served, which is NOT always the one asked for: the
+   * guide exists in `de` and `en` only, and anything else falls back to `de`.
+   *
+   * Read this rather than assuming. A child who writes Hindi may well hand
+   * the phone to someone who reads German, and the element needs the right
+   * `lang` or a screen reader pronounces the whole guide wrongly.
+   */
+  lang: string;
+  title: string;
+  steps: GuideStep[];
+  footer: string;
+  /** When a person last checked this guide against its sources. */
+  checked_on: string;
+  /**
+   * The escalation ladder, lowest rung first. **Never re-sort it** - the
+   * order is the content, and a child who has already been to the head of
+   * year must never be sent back to their form teacher.
+   *
+   * `emergency` is not in it. The content file lists it and the server drops
+   * it, for the same reason `lib/followups.ts` leaves it out of `LADDER`: an
+   * emergency is not an escalation. 110 is what you do INSTEAD of climbing,
+   * and it stays one tap away on every screen from `/api/emergency`.
+   */
+  ladder?: LadderRung[];
+  /**
+   * The rule that outranks the ladder: if the child said it happens at home,
+   * family is never suggested at any rung.
+   */
+  home_rule?: string;
+}
+
 /** GET /api/health */
 export interface HealthResponse {
   status: "ok" | "degraded";

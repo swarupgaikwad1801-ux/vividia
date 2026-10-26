@@ -103,7 +103,18 @@ export default function EscalationRung({
             onClick={() => onOpen(intent)}
             className={`min-h-tap rounded-card px-4 text-base font-medium transition-colors ${
               suggested && index === 0
-                ? "bg-calm text-white hover:bg-calm-strong"
+                // text-page, not text-white: --color-calm flips to a light
+                // teal in dark mode, where white measures about 2.3:1
+                // against the 4.5:1 floor. text-page flips with the theme,
+                // giving ~5.6:1 light and ~7.8:1 dark. This is the suggested
+                // next door for a child whose first adult did nothing, so it
+                // is the last button to let go dim.
+                //
+                // No hex here on purpose: noSend.test.ts in this feature
+                // forbids a raw hex anywhere in these files, comments
+                // included, and it caught this comment when it named the
+                // token's value. The tokens live in index.css.
+                ? "bg-calm text-page hover:bg-calm-strong"
                 : "border border-line text-ink hover:border-calm"
             }`}
             {...says(INTENT_KEY[intent.kind], lang)}

@@ -42,7 +42,6 @@ export const SCENE: Record<Step, Scene> = {
   handoff: "pink",
   handoffShow: "pink",
   handoffDone: "lilac",
-  followUp: "quiet",
   escalation: "quiet",
   pinSet: "quiet",
   help: "quiet",
