@@ -21,20 +21,23 @@ and never was.
 
 **Scope widened Sun 25 Oct**, on Swarup's call, after checking the evidence:
 
-- Bullying here is not mainly a migration story. HBSC 2022 (Robert Koch
-  Institute, n=6,475) puts **8.6% of schoolchildren in Germany in the bullied
-  role**, highest in primary school at 13.2%. The migration-background
-  evidence is mixed: the UNICEF/DJI 2025 report finds **girls with a migration
-  background at 17% against 9% without**, while Erhart et al. found no
-  difference at all, and Oertel et al. found socioeconomic status the stronger
-  predictor. A pitch built on "immigrant children are bullied more" would be
-  overclaiming from contested data.
+- Bullying here is not mainly a migration story. **8.6% of schoolchildren in
+  Germany are in the bullied role**, and it is **highest in primary school at
+  13.2%** (HBSC 2022, Table 1, p. 53 — see "Sources" below). We make **no
+  claim about migration background**: HBSC 2022 reports no migration
+  breakdown, and the one figure we found elsewhere does not support a
+  comparison (see the Sources note). A pitch built on "immigrant children are
+  bullied more" would be overclaiming.
 - What the data does support is **our actual premise**: of 12-to-17-year-olds
-  in Germany who were bullied, only about **60% sought help from anyone**, and
-  of those, only about **32% went to anyone formal** (Grüne & Willems 2024,
-  nationally representative subsample n=453). So roughly **4 in 10 bullied
-  children in Germany ask nobody**. That is language-independent. A
+  in Germany who were bullied, only **60% sought help from anyone at all**,
+  and of those help-seekers only **32% went to anyone formal** — most went to
+  family and friends (63%). So **40% of bullied children asked nobody**
+  (Grüne & Willems 2024, n=453). That is language-independent. A
   German-speaking child is in that 40% too.
+  - The 40% is `100 − 60` from the paper's own figure, not a number the paper
+    prints. Say "40% asked nobody", which the 60% directly entails. Do **not**
+    say "only 19% reach a professional" — that is 60% × 32% and is our
+    arithmetic compounded twice.
 - Therefore: **language is one barrier among several, not the product.** The
   product is "never guess what a child meant, and never speak for them".
   Translation is what that costs for a newcomer; for a German speaker the
@@ -43,6 +46,92 @@ and never was.
 Say it this way, and only this way: *a child who already speaks German is
 still a child who cannot say it. We do not translate for them, because they
 need no translation — we do the other thing we do, which is ask.*
+
+**Pitch decision, Sun 25 Oct (Neel, after #41):** the engine serves every
+child, but **the pitch, the demo and the video stay newcomer-first**, with
+Amara as the hero. German support is one line in the pitch, not its frame:
+*"Vividia is built for the child who can't say it in German. It also works
+for a German-speaking child who freezes: we keep their words exactly as they
+wrote them and ask when something could mean two things."* Reasons: the demo
+must show Nemotron translating, verifying and asking, and a German child's
+story shows only the asking; and one concrete user is easier for a judge to
+remember than "every child". The figures above are verified (#45, Sources
+below); the one most worth a line on Devpost is "40% of bullied children in
+Germany asked nobody", because it holds for every child the app serves.
+
+#### Sources for the bullying figures (checked 25 Oct 2026)
+
+Every number above was read out of the source document, not a search result.
+Neel asked for link and page on each (#41 review); this is that.
+
+**HBSC 2022** — Fischer SM, Bilz L (2024). Journal of Health Monitoring 9(1),
+pp. 42–61. Roughly 6,500 pupils in grades 5, 7 and 9 (ages 11, 13, 15); the
+school-bullying table is N = 5,793.
+
+The article exists in two editions with **different DOIs**, and the page
+numbers below are the German one's. Check which you have open:
+
+- **German** (the page numbers here): *Mobbing und Cybermobbing an Schulen in
+  Deutschland.* DOI [10.25646/11871](https://doi.org/10.25646/11871) ·
+  [PDF](https://edoc.rki.de/bitstream/handle/176904/11545/JHealthMonit_2024_01_Mobbing.pdf)
+- **English**: *Traditional bullying and cyberbullying at schools in Germany.*
+  DOI [10.25646/11872](https://doi.org/10.25646/11872) ·
+  [HTML](https://www.rki.de/SharedDocs/Journal/EN/johm-9-1-42/johm-9-1-42.html)
+  — no page numbers; Table 1 is in section 3.1.
+
+**Both editions were read, and they agree** on 8.6% bullied, 23.5%
+gender-diverse, 13.2% Grundschule and 3.0% cyberbullied. So those four do not
+rest on one extraction: the German PDF and the English HTML were checked
+separately and match.
+
+| Figure | Value | Where |
+|---|---|---|
+| Bullied role, all pupils | **8.6%** | Table 1, p. 53 |
+| Bullies 3.4% · both roles 1.9% · uninvolved 86.1% | — | Table 1, p. 53 |
+| Any direct involvement (8.6 + 3.4 + 1.9) | **≈14%** | abstract |
+| Girls 8.9% · boys 7.8% | — | Table 1, p. 53 |
+| **Gender-diverse pupils, bullied** | **23.5%** (n = 98) | Table 1, p. 53 |
+| **Primary school (Grundschule), bullied** | **13.2%** (n = 249) | Table 1, p. 53 |
+| Gymnasium, bullied | 7.4% (n = 3,075) | Table 1, p. 53 |
+| Cyberbullied, all pupils | **3.0%** (N = 5,706) | Table 1, p. 53 |
+| Cyberbullied trend 2017/18 → 2022 | **2.0% → 3.0%** | Table 2, p. 55 |
+| Bullied role 2009/10 → 2022 | 8.6 → 7.8 → 8.3 → **8.6%** (flat) | Table 2, p. 55 |
+| Bullies 2009/10 → 2022 | 8.4% → **3.4%** (more than halved) | Table 2, p. 55 |
+
+On the primary-school figure: HBSC surveys ages 11, 13 and 15, which looks
+like it rules out primary school — the question Neel raised. It does not. The
+German HBSC samples by **grade** (5, 7, 9) and breaks results down by school
+type, so grade-5 pupils still in a Grundschule form a subgroup of n = 249.
+The 13.2% is that subgroup, in the table, with the others.
+
+**Help-seeking** — Grüne B, Willems D (2024). *Help-Seeking for Bullying
+Victimization Among Adolescents in Germany.* Child & Youth Care Forum 53,
+1379–1397. DOI
+[10.1007/s10566-024-09799-4](https://doi.org/10.1007/s10566-024-09799-4)
+n = 453 adolescents aged 12–17 who reported being bullied, a subsample of a
+nationally representative survey. **60%** sought help at all; of those,
+**32%** went to a formal or professional source and **63%** to family and
+friends.
+
+**116 111** — Nummer gegen Kummer: **Mon–Sat 14:00–20:00** only, and
+**124,619 consultations in 2025** (84,329 child and youth line, 20,635 parent
+line, 18,855 online, 800 Helpline Ukraine).
+[nummergegenkummer.de](https://www.nummergegenkummer.de/jahresstatistik-2025-jetzt-online/)
+This is why the app never says "call someone" as if that were always
+available: for most of a child's week, it is not.
+
+**Deleted, because they did not hold up.** Do not reinstate without a source:
+
+- *"UNICEF/DJI 2025: girls with a migration background 17% vs 9%."* The 17%
+  is real — "Mädchen mit Migrationshintergrund haben zu 17 Prozent **bereits**
+  Mobbing erfahren" (ever experienced), in the report's summary. But the 9% is
+  "**regelmäßige** Mobbing-Erfahrungen" (regular) for all 12-to-17-year-olds.
+  **Two different questions, so the comparison is invalid**, and the summary
+  gives no figure for boys — "no gap for boys" was silence read as a finding.
+- *"PISA 2022 Germany ~7%."* No Germany prevalence figure found. HBSC is
+  German-specific and better sourced; it does this job.
+- *"Erhart et al. — no difference"* and *"Oertel et al. — SES the stronger
+  predictor."* Not verified. The migration claim is gone, so neither is needed.
 
 > The problem isn't that kids won't talk. It's that they've learned what
 > happens when they do.
