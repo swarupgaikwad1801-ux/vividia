@@ -123,3 +123,34 @@ def test_the_translator_is_told_not_to_hand_a_teacher_a_word_they_cannot_use():
     assert "Brotdose" in prompts.TRANSLATE_SYSTEM
     # Short enough not to straddle the prompt's own line wrap.
     assert "stay as the child wrote them" in prompts.TRANSLATE_SYSTEM
+
+
+def test_the_judge_is_told_that_when_it_happened_is_critical():
+    """Vernika's review of #80, and the regression it caught.
+
+    This PR is the first time `severity` decides whether a child is asked
+    anything: before it, `_ask_the_child` asked every `source_ambiguous`
+    dispute whatever its severity, so the definition above only had to be
+    roughly right. Now a `minor` dispute is dropped in code, which means every
+    category missing from that definition is silently never asked.
+
+    "When" was missing from it, and timing is the exact failure CLAUDE.md
+    documents at length: "kal chhutti ke baad chaaku leke aayega" became "nach
+    den Ferien" instead of "morgen nach der Schule" - a knife threat that lost
+    its timing. `kal` and `chhutti` are in the word list, and lexicon hits
+    reach the child without passing the severity gate, so those two words were
+    never at risk. The model check is what covers the words nobody has added
+    yet: "he said he'd come for me after the break" is in no list.
+    """
+    assert "WHEN it happened or will happen" in prompts.JUDGE_SYSTEM
+
+
+def test_the_test_the_judge_applies_asks_about_when_too():
+    """The paragraph that decides whether a phrase is reported at all.
+
+    Left as it was, it told the judge the opposite of the line above: for a
+    timing ambiguity both readings leave *what was done* identical, so "if
+    both readings leave what was done to this child the same, do not report
+    it" ruled out exactly the knife-on-Tuesday case.
+    """
+    assert '"what was done to this child", AND WHEN, the same' in prompts.JUDGE_SYSTEM

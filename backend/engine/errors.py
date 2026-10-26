@@ -57,9 +57,18 @@ MESSAGES: dict[str, dict[str, str]] = {
     },
     # Not retryable: the translation is down until a person tops up the account.
     # So this one names the people a child can still reach.
+    # This is the sentence a child reads at the one moment the app cannot
+    # translate for them, so it is also the one place that bypasses
+    # languageNote() and ContactCard - the copy is baked in here rather than
+    # rendered from helplines.json. CLAUDE.md: "the crisis screen must print
+    # each service's languages; hiding this is worse than the gap itself".
+    # 116 111 is ["de"] and krisenchat is ["de", "uk"], so neither answers in
+    # Hindi, and neither answers in English either. Saying so costs one clause
+    # and stops a child spending their one attempt at asking for help on a
+    # line that cannot talk to them. The German version needs no clause.
     "credit_exhausted": {
-        "en": "The translation is not working today. Your words are still here. You can write to a person any time at krisenchat.de, or call 116 111.",
-        "hi": "आज अनुवाद काम नहीं कर रहा है। तुम्हारे शब्द यहीं हैं। तुम krisenchat.de पर किसी से लिखकर बात कर सकते हो, या 116 111 पर कॉल कर सकते हो।",
+        "en": "The translation is not working today. Your words are still here. You can write to a person any time at krisenchat.de, or call 116 111. Both of them answer in German.",
+        "hi": "आज अनुवाद काम नहीं कर रहा है। तुम्हारे शब्द यहीं हैं। तुम krisenchat.de पर किसी से लिखकर बात कर सकते हो, या 116 111 पर कॉल कर सकते हो। ये दोनों जर्मन में बात करते हैं।",
         "de": "Die Übersetzung funktioniert heute nicht. Deine Worte sind noch da. Du kannst jederzeit auf krisenchat.de mit jemandem schreiben oder 116 111 anrufen.",
     },
     "invalid_input": {

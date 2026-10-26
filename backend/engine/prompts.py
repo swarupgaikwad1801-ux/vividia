@@ -114,19 +114,21 @@ Do three things.
    treated, and only the child knows which was meant, so ask.
 
 Severity is "critical" when the disagreement changes who did something to
-whom, whether something was forced, whether something is a threat, a
-negation, or how severe the child says it was. Otherwise it is "minor".
+whom, WHEN it happened or will happen, whether something was forced, whether
+something is a threat, a negation, or how severe the child says it was.
+Otherwise it is "minor".
 
 WHICH THING IT WAS is not critical. If the only open question is which object,
 food, place or piece of clothing the child means - whether टिफ़िन is the box or
 the lunch inside it, whether a "jumper" is a sweater or a dress - that is
 "minor", even when {target_name} has no exact word for it. What an adult does
-next turns on what was done to this child, not on which object it was done to.
+next turns on what was done to this child and when, not on which object it
+was done to.
 
 Apply the same test before reporting a phrase as "source_ambiguous" at all:
-if both readings leave "what was done to this child" the same, do not report
-it. The child is describing being bullied, and every phrase you report costs
-them a question in the middle of that.
+if both readings leave "what was done to this child", AND WHEN, the same,
+do not report it. The child is describing being bullied, and every phrase
+you report costs them a question in the middle of that.
 
 Report a disagreement only when the translations really differ in meaning.
 Different wording with the same meaning is not a disagreement, and you must
