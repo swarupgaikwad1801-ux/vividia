@@ -7,6 +7,15 @@ import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
 import LanguageSetup from "./screens/LanguageSetup";
 import Onboarding from "./screens/Onboarding";
+import {
+  FeelQuestion,
+  MoreQuestion,
+  OftenQuestion,
+  PictureReview,
+  WhatQuestion,
+  WhereQuestion,
+  WhoQuestion,
+} from "./screens/PictureQuestions";
 import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
 import Report from "./screens/Report";
@@ -20,7 +29,9 @@ import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import { fill, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
-import { back, canGoBack, current, go, start, type Step } from "./lib/nav";
+import { HOME, back, canGoBack, current, go, start, type Step } from "./lib/nav";
+import { MOOD_CODES } from "./lib/moods";
+import { NO_PICKS, choicesFrom, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
 import { SCENE, mapIndex } from "./lib/scenes";
 import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
@@ -125,6 +136,15 @@ export default function App() {
   const [adult, setAdult] = useState<AdultId | null>(null);
   // The child's traveller on the map: a picture, stored only on this phone.
   const [avatar, setAvatar] = useState(() => loadAvatar());
+  // The picture answers, question by question, kept here so Back returns to
+  // each question as the child left it. Nothing is stored until the child
+  // says the lines are right.
+  const [picks, setPicks] = useState<Picks>(NO_PICKS);
+  const [checkInMood, setCheckInMood] = useState<string | null>(null);
+  const pick = useCallback(
+    (question: keyof Picks) => (next: string[]) => setPicks((now) => ({ ...now, [question]: next })),
+    [],
+  );
 
   const refreshEntries = useCallback(() => setEntries(listEntries()), []);
 
@@ -152,11 +172,35 @@ export default function App() {
   );
 
   /**
-   * The check-in is a mood, not a diagnosis. It opens the writing screen and
-   * is never stored as a judgement about the child: `CLAUDE.md` is explicit
-   * that the app works nothing out about them and gives no risk score.
+   * The check-in is a mood, not a diagnosis. It opens the picture questions
+   * (Neel, 26 Oct: ask, don't make the child write) and is never stored as a
+   * judgement about the child: `CLAUDE.md` is explicit that the app works
+   * nothing out about them and gives no risk score.
    */
-  const afterCheckIn = useCallback(() => setStep("write"), [setStep]);
+  const afterCheckIn = useCallback(
+    (mood: string | null) => {
+      setCheckInMood(mood);
+      setStep("picWhat");
+    },
+    [setStep],
+  );
+
+  /**
+   * The picture answers become one entry, saved because the child pressed
+   * "Yes, save it" on the lines it will carry. Marked as chosen from
+   * pictures, so the card never shows a tapped tile as a quote. Then the
+   * offer to write; Back from there goes home rather than to a screen that
+   * could save the same answers twice.
+   */
+  const keepPictures = useCallback(() => {
+    const choices = choicesFrom(picks);
+    const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
+    addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
+    setWhere((now) => now ?? handoffWhereFor(choices.where));
+    setPicks(NO_PICKS);
+    refreshEntries();
+    setTrail([HOME, "picMore"]);
+  }, [picks, checkInMood, lang, refreshEntries]);
 
   /**
    * The ONLY path by which an entry is written, and it runs because the child
@@ -165,12 +209,15 @@ export default function App() {
    */
   const keepWords = useCallback(
     (approved: { text_child: string; text_de: string }) => {
-      addEntry({
-        date: new Date().toISOString().slice(0, 10),
-        mood: "",
-        text_child: approved.text_child,
-        text_de: approved.text_de,
-      });
+      addEntry(
+        {
+          date: new Date().toISOString().slice(0, 10),
+          mood: "",
+          text_child: approved.text_child,
+          text_de: approved.text_de,
+        },
+        "words",
+      );
       // Saved, so it is no longer a draft: the next visit to Write is empty.
       setDraft("");
       refreshEntries();
@@ -280,6 +327,42 @@ export default function App() {
             {t("onboarding.again", lang)}
           </button>
         </>
+      )}
+
+      {/* The picture questions: one per screen, each skippable. */}
+      {step === "picWhat" && (
+        <WhatQuestion lang={lang} value={picks.what} onChange={pick("what")} onNext={() => setStep("picWhere")} />
+      )}
+      {step === "picWhere" && (
+        <WhereQuestion lang={lang} value={picks.where} onChange={pick("where")} onNext={() => setStep("picWho")} />
+      )}
+      {step === "picWho" && (
+        <WhoQuestion
+          lang={lang}
+          howMany={picks.howMany}
+          kind={picks.kind}
+          onChange={(next) => setPicks((now) => ({ ...now, ...next }))}
+          onNext={() => setStep("picOften")}
+        />
+      )}
+      {step === "picOften" && (
+        <OftenQuestion lang={lang} value={picks.often} onChange={pick("often")} onNext={() => setStep("picFeel")} />
+      )}
+      {step === "picFeel" && (
+        <FeelQuestion lang={lang} value={picks.feel} onChange={pick("feel")} onNext={() => setStep("picReview")} />
+      )}
+      {step === "picReview" && (
+        <PictureReview
+          lang={lang}
+          choices={choicesFrom(picks)}
+          onSave={keepPictures}
+          onChange={() => setStep("picWhat")}
+          onNext={() => setStep("picMore")}
+          onNeedHelp={needHelp}
+        />
+      )}
+      {step === "picMore" && (
+        <MoreQuestion lang={lang} onWrite={() => setStep("write")} onNoThanks={() => setStep("handoff")} />
       )}
 
       {step === "write" && (
@@ -401,6 +484,10 @@ function EmergencyHelp({ lang }: { lang: Lang }) {
         {/* The network is the one thing that can fail here, and a child in a
             crisis is owed a reason rather than an empty box. */}
         {failed && <p className="text-base">{t("errors.network", lang)}</p>}
+
+        {/* What "Leave now" does and does not do, said here once (it is no
+            longer under the button on every screen). */}
+        <p className="text-sm text-ink-soft">{t("quickExit.note", lang)}</p>
 
         {contacts?.map((contact) => (
           <section key={contact.name} className="flex flex-col gap-0.5">

@@ -16,6 +16,7 @@ import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
 import type { StoredEntry } from "../lib/timeline";
 import { moodEmoji, moodLabel } from "../lib/moods";
+import SourceMark from "./SourceMark";
 
 interface Props {
   entry: StoredEntry;
@@ -80,7 +81,10 @@ export default function TimelineEntryCard({ entry, lang, onDelete }: Props) {
         </button>
       </div>
 
-      <p lang={lang} className="mt-3 whitespace-pre-wrap text-base">
+      <div className="mt-3">
+        <SourceMark source={entry.source} lang={lang} />
+      </div>
+      <p lang={lang} className="mt-2 whitespace-pre-wrap text-base">
         {entry.text_child}
       </p>
 

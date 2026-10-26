@@ -15,9 +15,19 @@ import type { Entry } from "../types/api";
 
 const KEY = "vividia.timeline.v1";
 
+/** Where an entry's words came from: tapped pictures, or the child's own writing. */
+export type EntrySource = "pictures" | "words";
+
 export interface StoredEntry extends Entry {
   /** Local id for deleting one entry; never sent to the backend. */
   id: string;
+  /**
+   * So the card can mark which lines were chosen from pictures and which are
+   * the child's own words: a tapped tile must never read as a quote. Local
+   * only, never sent. Missing on entries saved before this existed, which
+   * were all written, so it reads as "words".
+   */
+  source?: EntrySource;
 }
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -97,8 +107,8 @@ export function listEntries(): StoredEntry[] {
 }
 
 /** Save an entry the child has approved. Returns it with its local id. */
-export function addEntry(entry: Entry): StoredEntry {
-  const stored: StoredEntry = { ...entry, id: newId() };
+export function addEntry(entry: Entry, source: EntrySource = "words"): StoredEntry {
+  const stored: StoredEntry = { ...entry, id: newId(), source };
   write([...read(), stored]);
   return stored;
 }
@@ -120,5 +130,5 @@ export function clearAll(): void {
 
 /** The entries as the backend expects them for /api/report: local ids removed. */
 export function toEntries(entries: StoredEntry[] = listEntries()): Entry[] {
-  return entries.map(({ id: _id, ...entry }) => entry);
+  return entries.map(({ id: _id, source: _source, ...entry }) => entry);
 }

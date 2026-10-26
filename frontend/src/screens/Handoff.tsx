@@ -28,11 +28,12 @@ import HandoffWhere from "../components/HandoffWhere.tsx";
 import { isWhereItHappens, type AdultId, type WhereItHappens } from "../components/HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
 import type { Entry, ReportResponse } from "../types/api.ts";
+import type { EntrySource } from "../lib/timeline.ts";
 
 export interface HandoffProps {
   lang: string;
   /** The child's saved entries: what the card shows. */
-  entries?: readonly Entry[];
+  entries?: readonly (Entry & { source?: EntrySource })[];
   /** The report the child approved in step 3, or null if there is none yet. */
   report?: ReportResponse | null;
   /** True while that report is being built. */

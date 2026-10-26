@@ -129,6 +129,10 @@ export default function WriteSafetyNote({ lang, safety, onNeedHelp }: WriteSafet
       {/* The promise that makes the panel bearable: seeing this did not tell
           anyone anything. Nothing on this screen sends. */}
       <p className="text-sm text-help">{t("handoff.youDecide", lang)}</p>
+      {/* The one place outside onboarding that says what "Leave now" does and
+          does not do: here a child may need to leave fast, and must not
+          think it hides that they were here (CLAUDE.md, quick exit). */}
+      <p className="text-sm text-help">{t("quickExit.note", lang)}</p>
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useId } from "react";
+import { useEffect } from "react";
 
 import { NEUTRAL_URL, bindQuickExit, quickExit } from "../lib/quickExit";
 import { t } from "../lib/strings";
@@ -21,12 +21,14 @@ import { t } from "../lib/strings";
  * prevent. (`window.confirm` is also banned outright by the team rules,
  * because it freezes the automation QA runs.)
  *
- * **The note is not optional.** `quickExit.note` says this closes the app and
- * does *not* delete browser history, which is the single hardest-won sentence
- * in the privacy rules: the exit cannot erase history and a child must never
- * read it as though it could. So there is no prop to hide it. `lib/help.ts`
- * makes the same argument about its language note — a true sentence that a
- * screen is allowed to drop is a sentence that gets dropped.
+ * **The history note lives elsewhere, once.** `quickExit.note` says this
+ * closes the app and does *not* delete browser history: the exit cannot erase
+ * history and a child must never read it as though it could. Neel removed it
+ * from under the button (26 Oct): repeated on every screen it was noise. The
+ * fact is kept where it is read once and on purpose: the "Leave now"
+ * onboarding card, and the help panel shown for danger (WriteSafetyNote). The
+ * label "Leave now" alone implies nothing about history, so it is honest by
+ * itself (CLAUDE.md forbids implying erasure, not omitting the note).
  *
  * **Sticky, not fixed.** Sticky keeps the bar in the document flow, so it
  * cannot sit on top of a screen's own content or hide the last line of a text
@@ -53,8 +55,6 @@ export interface QuickExitButtonProps {
 }
 
 export default function QuickExitButton({ lang, url = NEUTRAL_URL }: QuickExitButtonProps) {
-  const noteId = useId();
-
   // Returns the unbind function, so the listener goes when the shell does.
   useEffect(() => bindQuickExit(document, url), [url]);
 
@@ -68,7 +68,6 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL }: QuickExitBu
           <button
             type="button"
             onClick={() => quickExit(url)}
-            aria-describedby={noteId}
             className="min-h-tap inline-flex items-center gap-2 rounded-full border-[3px] border-ink bg-surface px-4 text-base font-bold text-ink"
           >
             {/* An arrow out of a door, for a child who reads the shape faster
@@ -90,11 +89,6 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL }: QuickExitBu
             {t("quickExit.button", lang)}
           </button>
         </div>
-
-        {/* Says what is true and refuses the promise it cannot keep. */}
-        <p id={noteId} className="text-xs leading-snug text-ink-soft">
-          {t("quickExit.note", lang)}
-        </p>
       </div>
     </div>
   );

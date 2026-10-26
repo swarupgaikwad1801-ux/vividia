@@ -1,34 +1,44 @@
 /**
  * The picture incident builder: for a child who cannot write it down either.
  *
- * The child taps pictures for what happened, where, and who. This module
- * turns those taps into a timeline entry. It has one rule that outranks
- * everything else in it:
+ * The child taps pictures for what happened, where, who and how often (since
+ * 26 Oct this is the main way in, before any writing; see
+ * screens/PictureQuestions.tsx). This module turns those taps into a timeline
+ * entry. It has one rule that outranks everything else in it:
  *
  * ## The sentence is a fixed template, never model-written
  *
- * A model asked to "describe" three taps would add what the child did not
- * say: a motive, an injury, a time of day. The adult reading the report would
- * have no way to tell which words were the child's. So every sentence here is
- * a fixed, hand-written template per choice, in the child's language and in
+ * A model asked to "describe" the taps would add what the child did not say:
+ * a motive, an injury, a time of day. The adult reading the card would have
+ * no way to tell which words were the child's. So every sentence here is a
+ * fixed, hand-written template per choice, in the child's language and in
  * German side by side, and the German is exactly what the adult reads. No
  * network, no model, no translation step: the German exists before the child
- * taps anything.
+ * taps anything. (And the card marks these lines as chosen from pictures, so
+ * a tapped tile never reads as a quote: lib/timeline.ts `source`.)
  *
  * ## What the output is
  *
  * An `Entry` (from `src/types/api.ts`), so a picture entry sits in the same
- * timeline as a written one and goes through the same approval:
+ * timeline as a written one:
  *
- * - `text_child` / `text_de`: one short sentence per thing that happened.
- * - `place`: a place CODE (`classroom`, `corridor`, ...). These are the codes
- *   `backend/engine/report_text.py` already knows, so the report prints the
- *   place in the reader's language rather than quoting a word.
+ * - `text_child` / `text_de`: one short sentence per thing that happened,
+ *   then labelled lines for where, who and how often ("Where: Classroom").
+ *   Labels rather than sentences, so the grammar is right for every answer.
+ * - `place`: a place CODE (`classroom`, `schoolyard`, ...). These are the
+ *   codes `backend/engine/report_text.py` already knows, so the report prints
+ *   the place in the reader's language rather than quoting a word.
+ *   "Somewhere else" is null: it names no place.
  * - `people`: who, in the child's language. The report quotes it as written,
  *   which is right: it is the child's description.
  *
- * Nothing about *why*, how badly, or how often: the pictures do not ask, so
- * the sentence does not say. A child who wants to add that can write.
+ * Nothing about *why* or how badly: the pictures do not ask, so the sentence
+ * does not say. A child who wants to add that can write.
+ *
+ * ## "I don't want to say" is never stored
+ *
+ * It is a tile on every question, and choosing it records nothing at all for
+ * that question: no line, no "the child refused". It lives only in the screen.
  *
  * ## Grammar choices, so a reviewer knows what to check
  *
@@ -43,35 +53,41 @@
  *   chosen by the count.
  *
  * All the text lives in strings.ts (`pic.*`), so the one Hindi review and the
- * one `HINDI_REVIEWED` flag cover it. Not yet read by a native speaker.
+ * one `HINDI_REVIEWED` flag cover it. Not yet read by a native speaker; the
+ * German needs a native check too.
  */
 
 import type { Entry } from "../types/api.ts";
-import { HINDI_REVIEWED, STRINGS, type Lang } from "./strings.ts";
+import { HINDI_REVIEWED, STRINGS, type Lang, type StringKey } from "./strings.ts";
 
 export { HINDI_REVIEWED, type Lang };
 
 type Copy = Record<Lang, string>;
 
-export interface Choice {
-  /** Stable code, stored in nothing but used by screens and tests. */
-  code: string;
-  /** Shown on the tile. */
-  emoji: string;
+export interface Choice<C extends string = string> {
+  /** Stable code: what the screen and the entry use. */
+  code: C;
   label: Copy;
 }
 
+/** The two tiles every question ends with, in this order. */
+export const OTHER = "other";
+export const NO_SAY = "no_say";
+
 // --- what ------------------------------------------------------------------
 
-export type WhatCode = "pushed" | "hit" | "names" | "taken" | "online" | "left_out";
+export type WhatCode = "pushed" | "hit" | "names" | "taken" | "left_out" | "online" | "threatened" | "other";
 
-export const WHAT: readonly Choice[] = [
-  { code: "pushed", emoji: "🫸", label: STRINGS["pic.what.pushed"] },
-  { code: "hit", emoji: "👊", label: STRINGS["pic.what.hit"] },
-  { code: "names", emoji: "🗯️", label: STRINGS["pic.what.names"] },
-  { code: "taken", emoji: "🎒", label: STRINGS["pic.what.taken"] },
-  { code: "online", emoji: "📱", label: STRINGS["pic.what.online"] },
-  { code: "left_out", emoji: "🚪", label: STRINGS["pic.what.left_out"] },
+/** Fixed order: never shuffled, never "most common first". A test pins it. */
+export const WHAT: readonly Choice<WhatCode>[] = [
+  { code: "pushed", label: STRINGS["pic.what.pushed"] },
+  { code: "hit", label: STRINGS["pic.what.hit"] },
+  { code: "names", label: STRINGS["pic.what.names"] },
+  { code: "taken", label: STRINGS["pic.what.taken"] },
+  { code: "left_out", label: STRINGS["pic.what.left_out"] },
+  { code: "online", label: STRINGS["pic.what.online"] },
+  { code: "threatened", label: STRINGS["pic.what.threatened"] },
+  { code: "other", label: STRINGS["q.other"] },
 ];
 
 /**
@@ -83,37 +99,54 @@ const WHAT_SENTENCE: Record<WhatCode, { say: Copy; passive: Copy }> = {
   hit: { say: STRINGS["pic.say.hit"], passive: STRINGS["pic.passive.hit"] },
   names: { say: STRINGS["pic.say.names"], passive: STRINGS["pic.passive.names"] },
   taken: { say: STRINGS["pic.say.taken"], passive: STRINGS["pic.passive.taken"] },
-  online: { say: STRINGS["pic.say.online"], passive: STRINGS["pic.passive.online"] },
   left_out: { say: STRINGS["pic.say.left_out"], passive: STRINGS["pic.passive.left_out"] },
+  online: { say: STRINGS["pic.say.online"], passive: STRINGS["pic.passive.online"] },
+  threatened: { say: STRINGS["pic.say.threatened"], passive: STRINGS["pic.passive.threatened"] },
+  other: { say: STRINGS["pic.say.other"], passive: STRINGS["pic.passive.other"] },
 };
+
+/**
+ * Taps that get the same help route the writing screen shows for danger
+ * (110/112 and the helplines), at once and without a model call.
+ */
+export const DANGER: readonly WhatCode[] = ["hit", "threatened"];
+
+export function needsHelpRoute(what: readonly string[]): boolean {
+  return what.some((code) => (DANGER as readonly string[]).includes(code));
+}
 
 // --- where -----------------------------------------------------------------
 
-/** Codes shared with backend/engine/report_text.py PLACES. A test pins this. */
-export type WhereCode = "classroom" | "corridor" | "schoolyard" | "toilets" | "online" | "way_to_school";
+/**
+ * Codes shared with backend/engine/report_text.py PLACES (a test pins this),
+ * plus "elsewhere", which names no place and is stored as null.
+ */
+export type WhereCode = "classroom" | "schoolyard" | "toilets" | "way_to_school" | "online" | "elsewhere";
 
-export const WHERE: readonly Choice[] = [
-  { code: "classroom", emoji: "🏫", label: STRINGS["pic.where.classroom"] },
-  { code: "corridor", emoji: "🚶", label: STRINGS["pic.where.corridor"] },
-  { code: "schoolyard", emoji: "⛹️", label: STRINGS["pic.where.schoolyard"] },
-  { code: "toilets", emoji: "🚻", label: STRINGS["pic.where.toilets"] },
-  { code: "online", emoji: "💻", label: STRINGS["pic.where.online"] },
-  { code: "way_to_school", emoji: "🛣️", label: STRINGS["pic.where.way_to_school"] },
+export const WHERE: readonly Choice<WhereCode>[] = [
+  { code: "classroom", label: STRINGS["pic.where.classroom"] },
+  { code: "schoolyard", label: STRINGS["pic.where.schoolyard"] },
+  { code: "toilets", label: STRINGS["pic.where.toilets"] },
+  { code: "way_to_school", label: STRINGS["pic.where.way_to_school"] },
+  { code: "online", label: STRINGS["pic.where.online"] },
+  { code: "elsewhere", label: STRINGS["pic.where.elsewhere"] },
 ];
 
 // --- who -------------------------------------------------------------------
 
 export type HowMany = "one" | "several";
-export type HowOld = "older" | "same_age";
+export type WhoKind = "classmate" | "older" | "adult" | "other";
 
-export const HOW_MANY: readonly Choice[] = [
-  { code: "one", emoji: "🧍", label: STRINGS["pic.howMany.one"] },
-  { code: "several", emoji: "👥", label: STRINGS["pic.howMany.several"] },
+export const HOW_MANY: readonly Choice<HowMany>[] = [
+  { code: "one", label: STRINGS["pic.howMany.one"] },
+  { code: "several", label: STRINGS["pic.howMany.several"] },
 ];
 
-export const HOW_OLD: readonly Choice[] = [
-  { code: "older", emoji: "⬆️", label: STRINGS["pic.howOld.older"] },
-  { code: "same_age", emoji: "↔️", label: STRINGS["pic.howOld.same_age"] },
+export const WHO_KIND: readonly Choice<WhoKind>[] = [
+  { code: "classmate", label: STRINGS["pic.kind.classmate"] },
+  { code: "older", label: STRINGS["pic.kind.older"] },
+  { code: "adult", label: STRINGS["pic.kind.adult"] },
+  { code: "other", label: STRINGS["pic.kind.other"] },
 ];
 
 /** The doer at the start of a sentence, by count. */
@@ -124,32 +157,47 @@ const DOER: Record<HowMany, Copy> = {
 
 const HAT: Record<HowMany, string> = { one: "hat", several: "haben" };
 
+// --- how often -------------------------------------------------------------
+
+export type Often = "once" | "few" | "daily" | "other";
+
+export const OFTEN: readonly Choice<Often>[] = [
+  { code: "once", label: STRINGS["pic.often.once"] },
+  { code: "few", label: STRINGS["pic.often.few"] },
+  { code: "daily", label: STRINGS["pic.often.daily"] },
+  { code: "other", label: STRINGS["q.other"] },
+];
+
 // --- building the entry ----------------------------------------------------
 
 export interface Choices {
-  /** At least one; shown in the order the child tapped them. */
+  /** Shown in the order the child tapped them. May be empty. */
   what: WhatCode[];
   where?: WhereCode | null;
   howMany?: HowMany | null;
-  howOld?: HowOld | null;
+  kind?: WhoKind | null;
+  often?: Often | null;
 }
+
+export const NO_CHOICES: Choices = { what: [], where: null, howMany: null, kind: null, often: null };
 
 function pick(lang: string): Lang {
   return lang === "de" || lang === "hi" ? lang : "en";
 }
 
-function label(list: readonly Choice[], code: string, lang: Lang): string {
+function label<C extends string>(list: readonly Choice<C>[], code: C, lang: Lang): string {
   return list.find((choice) => choice.code === code)?.label[lang] ?? code;
 }
 
+function line(key: StringKey, x: string, lang: Lang): string {
+  return STRINGS[key][lang].replace("{x}", x);
+}
+
 /**
- * The sentences for the child's taps: in their language, and in German.
+ * The sentences for what happened: in the child's language, and in German.
  *
- * Duplicate taps collapse to one sentence. An empty `what` gives empty
- * strings, so a screen can keep the "save" button disabled until the child
- * has picked something rather than saving an entry that says nothing.
- * When the child has not said how many, the sentence is passive and names
- * no doer.
+ * Duplicate taps collapse to one sentence. When the child has not said how
+ * many, the sentence is passive and names no doer.
  */
 export function sentenceFor(choices: Choices, lang: string): { text_child: string; text_de: string } {
   const child = pick(lang);
@@ -159,7 +207,7 @@ export function sentenceFor(choices: Choices, lang: string): { text_child: strin
   const render = (into: Lang) =>
     what
       .map((code) =>
-        count
+        count && code !== "other"
           ? WHAT_SENTENCE[code].say[into].replace("{S}", DOER[count][into]).replace("{hat}", HAT[count])
           : WHAT_SENTENCE[code].passive[into],
       )
@@ -168,26 +216,110 @@ export function sentenceFor(choices: Choices, lang: string): { text_child: strin
   return { text_child: render(child), text_de: render("de") };
 }
 
-/** Who, in the child's language, as the report will quote it. Null if nothing was tapped. */
-export function peopleFor(choices: Choices, lang: string): string | null {
-  const child = pick(lang);
+/** Who, in one language, e.g. "One person, Older than me". Null if nothing was tapped. */
+function whoIn(choices: Choices, lang: Lang): string | null {
   const parts = [
-    choices.howMany ? label(HOW_MANY, choices.howMany, child) : null,
-    choices.howOld ? label(HOW_OLD, choices.howOld, child) : null,
+    choices.howMany ? label(HOW_MANY, choices.howMany, lang) : null,
+    choices.kind ? label(WHO_KIND, choices.kind, lang) : null,
   ].filter((part): part is string => Boolean(part));
   return parts.length ? parts.join(", ") : null;
 }
 
+/** Who, in the child's language, as the report will quote it. Null if nothing was tapped. */
+export function peopleFor(choices: Choices, lang: string): string | null {
+  return whoIn(choices, pick(lang));
+}
+
 /**
- * A timeline entry from the child's taps. The child still approves it on the
- * same screen as a written entry; this only fills it in.
+ * Labelled lines for where, who and how often, in one language. "Somewhere
+ * else" for how often says nothing an adult can use, so it adds no line.
+ */
+export function linesFor(choices: Choices, lang: string): string[] {
+  const into = pick(lang);
+  const out: string[] = [];
+  if (choices.where) out.push(line("pic.line.where", label(WHERE, choices.where, into), into));
+  const who = whoIn(choices, into);
+  if (who) out.push(line("pic.line.who", who, into));
+  if (choices.often && choices.often !== "other") out.push(line("pic.line.often", label(OFTEN, choices.often, into), into));
+  return out;
+}
+
+/** True when the taps say anything at all worth saving. */
+export function hasAnswers(choices: Choices): boolean {
+  return choices.what.length > 0 || Boolean(choices.where || choices.howMany || choices.kind || choices.often);
+}
+
+/**
+ * A timeline entry from the child's taps: the sentences, then the lines, in
+ * the child's language and in German. The child approves it before it is
+ * saved; this only fills it in.
  */
 export function entryFor(choices: Choices, lang: string, date: string, mood: string): Entry {
+  const { text_child, text_de } = sentenceFor(choices, lang);
+  const join = (sentences: string, lines: string[]) => [sentences, ...lines].filter(Boolean).join("\n");
   return {
     date,
     mood,
-    ...sentenceFor(choices, lang),
-    place: choices.where ?? null,
+    text_child: join(text_child, linesFor(choices, lang)),
+    text_de: join(text_de, linesFor(choices, "de")),
+    place: choices.where && choices.where !== "elsewhere" ? choices.where : null,
     people: peopleFor(choices, lang),
   };
+}
+
+// --- what the screens hold while the child answers --------------------------
+
+/**
+ * The raw taps per question, including "no_say", kept by the app so Back
+ * returns to each question exactly as the child left it. Nothing is
+ * pre-selected: every list starts empty.
+ */
+export interface Picks {
+  what: string[];
+  where: string[];
+  howMany: string[];
+  kind: string[];
+  often: string[];
+  feel: string[];
+}
+
+export const NO_PICKS: Picks = { what: [], where: [], howMany: [], kind: [], often: [], feel: [] };
+
+/**
+ * One tap on a tile. "I don't want to say" stands alone: tapping it clears
+ * the other answers, and tapping an answer clears it. Tapping a chosen tile
+ * again un-chooses it.
+ */
+export function toggle(current: readonly string[], code: string, multi: boolean): string[] {
+  if (current.includes(code)) return current.filter((c) => c !== code);
+  if (code === NO_SAY) return [NO_SAY];
+  const rest = current.filter((c) => c !== NO_SAY);
+  return multi ? [...rest, code] : [code];
+}
+
+function one<C extends string>(list: readonly Choice<C>[], picked: readonly string[]): C | null {
+  const code = picked.find((c) => list.some((choice) => choice.code === c));
+  return (code as C | undefined) ?? null;
+}
+
+/** The answers worth keeping: "no_say" and anything unknown drop out here. */
+export function choicesFrom(picks: Picks): Choices {
+  return {
+    what: picks.what.filter((c): c is WhatCode => WHAT.some((choice) => choice.code === c)),
+    where: one(WHERE, picks.where),
+    howMany: one(HOW_MANY, picks.howMany),
+    kind: one(WHO_KIND, picks.kind),
+    often: one(OFTEN, picks.often),
+  };
+}
+
+/**
+ * Where the handoff screen should start, from the picture answer: the school
+ * places mean school, online means online. Anything else asks again there,
+ * because "at home" changes who is suggested and the pictures do not ask it.
+ */
+export function handoffWhereFor(where: WhereCode | null | undefined): "school" | "online" | null {
+  if (where === "online") return "online";
+  if (where === "classroom" || where === "schoolyard" || where === "toilets" || where === "way_to_school") return "school";
+  return null;
 }

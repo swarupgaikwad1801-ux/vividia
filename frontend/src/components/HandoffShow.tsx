@@ -22,6 +22,8 @@ import { useState } from "react";
 
 import CardLanguageSwitch from "./CardLanguageSwitch.tsx";
 import { SparkleBurst } from "../art/Things.tsx";
+import SourceMark from "./SourceMark.tsx";
+import type { EntrySource } from "../lib/timeline.ts";
 import { primarySuggestion, suggestedAdults, type AdultId, type WhereItHappens } from "./HandoffSuggestions.ts";
 import { formatDay } from "../lib-followups-ui/dates.ts";
 import { t } from "../lib/strings.ts";
@@ -29,8 +31,8 @@ import type { Entry, ReportResponse } from "../types/api.ts";
 
 export interface HandoffShowProps {
   lang: string;
-  /** The child's saved entries, oldest first. */
-  entries: readonly Entry[];
+  /** The child's saved entries, oldest first, with where their words came from. */
+  entries: readonly (Entry & { source?: EntrySource })[];
   /** Fallback when there are no entries. */
   report: ReportResponse | null;
   where: WhereItHappens;
@@ -68,8 +70,11 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
         {entries.length > 0 ? (
           <ol className="flex flex-col gap-4">
             {entries.map((entry, index) => (
-              <li key={`${entry.date}-${index}`} className="flex flex-col gap-1">
-                <span className="text-sm text-ink-soft">{formatDay(entry.date, showing)}</span>
+              <li key={`${entry.date}-${index}`} className="flex flex-col items-start gap-1">
+                <span className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+                  {formatDay(entry.date, showing)}
+                  <SourceMark source={entry.source} lang={showing} />
+                </span>
                 <p className="whitespace-pre-wrap text-xl leading-relaxed text-ink">
                   {german ? entry.text_de : entry.text_child}
                 </p>

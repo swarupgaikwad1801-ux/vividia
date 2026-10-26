@@ -29,6 +29,16 @@ test("the main journey goes back the way it came, ending at check-in", () => {
   assert.deepEqual(backAll(trail), ["handoffShow", "handoff", "report", "timeline", "write", "checkIn"]);
 });
 
+test("the picture questions go back one question at a time, to the check-in", () => {
+  const trail = walk("checkIn", "picWhat", "picWhere", "picWho", "picOften", "picFeel", "picReview");
+  assert.deepEqual(backAll(trail), ["picFeel", "picOften", "picWho", "picWhere", "picWhat", "checkIn"]);
+});
+
+test("'Change it' on the check screen returns to the first question without a loop", () => {
+  const trail = walk("checkIn", "picWhat", "picWhere", "picWho", "picOften", "picFeel", "picReview", "picWhat");
+  assert.deepEqual(trail, ["checkIn", "picWhat"]);
+});
+
 test("check-in has no back: it is the first step", () => {
   assert.equal(canGoBack(start(HOME)), false);
   assert.deepEqual(back(start(HOME)), [HOME]);
@@ -84,7 +94,8 @@ test("the PIN screen goes back to where it was opened", () => {
 test("the lock is not a step, so no trail can hold it", () => {
   // A compile-time fact, checked at runtime too: "locked" is not a Step.
   const steps: Step[] = [
-    "language", "onboarding", "checkIn", "write", "timeline", "report", "handoff",
+    "language", "onboarding", "checkIn",
+    "picWhat", "picWhere", "picWho", "picOften", "picFeel", "picReview", "picMore", "write", "timeline", "report", "handoff",
     "handoffShow", "handoffDone", "followUp", "escalation", "pinSet",
   ];
   assert.ok(!(steps as string[]).includes("locked"));

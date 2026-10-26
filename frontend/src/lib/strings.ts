@@ -248,7 +248,11 @@ export const STRINGS = {
   // The game map (components/GameMap.tsx). Places, not levels: nothing is
   // won or locked. Read out once per screen for a screen reader.
   "map.feel": { en: "How you feel", de: "Wie es dir geht", hi: "कैसा लग रहा है" },
-  "map.words": { en: "Your words", de: "Deine Worte", hi: "तुम्हारे शब्द" },
+  "map.what": { en: "What happened", de: "Was passiert ist", hi: "क्या हुआ" },
+  "map.where": { en: "Where", de: "Wo", hi: "कहाँ" },
+  "map.whoDid": { en: "Who", de: "Wer", hi: "कौन" },
+  "map.often": { en: "How often", de: "Wie oft", hi: "कितनी बार" },
+  "map.feelAbout": { en: "How it feels", de: "Wie es sich anfühlt", hi: "कैसा लगता है" },
   "map.card": { en: "Your card", de: "Deine Karte", hi: "तुम्हारा कार्ड" },
   "map.who": { en: "Who sees it", de: "Wer es sieht", hi: "कौन देखेगा" },
   "map.done": { en: "Done", de: "Fertig", hi: "हो गया" },
@@ -602,23 +606,73 @@ export const STRINGS = {
   "onboarding.start": { en: "Start", de: "Los geht's", hi: "शुरू करो" },
   "onboarding.again": { en: "What this app does", de: "Was diese App macht", hi: "यह ऐप क्या करता है" },
 
-  // Picture incident builder (lib/pictures.ts): the tiles.
+  // Picture questions (screens/PictureQuestions.tsx). Open questions, never
+  // yes/no, never leading, never "why" (see that file's header).
+  "q.what.title": { en: "What happened?", de: "Was ist passiert?", hi: "क्या हुआ?" },
+  "q.what.hint": { en: "Tap all that fit.", de: "Tipp alles an, was passt.", hi: "जो-जो सही लगे, सब चुनो।" },
+  "q.where.title": { en: "Where did it happen?", de: "Wo ist es passiert?", hi: "यह कहाँ हुआ?" },
+  "q.who.title": { en: "Who did it?", de: "Wer war das?", hi: "यह किसने किया?" },
+  "q.who.howMany": { en: "How many?", de: "Wie viele?", hi: "कितने?" },
+  "q.who.kind": { en: "Who were they?", de: "Wer war es?", hi: "वे कौन थे?" },
+  "q.often.title": { en: "How often does it happen?", de: "Wie oft passiert das?", hi: "यह कितनी बार होता है?" },
+  "q.feel.title": { en: "How do you feel about it?", de: "Wie fühlst du dich damit?", hi: "इसके बारे में कैसा लगता है?" },
+  "q.pickOne": { en: "Pick one.", de: "Such eins aus.", hi: "एक चुनो।" },
+  "q.skip": { en: "Skip", de: "Überspringen", hi: "छोड़ो" },
+  // On every question, always the last two tiles, in this order.
+  "q.other": { en: "Something else", de: "Etwas anderes", hi: "कुछ और" },
+  "q.noSay": { en: "I don't want to say", de: "Möchte ich nicht sagen", hi: "नहीं बताना" },
+  "q.review.hint": { en: "This is what the card will say.", de: "Das steht dann auf der Karte.", hi: "कार्ड पर यही लिखा होगा।" },
+  "q.review.nothing": {
+    en: "You did not pick anything. That is okay.",
+    de: "Du hast nichts ausgewählt. Das ist okay.",
+    hi: "तुमने कुछ नहीं चुना। कोई बात नहीं।",
+  },
+  // Neutral thanks only: never praise tied to what was picked.
+  "q.thanks": { en: "Thank you.", de: "Danke.", hi: "धन्यवाद।" },
+  "q.more.title": {
+    en: "Want to say more in your own words?",
+    de: "Willst du mehr in deinen eigenen Worten sagen?",
+    hi: "क्या अपने शब्दों में कुछ और कहना है?",
+  },
+  "q.more.yes": { en: "Yes, I'll write", de: "Ja, ich schreibe", hi: "हाँ, लिखना है" },
+  "q.more.no": { en: "No thanks", de: "Nein, danke", hi: "नहीं, धन्यवाद" },
+  // Shown with 110/112 when "hit" or "threatened" is picked: the same panel
+  // the writing screen shows for danger. No diagnosis, no "you are safe".
+  "q.safety": {
+    en: "Some of what you picked can be serious. If you are not safe right now, you can call for help at any time.",
+    de: "Manches, was du ausgewählt hast, kann ernst sein. Wenn du gerade nicht sicher bist, kannst du jederzeit Hilfe rufen.",
+    hi: "तुमने जो चुना, उसमें से कुछ बातें गंभीर हो सकती हैं। अगर तुम अभी सुरक्षित नहीं हो, तो कभी भी मदद बुलाई जा सकती है।",
+  },
+
+  // Picture incident builder (lib/pictures.ts): the tiles, in their fixed order.
   "pic.what.pushed": { en: "Pushed me", de: "Geschubst", hi: "धक्का दिया" },
   "pic.what.hit": { en: "Hit me", de: "Geschlagen", hi: "मारा" },
   "pic.what.names": { en: "Called me names", de: "Beschimpft", hi: "बुरे नाम बुलाए" },
   "pic.what.taken": { en: "Took my things", de: "Sachen weggenommen", hi: "मेरी चीज़ें लीं" },
-  "pic.what.online": { en: "Online", de: "Online", hi: "ऑनलाइन" },
   "pic.what.left_out": { en: "Left me out", de: "Ausgeschlossen", hi: "शामिल नहीं किया" },
+  "pic.what.online": { en: "Online", de: "Online", hi: "ऑनलाइन" },
+  "pic.what.threatened": { en: "Threatened me", de: "Bedroht", hi: "धमकाया" },
   "pic.where.classroom": { en: "Classroom", de: "Klassenzimmer", hi: "क्लास" },
-  "pic.where.corridor": { en: "Corridor", de: "Flur", hi: "गलियारा" },
   "pic.where.schoolyard": { en: "Schoolyard", de: "Schulhof", hi: "स्कूल का मैदान" },
   "pic.where.toilets": { en: "Toilets", de: "Toiletten", hi: "टॉयलेट" },
-  "pic.where.online": { en: "Online", de: "Online", hi: "ऑनलाइन" },
   "pic.where.way_to_school": { en: "Way to school", de: "Schulweg", hi: "स्कूल का रास्ता" },
+  "pic.where.online": { en: "Online", de: "Online", hi: "ऑनलाइन" },
+  "pic.where.elsewhere": { en: "Somewhere else", de: "Woanders", hi: "कहीं और" },
   "pic.howMany.one": { en: "One person", de: "Eine Person", hi: "एक व्यक्ति" },
-  "pic.howMany.several": { en: "Several people", de: "Mehrere", hi: "कई लोग" },
-  "pic.howOld.older": { en: "Older than me", de: "Älter als ich", hi: "मुझसे उम्र में बड़े" },
-  "pic.howOld.same_age": { en: "My age", de: "So alt wie ich", hi: "मेरी उम्र के" },
+  "pic.howMany.several": { en: "A group", de: "Eine Gruppe", hi: "एक ग्रुप" },
+  "pic.kind.classmate": { en: "In my class", de: "Aus meiner Klasse", hi: "मेरी क्लास से" },
+  "pic.kind.older": { en: "Older than me", de: "Älter als ich", hi: "मुझसे उम्र में बड़े" },
+  "pic.kind.adult": { en: "An adult", de: "Eine erwachsene Person", hi: "एक वयस्क" },
+  "pic.kind.other": { en: "Someone else", de: "Jemand anderes", hi: "कोई और" },
+  "pic.often.once": { en: "Once", de: "Einmal", hi: "एक बार" },
+  "pic.often.few": { en: "A few times", de: "Ein paar Mal", hi: "कुछ बार" },
+  "pic.often.daily": { en: "Almost every day", de: "Fast jeden Tag", hi: "लगभग हर दिन" },
+
+  // Where, who and how often go on the card as labelled lines, not
+  // sentences: fixed words, so the grammar cannot go wrong for any answer.
+  "pic.line.where": { en: "Where: {x}", de: "Wo: {x}", hi: "कहाँ: {x}" },
+  "pic.line.who": { en: "Who: {x}", de: "Wer: {x}", hi: "कौन: {x}" },
+  "pic.line.often": { en: "How often: {x}", de: "Wie oft: {x}", hi: "कितनी बार: {x}" },
 
   // The sentence for each tap when the child said how many. {S} is pic.doer.*;
   // German {hat} becomes "hat" or "haben".
@@ -634,6 +688,9 @@ export const STRINGS = {
     hi: "{S} ने ऑनलाइन मेरे बारे में बुरी बातें लिखीं।",
   },
   "pic.say.left_out": { en: "{S} left me out.", de: "{S} {hat} mich ausgeschlossen.", hi: "{S} ने मुझे शामिल नहीं किया।" },
+  "pic.say.threatened": { en: "{S} threatened me.", de: "{S} {hat} mich bedroht.", hi: "{S} ने मुझे धमकाया।" },
+  // "Something else": no doer, whatever the count, because nothing is known.
+  "pic.say.other": { en: "Something else happened.", de: "Etwas anderes ist passiert.", hi: "कुछ और हुआ।" },
 
   // The same sentences when the child did not say how many: passive, so no
   // doer and no count is added that the child never gave.
@@ -647,6 +704,13 @@ export const STRINGS = {
     hi: "ऑनलाइन मेरे बारे में बुरी बातें लिखी गईं।",
   },
   "pic.passive.left_out": { en: "I was left out.", de: "Ich wurde ausgeschlossen.", hi: "मुझे शामिल नहीं किया गया।" },
+  "pic.passive.threatened": { en: "I was threatened.", de: "Ich wurde bedroht.", hi: "मुझे धमकाया गया।" },
+  "pic.passive.other": { en: "Something else happened.", de: "Etwas anderes ist passiert.", hi: "कुछ और हुआ।" },
+
+  // On the card: where each line came from, so a tapped tile never reads as
+  // a quote. Shown in the card's current language (the adult may read German).
+  "card.fromPictures": { en: "Chosen from pictures", de: "Aus Bildern gewählt", hi: "तस्वीरों से चुना" },
+  "card.ownWords": { en: "In my own words", de: "In meinen eigenen Worten", hi: "मेरे अपने शब्दों में" },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;

@@ -55,6 +55,25 @@ test("the big card starts in the child's language, with no German on screen", ()
   assert.ok(!markup.includes(STRINGS["handoff.socialWorker"].de));
 });
 
+test("the card marks lines chosen from pictures apart from the child's own words", () => {
+  const markup = show({
+    entries: [
+      { ...ENTRIES[0], source: "pictures" },
+      { ...ENTRIES[1], source: "words" },
+    ],
+  });
+  const pictures = markup.indexOf(STRINGS["card.fromPictures"].en);
+  const words = markup.indexOf(STRINGS["card.ownWords"].en);
+  assert.ok(pictures !== -1 && words !== -1, "both marks are on the card");
+  assert.ok(pictures < markup.indexOf(ENTRIES[0].text_child), "the picture mark sits with the picture line");
+  assert.ok(words > markup.indexOf(ENTRIES[0].text_child) && words < markup.indexOf(ENTRIES[1].text_child));
+  // And in German for the adult.
+  const de = renderToStaticMarkup(
+    createElement(HandoffShow, { lang: "de", entries: [{ ...ENTRIES[0], source: "pictures" }], report: null, where: "school", chosen: null, onDone: noop }),
+  );
+  assert.ok(de.includes(STRINGS["card.fromPictures"].de));
+});
+
 test("the big card shows the child's own entries, not the model's summary", () => {
   const markup = show();
   assert.ok(!markup.includes(REPORT.child_version));

@@ -21,6 +21,15 @@ export type Step =
   | "language" // first run only
   | "onboarding" // three picture cards: after the language, and on request
   | "checkIn" // the emoji check-in: the step that needs no language
+  // The picture questions (screens/PictureQuestions.tsx), one per screen, so
+  // Back goes one question back.
+  | "picWhat"
+  | "picWhere"
+  | "picWho"
+  | "picOften"
+  | "picFeel"
+  | "picReview" // the child checks the lines before they are saved
+  | "picMore" // "Want to say more in your own words?": optional writing
   | "write" // the centrepiece: find the words
   | "timeline" // everything they have written
   | "report" // the bilingual card, approved word by word

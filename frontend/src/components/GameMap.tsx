@@ -1,6 +1,7 @@
 /**
- * The journey as a little map: five coloured places on a winding path, and
- * the child's own traveller standing on the one they are at.
+ * The journey as a little map: coloured stops on a winding path (one per
+ * picture question, then the card, who sees it, done), and the child's own
+ * traveller standing on the one they are at.
  *
  * Moving on walks the traveller forward; Back walks it back. There is nothing
  * to collect and no score: places are not "levels", and none is locked.
@@ -11,7 +12,7 @@ import { useState } from "react";
 
 import { AVATARS, AvatarGroup, AvatarHead } from "../art/People";
 import { Sparkle } from "../art/Things";
-import { MAP_PLACES } from "../lib/scenes";
+import { MAP_PLACES, type Glyph as GlyphKind } from "../lib/scenes";
 import { fill, t } from "../lib/strings";
 
 const INK = "#1B1B2F";
@@ -23,39 +24,73 @@ const SCENE_FILL: Record<string, string> = {
   lilac: "#B69CFF",
 };
 
-const XS = [34, 102, 170, 238, 306];
-// Low enough that the traveller standing on a high place stays inside the frame.
-const YS = [70, 52, 70, 52, 70];
+// Evenly spaced across the 340-wide drawing, alternating low and high. Low
+// enough that the traveller on a high stop stays inside the frame.
+const N = MAP_PLACES.length;
+const XS = MAP_PLACES.map((_, i) => 22 + (i * 296) / (N - 1));
+const YS = MAP_PLACES.map((_, i) => (i % 2 === 0 ? 70 : 54));
+const R = 12;
 
-/** A tiny glyph for each place: a face, a pencil, a card, two people, a house. */
-function Glyph({ i, x, y }: { i: number; x: number; y: number }) {
-  switch (i) {
-    case 0:
+/** A tiny glyph per stop, scaled to fit inside its circle. */
+function Glyph({ kind, x, y }: { kind: GlyphKind; x: number; y: number }) {
+  const g = { fill: "#FFFFFF", stroke: INK, strokeWidth: 2, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
+  switch (kind) {
+    case "face":
       return (
         <g>
-          <circle cx={x - 4} cy={y - 2} r="1.8" fill={INK} />
-          <circle cx={x + 4} cy={y - 2} r="1.8" fill={INK} />
-          <path d={`M${x - 5} ${y + 3} q5 5 10 0`} fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" />
+          <circle cx={x - 3.5} cy={y - 2} r="1.6" fill={INK} />
+          <circle cx={x + 3.5} cy={y - 2} r="1.6" fill={INK} />
+          <path d={`M${x - 4.5} ${y + 2.5} q4.5 4 9 0`} fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" />
         </g>
       );
-    case 1:
-      return <path d={`M${x - 6} ${y + 6} l2 -6 l9 -9 l4 4 l-9 9 z`} fill="#FFFFFF" stroke={INK} strokeWidth="2" strokeLinejoin="round" />;
-    case 2:
-      return <rect x={x - 6} y={y - 8} width="12" height="16" rx="2" fill="#FFFFFF" stroke={INK} strokeWidth="2" />;
-    case 3:
+    case "burst":
+      return <path d={`M${x} ${y - 7} l2 5 l5 -1 l-3 4 l3 4 l-5 -1 l-2 5 l-2 -5 l-5 1 l3 -4 l-3 -4 l5 1 z`} {...g} />;
+    case "pin":
       return (
-        <g fill="#FFFFFF" stroke={INK} strokeWidth="2">
-          <circle cx={x - 4} cy={y - 2} r="4" />
-          <circle cx={x + 5} cy={y - 1} r="3.2" />
-          <path d={`M${x - 9} ${y + 8} q5 -7 10 0 M${x + 1} ${y + 8} q4 -6 8 0`} fill="none" />
+        <g {...g}>
+          <path d={`M${x} ${y + 7} q-7 -7 -7 -11 a7 7 0 0 1 14 0 q0 4 -7 11 z`} />
+          <circle cx={x} cy={y - 4} r="2" fill={INK} stroke="none" />
+        </g>
+      );
+    case "people":
+      return (
+        <g {...g}>
+          <circle cx={x - 3.5} cy={y - 2} r="3.5" />
+          <circle cx={x + 4} cy={y - 1} r="2.8" />
+          <path d={`M${x - 8} ${y + 7} q4.5 -6 9 0 M${x + 1} ${y + 7} q3.5 -5 7 0`} fill="none" />
+        </g>
+      );
+    case "calendar":
+      return (
+        <g {...g}>
+          <rect x={x - 6} y={y - 5} width="12" height="11" rx="2" />
+          <path d={`M${x - 6} ${y - 1} h12`} />
+        </g>
+      );
+    case "heart":
+      return <path d={`M${x} ${y + 6} c-8 -5 -8 -11 -4 -12 c2 0 4 2 4 3 c0 -1 2 -3 4 -3 c4 1 4 7 -4 12 z`} {...g} />;
+    case "card":
+      return <rect x={x - 5} y={y - 7} width="10" height="14" rx="2" {...g} />;
+    case "eyes":
+      return (
+        <g {...g}>
+          <circle cx={x - 3.5} cy={y} r="3.5" />
+          <circle cx={x + 3.5} cy={y} r="3.5" />
+          <circle cx={x - 3} cy={y + 0.5} r="1.2" fill={INK} stroke="none" />
+          <circle cx={x + 4} cy={y + 0.5} r="1.2" fill={INK} stroke="none" />
         </g>
       );
     default:
-      return (
-        <path d={`M${x - 7} ${y + 7} v-8 l7 -6 l7 6 v8 z`} fill="#FFFFFF" stroke={INK} strokeWidth="2" strokeLinejoin="round" />
-      );
+      return <path d={`M${x - 6} ${y + 6} v-7 l6 -5 l6 5 v7 z`} {...g} />;
   }
 }
+
+/** The winding path through every stop, as one smooth curve. */
+const PATH = XS.reduce((d, x, i) => {
+  if (i === 0) return `M${x} ${YS[0]}`;
+  const mid = (XS[i - 1] + x) / 2;
+  return `${d} C ${mid} ${YS[i - 1]}, ${mid} ${YS[i]}, ${x} ${YS[i]}`;
+}, "");
 
 export interface GameMapProps {
   at: number;
@@ -83,43 +118,31 @@ export default function GameMap({ at, avatar, lang, onAvatar }: GameMapProps) {
         aria-expanded={picking}
         aria-label={t("avatar.change", lang)}
         className="absolute size-11 -translate-x-1/2 -translate-y-1/2 rounded-full transition-[left,top] duration-500"
-        style={{ left: `${(XS[at] / 340) * 100}%`, top: `${((YS[at] - 30) / 96) * 100}%` }}
+        style={{ left: `${(XS[at] / 340) * 100}%`, top: `${((YS[at] - 28) / 96) * 100}%` }}
       />
       <svg viewBox="0 0 340 96" aria-hidden="true" focusable="false" className="block w-full">
         {/* The path */}
-        <path
-          d={`M${XS[0]} ${YS[0]} C 68 ${YS[0]}, 68 ${YS[1]}, ${XS[1]} ${YS[1]} S 136 ${YS[2]}, ${XS[2]} ${YS[2]} S 204 ${YS[3]}, ${XS[3]} ${YS[3]} S 272 ${YS[4]}, ${XS[4]} ${YS[4]}`}
-          fill="none"
-          stroke="#D9D6E8"
-          strokeWidth="10"
-          strokeLinecap="round"
-        />
-        <path
-          d={`M${XS[0]} ${YS[0]} C 68 ${YS[0]}, 68 ${YS[1]}, ${XS[1]} ${YS[1]} S 136 ${YS[2]}, ${XS[2]} ${YS[2]} S 204 ${YS[3]}, ${XS[3]} ${YS[3]} S 272 ${YS[4]}, ${XS[4]} ${YS[4]}`}
-          fill="none"
-          stroke={INK}
-          strokeWidth="2.5"
-          strokeDasharray="2 9"
-          strokeLinecap="round"
-        />
-        {/* The places */}
+        <path d={PATH} fill="none" stroke="#D9D6E8" strokeWidth="9" strokeLinecap="round" />
+        <path d={PATH} fill="none" stroke={INK} strokeWidth="2.5" strokeDasharray="2 8" strokeLinecap="round" />
+        {/* The stops. The ones already passed are filled; the rest are pale,
+            so the child can see how far along they are without a number. */}
         {MAP_PLACES.map((p, i) => (
-          <g key={p.label}>
-            <circle cx={XS[i]} cy={YS[i]} r={i === at ? 17 : 14} fill={SCENE_FILL[p.scene]} stroke={INK} strokeWidth="3" />
-            <Glyph i={i} x={XS[i]} y={YS[i]} />
+          <g key={p.label} opacity={i <= at ? 1 : 0.55}>
+            <circle cx={XS[i]} cy={YS[i]} r={i === at ? R + 3 : R} fill={SCENE_FILL[p.scene]} stroke={INK} strokeWidth="3" />
+            <Glyph kind={p.glyph} x={XS[i]} y={YS[i]} />
           </g>
         ))}
-        <Sparkle x={320} y={18} size={6} fill="#FFD23F" />
-        <Sparkle x={150} y={16} size={5} fill="#FF6FB5" />
-        {/* The traveller: slides to the place, then bobs gently. */}
+        <Sparkle x={326} y={16} size={6} fill="#FFD23F" />
+        <Sparkle x={160} y={14} size={5} fill="#FF6FB5" />
+        {/* The traveller: slides to the stop, then bobs gently. */}
         <g
           style={{
-            transform: `translate(${XS[at]}px, ${YS[at] - 30}px)`,
+            transform: `translate(${XS[at]}px, ${YS[at] - 28}px)`,
             transition: "transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1)",
           }}
         >
           <g className="animate-bob">
-            <AvatarGroup index={avatar} x={0} y={0} r={13} />
+            <AvatarGroup index={avatar} x={0} y={0} r={12} />
           </g>
         </g>
       </svg>

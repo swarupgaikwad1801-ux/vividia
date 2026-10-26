@@ -27,10 +27,12 @@ import {
 import { t } from "../lib/strings.ts";
 import { AdultPicture } from "../art/People.tsx";
 import type { Entry, ReportResponse } from "../types/api.ts";
+import type { EntrySource } from "../lib/timeline.ts";
+import SourceMark from "./SourceMark.tsx";
 
 export interface HandoffCardProps {
   /** The child's saved entries: what the card shows, in their language. */
-  entries?: readonly Entry[];
+  entries?: readonly (Entry & { source?: EntrySource })[];
   lang: string;
   /** The child's answer. Everything on this card is derived from it. */
   where: WhereItHappens;
@@ -177,8 +179,9 @@ export default function HandoffCard({
         {!loading && !error && entries.length > 0 && (
           <ol className="flex flex-col gap-2">
             {entries.map((entry, index) => (
-              <li key={`${entry.date}-${index}`} className="whitespace-pre-wrap text-base text-ink">
-                {entry.text_child}
+              <li key={`${entry.date}-${index}`} className="flex flex-col items-start gap-1">
+                <SourceMark source={entry.source} lang={lang} />
+                <span className="whitespace-pre-wrap text-base text-ink">{entry.text_child}</span>
               </li>
             ))}
           </ol>
