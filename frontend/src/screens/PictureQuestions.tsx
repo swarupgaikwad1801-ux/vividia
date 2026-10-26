@@ -40,14 +40,19 @@ import type { CSSProperties, ReactNode } from "react";
 
 import Face from "../art/Face";
 import QuestionPicture, { type QuestionKind } from "../art/Questions";
-import DangerLine from "../components/DangerLine";
+import DangerLine, { HelpPulse } from "../components/DangerLine";
 import { MOODS } from "../lib/moods";
 import {
+  ADULT_WHERE,
+  BODY,
   HOW_MANY,
   NO_SAY,
   OFTEN,
+  TAKEN,
   WHAT,
+  WHEN,
   WHERE,
+  WHERE_ONLINE,
   WHO_KIND,
   linesFor,
   needsHelpRoute,
@@ -203,8 +208,12 @@ export interface QuestionProps {
   lang: string;
   value: readonly string[];
   onChange: (next: string[]) => void;
-  /** Go on. Skip clears this question's answer first. */
-  onNext: () => void;
+  /**
+   * Go on. `skipped` is true when Skip cleared the answer: the app works out
+   * the next question from the cleared answer, not the stale one (state
+   * updates land after this call).
+   */
+  onNext: (skipped?: boolean) => void;
 }
 
 /** What happened? Several answers allowed. */
@@ -212,7 +221,7 @@ export function WhatQuestion({ lang, value, onChange, onNext }: QuestionProps) {
   return (
     <Screen id="q-what" title={t("q.what.title", lang)} hint={t("q.what.hint", lang)}>
       <TileGrid tiles={tilesFor("what", WHAT, lang)} value={value} multi name="q-what" labelledBy="q-what" onChange={onChange} />
-      <Footer lang={lang} ready={value.length > 0} onNext={onNext} onSkip={() => { onChange([]); onNext(); }} />
+      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -222,7 +231,7 @@ export function WhereQuestion({ lang, value, onChange, onNext }: QuestionProps) 
   return (
     <Screen id="q-where" title={t("q.where.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tilesFor("where", WHERE, lang)} value={value} multi={false} name="q-where" labelledBy="q-where" onChange={onChange} cols={2} />
-      <Footer lang={lang} ready={value.length > 0} onNext={onNext} onSkip={() => { onChange([]); onNext(); }} />
+      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -232,7 +241,7 @@ export function OftenQuestion({ lang, value, onChange, onNext }: QuestionProps) 
   return (
     <Screen id="q-often" title={t("q.often.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tilesFor("often", OFTEN, lang)} value={value} multi={false} name="q-often" labelledBy="q-often" onChange={onChange} cols={2} />
-      <Footer lang={lang} ready={value.length > 0} onNext={onNext} onSkip={() => { onChange([]); onNext(); }} />
+      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -242,7 +251,7 @@ export interface WhoQuestionProps {
   howMany: readonly string[];
   kind: readonly string[];
   onChange: (next: { howMany: string[]; kind: string[] }) => void;
-  onNext: () => void;
+  onNext: (skipped?: boolean) => void;
 }
 
 /**
@@ -290,7 +299,7 @@ export function WhoQuestion({ lang, howMany, kind, onChange, onNext }: WhoQuesti
         cols={2}
         onChange={(next) => onChange({ howMany: next.includes(NO_SAY) ? [NO_SAY] : [], kind: [] })}
       />
-      <Footer lang={lang} ready={answered} onNext={onNext} onSkip={() => { onChange({ howMany: [], kind: [] }); onNext(); }} />
+      <Footer lang={lang} ready={answered} onNext={() => onNext()} onSkip={() => { onChange({ howMany: [], kind: [] }); onNext(true); }} />
     </Screen>
   );
 }
@@ -310,7 +319,62 @@ export function FeelQuestion({ lang, value, onChange, onNext }: QuestionProps) {
   return (
     <Screen id="q-feel" title={t("q.feel.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tiles} value={value} multi={false} name="q-feel" labelledBy="q-feel" onChange={onChange} />
-      <Footer lang={lang} ready={value.length > 0} onNext={onNext} onSkip={() => { onChange([]); onNext(); }} />
+      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
+    </Screen>
+  );
+}
+
+// --- follow-ups (lib/questions.ts decides when each is asked) ---------------------
+
+const FOLLOW_UPS = {
+  picBody: { kind: "body", title: "q.body.title", list: BODY, cols: 2 },
+  picTaken: { kind: "taken", title: "q.taken.title", list: TAKEN, cols: 3 },
+  picWhereOnline: { kind: "whereOnline", title: "q.whereOnline.title", list: WHERE_ONLINE, cols: 3 },
+  picWhen: { kind: "when", title: "q.when.title", list: WHEN, cols: 3 },
+  picAdultWhere: { kind: "adultWhere", title: "q.adult.title", list: ADULT_WHERE, cols: 2 },
+} as const satisfies Record<string, { kind: QuestionKind; title: StringKey; list: readonly Choice[]; cols: 2 | 3 }>;
+
+export type FollowUpStep = keyof typeof FOLLOW_UPS;
+
+export interface FollowUpQuestionProps extends QuestionProps {
+  step: FollowUpStep;
+}
+
+/**
+ * A follow-up: one answer, its title repeating the child's own pick as a cue
+ * ("You said things were taken. What was taken?"). Same rules as every other
+ * question: open, nothing pre-selected, fixed order, Something else and
+ * I don't want to say last, and Skip.
+ */
+export function FollowUpQuestion({ step, lang, value, onChange, onNext }: FollowUpQuestionProps) {
+  const q = FOLLOW_UPS[step];
+  const id = `q-${step}`;
+  return (
+    <Screen id={id} title={t(q.title, lang)} hint={t("q.pickOne", lang)}>
+      <TileGrid tiles={tilesFor(q.kind, q.list, lang)} value={value} multi={false} name={id} labelledBy={id} onChange={onChange} cols={q.cols} />
+      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
+    </Screen>
+  );
+}
+
+/**
+ * "Something else" on What happened?: the child's own words. Kept on the
+ * phone until the questions end, then handed to the writing screen, where
+ * the German is checked and the child approves it like any written entry.
+ */
+export function OwnWordsQuestion({ lang, value, onChange, onNext }: QuestionProps) {
+  const text = value[0] ?? "";
+  return (
+    <Screen id="q-own" title={t("q.own.title", lang)} hint={t("q.own.hint", lang)}>
+      <textarea
+        aria-labelledby="q-own"
+        value={text}
+        onChange={(event) => onChange(event.target.value ? [event.target.value] : [])}
+        rows={5}
+        className="w-full rounded-card border-[3px] border-ink bg-surface p-4 text-lg text-ink"
+        placeholder={t("write.placeholder", lang)}
+      />
+      <Footer lang={lang} ready={text.trim().length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -326,6 +390,11 @@ export interface PictureReviewProps {
   onChange: () => void;
   /** Nothing to save: go on to the offer to write. */
   onNext: () => void;
+  /**
+   * Keep Need help prominent (it pulses) without the danger line: the adult
+   * route (lib/questions.ts). An adult hurting a child is for an adult to act on.
+   */
+  prominentHelp?: boolean;
 }
 
 /**
@@ -333,10 +402,10 @@ export interface PictureReviewProps {
  * check before anything is saved: the same "is this right?" as a written
  * entry gets.
  */
-export function PictureReview({ lang, choices, onSave, onChange, onNext }: PictureReviewProps) {
+export function PictureReview({ lang, choices, onSave, onChange, onNext, prominentHelp = false }: PictureReviewProps) {
   const what = sentenceFor(choices, lang).text_child;
   const lines = [...(what ? [what] : []), ...linesFor(choices, lang)];
-  const help = needsHelpRoute(choices.what);
+  const help = needsHelpRoute(choices);
 
   return (
     <Screen id="q-review" title={t("approve.title", lang)} hint={lines.length ? t("q.review.hint", lang) : undefined}>
@@ -344,6 +413,7 @@ export function PictureReview({ lang, choices, onSave, onChange, onNext }: Pictu
           screen: one red line, and Need help pulses. Built here, with no
           model call: the taps already say it. */}
       {help && <DangerLine lang={lang} />}
+      {!help && prominentHelp && <HelpPulse />}
 
       {lines.length > 0 ? (
         <>

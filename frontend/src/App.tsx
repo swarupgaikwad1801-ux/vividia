@@ -10,7 +10,9 @@ import LanguageSetup from "./screens/LanguageSetup";
 import Onboarding from "./screens/Onboarding";
 import {
   FeelQuestion,
+  FollowUpQuestion,
   MoreQuestion,
+  OwnWordsQuestion,
   OftenQuestion,
   PictureReview,
   WhatQuestion,
@@ -32,8 +34,17 @@ import { fill, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
 import { HOME, back, canGoBack, current, go, start, type Step } from "./lib/nav";
 import { MOOD_CODES } from "./lib/moods";
-import { NO_PICKS, choicesFrom, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
-import { SCENE, mapIndex } from "./lib/scenes";
+import { NO_PICKS, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
+import { SCENE, mapFor } from "./lib/scenes";
+import {
+  ANSWER_OF,
+  adultRoute,
+  answersFor,
+  nextQuestion,
+  questionsFor,
+  wroteOwnWords,
+  type QuestionStep,
+} from "./lib/questions";
 import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
 import { addEntry, listEntries } from "./lib/timeline";
@@ -193,15 +204,51 @@ export default function App() {
    * offer to write; Back from there goes home rather than to a screen that
    * could save the same answers twice.
    */
-  const keepPictures = useCallback(() => {
-    const choices = choicesFrom(picks);
-    const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
-    addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
-    setWhere((now) => now ?? handoffWhereFor(choices.where));
-    setPicks(NO_PICKS);
-    refreshEntries();
-    setTrail([HOME, "picMore"]);
-  }, [picks, checkInMood, lang, refreshEntries]);
+  /**
+   * The end of the questions, with or without saving. The child's own words
+   * (from "Something else") go to the writing screen, prefilled, where the
+   * German is checked and they approve it; otherwise the offer to write.
+   * Back from there goes home rather than to a screen that could save the
+   * same answers twice.
+   */
+  const finishPictures = useCallback(
+    (save: boolean) => {
+      const choices = answersFor(picks);
+      if (save) {
+        const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
+        addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
+        refreshEntries();
+      }
+      // An adult from home means the handoff must not suggest family: that
+      // answer wins over anything remembered.
+      const start = handoffWhereFor(choices.where, choices.adultWhere, Boolean(choices.whereOnline));
+      setWhere((now) => (start === "home" ? "home" : now ?? start));
+      const own = questionsFor(picks).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
+      setPicks(NO_PICKS);
+      if (own) {
+        setDraft(own);
+        setTrail([HOME, "write"]);
+      } else {
+        setTrail([HOME, "picMore"]);
+      }
+    },
+    [picks, checkInMood, lang, refreshEntries],
+  );
+  const keepPictures = useCallback(() => finishPictures(true), [finishPictures]);
+
+  /**
+   * Go on from a question. Skip has just cleared the answer, but that state
+   * update lands after this call, so the next question is worked out from
+   * the cleared answers here rather than from the stale ones.
+   */
+  const advance = useCallback(
+    (from: QuestionStep) => (skipped?: boolean) => {
+      const key = ANSWER_OF[from];
+      const now = skipped ? { ...picks, [key]: [], ...(from === "picWho" ? { kind: [] } : {}) } : picks;
+      setStep(nextQuestion(from, now));
+    },
+    [picks, setStep],
+  );
 
   /**
    * The ONLY path by which an entry is written, and it runs because the child
@@ -262,7 +309,7 @@ export default function App() {
   }
 
   const scene = SCENE[step];
-  const onMap = mapIndex(step);
+  const onMap = mapFor(step, picks);
 
   return (
     // One flat colour per place (lib/scenes.ts), filling the whole screen.
@@ -309,7 +356,8 @@ export default function App() {
 
       {onMap !== null && (
         <GameMap
-          at={onMap}
+          places={onMap.places}
+          at={onMap.at}
           avatar={avatar}
           lang={lang}
           onAvatar={(next) => {
@@ -349,12 +397,26 @@ export default function App() {
         </>
       )}
 
-      {/* The picture questions: one per screen, each skippable. */}
+      {/* The picture questions: one per screen, each skippable. Which comes
+          next depends on the answers so far (lib/questions.ts). */}
       {step === "picWhat" && (
-        <WhatQuestion lang={lang} value={picks.what} onChange={pick("what")} onNext={() => setStep("picWhere")} />
+        <WhatQuestion lang={lang} value={picks.what} onChange={pick("what")} onNext={advance("picWhat")} />
+      )}
+      {(step === "picBody" || step === "picTaken" || step === "picWhereOnline" || step === "picWhen" || step === "picAdultWhere") && (
+        <FollowUpQuestion
+          key={step}
+          step={step}
+          lang={lang}
+          value={picks[ANSWER_OF[step]]}
+          onChange={pick(ANSWER_OF[step])}
+          onNext={advance(step)}
+        />
+      )}
+      {step === "picOwn" && (
+        <OwnWordsQuestion lang={lang} value={picks.own} onChange={pick("own")} onNext={advance("picOwn")} />
       )}
       {step === "picWhere" && (
-        <WhereQuestion lang={lang} value={picks.where} onChange={pick("where")} onNext={() => setStep("picWho")} />
+        <WhereQuestion lang={lang} value={picks.where} onChange={pick("where")} onNext={advance("picWhere")} />
       )}
       {step === "picWho" && (
         <WhoQuestion
@@ -362,22 +424,23 @@ export default function App() {
           howMany={picks.howMany}
           kind={picks.kind}
           onChange={(next) => setPicks((now) => ({ ...now, ...next }))}
-          onNext={() => setStep("picOften")}
+          onNext={(skipped) => advance("picWho")(skipped)}
         />
       )}
       {step === "picOften" && (
-        <OftenQuestion lang={lang} value={picks.often} onChange={pick("often")} onNext={() => setStep("picFeel")} />
+        <OftenQuestion lang={lang} value={picks.often} onChange={pick("often")} onNext={advance("picOften")} />
       )}
       {step === "picFeel" && (
-        <FeelQuestion lang={lang} value={picks.feel} onChange={pick("feel")} onNext={() => setStep("picReview")} />
+        <FeelQuestion lang={lang} value={picks.feel} onChange={pick("feel")} onNext={advance("picFeel")} />
       )}
       {step === "picReview" && (
         <PictureReview
           lang={lang}
-          choices={choicesFrom(picks)}
+          choices={answersFor(picks)}
           onSave={keepPictures}
           onChange={() => setStep("picWhat")}
-          onNext={() => setStep("picMore")}
+          onNext={() => finishPictures(false)}
+          prominentHelp={adultRoute(picks)}
         />
       )}
       {step === "picMore" && (

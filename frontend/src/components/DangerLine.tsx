@@ -21,19 +21,37 @@ import { t } from "../lib/strings.ts";
 /** Set while a danger line is on screen; index.css makes Need help pulse. */
 const FLAG = "danger";
 
+/** Make Need help pulse while this is mounted. */
+function usePulse() {
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset[FLAG] = "1";
+    return () => {
+      delete root.dataset[FLAG];
+    };
+  }, []);
+}
+
+/**
+ * Need help pulses, with no red line: for when help should stay prominent
+ * but nothing the child said means danger right now (the adult route).
+ */
+export function HelpPulse() {
+  usePulse();
+  return null;
+}
+
 export default function DangerLine({ lang }: { lang: string }) {
   const [number, setNumber] = useState<string | null>(null);
+  usePulse();
 
   useEffect(() => {
     let live = true;
     emergency(lang)
       .then((res) => live && setNumber(res.contacts[0]?.contact ?? null))
       .catch(() => {});
-    const root = document.documentElement;
-    root.dataset[FLAG] = "1";
     return () => {
       live = false;
-      delete root.dataset[FLAG];
     };
   }, [lang]);
 

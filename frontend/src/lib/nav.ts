@@ -24,8 +24,15 @@ export type Step =
   // The picture questions (screens/PictureQuestions.tsx), one per screen, so
   // Back goes one question back.
   | "picWhat"
+  // Follow-ups, asked only after the answer they follow (lib/questions.ts).
+  | "picBody"
+  | "picTaken"
+  | "picWhereOnline"
+  | "picWhen"
+  | "picOwn"
   | "picWhere"
   | "picWho"
+  | "picAdultWhere"
   | "picOften"
   | "picFeel"
   | "picReview" // the child checks the lines before they are saved

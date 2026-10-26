@@ -12,7 +12,7 @@ import { useState } from "react";
 
 import { AVATARS, AvatarGroup, AvatarHead } from "../art/People";
 import { Sparkle } from "../art/Things";
-import { MAP_PLACES, type Glyph as GlyphKind } from "../lib/scenes";
+import type { Glyph as GlyphKind, MapPlace } from "../lib/scenes";
 import { fill, t } from "../lib/strings";
 
 const INK = "#1B1B2F";
@@ -24,17 +24,67 @@ const SCENE_FILL: Record<string, string> = {
   lilac: "#B69CFF",
 };
 
-// Evenly spaced across the 340-wide drawing, alternating low and high. Low
-// enough that the traveller on a high stop stays inside the frame.
-const N = MAP_PLACES.length;
-const XS = MAP_PLACES.map((_, i) => 22 + (i * 296) / (N - 1));
-const YS = MAP_PLACES.map((_, i) => (i % 2 === 0 ? 70 : 54));
-const R = 12;
+/**
+ * Where each stop sits: evenly spaced across the 340-wide drawing,
+ * alternating low and high (low enough that the traveller on a high stop
+ * stays inside the frame), and a radius that shrinks a little when the
+ * child's answers add stops, so they never touch.
+ */
+function layout(n: number) {
+  const step = 296 / Math.max(1, n - 1);
+  const xs = Array.from({ length: n }, (_, i) => 22 + i * step);
+  const ys = Array.from({ length: n }, (_, i) => (i % 2 === 0 ? 70 : 54));
+  const r = Math.min(12, step * 0.42);
+  const path = xs.reduce((d, x, i) => {
+    if (i === 0) return `M${x} ${ys[0]}`;
+    const mid = (xs[i - 1] + x) / 2;
+    return `${d} C ${mid} ${ys[i - 1]}, ${mid} ${ys[i]}, ${x} ${ys[i]}`;
+  }, "");
+  return { xs, ys, r, path };
+}
 
-/** A tiny glyph per stop, scaled to fit inside its circle. */
-function Glyph({ kind, x, y }: { kind: GlyphKind; x: number; y: number }) {
+/** A tiny glyph per stop, drawn at 12px radius and scaled to the stop. */
+function Glyph({ kind, x, y, s }: { kind: GlyphKind; x: number; y: number; s: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s}) translate(${-x} ${-y})`}>
+      <GlyphShape kind={kind} x={x} y={y} />
+    </g>
+  );
+}
+
+function GlyphShape({ kind, x, y }: { kind: GlyphKind; x: number; y: number }) {
   const g = { fill: "#FFFFFF", stroke: INK, strokeWidth: 2, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
   switch (kind) {
+    case "bag":
+      return (
+        <g {...g}>
+          <rect x={x - 5} y={y - 3} width="10" height="10" rx="2.5" />
+          <path d={`M${x - 2.5} ${y - 3} v-2 a2.5 2.5 0 0 1 5 0 v2`} fill="none" />
+        </g>
+      );
+    case "phone":
+      return (
+        <g {...g}>
+          <rect x={x - 4} y={y - 7} width="8" height="14" rx="2" />
+          <path d={`M${x - 1.5} ${y + 4.5} h3`} />
+        </g>
+      );
+    case "clock":
+      return (
+        <g {...g}>
+          <circle cx={x} cy={y} r="6" />
+          <path d={`M${x} ${y - 3.5} v3.5 l2.5 2`} fill="none" />
+        </g>
+      );
+    case "pencil":
+      return <path d={`M${x - 6} ${y + 6} l2 -6 l9 -9 l4 4 l-9 9 z`} {...g} />;
+    case "bandage":
+      return (
+        <g {...g}>
+          <rect x={x - 7} y={y - 3} width="14" height="6" rx="3" transform={`rotate(-35 ${x} ${y})`} />
+          <circle cx={x} cy={y} r="1" fill={INK} stroke="none" />
+        </g>
+      );
     case "face":
       return (
         <g>
@@ -85,14 +135,9 @@ function Glyph({ kind, x, y }: { kind: GlyphKind; x: number; y: number }) {
   }
 }
 
-/** The winding path through every stop, as one smooth curve. */
-const PATH = XS.reduce((d, x, i) => {
-  if (i === 0) return `M${x} ${YS[0]}`;
-  const mid = (XS[i - 1] + x) / 2;
-  return `${d} C ${mid} ${YS[i - 1]}, ${mid} ${YS[i]}, ${x} ${YS[i]}`;
-}, "");
-
 export interface GameMapProps {
+  /** The stops for this child's answers (lib/scenes.ts mapFor). */
+  places: readonly MapPlace[];
   at: number;
   avatar: number;
   lang: string;
@@ -100,14 +145,15 @@ export interface GameMapProps {
   onAvatar: (index: number) => void;
 }
 
-export default function GameMap({ at, avatar, lang, onAvatar }: GameMapProps) {
+export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapProps) {
   const [picking, setPicking] = useState(false);
-  const place = MAP_PLACES[at];
+  const place = places[at];
+  const { xs: XS, ys: YS, r: R, path: PATH } = layout(places.length);
   return (
     <div className="mx-4 mt-2 flex flex-col gap-2">
     <div className="relative rounded-card border-[3px] border-ink bg-surface/90 px-1">
       <p className="sr-only">
-        {fill("map.youAreHere", lang, { place: t(place.label, lang), n: at + 1, total: MAP_PLACES.length })}
+        {fill("map.youAreHere", lang, { place: t(place.label, lang), n: at + 1, total: places.length })}
       </p>
       {/* The traveller is the one thing on the map you can tap: it opens the
           heads to choose from. A real button laid over the drawing, at least
@@ -126,10 +172,10 @@ export default function GameMap({ at, avatar, lang, onAvatar }: GameMapProps) {
         <path d={PATH} fill="none" stroke={INK} strokeWidth="2.5" strokeDasharray="2 8" strokeLinecap="round" />
         {/* The stops. The ones already passed are filled; the rest are pale,
             so the child can see how far along they are without a number. */}
-        {MAP_PLACES.map((p, i) => (
-          <g key={p.label} opacity={i <= at ? 1 : 0.55}>
+        {places.map((p, i) => (
+          <g key={`${p.label}-${i}`} opacity={i <= at ? 1 : 0.55}>
             <circle cx={XS[i]} cy={YS[i]} r={i === at ? R + 3 : R} fill={SCENE_FILL[p.scene]} stroke={INK} strokeWidth="3" />
-            <Glyph kind={p.glyph} x={XS[i]} y={YS[i]} />
+            <Glyph kind={p.glyph} x={XS[i]} y={YS[i]} s={R / 12} />
           </g>
         ))}
         <Sparkle x={326} y={16} size={6} fill="#FFD23F" />

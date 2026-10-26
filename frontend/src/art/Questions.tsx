@@ -242,7 +242,131 @@ function OftenPicture({ code, className }: { code: string; className?: string })
   );
 }
 
-export type QuestionKind = "what" | "where" | "who" | "often";
+/** Follow-up pictures: where online, what was taken, the body, when, the adult. */
+function FollowUpPicture({ kind, code, className }: { kind: QuestionKind; code: string; className?: string }) {
+  if (code === "other") return <OtherPicture className={className} />;
+  switch (`${kind}:${code}`) {
+    case "whereOnline:chat":
+      return (
+        <Svg className={className}>
+          <rect x="16" y="14" width="56" height="30" rx="10" fill="#4CC9F0" stroke={INK} strokeWidth={W} />
+          <rect x="48" y="50" width="56" height="30" rx="10" fill="#FFD23F" stroke={INK} strokeWidth={W} />
+          <path d="M28 29 h32 M60 65 h32" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+        </Svg>
+      );
+    case "whereOnline:game":
+      return (
+        <Svg className={className}>
+          <rect x="14" y="30" width="92" height="40" rx="20" fill="#B69CFF" stroke={INK} strokeWidth={W} />
+          <path d="M36 42 v16 M28 50 h16" stroke={INK} strokeWidth="4" strokeLinecap="round" />
+          <circle cx="80" cy="46" r="4" fill={INK} />
+          <circle cx="90" cy="56" r="4" fill={INK} />
+        </Svg>
+      );
+    case "whereOnline:social":
+      return (
+        <Svg className={className}>
+          <rect x="30" y="10" width="60" height="76" rx="10" fill="#FFFFFF" stroke={INK} strokeWidth={W} />
+          <rect x="38" y="20" width="44" height="30" rx="4" fill="#FF6FB5" stroke={INK} strokeWidth="2.5" />
+          <path d="M46 62 c0 -6 8 -6 6 0 c-2 -6 6 -6 6 0 c0 5 -6 8 -6 11 c0 -3 -6 -6 -6 -11 z" fill="#FF6FB5" stroke={INK} strokeWidth="2" />
+          <path d="M66 64 h14 M66 72 h10" stroke={INK} strokeWidth="2.5" strokeLinecap="round" />
+        </Svg>
+      );
+    case "whereOnline:messages":
+      return (
+        <Svg className={className}>
+          <rect x="18" y="20" width="84" height="56" rx="8" fill="#FFFFFF" stroke={INK} strokeWidth={W} />
+          <path d="M18 26 l42 28 l42 -28" fill="none" stroke={INK} strokeWidth={W} strokeLinejoin="round" />
+        </Svg>
+      );
+    case "taken:lunch":
+      return (
+        <Svg className={className}>
+          <rect x="20" y="40" width="80" height="40" rx="10" fill="#38D47A" stroke={INK} strokeWidth={W} />
+          <path d="M20 52 h80" stroke={INK} strokeWidth="3" />
+          <circle cx="44" cy="30" r="10" fill="#FF6FB5" stroke={INK} strokeWidth="3" />
+          <path d="M44 20 q4 -6 8 -4" fill="none" stroke={INK} strokeWidth="2.5" />
+        </Svg>
+      );
+    case "taken:money":
+      return (
+        <Svg className={className}>
+          <circle cx="46" cy="52" r="22" fill="#FFD23F" stroke={INK} strokeWidth={W} />
+          <circle cx="76" cy="42" r="18" fill="#FFD23F" stroke={INK} strokeWidth={W} />
+          <circle cx="46" cy="52" r="12" fill="none" stroke={INK} strokeWidth="2.5" />
+        </Svg>
+      );
+    case "taken:phone":
+      return (
+        <Svg className={className}>
+          <rect x="40" y="8" width="40" height="80" rx="9" fill={INK} />
+          <rect x="45" y="16" width="30" height="58" rx="3" fill="#4CC9F0" />
+          <circle cx="60" cy="81" r="3" fill="#FFFFFF" />
+        </Svg>
+      );
+    case "taken:school_things":
+      return (
+        <Svg className={className}>
+          <rect x="20" y="30" width="44" height="54" rx="4" fill="#FF6FB5" stroke={INK} strokeWidth={W} />
+          <path d="M30 30 v54" stroke={INK} strokeWidth="2.5" />
+          <path d="M74 80 l26 -56 l8 4 l-26 56 z" fill="#FFD23F" stroke={INK} strokeWidth="3" strokeLinejoin="round" />
+        </Svg>
+      );
+    case "body:fine":
+    case "body:hurts_bit":
+    case "body:hurts_lot": {
+      // A body outline with a soft glow where it hurts: more glow, more hurt.
+      // No face in pain.
+      const glow = code === "fine" ? 0 : code === "hurts_bit" ? 1 : 2;
+      return (
+        <Svg className={className}>
+          <circle cx="60" cy="22" r="12" fill="#E8B48E" stroke={INK} strokeWidth={W} />
+          <rect x="44" y="36" width="32" height="40" rx="12" fill="#4CC9F0" stroke={INK} strokeWidth={W} />
+          <path d="M44 46 l-12 14 M76 46 l12 14 M52 76 v14 M68 76 v14" stroke={INK} strokeWidth={W} strokeLinecap="round" />
+          {/* The glow sits on top of the shoulder, so it shows: small for
+              "a bit", big with motion ticks for "a lot". */}
+          {glow > 0 && (
+            <circle cx="76" cy="44" r={glow === 1 ? 7 : 12} fill="#FF6F6F" stroke={INK} strokeWidth="2" opacity="0.85" />
+          )}
+          {glow === 2 && <Ticks x={94} y={30} />}
+        </Svg>
+      );
+    }
+    case "when:today":
+      return (
+        <Svg className={className}>
+          <circle cx="60" cy="48" r="20" fill="#FFD23F" stroke={INK} strokeWidth={W} />
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+            <path key={a} d="M60 18 v-8" stroke={INK} strokeWidth="3" strokeLinecap="round" transform={`rotate(${a} 60 48)`} />
+          ))}
+        </Svg>
+      );
+    case "when:tomorrow":
+      return (
+        <Svg className={className}>
+          <path d="M44 24 a24 24 0 1 0 24 34 a18 18 0 1 1 -24 -34 z" fill="#B69CFF" stroke={INK} strokeWidth={W} strokeLinejoin="round" />
+          <path d="M74 56 h30 m-10 -10 l10 10 l-10 10" fill="none" stroke={INK} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
+      );
+    case "when:later":
+      return (
+        <Svg className={className}>
+          <circle cx="60" cy="48" r="30" fill="#FFFFFF" stroke={INK} strokeWidth={W} />
+          <path d="M60 28 v20 l14 10" fill="none" stroke={INK} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
+      );
+    case "when:dont_know":
+      return <OtherPicture className={className} />;
+    case "adultWhere:school":
+      return <PlacePicture id="school" className={className} />;
+    case "adultWhere:home":
+      return <PlacePicture id="home" className={className} />;
+    default:
+      return <PlacePicture id="elsewhere" className={className} />;
+  }
+}
+
+export type QuestionKind = "what" | "where" | "who" | "often" | "whereOnline" | "taken" | "body" | "when" | "adultWhere";
 
 /** The picture for one tile. "no_say" and "other" look the same on every question. */
 export default function QuestionPicture({ kind, code, className }: { kind: QuestionKind; code: string; className?: string }) {
@@ -254,7 +378,9 @@ export default function QuestionPicture({ kind, code, className }: { kind: Quest
       return <WherePicture code={code} className={className} />;
     case "who":
       return <WhoPicture code={code} className={className} />;
-    default:
+    case "often":
       return <OftenPicture code={code} className={className} />;
+    default:
+      return <FollowUpPicture kind={kind} code={code} className={className} />;
   }
 }

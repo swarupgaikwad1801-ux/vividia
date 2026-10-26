@@ -192,10 +192,13 @@ test("'something else' is the last answer tile on every multi-answer list", () =
   assert.equal(WHERE.at(-1)?.code, "elsewhere");
 });
 
-test("'hit' or 'threatened' shows the help route; nothing else does on its own", () => {
-  assert.equal(needsHelpRoute(["hit"]), true);
-  assert.equal(needsHelpRoute(["names", "threatened"]), true);
-  assert.equal(needsHelpRoute(["names", "taken", "left_out", "online", "pushed", "other"]), false);
+test("'hit', 'threatened', 'hurts a lot' or 'today' shows the help route; nothing else does", () => {
+  assert.equal(needsHelpRoute({ what: ["hit"] }), true);
+  assert.equal(needsHelpRoute({ what: ["names", "threatened"] }), true);
+  assert.equal(needsHelpRoute({ what: ["pushed"], body: "hurts_lot" }), true);
+  assert.equal(needsHelpRoute({ what: [], when: "today" }), true);
+  assert.equal(needsHelpRoute({ what: ["names", "taken", "left_out", "online", "pushed", "other"] }), false);
+  assert.equal(needsHelpRoute({ what: ["pushed"], body: "hurts_bit", when: "later" }), false);
 });
 
 test("the handoff starts at school or online when the picture said so, else it asks", () => {

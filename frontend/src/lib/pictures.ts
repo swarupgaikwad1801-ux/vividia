@@ -107,12 +107,20 @@ const WHAT_SENTENCE: Record<WhatCode, { say: Copy; passive: Copy }> = {
 
 /**
  * Taps that get the same help route the writing screen shows for danger
- * (110/112 and the helplines), at once and without a model call.
+ * (the red 110 line, and Need help pulses), at once and without a model call.
  */
 export const DANGER: readonly WhatCode[] = ["hit", "threatened"];
 
-export function needsHelpRoute(what: readonly string[]): boolean {
-  return what.some((code) => (DANGER as readonly string[]).includes(code));
+/**
+ * Danger from the answers: "hit" or "threatened", or a follow-up that says
+ * it is serious now: the body "hurts a lot", or the threat is for "today".
+ */
+export function needsHelpRoute(choices: Pick<Choices, "what" | "body" | "when">): boolean {
+  return (
+    choices.what.some((code) => (DANGER as readonly string[]).includes(code)) ||
+    choices.body === "hurts_lot" ||
+    choices.when === "today"
+  );
 }
 
 // --- where -----------------------------------------------------------------
@@ -168,6 +176,50 @@ export const OFTEN: readonly Choice<Often>[] = [
   { code: "other", label: STRINGS["q.other"] },
 ];
 
+// --- follow-ups (asked only after the answer they follow: lib/questions.ts) ---
+
+export type WhereOnline = "chat" | "game" | "social" | "messages" | "other";
+export const WHERE_ONLINE: readonly Choice<WhereOnline>[] = [
+  { code: "chat", label: STRINGS["pic.online.chat"] },
+  { code: "game", label: STRINGS["pic.online.game"] },
+  { code: "social", label: STRINGS["pic.online.social"] },
+  { code: "messages", label: STRINGS["pic.online.messages"] },
+  { code: "other", label: STRINGS["q.other"] },
+];
+
+export type Taken = "lunch" | "money" | "phone" | "school_things" | "other";
+export const TAKEN: readonly Choice<Taken>[] = [
+  { code: "lunch", label: STRINGS["pic.taken.lunch"] },
+  { code: "money", label: STRINGS["pic.taken.money"] },
+  { code: "phone", label: STRINGS["pic.taken.phone"] },
+  { code: "school_things", label: STRINGS["pic.taken.school_things"] },
+  { code: "other", label: STRINGS["q.other"] },
+];
+
+export type Body = "fine" | "hurts_bit" | "hurts_lot" | "other";
+export const BODY: readonly Choice<Body>[] = [
+  { code: "fine", label: STRINGS["pic.body.fine"] },
+  { code: "hurts_bit", label: STRINGS["pic.body.hurts_bit"] },
+  { code: "hurts_lot", label: STRINGS["pic.body.hurts_lot"] },
+  { code: "other", label: STRINGS["q.other"] },
+];
+
+export type When = "today" | "tomorrow" | "later" | "dont_know" | "other";
+export const WHEN: readonly Choice<When>[] = [
+  { code: "today", label: STRINGS["pic.when.today"] },
+  { code: "tomorrow", label: STRINGS["pic.when.tomorrow"] },
+  { code: "later", label: STRINGS["pic.when.later"] },
+  { code: "dont_know", label: STRINGS["pic.when.dont_know"] },
+  { code: "other", label: STRINGS["q.other"] },
+];
+
+export type AdultWhere = "school" | "home" | "elsewhere";
+export const ADULT_WHERE: readonly Choice<AdultWhere>[] = [
+  { code: "school", label: STRINGS["pic.adult.school"] },
+  { code: "home", label: STRINGS["pic.adult.home"] },
+  { code: "elsewhere", label: STRINGS["pic.adult.elsewhere"] },
+];
+
 // --- building the entry ----------------------------------------------------
 
 export interface Choices {
@@ -177,6 +229,11 @@ export interface Choices {
   howMany?: HowMany | null;
   kind?: WhoKind | null;
   often?: Often | null;
+  whereOnline?: WhereOnline | null;
+  taken?: Taken | null;
+  body?: Body | null;
+  when?: When | null;
+  adultWhere?: AdultWhere | null;
 }
 
 export const NO_CHOICES: Choices = { what: [], where: null, howMany: null, kind: null, often: null };
@@ -237,16 +294,26 @@ export function peopleFor(choices: Choices, lang: string): string | null {
 export function linesFor(choices: Choices, lang: string): string[] {
   const into = pick(lang);
   const out: string[] = [];
+  // A follow-up answer of "Something else" adds no line: it tells an adult
+  // nothing they could act on, and no line is better than a vague one.
+  const add = <C extends string>(key: StringKey, list: readonly Choice<C>[], code: C | null | undefined) => {
+    if (code && code !== "other") out.push(line(key, label(list, code, into), into));
+  };
+  add("pic.line.taken", TAKEN, choices.taken);
+  add("pic.line.body", BODY, choices.body);
+  add("pic.line.when", WHEN, choices.when);
+  add("pic.line.whereOnline", WHERE_ONLINE, choices.whereOnline);
   if (choices.where) out.push(line("pic.line.where", label(WHERE, choices.where, into), into));
   const who = whoIn(choices, into);
   if (who) out.push(line("pic.line.who", who, into));
-  if (choices.often && choices.often !== "other") out.push(line("pic.line.often", label(OFTEN, choices.often, into), into));
+  add("pic.line.adult", ADULT_WHERE, choices.adultWhere);
+  add("pic.line.often", OFTEN, choices.often);
   return out;
 }
 
 /** True when the taps say anything at all worth saving. */
 export function hasAnswers(choices: Choices): boolean {
-  return choices.what.length > 0 || Boolean(choices.where || choices.howMany || choices.kind || choices.often);
+  return choices.what.length > 0 || linesFor(choices, "en").length > 0;
 }
 
 /**
@@ -281,9 +348,30 @@ export interface Picks {
   kind: string[];
   often: string[];
   feel: string[];
+  // Follow-ups (lib/questions.ts decides which are asked).
+  whereOnline: string[];
+  taken: string[];
+  body: string[];
+  when: string[];
+  adultWhere: string[];
+  /** "Something else" in the child's own words: [text], or [] if none. */
+  own: string[];
 }
 
-export const NO_PICKS: Picks = { what: [], where: [], howMany: [], kind: [], often: [], feel: [] };
+export const NO_PICKS: Picks = {
+  what: [],
+  where: [],
+  howMany: [],
+  kind: [],
+  often: [],
+  feel: [],
+  whereOnline: [],
+  taken: [],
+  body: [],
+  when: [],
+  adultWhere: [],
+  own: [],
+};
 
 /**
  * One tap on a tile. "I don't want to say" stands alone: tapping it clears
@@ -302,14 +390,27 @@ function one<C extends string>(list: readonly Choice<C>[], picked: readonly stri
   return (code as C | undefined) ?? null;
 }
 
-/** The answers worth keeping: "no_say" and anything unknown drop out here. */
-export function choicesFrom(picks: Picks): Choices {
+/**
+ * The answers worth keeping: "no_say" and anything unknown drop out here.
+ *
+ * `asked` is the questions actually asked this time (lib/questions.ts
+ * `answersFor` passes it): an answer to a question the flow no longer asks,
+ * because the child went Back and changed an earlier answer, is dropped
+ * rather than left on the card. Omitted, every answer counts.
+ */
+export function choicesFrom(picks: Picks, asked?: ReadonlySet<keyof Picks>): Choices {
+  const use = (key: keyof Picks): string[] => (!asked || asked.has(key) ? picks[key] : []);
   return {
-    what: picks.what.filter((c): c is WhatCode => WHAT.some((choice) => choice.code === c)),
-    where: one(WHERE, picks.where),
-    howMany: one(HOW_MANY, picks.howMany),
-    kind: one(WHO_KIND, picks.kind),
-    often: one(OFTEN, picks.often),
+    what: use("what").filter((c): c is WhatCode => WHAT.some((choice) => choice.code === c)),
+    where: one(WHERE, use("where")),
+    howMany: one(HOW_MANY, use("howMany")),
+    kind: one(WHO_KIND, use("kind")),
+    often: one(OFTEN, use("often")),
+    whereOnline: one(WHERE_ONLINE, use("whereOnline")),
+    taken: one(TAKEN, use("taken")),
+    body: one(BODY, use("body")),
+    when: one(WHEN, use("when")),
+    adultWhere: one(ADULT_WHERE, use("adultWhere")),
   };
 }
 
@@ -318,8 +419,16 @@ export function choicesFrom(picks: Picks): Choices {
  * places mean school, online means online. Anything else asks again there,
  * because "at home" changes who is suggested and the pictures do not ask it.
  */
-export function handoffWhereFor(where: WhereCode | null | undefined): "school" | "online" | null {
-  if (where === "online") return "online";
+export function handoffWhereFor(
+  where: WhereCode | null | undefined,
+  adultWhere?: AdultWhere | null,
+  online?: boolean,
+): "school" | "home" | "online" | null {
+  // An adult from home means the handoff must not suggest family: start it
+  // at "home", which removes family from the list (HandoffSuggestions.ts).
+  if (adultWhere === "home") return "home";
+  if (adultWhere === "school") return "school";
+  if (where === "online" || online) return "online";
   if (where === "classroom" || where === "schoolyard" || where === "toilets" || where === "way_to_school") return "school";
   return null;
 }

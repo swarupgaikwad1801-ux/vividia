@@ -265,6 +265,12 @@ export const STRINGS = {
   "map.whoDid": { en: "Who", de: "Wer", hi: "कौन" },
   "map.often": { en: "How often", de: "Wie oft", hi: "कितनी बार" },
   "map.feelAbout": { en: "How it feels", de: "Wie es sich anfühlt", hi: "कैसा लगता है" },
+  "map.body": { en: "How your body feels", de: "Wie sich dein Körper anfühlt", hi: "शरीर कैसा है" },
+  "map.taken": { en: "What was taken", de: "Was weggenommen wurde", hi: "क्या लिया गया" },
+  "map.whereOnline": { en: "Where online", de: "Wo online", hi: "ऑनलाइन कहाँ" },
+  "map.when": { en: "When", de: "Wann", hi: "कब" },
+  "map.own": { en: "Your own words", de: "Deine eigenen Worte", hi: "तुम्हारे अपने शब्द" },
+  "map.adult": { en: "The adult", de: "Die erwachsene Person", hi: "वह वयस्क" },
   "map.card": { en: "Your card", de: "Deine Karte", hi: "तुम्हारा कार्ड" },
   "map.who": { en: "Who sees it", de: "Wer es sieht", hi: "कौन देखेगा" },
   "map.done": { en: "Done", de: "Fertig", hi: "हो गया" },
@@ -678,6 +684,69 @@ export const STRINGS = {
   "pic.line.where": { en: "Where: {x}", de: "Wo: {x}", hi: "कहाँ: {x}" },
   "pic.line.who": { en: "Who: {x}", de: "Wer: {x}", hi: "कौन: {x}" },
   "pic.line.often": { en: "How often: {x}", de: "Wie oft: {x}", hi: "कितनी बार: {x}" },
+
+  // Follow-up questions (lib/questions.ts): asked only after the answer they
+  // follow, and they repeat the child's own pick as a cue ("You said...").
+  // Never yes/no, never why. The German needs a native check.
+  "q.own.title": {
+    en: "You said something else happened. What happened?",
+    de: "Du hast gesagt, etwas anderes ist passiert. Was ist passiert?",
+    hi: "तुमने कहा कि कुछ और हुआ। क्या हुआ?",
+  },
+  "q.own.hint": {
+    en: "You can write it in your own words.",
+    de: "Du kannst es in deinen eigenen Worten schreiben.",
+    hi: "अपने शब्दों में लिखो।",
+  },
+  "q.whereOnline.title": {
+    en: "You said it happened online. Where online?",
+    de: "Du hast gesagt, es war online. Wo online?",
+    hi: "तुमने कहा कि यह ऑनलाइन हुआ। ऑनलाइन कहाँ?",
+  },
+  "q.taken.title": {
+    en: "You said things were taken. What was taken?",
+    de: "Du hast gesagt, dir wurden Sachen weggenommen. Was wurde weggenommen?",
+    hi: "तुमने कहा कि चीज़ें ली गईं। क्या लिया गया?",
+  },
+  "q.body.title": {
+    en: "You said you were pushed or hit. How does your body feel now?",
+    de: "Du hast gesagt, du wurdest geschubst oder geschlagen. Wie fühlt sich dein Körper jetzt an?",
+    hi: "तुमने कहा कि धक्का दिया गया या मारा गया। अभी शरीर कैसा लग रहा है?",
+  },
+  "q.when.title": {
+    en: "You said you were threatened. When did they say it would happen?",
+    de: "Du hast gesagt, du wurdest bedroht. Wann soll es passieren?",
+    hi: "तुमने कहा कि धमकाया गया। यह कब होने को कहा गया?",
+  },
+  "q.adult.title": {
+    en: "You said it was an adult. Where is this adult from?",
+    de: "Du hast gesagt, es war eine erwachsene Person. Woher kennst du die Person?",
+    hi: "तुमने कहा कि यह कोई वयस्क है। यह वयस्क कहाँ से है?",
+  },
+  "pic.online.chat": { en: "Group chat", de: "Gruppenchat", hi: "ग्रुप चैट" },
+  "pic.online.game": { en: "A game", de: "Ein Spiel", hi: "गेम" },
+  "pic.online.social": { en: "Social media", de: "Soziale Medien", hi: "सोशल मीडिया" },
+  "pic.online.messages": { en: "Messages", de: "Nachrichten", hi: "मैसेज" },
+  "pic.taken.lunch": { en: "My lunch", de: "Mein Essen", hi: "मेरा खाना" },
+  "pic.taken.money": { en: "Money", de: "Geld", hi: "पैसे" },
+  "pic.taken.phone": { en: "My phone", de: "Mein Handy", hi: "मेरा फ़ोन" },
+  "pic.taken.school_things": { en: "School things", de: "Schulsachen", hi: "स्कूल का सामान" },
+  "pic.body.fine": { en: "Fine", de: "Gut", hi: "ठीक है" },
+  "pic.body.hurts_bit": { en: "Hurts a bit", de: "Tut ein bisschen weh", hi: "थोड़ा दर्द है" },
+  "pic.body.hurts_lot": { en: "Hurts a lot", de: "Tut sehr weh", hi: "बहुत दर्द है" },
+  "pic.when.today": { en: "Today", de: "Heute", hi: "आज" },
+  // Not कल: in Hindi it means both yesterday and tomorrow (see PR #70).
+  "pic.when.tomorrow": { en: "Tomorrow", de: "Morgen", hi: "अगले दिन" },
+  "pic.when.later": { en: "Later", de: "Später", hi: "बाद में" },
+  "pic.when.dont_know": { en: "I don't know", de: "Weiß ich nicht", hi: "पता नहीं" },
+  "pic.adult.school": { en: "From school", de: "Aus der Schule", hi: "स्कूल से" },
+  "pic.adult.home": { en: "From home", de: "Von zu Hause", hi: "घर से" },
+  "pic.adult.elsewhere": { en: "Somewhere else", de: "Woanders", hi: "कहीं और" },
+  "pic.line.whereOnline": { en: "Where online: {x}", de: "Wo online: {x}", hi: "ऑनलाइन कहाँ: {x}" },
+  "pic.line.taken": { en: "What was taken: {x}", de: "Was weggenommen wurde: {x}", hi: "क्या लिया गया: {x}" },
+  "pic.line.body": { en: "Body now: {x}", de: "Körper jetzt: {x}", hi: "शरीर अभी: {x}" },
+  "pic.line.when": { en: "When it is meant to happen: {x}", de: "Wann es passieren soll: {x}", hi: "यह कब होने वाला है: {x}" },
+  "pic.line.adult": { en: "The adult is: {x}", de: "Die erwachsene Person ist: {x}", hi: "वह वयस्क: {x}" },
 
   // The sentence for each tap when the child said how many. {S} is pic.doer.*;
   // German {hat} becomes "hat" or "haben".
