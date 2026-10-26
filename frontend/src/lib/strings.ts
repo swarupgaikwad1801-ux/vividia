@@ -541,8 +541,9 @@ export const STRINGS = {
     hi: "इसे शब्दों में कहने के लिए धन्यवाद।",
   },
 
-  // Voice, both ways. Reading aloud uses the device's own speechSynthesis and
-  // leaves the phone; turning speech into text usually does not stay on it,
+  // Voice, both ways. Reading aloud stays on the phone only with a voice whose
+  // `localService` is true (some Chrome voices are online ones), so pick those
+  // or show voice.noVoice. Turning speech into text usually leaves the phone,
   // so voice.privacy must be shown wherever the mic button is.
   "voice.speak": { en: "Speak", de: "Sprechen", hi: "बोलें" },
   "voice.listening": {
