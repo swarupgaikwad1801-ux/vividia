@@ -19,13 +19,12 @@ export interface OnboardingCard {
   /** The `id` in `content/onboarding.json`. */
   id: string;
   key: StringKey;
+  /** The picture on the card. Decorative: the sentence says it all. */
+  picture: string;
 }
 
 export const ONBOARDING_CARDS: readonly OnboardingCard[] = [
-  { id: "what", key: "onboarding.what" },
-  { id: "you-decide", key: "onboarding.youDecide" },
-  { id: "where-words-go", key: "onboarding.whereWordsGo" },
-  { id: "check-meaning", key: "onboarding.checkMeaning" },
-  { id: "not-a-person", key: "onboarding.notAPerson" },
-  { id: "leave-now", key: "onboarding.leaveNow" },
+  { id: "what", key: "onboarding.what", picture: "💬" },
+  { id: "you-decide", key: "onboarding.youDecide", picture: "👀" },
+  { id: "leave-now", key: "onboarding.leaveNow", picture: "🚪" },
 ];

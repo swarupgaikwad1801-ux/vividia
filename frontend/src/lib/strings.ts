@@ -209,42 +209,32 @@ export const STRINGS = {
   "help.checkedYesterday": { en: "checked yesterday", de: "gestern geprüft", hi: "कल जाँचा गया" },
   "help.checkedDays": { en: "checked {n} days ago", de: "vor {n} Tagen geprüft", hi: "{n} दिन पहले जाँचा गया" },
 
-  // Onboarding (screens/Onboarding.tsx). The six cards are content/onboarding.json
-  // word for word; lib/onboarding.test.ts fails if the two drift, so edit both.
-  // Copied here rather than fetched so the first screen after the language
-  // works offline and never waits on the backend waking up.
+  // Onboarding (screens/Onboarding.tsx): three picture cards, one at a time.
+  // The cards are content/onboarding.json word for word; lib/onboarding.test.ts
+  // fails if the two drift, so edit both. Copied here rather than fetched so the
+  // first screen after the language works offline and never waits on the
+  // backend waking up. {button} is filled with quickExit.button.
   "onboarding.title": { en: "Before you start", de: "Bevor du anfängst", hi: "शुरू करने से पहले" },
   "onboarding.what": {
-    en: "This app helps you put into words what is happening to you, in your own language. It shows you a German version, so an adult you choose can understand you.",
-    de: "Diese App hilft dir, in Worte zu fassen, was dir passiert, damit ein Erwachsener, den du auswählst, dich verstehen kann.",
-    hi: "यह ऐप आपकी मदद करता है कि जो आपके साथ हो रहा है, उसे आप अपनी भाषा में शब्दों में कह सकें। यह आपको उसका जर्मन रूप दिखाता है, ताकि आपका चुना हुआ कोई बड़ा आपको समझ सके।",
+    en: "This app helps you tell an adult what happened. It is not a person and not a doctor.",
+    de: "Die App hilft dir, einem Erwachsenen zu sagen, was passiert ist. Sie ist kein Mensch und kein Arzt.",
+    hi: "यह ऐप किसी बड़े को यह बताने में मदद करता है कि क्या हुआ। यह कोई इंसान या डॉक्टर नहीं है।",
   },
   "onboarding.youDecide": {
-    en: "You decide. Nothing is sent to anyone unless you choose to show it. The app never tells anyone behind your back.",
-    de: "Du entscheidest. Nichts wird an jemanden geschickt, außer du zeigst es selbst. Die App erzählt niemandem etwas hinter deinem Rücken.",
-    hi: "फ़ैसला आपका है। जब तक आप ख़ुद न दिखाएँ, कुछ भी किसी को नहीं भेजा जाता। ऐप आपकी पीठ पीछे किसी को कुछ नहीं बताता।",
-  },
-  "onboarding.whereWordsGo": {
-    en: "To translate your words, the app sends them to a computer service. It does not keep them. Your list of what happened stays only on this phone, and you can delete it.",
-    de: "Um deine Worte zu prüfen, schickt die App sie an einen Computerdienst. Er speichert sie nicht. Deine Liste mit dem, was passiert ist, bleibt nur auf diesem Handy, und du kannst sie löschen.",
-    hi: "आपके शब्दों का अनुवाद करने के लिए ऐप उन्हें एक कंप्यूटर सेवा को भेजता है। वह उन्हें रखती नहीं है। जो हुआ उसकी आपकी सूची सिर्फ़ इसी फ़ोन पर रहती है, और आप उसे मिटा सकते हैं।",
-  },
-  "onboarding.checkMeaning": {
-    en: "If your words could mean two things, the app asks you what you meant. It never guesses.",
-    de: "Wenn deine Worte zwei Dinge bedeuten können, fragt dich die App, was du gemeint hast. Sie rät nie.",
-    hi: "अगर आपके शब्दों के दो मतलब हो सकते हैं, तो ऐप आपसे पूछता है कि आपका क्या मतलब था। वह कभी अंदाज़ा नहीं लगाता।",
-  },
-  "onboarding.notAPerson": {
-    en: "This app is not a person and not a doctor. It helps you reach people who can help.",
-    de: "Diese App ist kein Mensch und kein Arzt. Sie hilft dir, Menschen zu erreichen, die helfen können.",
-    hi: "यह ऐप कोई इंसान या डॉक्टर नहीं है। यह आपको उन लोगों तक पहुँचने में मदद करता है जो मदद कर सकते हैं।",
+    en: "You choose who sees it. The app tells nobody behind your back.",
+    de: "Du suchst aus, wer es sieht. Die App sagt niemandem heimlich etwas.",
+    hi: "कौन देखेगा, यह तुम चुनो। ऐप चुपके से किसी को कुछ नहीं बताता।",
   },
   "onboarding.leaveNow": {
-    en: "The \"Leave now\" button is at the top of every screen. It closes the app at once, but it does not delete your browser history.",
-    de: "Der Knopf „Sofort verlassen“ ist oben auf jedem Bildschirm. Damit schließt sich die App sofort, aber dein Browserverlauf wird nicht gelöscht.",
-    hi: "\"तुरंत बाहर निकलें\" बटन हर स्क्रीन पर ऊपर है। यह ऐप को तुरंत बंद कर देता है, लेकिन आपके ब्राउज़र की हिस्ट्री नहीं मिटाता।",
+    en: "“{button}” at the top closes the app fast. It does not delete your browser history.",
+    de: "„{button}“ oben schließt die App sofort. Dein Browser-Verlauf wird aber nicht gelöscht.",
+    hi: "ऊपर वाला “{button}” बटन ऐप तुरंत बंद करता है। पर ब्राउज़र की हिस्ट्री नहीं मिटती।",
   },
-  "onboarding.start": { en: "Start", de: "Los geht's", hi: "शुरू करें" },
+  // "1 of 3" next to the dots, so a screen reader hears where it is.
+  "onboarding.step": { en: "{n} of {total}", de: "{n} von {total}", hi: "{total} में से {n}" },
+  "onboarding.next": { en: "Next", de: "Weiter", hi: "आगे" },
+  "onboarding.skip": { en: "Skip", de: "Überspringen", hi: "छोड़ो" },
+  "onboarding.start": { en: "Start", de: "Los geht's", hi: "शुरू करो" },
   "onboarding.again": { en: "What this app does", de: "Was diese App macht", hi: "यह ऐप क्या करता है" },
 } as const satisfies Record<string, Text>;
 

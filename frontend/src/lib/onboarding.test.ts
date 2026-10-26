@@ -12,7 +12,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { ONBOARDING_CARDS } from "./onboarding";
-import { LANGS, STRINGS } from "./strings";
+import { LANGS, STRINGS, fill } from "./strings";
 
 interface Screen {
   id: string;
@@ -57,10 +57,31 @@ test("no card promises a help button on every screen", () => {
 
 test("the leave-now card names the real button and keeps the history caveat", () => {
   for (const lang of LANGS) {
-    const text = STRINGS["onboarding.leaveNow"][lang];
+    // The button's name is filled in from quickExit.button, so it can never
+    // be spelled differently from the button itself.
+    const text = fill("onboarding.leaveNow", lang, { button: STRINGS["quickExit.button"][lang] });
     assert.ok(text.includes(STRINGS["quickExit.button"][lang]), `names "Leave now" as the button says it (${lang})`);
+    assert.ok(!text.includes("{"), `no unfilled placeholder (${lang})`);
   }
   // CLAUDE.md: quick exit does not erase browser history, and the UI must not
   // imply that it does.
   assert.match(STRINGS["onboarding.leaveNow"].en, /does not delete your browser history/);
+});
+
+test("onboarding stays short: at most three cards, at most two sentences each", () => {
+  // Issue #3: six cards of promises made the app feel like an interview. Each
+  // promise belongs on the screen where it matters, not here.
+  assert.ok(ONBOARDING_CARDS.length <= 3, `${ONBOARDING_CARDS.length} cards`);
+  for (const card of ONBOARDING_CARDS) {
+    for (const lang of LANGS) {
+      const sentences = STRINGS[card.key][lang].split(/[.!?।]/).filter((s) => s.trim());
+      assert.ok(sentences.length <= 2, `${card.id} (${lang}) has ${sentences.length} sentences`);
+    }
+  }
+});
+
+test("the app still says it is not a person and not a doctor", () => {
+  // CLAUDE.md: a communication tool, not counselling; the UI says so. This
+  // card is the only place that says it.
+  assert.match(STRINGS["onboarding.what"].en, /not a person and not a doctor/);
 });
