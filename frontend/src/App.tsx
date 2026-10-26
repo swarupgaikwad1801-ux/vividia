@@ -83,9 +83,26 @@ type Step =
   | "timeline" // everything they have written
   | "report" // the bilingual report, approved word by word
   | "handoff" // choose who hears it
-  | "followUp" // has anything changed?
   | "escalation" // the next door, if the first one did not open
   | "pinSet"; // set or change the PIN
+
+/*
+ * Every member of `Step` must appear in at least one `setStep` call, or its
+ * screen is mounted and unreachable. Three were: `pinSet` and `followUp` had
+ * no entry point at all, and `escalation` was reachable only from `followUp`,
+ * so the escalation ladder was dead as well. A child could not set a PIN,
+ * which in turn meant the lock never engaged.
+ *
+ * `followUp` is no longer a step. It gates itself - `FollowUp` returns `null`
+ * unless `shouldAsk()` says the question is due, and records the answer
+ * itself - so it is rendered in place beside the check-in rather than
+ * navigated to. Making it a destination is what left it unreachable: a
+ * destination needs a caller who knows when to send the child there, and the
+ * thing that knows is the component.
+ *
+ * `App.reachable.test.ts` asserts this against this file's own source,
+ * because TypeScript cannot: a member nothing assigns is still a valid member.
+ */
 
 export default function App() {
   // Both read before the first render, so the app never flashes the wrong
@@ -198,14 +215,28 @@ export default function App() {
         <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
       )}
 
-      {step === "checkIn" && <CheckIn lang={lang} onChoose={afterCheckIn} />}
+      {step === "checkIn" && (
+        <main className="flex flex-col gap-6 px-4 py-6">
+          {/* Above the check-in, and self-gating: `FollowUp` renders nothing
+              unless a check-in is actually due, so this is not a screen the
+              child has to get past. It is here because this is the screen the
+              app opens on - "don't get dropped" means asking when they come
+              back, not waiting for them to go looking for the question. */}
+          <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
+          <CheckIn lang={lang} onChoose={afterCheckIn} />
+        </main>
+      )}
 
       {step === "write" && (
         <Write lang={lang} initialText={draft} onApproved={keepWords} onNeedHelp={needHelp} />
       )}
 
       {step === "timeline" && (
-        <Timeline lang={lang} onBuildReport={() => setStep("report")} />
+        <Timeline
+          lang={lang}
+          onBuildReport={() => setStep("report")}
+          onSetPin={() => setStep("pinSet")}
+        />
       )}
 
       {step === "report" && (
@@ -220,10 +251,6 @@ export default function App() {
       )}
 
       {step === "handoff" && <Handoff lang={lang} report={report} />}
-
-      {step === "followUp" && (
-        <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
-      )}
 
       {step === "escalation" && (
         <Escalation lang={lang} entries={entries} onOpen={() => setStep("handoff")} />

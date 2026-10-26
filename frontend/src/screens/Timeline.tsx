@@ -44,6 +44,7 @@ import { forgetEverything } from "../lib/forgetEverything";
 import PinRemovedNotice from "../components/PinRemovedNotice";
 import TimelineDeleteAll from "../components/TimelineDeleteAll";
 import TimelineEntryCard from "../components/TimelineEntryCard";
+import { pinStatus } from "../lib/pin";
 
 export interface TimelineProps {
   lang: Lang;
@@ -53,9 +54,20 @@ export interface TimelineProps {
    * that goes nowhere is worse than no button.
    */
   onBuildReport?: () => void;
+  /**
+   * The child wants to set or change the PIN.
+   *
+   * It lives here because this is the screen about their own stored words -
+   * the same screen that carries "delete everything" and the notice saying a
+   * PIN was removed. Until this existed, `PinSet` was mounted in `App.tsx` and
+   * nothing ever navigated to it, so a child could not set a PIN at all and
+   * the lock could never engage. Same rule as `onBuildReport`: no callback,
+   * no button.
+   */
+  onSetPin?: () => void;
 }
 
-export default function Timeline({ lang, onBuildReport }: TimelineProps) {
+export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProps) {
   // Read once on mount and after every change. `listEntries()` is called
   // before `isPersistent()` because a failed read is what flips that flag.
   const [entries, setEntries] = useState<StoredEntry[]>(() => listEntries());
@@ -146,6 +158,20 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
           </div>
         </>
       )}
+
+      {/* Outside the "has entries" branch on purpose: a child may want the
+          lock on before there is anything to lock, and setting it up first is
+          the sensible order, not an edge case. Quiet styling - it is a setting,
+          not a step in the journey. */}
+      {onSetPin ? (
+        <button
+          type="button"
+          onClick={onSetPin}
+          className="min-h-tap self-start rounded-card border border-line px-4 text-base font-medium text-ink"
+        >
+          {t(pinStatus() === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
+        </button>
+      ) : null}
     </main>
   );
 }
