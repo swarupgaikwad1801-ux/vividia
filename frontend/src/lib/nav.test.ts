@@ -68,8 +68,9 @@ test("'change it' on the card goes to the timeline without a loop", () => {
 });
 
 test("the follow-up branch goes back through the ladder", () => {
-  const trail = walk("checkIn", "followUp", "escalation", "handoff");
-  assert.deepEqual(backAll(trail), ["escalation", "followUp", "checkIn"]);
+  // The follow-up question sits on the check-in, so the ladder opens from there.
+  const trail = walk("checkIn", "escalation", "handoff");
+  assert.deepEqual(backAll(trail), ["escalation", "checkIn"]);
 });
 
 test("the PIN screen goes back to where it was opened", () => {
@@ -81,7 +82,7 @@ test("the lock is not a step, so no trail can hold it", () => {
   // A compile-time fact, checked at runtime too: "locked" is not a Step.
   const steps: Step[] = [
     "language", "onboarding", "checkIn", "write", "timeline", "report", "handoff",
-    "handoffShow", "handoffDone", "followUp", "escalation", "pinSet",
+    "handoffShow", "handoffDone", "escalation", "pinSet",
   ];
   assert.ok(!(steps as string[]).includes("locked"));
 });

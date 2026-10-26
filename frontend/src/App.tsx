@@ -261,7 +261,11 @@ export default function App() {
       )}
 
       {step === "timeline" && (
-        <Timeline lang={lang} onBuildReport={() => setStep("report")} />
+        <Timeline
+          lang={lang}
+          onBuildReport={() => setStep("report")}
+          onSetPin={() => setStep("pinSet")}
+        />
       )}
 
       {step === "report" && (
@@ -303,10 +307,6 @@ export default function App() {
       )}
 
       {step === "handoffDone" && <HandoffDone lang={lang} onHome={() => setStep("checkIn")} />}
-
-      {step === "followUp" && (
-        <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
-      )}
 
       {step === "escalation" && (
         <Escalation lang={lang} entries={entries} onOpen={() => setStep("handoff")} />

@@ -27,9 +27,15 @@ export type Step =
   | "handoff" // choose who sees it
   | "handoffShow" // the card, big, to hold up to that person
   | "handoffDone" // "in a few days, the app will ask how things are"
-  | "followUp" // has anything changed?
   | "escalation" // the next door, if the first one did not open
   | "pinSet"; // set or change the PIN
+
+/*
+ * Every member must have a door: some navigation in App.tsx that reaches it
+ * (Vernika's #82). `followUp` is not a step: `FollowUp` gates itself and is
+ * rendered in place above the check-in, which is where its door to
+ * `escalation` is. `App.reachable.test.ts` checks this union against App.tsx.
+ */
 
 export const HOME: Step = "checkIn";
 
