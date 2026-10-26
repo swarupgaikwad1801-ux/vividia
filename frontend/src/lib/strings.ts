@@ -623,6 +623,10 @@ export const STRINGS = {
   // The 🌐 button on the check-in, and the heading of the screen it opens.
   // Hinglish in the "tum" form, like the rest.
   "lang.change": { en: "Change language", de: "Sprache ändern", hi: "Language badlo" },
+  // The speaker button (components/ReadAloud.tsx). Shown in English on
+  // Hinglish screens (ENGLISH_IN_HINGLISH), like the other buttons.
+  "read.aloud": { en: "Read aloud", de: "Vorlesen", hi: "Padh kar sunao" },
+  "read.stop": { en: "Stop reading", de: "Vorlesen stoppen", hi: "Ruko" },
 
   // Picture questions (screens/PictureQuestions.tsx). Open questions, never
   // yes/no, never leading, never "why" (see that file's header).
@@ -809,6 +813,8 @@ export const ENGLISH_IN_HINGLISH: ReadonlySet<StringKey> = new Set<StringKey>([
   "nav.back",
   "nav.next",
   "lang.change",
+  "read.aloud",
+  "read.stop",
   "onboarding.title",
   "onboarding.again",
   "onboarding.next",
