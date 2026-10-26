@@ -127,6 +127,12 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
+  // The timeline screen deletes entries in storage directly, so read them
+  // again on every move: the card must never show a sentence the child deleted.
+  useEffect(() => {
+    refreshEntries();
+  }, [step, refreshEntries]);
+
   const chooseLang = useCallback(
     (next: Lang) => {
       setLang(next);
@@ -272,6 +278,7 @@ export default function App() {
       {step === "handoff" && (
         <Handoff
           lang={lang}
+          entries={entries}
           report={report}
           initialWhere={where}
           initialAdult={adult}
@@ -284,9 +291,10 @@ export default function App() {
         />
       )}
 
-      {step === "handoffShow" && report && where && (
+      {step === "handoffShow" && where && (
         <HandoffShow
           lang={lang}
+          entries={entries}
           report={report}
           where={where}
           chosen={adult}

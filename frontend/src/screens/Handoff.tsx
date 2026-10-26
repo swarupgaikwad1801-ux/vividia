@@ -27,10 +27,12 @@ import HandoffCard from "../components/HandoffCard.tsx";
 import HandoffWhere from "../components/HandoffWhere.tsx";
 import { isWhereItHappens, type AdultId, type WhereItHappens } from "../components/HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
-import type { ReportResponse } from "../types/api.ts";
+import type { Entry, ReportResponse } from "../types/api.ts";
 
 export interface HandoffProps {
   lang: string;
+  /** The child's saved entries: what the card shows. */
+  entries?: readonly Entry[];
   /** The report the child approved in step 3, or null if there is none yet. */
   report?: ReportResponse | null;
   /** True while that report is being built. */
@@ -51,13 +53,14 @@ export interface HandoffProps {
   initialAdult?: AdultId | null;
   /**
    * Go on to the big card (issue #3: handoff was a dead end). The Next button
-   * appears only once there is an approved report to show.
+   * appears only once there is something approved to show.
    */
   onNext?: () => void;
 }
 
 export default function Handoff({
   lang,
+  entries = [],
   report = null,
   loading = false,
   error = null,
@@ -127,6 +130,7 @@ export default function Handoff({
       ) : (
         <>
           <HandoffCard
+            entries={entries}
             lang={lang}
             where={where}
             chosen={chosen}
@@ -137,7 +141,7 @@ export default function Handoff({
             onRetry={onRetry ?? null}
           />
 
-          {report && !loading && !error && onNext && (
+          {(entries.length > 0 || report) && !loading && !error && onNext && (
             <button
               type="button"
               onClick={onNext}

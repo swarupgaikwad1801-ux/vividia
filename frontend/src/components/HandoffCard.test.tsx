@@ -94,10 +94,33 @@ test("the card has no way to send anything", () => {
   }
 });
 
-test("the adult's half of the card is in German and marked as German", () => {
+test("the choice screen speaks only the child's language: no German on it", () => {
+  // Issue #3 (Neel): one language per screen. The German is on the big card
+  // that comes next, behind its language switch (HandoffShow.test.tsx).
   const markup = render("home", "hi");
-  assert.ok(markup.includes(REPORT.german_version));
-  assert.ok(markup.includes('lang="de"'));
+  assert.ok(!markup.includes(REPORT.german_version));
+  assert.ok(!markup.includes('lang="de"'));
+  assert.ok(!markup.includes(STRINGS["handoff.socialWorker"].de));
+  assert.ok(markup.includes(REPORT.child_version));
+});
+
+test("the card shows the child's own saved words before any summary", () => {
+  const markup = renderToStaticMarkup(
+    createElement(HandoffCard, {
+      entries: [{ date: "2026-10-20", mood: "sad", text_child: "My own sentence.", text_de: "Mein eigener Satz." }],
+      lang: "en",
+      where: "school",
+      chosen: null,
+      onChoose: () => {},
+      report: REPORT,
+      loading: false,
+      error: null,
+      onRetry: null,
+    }),
+  );
+  assert.ok(markup.includes("My own sentence."));
+  assert.ok(!markup.includes(REPORT.child_version));
+  assert.ok(!markup.includes("Mein eigener Satz."));
 });
 
 test("the card leads with one suggested adult", () => {

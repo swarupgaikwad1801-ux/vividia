@@ -239,6 +239,12 @@ export const STRINGS = {
   "lang.hi": { en: "Hindi", de: "Hindi", hi: "हिंदी" },
   "lang.uk": { en: "Ukrainian", de: "Ukrainisch", hi: "यूक्रेनी" },
 
+  // The language switch on the card the child shows an adult
+  // (components/CardLanguageSwitch.tsx). "Auf Deutsch" stays German in every
+  // language: it is the adult who reads and taps it.
+  "card.german": { en: "Auf Deutsch", de: "Auf Deutsch", hi: "Auf Deutsch" },
+  "card.languageSwitch": { en: "Choose the language", de: "Sprache wählen", hi: "भाषा चुनो" },
+
   // The language note next to each helpline. {list} is the languages joined
   // with help.and; "only" is added when the child's language is not among them.
   "help.and": { en: " and ", de: " und ", hi: " और " },
@@ -299,12 +305,6 @@ export const STRINGS = {
     en: "You said this is right.",
     de: "Du hast gesagt: Das stimmt.",
     hi: "तुमने कहा कि यह सही है।",
-  },
-  // Must keep saying that the words leave the phone (CLAUDE.md, privacy).
-  "report.cloudNote": {
-    en: "To make the German, your words go to a translation service on the internet and come straight back. Our server keeps no copy. The service does not keep them either.",
-    de: "Für das Deutsch gehen deine Worte zu einem Übersetzungsdienst im Internet und kommen gleich zurück. Unser Server behält keine Kopie. Der Dienst behält sie auch nicht.",
-    hi: "जर्मन बनाने के लिए तुम्हारे शब्द इंटरनेट पर एक अनुवाद सेवा के पास जाते हैं और तुरंत लौट आते हैं। हमारा सर्वर कोई कॉपी नहीं रखता। वह सेवा भी उन्हें नहीं रखती।",
   },
   "report.offline": {
     en: "There is no internet, so the card can't be made yet. What you saved is still here.",
