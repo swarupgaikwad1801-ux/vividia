@@ -114,6 +114,15 @@ export const STRINGS = {
   "approve.title": { en: "Is this right?", de: "Stimmt das so?", hi: "क्या यह सही है?" },
   "approve.yes": { en: "Yes, save it", de: "Ja, speichern", hi: "हाँ, सेव करें" },
   "approve.change": { en: "Change it", de: "Ändern", hi: "बदलें" },
+  // Deliberately scoped to adults rather than "nothing leaves": the German was
+  // written in the cloud, so a flat "nothing leaves this phone" would be the
+  // claim CLAUDE.md forbids. What is true, and what the child is deciding
+  // about, is that no person is shown anything until they press yes.
+  "approve.nothingGoes": {
+    en: "Nothing goes to an adult until you press yes.",
+    de: "Nichts geht an Erwachsene, bevor du auf Ja drückst.",
+    hi: "जब तक आप हाँ नहीं दबाते, कुछ भी किसी बड़े के पास नहीं जाता।",
+  },
 
   "timeline.title": { en: "What happened so far", de: "Was bisher passiert ist", hi: "अब तक क्या हुआ" },
   "timeline.empty": {

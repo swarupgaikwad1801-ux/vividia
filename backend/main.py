@@ -30,6 +30,9 @@ from app.schemas import (
     EmergencyResponse,
     Entry,
     ErrorResponse,
+    GuideResponse,
+    GuideStep,
+    LadderRung,
     HealthResponse,
     ReportRequest,
     ReportResponse,
@@ -355,19 +358,88 @@ def _content_file(path) -> dict:
         raise ChildSafeError(error, "en") from error
 
 
-@app.get("/api/guide")
-async def guide() -> dict:
-    """The trusted adult's 5-minute guide and the escalation ladder.
+# The guide exists in these two. The adult the child chooses is, in this
+# deployment, most often a teacher in a German school, so German is the
+# default rather than English.
+GUIDE_LANGS = ("de", "en")
+GUIDE_FALLBACK = "de"
 
-    Served as content/adult_guide.json is, for the same reason /api/demo has
-    no response model: the wording is Neel's and changes without a schema
-    change. Every step keeps its source key, and `sources` maps those keys to
-    the pages they come from, so the handoff card can link each one.
 
-    No model call, outside the spending cap: the adult has to be able to read
-    this on the day the demo has spent its allowance.
+@app.get("/api/guide", response_model=GuideResponse)
+async def guide(lang: str = GUIDE_FALLBACK) -> GuideResponse:
+    """The 5-minute guide for the adult the child chose to tell.
+
+    One language, chosen here rather than on the screen: the adult reads one,
+    and sending both would put the choice in the component that knows least
+    about it. The response says which language it actually served, because
+    the guide exists in de and en only - a child who writes Hindi may well
+    hand the phone to someone who reads German, and the screen must be able
+    to set `lang` on the element rather than assume.
+
+    Each step's `source` key is resolved to the URL from the file's own
+    `sources` map, so the handoff card can link a step without carrying a
+    copy of that map. A step that cites nothing gets `null` rather than a
+    guess: a claim about how to treat a child who has just disclosed should
+    carry its source, and a missing one should be visible.
+
+    The wording changes without a schema change, which is why this served the
+    file as-is until now. The shape does not change, and the shape is what
+    the screen is built against.
+
+    No model call and no Tavily, so it stays outside the spending cap: the
+    adult has to be able to read this on a day the demo has spent its
+    allowance. `/api/onboarding` below still serves its file whole, because
+    nothing is built against it yet.
     """
-    return _without_notes(_content_file(ADULT_GUIDE))
+    served = lang if lang in GUIDE_LANGS else GUIDE_FALLBACK
+    data = _without_notes(_content_file(ADULT_GUIDE))
+    guide_text = data.get("guide", {})
+    sources = data.get("sources", {})
+
+    steps = [
+        GuideStep(
+            text=step[served],
+            # .get, not [], and None rather than "": an absent source must
+            # read as "this step cites nothing" and not as a broken link.
+            source_url=sources.get(step.get("source")) if step.get("source") else None,
+        )
+        for step in guide_text.get("steps", [])
+        if isinstance(step, dict) and step.get(served)
+    ]
+    if not steps:
+        raise ChildSafeError(ValueError(f"no guide steps for {served!r}"), served)
+
+    # The ladder is the CHILD's, not the adult's, and rides along because it
+    # lives in the same file. In FILE ORDER, never sorted: the order is the
+    # content, and a child who has already been to the head of year should
+    # never be sent back to their form teacher.
+    #
+    # `emergency` is dropped. The file lists it as a sixth rung and
+    # lib/followups.ts deliberately leaves it out of LADDER, because an
+    # emergency is not an escalation: 110 is what you do INSTEAD of climbing,
+    # not the next thing to try after the school psychologist did not answer.
+    # Serving it would hand every screen a rung reading "call the police" and
+    # rely on each one remembering to filter it. The rule belongs in one
+    # place, and the safer place is here.
+    #
+    # The numbers are still one tap away on every screen, from
+    # /api/emergency, which is where they belong.
+    ladder = [
+        LadderRung(id=rung["id"], text=rung[served])
+        for rung in data.get("escalation_ladder", {}).get("steps", [])
+        if isinstance(rung, dict) and rung.get("id") and rung.get(served)
+        and rung["id"] != "emergency"
+    ]
+
+    return GuideResponse(
+        lang=served,
+        title=guide_text.get("title", {}).get(served, ""),
+        steps=steps,
+        footer=guide_text.get("footer", {}).get(served, ""),
+        checked_on=data.get("checked_on", ""),
+        ladder=ladder,
+        home_rule=data.get("escalation_ladder", {}).get("home_rule", ""),
+    )
 
 
 @app.get("/api/onboarding")

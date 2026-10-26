@@ -39,10 +39,14 @@ import { useCallback, useState } from "react";
 import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
 import type { StoredEntry } from "../lib/timeline";
-import { clearAll, isPersistent, listEntries, removeEntry } from "../lib/timeline";
+import { isPersistent, listEntries, removeEntry } from "../lib/timeline";
+import { forgetEverything } from "../lib/forgetEverything";
+import PinRemovedNotice from "../components/PinRemovedNotice";
 import TimelineDeleteAll from "../components/TimelineDeleteAll";
 import TimelineEntryCard from "../components/TimelineEntryCard";
 import { tPending } from "../components/TimelinePendingStrings";
+import { pinText } from "../components/pinText";
+import { pinStatus } from "../lib/pin";
 
 export interface TimelineProps {
   lang: Lang;
@@ -52,9 +56,20 @@ export interface TimelineProps {
    * that goes nowhere is worse than no button.
    */
   onBuildReport?: () => void;
+  /**
+   * The child wants to set or change the PIN.
+   *
+   * It lives here because this is the screen about their own stored words -
+   * the same screen that carries "delete everything" and the notice saying a
+   * PIN was removed. Until this existed, `PinSet` was mounted in `App.tsx` and
+   * nothing ever navigated to it, so a child could not set a PIN at all and
+   * the lock could never engage. Same rule as `onBuildReport`: no callback,
+   * no button.
+   */
+  onSetPin?: () => void;
 }
 
-export default function Timeline({ lang, onBuildReport }: TimelineProps) {
+export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProps) {
   // Read once on mount and after every change. `listEntries()` is called
   // before `isPersistent()` because a failed read is what flips that flag.
   const [entries, setEntries] = useState<StoredEntry[]>(() => listEntries());
@@ -76,13 +91,23 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
   );
 
   const deleteEverything = useCallback(() => {
-    clearAll();
+    // Not clearAll(): that empties the timeline and leaves the check-in
+    // schedule, the handoff record and the note about the PIN behind. A
+    // child who pressed this was told everything was gone while the app
+    // still remembered that they had taken a report to a teacher.
+    // forgetEverything() is the one place that knows the full list.
+    forgetEverything();
     setStatus(tPending("timeline.deletedAll", lang));
     refresh();
   }, [lang, refresh]);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
+      {/* If someone removed the PIN without knowing it, this is where the
+          child finds out. On the timeline because that is the screen they
+          open to see their own words - the place they would notice. */}
+      <PinRemovedNotice lang={lang} />
+
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">{t("timeline.title", lang)}</h1>
         {/* Only ever a claim about this list. Never about the whole app. */}
@@ -135,6 +160,20 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
           </div>
         </>
       )}
+
+      {/* Outside the "has entries" branch on purpose: a child may want the
+          lock on before there is anything to lock, and setting it up first is
+          the sensible order, not an edge case. Quiet styling - it is a setting,
+          not a step in the journey. */}
+      {onSetPin ? (
+        <button
+          type="button"
+          onClick={onSetPin}
+          className="min-h-tap self-start rounded-card border border-line px-4 text-base font-medium text-ink"
+        >
+          {pinText(pinStatus() === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
+        </button>
+      ) : null}
     </main>
   );
 }

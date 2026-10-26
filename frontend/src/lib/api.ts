@@ -15,6 +15,7 @@ import type {
   ClarifyResponse,
   Entry,
   EmergencyResponse,
+  GuideResponse,
   ErrorCode,
   ErrorResponse,
   HealthResponse,
@@ -142,6 +143,21 @@ export function resources(lang: string, state = ""): Promise<ResourcesResponse> 
  */
 export function emergency(lang = "en"): Promise<EmergencyResponse> {
   return request("/api/emergency", lang, { method: "GET" }, QUICK_MS);
+}
+
+/**
+ * The 5-minute guide for the adult, in one language.
+ *
+ * `lang` is a request, not a guarantee: the guide exists in de and en, and
+ * the response says which was served. Read `response.lang`, do not assume
+ * the one you asked for.
+ *
+ * No model call and outside the spending cap, so this answers on a day the
+ * demo has spent its allowance.
+ */
+export function guide(lang = "de"): Promise<GuideResponse> {
+  const query = new URLSearchParams({ lang });
+  return request(`/api/guide?${query}`, lang, { method: "GET" }, QUICK_MS);
 }
 
 export function health(): Promise<HealthResponse> {
