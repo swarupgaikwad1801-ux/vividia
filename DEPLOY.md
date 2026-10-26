@@ -1,10 +1,21 @@
-# Deploying the backend
+# Deploying
+
+Two services: the **backend** (FastAPI, Docker, on Render) and the
+**frontend** (static Vite build, on Vercel). The URL judges visit is the
+frontend's. Hard requirement 5 is not met until that URL loads and a
+translation comes back through it.
 
 The demo must stay up for judges from submission until **15 Dec 2026**, so the
 goal here is "cheap and boring", not clever.
 
 Nothing in this file needs a key in the repository. Keys go in the host's
 dashboard, and `.env` never leaves your machine.
+
+**Order matters.** The backend's `ALLOWED_ORIGINS` needs the frontend's URL,
+and the frontend's `VITE_API_URL` needs the backend's. Deploy the backend
+first, deploy the frontend with the backend's URL, then come back and set
+`ALLOWED_ORIGINS` to the frontend's URL. The second visit to the Render
+dashboard is not optional — skip it and every call fails CORS.
 
 ## Check the image before trusting it
 
@@ -77,6 +88,99 @@ ways to satisfy the platform requirement, and we already satisfy the other
 If the quota request is still pending (several teams hit
 `compute.instance.non-gpu.vcpu = 0`), do not wait on it. Ship on Render and
 move on.
+
+## Deploying the frontend (Vercel)
+
+This is the URL judges open, so it is the one that has to be right.
+
+`frontend/vercel.json` holds the build settings, so the dashboard needs almost
+nothing. The one thing it cannot hold is the API URL, for the reason below.
+
+1. vercel.com → **Add New** → **Project** → import `swarupgaikwad1801-ux/vividia`.
+2. **Root Directory:** `frontend`. Vercel then reads `frontend/vercel.json`
+   and picks up the framework, build command and output directory itself.
+3. **Environment Variables** → add `VITE_API_URL`, set to the Render URL with
+   **no trailing slash**, e.g. `https://vividia-api.onrender.com`.
+4. Deploy. Then do the backend's `ALLOWED_ORIGINS` step with the URL Vercel
+   gives you.
+
+### `VITE_API_URL` is baked in at build time, not read at runtime
+
+This is the trap worth knowing about before it costs an hour.
+
+Vite replaces `import.meta.env` with a literal object when it builds, so
+`VITE_API_URL` is compiled **into** `dist/assets/index-*.js`. The consequence:
+
+> **Editing `VITE_API_URL` in the Vercel dashboard changes nothing until you
+> redeploy.** The old URL stays compiled into the bundle being served.
+
+So after any change to it, trigger a new deployment. To check which URL a
+build actually contains, search the served bundle for it rather than trusting
+the dashboard:
+
+```bash
+curl -s https://<your-app>.vercel.app/assets/index-*.js | grep -o 'https://[a-z0-9.-]*onrender.com'
+```
+
+If that prints nothing, `VITE_API_URL` was unset at build time. The client
+then falls back to `""`, which means same-origin: the app POSTs to
+`https://<your-app>.vercel.app/api/translate`, nothing is there, and the child
+sees the generic "something went wrong" message with no clue why.
+
+### `ALLOWED_ORIGINS` must match the origin exactly
+
+An origin is scheme + host + port. `https://vividia.vercel.app` and
+`https://vividia.vercel.app/` are not the same string to the middleware, and
+`http://localhost:4173` and `http://127.0.0.1:4173` are **different origins**
+even though they are the same machine. A mismatch shows up as a failed
+`OPTIONS` preflight, which in the browser looks like a network error rather
+than a CORS error, so it is easy to misread as the backend being down.
+
+Vercel also gives every deployment its own preview URL. Those are not in
+`ALLOWED_ORIGINS`, so **preview deployments cannot call the API**. Test on the
+production URL, or add the preview origin while you need it.
+
+## Verifying it before a judge does
+
+Run these in order. Each one fails for a different reason, which is the point.
+
+```bash
+# 1. The backend is up and using real models, not the mock.
+curl https://<api>.onrender.com/api/health
+#    -> {"status":"ok","engine":"live","models":{...}}
+#    "engine":"mock" means ENGINE_MODE never reached the container.
+
+# 2. The frontend is served.
+curl -sI https://<app>.vercel.app | head -1      # -> 200
+
+# 3. The bundle carries the right API URL (see the trap above).
+curl -s https://<app>.vercel.app/assets/index-*.js | grep -o 'onrender.com'
+
+# 4. CORS actually passes, which steps 1-3 do not prove.
+curl -i -X OPTIONS https://<api>.onrender.com/api/translate \
+  -H "Origin: https://<app>.vercel.app" \
+  -H "Access-Control-Request-Method: POST"
+#    -> 200, with access-control-allow-origin echoing your frontend URL
+```
+
+Then open the app and send one sentence. **Read the German.** If it comes back
+unrelated to what you typed, the backend is in mock mode: `engine/mock.py`
+returns a fixed sentence and ignores its input entirely. Typing "they took my
+bag and pushed me in the corridor" and getting "...weggenommen und alle haben
+über mich gelacht" is the mock, not a translation failure — and it is the
+centrepiece of the demo, so it must not happen in front of a judge. Step 1 is
+what catches it; this is the symptom if you skip step 1.
+
+### What this shape was tested against
+
+The frontend/backend split above was verified end to end locally on
+26 Oct 2026 before either half was deployed: production build (`npm run build`)
+served by `vite preview` on one origin, the backend on another, with
+`ALLOWED_ORIGINS` set to the first. A sentence typed into the built bundle
+produced `OPTIONS /api/translate 200` followed by `POST /api/translate 200` in
+the backend log, and German rendered on screen. That proves the build, the
+inlined `VITE_API_URL`, the CORS pairing and the API client agree with each
+other. It does **not** prove anything about Render, Vercel or live models.
 
 ## After deploying
 
