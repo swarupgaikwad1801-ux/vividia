@@ -28,8 +28,18 @@ import { basename } from "node:path";
 /** The directories this feature owns. */
 const ROOTS = ["../lib-followups-ui", "../screens", "../components"] as const;
 
-/** In `components/` only these two prefixes are mine; the rest is Vernika's. */
-const MY_COMPONENT = /^(FollowUp|Escalation)/;
+/**
+ * `components/` and `screens/` are shared directories: this feature owns the
+ * `FollowUp*` and `Escalation*` files in them and nothing else.
+ *
+ * The prefix test used to be applied to `components/` alone, so the scan read
+ * every screen in the app. `screens/Report.tsx` (#57) then failed it, because
+ * it POSTs to `/api/report` - which it is supposed to do, after the child has
+ * approved the words one by one. A scan that fails on another feature's
+ * correct behaviour stops being a guard and becomes something to switch off,
+ * which would cost the real protection.
+ */
+const MINE = /^(FollowUp|Escalation)/;
 
 const SELF = basename(new URL(import.meta.url).pathname);
 
@@ -44,7 +54,9 @@ function filesUnder(root: string): { name: string; source: string }[] {
   return names
     .filter((name) => /\.tsx?$/.test(name))
     .filter((name) => name !== SELF)
-    .filter((name) => !root.endsWith("components") || MY_COMPONENT.test(name))
+    // Only lib-followups-ui is wholly this feature's; the other two roots
+    // are shared, so there the prefix decides.
+    .filter((name) => root.endsWith("lib-followups-ui") || MINE.test(name))
     .map((name) => ({
       name: `${root.replace("../", "")}/${name}`,
       source: readFileSync(new URL(name, dir), "utf-8"),
