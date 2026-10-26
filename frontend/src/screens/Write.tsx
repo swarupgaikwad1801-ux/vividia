@@ -6,7 +6,7 @@ import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
 import WriteSafetyNote from "../components/WriteSafetyNote.tsx";
-import { tt } from "../components/WriteStrings.ts";
+
 
 /**
  * "Find the words" — the child writes in their own language and sees the
@@ -287,7 +287,7 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
                 disabled={!online}
                 className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50 sm:flex-1"
               >
-                {tt("write.retry", lang)}
+                {t("write.retry", lang)}
               </button>
             )}
             <button

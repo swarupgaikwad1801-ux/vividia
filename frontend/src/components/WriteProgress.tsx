@@ -1,5 +1,17 @@
-import { t } from "../lib/strings.ts";
-import { shortSeconds, tt, ttCount } from "./WriteStrings.ts";
+import { fill, t } from "../lib/strings.ts";
+
+/**
+ * The unit on the visible timer. "s" is the SI symbol and reads the same in
+ * all three languages, so the number next to it is not translated wrongly
+ * while nobody who speaks German or Hindi is here to check it.
+ *
+ * Not in strings.ts on purpose: it is a unit, not wording, so it needs no
+ * Hindi review and should not be sitting in the file that does.
+ */
+function shortSeconds(n: number): string {
+  return `${n} s`;
+}
+
 
 /**
  * The wait while the words are being checked.
@@ -73,15 +85,15 @@ export default function WriteProgress({ lang, elapsedMs, onStop }: WriteProgress
         />
       </div>
 
-      <p className="text-sm text-ink-soft">{tt("write.whatWeDo", lang)}</p>
+      <p className="text-sm text-ink-soft">{t("write.whatWeDo", lang)}</p>
 
       {elapsedMs >= LONG_MS && (
-        <p className="text-sm text-ink-soft">{tt("write.stillWorking", lang)}</p>
+        <p className="text-sm text-ink-soft">{t("write.stillWorking", lang)}</p>
       )}
 
       <p className="sr-only" role="status" aria-live="polite">
         {announcedSeconds > 0
-          ? `${t("write.checking", lang)} ${ttCount("write.secondsLong", announcedSeconds, lang)}`
+          ? `${t("write.checking", lang)} ${fill("write.secondsLong", lang, { n: announcedSeconds })}`
           : t("write.checking", lang)}
       </p>
 
@@ -92,7 +104,7 @@ export default function WriteProgress({ lang, elapsedMs, onStop }: WriteProgress
         onClick={onStop}
         className="min-h-tap self-start rounded-card border border-line px-4 text-base font-medium text-ink-soft"
       >
-        {tt("write.stop", lang)}
+        {t("write.stop", lang)}
       </button>
     </section>
   );

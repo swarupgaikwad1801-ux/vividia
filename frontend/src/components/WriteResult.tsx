@@ -1,6 +1,5 @@
 import type { TranslateResponse } from "../types/api.ts";
-import { t } from "../lib/strings.ts";
-import { tt, ttCount } from "./WriteStrings.ts";
+import { fill, t } from "../lib/strings.ts";
 
 /**
  * The child's own words and the German, side by side.
@@ -46,7 +45,7 @@ export default function WriteResult({ lang, childText, result, decidedByChild }:
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <h2 className="text-sm font-medium text-ink-soft">{tt("write.yourWords", lang)}</h2>
+          <h2 className="text-sm font-medium text-ink-soft">{t("write.yourWords", lang)}</h2>
           {/* whitespace-pre-line: the child's line breaks are part of what they wrote. */}
           <p lang={lang} className="whitespace-pre-line text-base">
             {childText}
@@ -62,13 +61,13 @@ export default function WriteResult({ lang, childText, result, decidedByChild }:
 
       {decidedByChild && (
         <p className="rounded-card bg-calm-soft p-3 text-sm text-ink">
-          {tt("write.yourChoiceUsed", lang)}
+          {t("write.yourChoiceUsed", lang)}
         </p>
       )}
 
       <div className="flex flex-col gap-2 border-t border-line pt-3">
         <div className="flex items-baseline justify-between gap-3 text-sm">
-          <span className="text-ink-soft">{tt("write.agreement", lang)}</span>
+          <span className="text-ink-soft">{t("write.agreement", lang)}</span>
           <span className="font-medium tabular-nums">{agreement}%</span>
         </div>
         {/* Decorative twin of the number above it, hence aria-hidden: the
@@ -77,12 +76,14 @@ export default function WriteResult({ lang, childText, result, decidedByChild }:
         <div aria-hidden="true" className="h-1.5 overflow-hidden rounded-full bg-calm-soft">
           <div className="h-full rounded-full bg-calm" style={{ width: `${agreement}%` }} />
         </div>
-        <p className="text-xs text-ink-soft">{tt("write.agreementNote", lang)}</p>
+        <p className="text-xs text-ink-soft">{t("write.agreementNote", lang)}</p>
         {/* The live check count from the engine. Shown because the work is the
             product: a child (and a judge) can see that more than one pass
             looked at this sentence. Real numbers from `usage`, never invented. */}
         <p className="text-xs tabular-nums text-ink-soft">
-          {ttCount("write.checks", result.usage.calls_made, lang)} ·{" "}
+          {result.usage.calls_made === 1
+            ? t("write.checksOne", lang)
+            : fill("write.checks", lang, { n: result.usage.calls_made })} ·{" "}
           {latencySeconds.toFixed(1)} s
         </p>
       </div>

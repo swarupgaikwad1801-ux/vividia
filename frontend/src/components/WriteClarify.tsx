@@ -1,6 +1,5 @@
 import type { Ambiguity } from "../types/api.ts";
 import { t } from "../lib/strings.ts";
-import { tt } from "./WriteStrings.ts";
 
 /**
  * The question to the child — the thing this whole product is for.
@@ -100,7 +99,7 @@ export default function WriteClarify({
                 // Marks the questions where the two readings change who did
                 // what, or flip a negation. Text, not a colour alone.
                 <span className="w-fit rounded-card bg-help-soft px-2 py-0.5 text-xs font-medium text-help">
-                  {tt("clarify.important", lang)}
+                  {t("clarify.important", lang)}
                 </span>
               )}
             </legend>
@@ -138,7 +137,7 @@ export default function WriteClarify({
 
       {rejectedAll ? (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-ink-soft">{tt("clarify.rewriteWhy", lang)}</p>
+          <p className="text-sm text-ink-soft">{t("clarify.rewriteWhy", lang)}</p>
           <button
             type="button"
             onClick={onRewrite}
@@ -146,7 +145,7 @@ export default function WriteClarify({
             // ~2.3:1, under the 4.5:1 floor. text-page flips with the theme.
             className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
           >
-            {tt("clarify.rewrite", lang)}
+            {t("clarify.rewrite", lang)}
           </button>
         </div>
       ) : (
@@ -159,7 +158,7 @@ export default function WriteClarify({
           disabled={answered.length === 0}
           className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50"
         >
-          {tt("clarify.send", lang)}
+          {t("clarify.send", lang)}
         </button>
       )}
     </section>
