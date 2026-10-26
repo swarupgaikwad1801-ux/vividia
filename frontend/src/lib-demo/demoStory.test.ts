@@ -96,7 +96,15 @@ describe("the demo story", () => {
     assert.equal(isDemoLoaded(), false);
   });
 
-  it("never deletes entries the person wrote themselves", () => {
+  it("refuses to seed on top of entries the person wrote themselves", () => {
+    // The case that matters. Amara's incidents are fiction, and a timeline
+    // holding both is the source for the report, the handoff card and the
+    // follow-ups - so a made-up incident could reach a real teacher in a
+    // real child's name. The button is visible to everyone, not only judges.
+    //
+    // This test used to assert ownEntriesKept === true, with the comment
+    // "the screen must be told it is mixing". It pinned the bug: the flag was
+    // computed and the seeding happened anyway.
     const mine = addEntry({
       date: "2026-10-02",
       mood: "sad",
@@ -104,13 +112,31 @@ describe("the demo story", () => {
       text_de: "meine eigenen Worte",
     });
 
-    const { ownEntriesKept } = seedFromStory(story());
-    assert.equal(ownEntriesKept, true, "the screen must be told it is mixing");
+    assert.throws(
+      () => seedFromStory(story()),
+      (error: unknown) => error instanceof ApiError && !error.retryable,
+      "seeding must be refused, not reported",
+    );
 
-    clearDemo();
     const left = listEntries();
-    assert.equal(left.length, 1);
+    assert.equal(left.length, 1, "the person's own timeline must be untouched");
     assert.equal(left[0].id, mine.id);
+    assert.equal(left[0].text_child, "my own words");
+    assert.equal(
+      isDemoLoaded(),
+      false,
+      "a refused load must leave no demo session behind, or the app thinks it is in the example",
+    );
+  });
+
+  it("seeds normally in a fresh browser, which is what a judge has", () => {
+    assert.deepEqual(listEntries(), [], "precondition: nothing of the person's own");
+
+    const { session } = seedFromStory(story());
+
+    assert.ok(session.persona.name);
+    assert.ok(listEntries().length > 0, "the example must still load for a judge");
+    assert.equal(isDemoLoaded(), true);
   });
 
   it("does not double the timeline when pressed twice", () => {

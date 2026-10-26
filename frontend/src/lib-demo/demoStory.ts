@@ -27,6 +27,7 @@ import { ApiError, demo as fetchStory } from "../lib/api";
 import type { DemoStory } from "../lib/api";
 import { addEntry, listEntries, removeEntry } from "../lib/timeline";
 import { t } from "../lib/strings";
+import { tp } from "./pendingStrings";
 import type { Entry } from "../types/api";
 
 /** Our own key. The timeline keeps its own, and we never write to it. */
@@ -56,12 +57,6 @@ export interface DemoSession {
 
 export interface DemoLoadResult {
   session: DemoSession;
-  /**
-   * True when the person already had entries of their own before pressing.
-   * The screen says so, because the timeline now mixes the example with their
-   * own words and they should know which clearing removes.
-   */
-  ownEntriesKept: boolean;
 }
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -165,6 +160,21 @@ function brokenStory(lang: string): ApiError {
 }
 
 /**
+ * Refused because this browser already holds somebody's own entries.
+ *
+ * Not an error in our code, but it travels the error path on purpose: a
+ * caller can read a boolean and carry on regardless, which is exactly what
+ * happened here before, and cannot ignore a throw. `ownEntriesKept` was
+ * computed and then seeded over.
+ *
+ * `retryable` is false: pressing again will not help, and the person has to
+ * decide to clear their own timeline first.
+ */
+function notOnTopOfRealEntries(lang: string): ApiError {
+  return new ApiError("invalid_input", tp("demo.ownEntriesKept", lang), false);
+}
+
+/**
  * Turn a story into the app state it describes.
  *
  * Split out from `loadDemo` so it can be tested, and so a caller that already
@@ -185,10 +195,23 @@ export function seedFromStory(story: DemoStory, lang?: string): DemoLoadResult {
   if (!entries.every(isUsableEntry)) throw brokenStory(messageLang);
 
   // Pressing the button twice must not double the timeline, and must not
-  // orphan the first run's entries with no way to remove them.
+  // orphan the first run's entries with no way to remove them. Done before
+  // the check below so a previous run of the example does not read as the
+  // child's own writing.
   clearDemo();
 
-  const ownEntriesKept = listEntries().length > 0;
+  // The example is never written on top of somebody's own entries.
+  //
+  // Amara's incidents are fiction. A timeline holding both is the source for
+  // the report, the handoff card and the follow-ups, so a made-up incident
+  // could reach a real teacher in a real child's name. The button is visible
+  // to everyone, not only judges, and a curious child will press it.
+  //
+  // Judges lose nothing: they open the demo in a fresh browser.
+  if (listEntries().length > 0) {
+    throw notOnTopOfRealEntries(messageLang);
+  }
+
   const seededIds = entries.map((entry) => addEntry(entry).id);
 
   const session: DemoSession = {
@@ -203,7 +226,7 @@ export function seedFromStory(story: DemoStory, lang?: string): DemoLoadResult {
     loadedAt: new Date().toISOString(),
   };
   writeSession(session);
-  return { session, ownEntriesKept };
+  return { session };
 }
 
 /**
