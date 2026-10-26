@@ -119,6 +119,55 @@ export const STRINGS = {
   "handoff.socialWorker": { en: "The school social worker", de: "Die Schulsozialarbeit", hi: "स्कूल के सोशल वर्कर" },
   "handoff.family": { en: "Someone in my family", de: "Jemand aus meiner Familie", hi: "मेरे परिवार में कोई" },
 
+  // --- writing screen ("Find the words") ---
+  // Moved from the temporary components/WriteStrings.ts on feat/write-screen,
+  // same key names. {n} is filled with fill().
+  "write.yourWords": { en: "Your words", de: "Deine Worte", hi: "आपके शब्द" },
+  "write.whatWeDo": {
+    en: "We translate your words more than once and compare the results.",
+    de: "Wir übersetzen deine Worte mehr als einmal und vergleichen die Ergebnisse.",
+    hi: "हम आपके शब्दों का एक से ज़्यादा बार अनुवाद करते हैं और नतीजों की तुलना करते हैं।",
+  },
+  "write.stillWorking": {
+    en: "Still going. A careful check can take a while.",
+    de: "Läuft noch. Eine sorgfältige Prüfung kann dauern.",
+    hi: "अभी चल रहा है। ध्यान से जाँचने में समय लग सकता है।",
+  },
+  "write.stop": { en: "Stop", de: "Abbrechen", hi: "रोकें" },
+  "write.retry": { en: "Try again", de: "Nochmal versuchen", hi: "फिर कोशिश करें" },
+  "write.agreement": {
+    en: "The checks agreed",
+    de: "Die Prüfungen stimmten überein",
+    hi: "जाँचें सहमत थीं",
+  },
+  "write.agreementNote": {
+    en: "That is how much our checks said the same thing as each other. It is not a mark for whether the German is right.",
+    de: "So sehr haben unsere Prüfungen dasselbe gesagt. Es ist keine Note dafür, ob das Deutsch richtig ist.",
+    hi: "इसका मतलब है कि हमारी जाँचें आपस में कितना एक जैसा कह रही थीं। यह इस बात का अंक नहीं है कि जर्मन सही है या नहीं।",
+  },
+  "write.yourChoiceUsed": {
+    en: "Your answer decided this German. The app did not choose for you.",
+    de: "Deine Antwort hat dieses Deutsch entschieden. Die App hat nicht für dich gewählt.",
+    hi: "यह जर्मन आपके जवाब से तय हुआ। ऐप ने आपके लिए नहीं चुना।",
+  },
+  "write.checksOne": { en: "1 check", de: "1 Prüfung", hi: "1 जाँच" },
+  "write.checks": { en: "{n} checks", de: "{n} Prüfungen", hi: "{n} जाँच" },
+  "write.secondsLong": { en: "{n} seconds so far", de: "bisher {n} Sekunden", hi: "अब तक {n} सेकंड" },
+  "clarify.important": { en: "Important", de: "Wichtig", hi: "ज़रूरी" },
+  "clarify.somethingElse": { en: "Something else", de: "Etwas anderes", hi: "कुछ और" },
+  "clarify.somethingElseHint": {
+    en: "Neither of these is what I meant",
+    de: "Keines davon habe ich gemeint",
+    hi: "इनमें से कोई भी मेरा मतलब नहीं था",
+  },
+  "clarify.send": { en: "That's what I meant", de: "Das habe ich gemeint", hi: "मेरा यही मतलब था" },
+  "clarify.rewrite": { en: "Say it another way", de: "Sag es anders", hi: "दूसरे तरीके से कहें" },
+  "clarify.rewriteWhy": {
+    en: "You said none of the answers fit. Nobody can pick for you, so change your own words and check them again.",
+    de: "Du hast gesagt, dass keine Antwort passt. Niemand kann für dich wählen, also ändere deine eigenen Worte und prüfe sie noch einmal.",
+    hi: "आपने कहा कि कोई भी जवाब सही नहीं है। कोई आपके लिए नहीं चुन सकता, इसलिए अपने शब्द बदलें और उन्हें फिर जाँचें।",
+  },
+
   "errors.network": {
     en: "We can't reach the internet right now. What you saved is still on this phone.",
     de: "Wir erreichen gerade das Internet nicht. Was du gespeichert hast, ist noch auf diesem Handy.",
@@ -134,6 +183,31 @@ export const STRINGS = {
     de: "Bei uns ist etwas schiefgegangen. Deine Worte sind nicht verloren.",
     hi: "हमारी तरफ़ से कुछ गड़बड़ हो गई। आपके शब्द खोए नहीं हैं।",
   },
+
+  // The emoji check-in (lib/moods.ts). The codes after "mood." are stored in
+  // the timeline, so they must not change.
+  "mood.good": { en: "Good", de: "Gut", hi: "अच्छा" },
+  "mood.ok": { en: "OK", de: "Geht so", hi: "ठीक है" },
+  "mood.sad": { en: "Sad", de: "Traurig", hi: "दुखी" },
+  "mood.scared": { en: "Scared", de: "Angst", hi: "डर लग रहा है" },
+  "mood.angry": { en: "Angry", de: "Wütend", hi: "गुस्सा" },
+  "mood.alone": { en: "Alone", de: "Allein", hi: "अकेला" },
+
+  // Languages a helpline speaks (lib/help.ts). Only the codes that appear in
+  // content/helplines.json, plus the two we ship as source languages.
+  "lang.de": { en: "German", de: "Deutsch", hi: "जर्मन" },
+  "lang.en": { en: "English", de: "Englisch", hi: "अंग्रेज़ी" },
+  "lang.hi": { en: "Hindi", de: "Hindi", hi: "हिंदी" },
+  "lang.uk": { en: "Ukrainian", de: "Ukrainisch", hi: "यूक्रेनी" },
+
+  // The language note next to each helpline. {list} is the languages joined
+  // with help.and; "only" is added when the child's language is not among them.
+  "help.and": { en: " and ", de: " und ", hi: " और " },
+  "help.speaks": { en: "Speaks {list}", de: "Spricht {list}", hi: "{list} बोलते हैं" },
+  "help.speaksOnly": { en: "Speaks {list} only", de: "Spricht nur {list}", hi: "सिर्फ़ {list} बोलते हैं" },
+  "help.checkedToday": { en: "checked today", de: "heute geprüft", hi: "आज जाँचा गया" },
+  "help.checkedYesterday": { en: "checked yesterday", de: "gestern geprüft", hi: "कल जाँचा गया" },
+  "help.checkedDays": { en: "checked {n} days ago", de: "vor {n} Tagen geprüft", hi: "{n} दिन पहले जाँचा गया" },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;
@@ -142,6 +216,13 @@ export type StringKey = keyof typeof STRINGS;
 export function t(key: StringKey, lang: string): string {
   const entry: Text = STRINGS[key];
   return (isLang(lang) && entry[lang]) || entry[FALLBACK_LANG];
+}
+
+/** `t()` with `{name}` placeholders filled in, e.g. fill("help.checkedDays", "de", { n: 3 }). */
+export function fill(key: StringKey, lang: string, values: Record<string, string | number>): string {
+  return t(key, lang).replace(/\{(\w+)\}/g, (whole, name: string) =>
+    name in values ? String(values[name]) : whole,
+  );
 }
 
 export function isLang(lang: string): lang is Lang {

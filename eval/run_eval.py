@@ -129,6 +129,14 @@ async def run_case(case, data, strategies, with_safety, semaphore):
             # answer is known: the app cannot see the reference, and a case
             # where it asks a question with no right option still fails.
             answered = 0
+            # Both calls are the app doing one job for one sentence, so the
+            # cost and the calls are the sum of the two. `translate()` builds a
+            # fresh Usage each time, so reading them off the second `out` threw
+            # the fan-out away and billed the whole case as the single
+            # clarified pass - understating exactly the strategies that ask.
+            asked = len(out.get("ambiguities", []))
+            calls = out.get("calls_made", 0)
+            cost = out.get("usage", {}).get("estimated_cost_usd", 0.0)
             if out.get("ambiguities") and "reference_de" in case:
                 choices = {}
                 for ambiguity in out["ambiguities"]:
@@ -145,14 +153,21 @@ async def run_case(case, data, strategies, with_safety, semaphore):
                         strategy=strategy,
                     )
                     answered = len(choices)
+                    calls += out.get("calls_made", 0)
+                    cost += out.get("usage", {}).get("estimated_cost_usd", 0.0)
 
             result = {
                 "translation": out["translation"],
-                "ambiguities": len(out.get("ambiguities", [])),
+                # What the app asked the child, which is the behaviour the
+                # product exists for. NOT len(out["ambiguities"]) after the
+                # clarified re-run: that is 0 by design precisely when a
+                # question was asked, so it read as "never asked anyone".
+                "ambiguities": asked,
+                "ambiguities_unanswered": len(out.get("ambiguities", [])),
                 "child_answered": answered,
-                "calls_made": out.get("calls_made", 0),
+                "calls_made": calls,
                 "latency_ms": int((time.perf_counter() - started) * 1000),
-                "cost_usd": out.get("usage", {}).get("estimated_cost_usd", 0.0),
+                "cost_usd": cost,
             }
             if "check" in case:
                 result["pass"], result["problems"] = passes(case["check"], out["translation"])
@@ -173,7 +188,15 @@ def summarise(rows, strategies) -> dict:
             "cases": len(done),
             "errors": sum(1 for r in rows if "error" in r["results"].get(strategy, {})),
             "meaning_kept": f"{sum(d['pass'] for d in scored)}/{len(scored)}" if scored else "n/a",
-            "asked_child": sum(1 for d in done if d["ambiguities"]),
+            # Cases where the app put a question to the child rather than
+            # picking a reading on its own. `ambiguities` is now what was
+            # asked, so this counts what it says it counts.
+            "asked_child": sum(1 for d in done if d.get("ambiguities")),
+            # Of those, the ones where an option matched the human reference,
+            # so the run could answer as the child would. A case it asked
+            # about with no right option on offer stays in asked_child and
+            # out of this, which is the gap worth seeing.
+            "child_answered": sum(1 for d in done if d.get("child_answered")),
             "avg_calls": round(sum(d["calls_made"] for d in done) / len(done), 2) if done else 0,
             "avg_latency_ms": int(sum(d["latency_ms"] for d in done) / len(done)) if done else 0,
             "total_cost_usd": round(sum(d["cost_usd"] for d in done), 5),
@@ -190,12 +213,14 @@ def summarise(rows, strategies) -> dict:
 
 def markdown(summary, set_name) -> str:
     lines = [f"### {set_name}", "",
-             "| Strategy | Meaning kept | Asked the child | Avg calls | Avg latency | Cost |",
-             "|---|---|---|---|---|---|"]
+             "| Strategy | Meaning kept | Asked the child | Child could answer "
+             "| Avg calls | Avg latency | Cost |",
+             "|---|---|---|---|---|---|---|"]
     for strategy in STRATEGIES:
         if strategy in summary:
             s = summary[strategy]
-            lines.append(f"| {strategy} | {s['meaning_kept']} | {s['asked_child']} | {s['avg_calls']} "
+            lines.append(f"| {strategy} | {s['meaning_kept']} | {s['asked_child']} "
+                         f"| {s.get('child_answered', 0)} | {s['avg_calls']} "
                          f"| {s['avg_latency_ms']} ms | ${s['total_cost_usd']} |")
     if "safety" in summary:
         s = summary["safety"]

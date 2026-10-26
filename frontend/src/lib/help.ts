@@ -23,11 +23,12 @@
  */
 
 import type { Resource } from "../types/api.ts";
+import { FALLBACK_LANG, HINDI_REVIEWED, STRINGS, fill, t, type Lang } from "./strings.ts";
 
-/** Languages we have interface copy for. */
-export type Lang = "en" | "de" | "hi";
-
-const FALLBACK_LANG: Lang = "en";
+// The wording lives in strings.ts with the rest of the screen text, so one
+// Hindi review and one flag cover all of it. Re-exported so callers of this
+// module keep working.
+export { HINDI_REVIEWED, type Lang };
 
 function pick(lang: string): Lang {
   return lang === "de" || lang === "hi" ? lang : FALLBACK_LANG;
@@ -40,20 +41,13 @@ function pick(lang: string): Lang {
  * `uk`) plus the two we ship as source languages. An unknown code falls back
  * to the code in capitals, which is ugly but never wrong: inventing a name
  * for a language we do not have a word for would be.
- *
- * The German and Hindi wording has NOT been read by a native speaker.
  */
 const LANGUAGE_NAMES: Record<string, Record<Lang, string>> = {
-  de: { en: "German", de: "Deutsch", hi: "जर्मन" },
-  en: { en: "English", de: "Englisch", hi: "अंग्रेज़ी" },
-  hi: { en: "Hindi", de: "Hindi", hi: "हिंदी" },
-  uk: { en: "Ukrainian", de: "Ukrainisch", hi: "यूक्रेनी" },
+  de: STRINGS["lang.de"],
+  en: STRINGS["lang.en"],
+  hi: STRINGS["lang.hi"],
+  uk: STRINGS["lang.uk"],
 };
-
-/** "and" as a list joiner, per language. */
-const AND: Record<Lang, string> = { en: " and ", de: " und ", hi: " और " };
-
-export const HINDI_REVIEWED = false;
 
 export function languageName(code: string, lang: string): string {
   return LANGUAGE_NAMES[code]?.[pick(lang)] ?? code.toUpperCase();
@@ -82,17 +76,10 @@ export function languageNote(resource: Resource, lang: string): string {
   const list =
     names.length === 1
       ? names[0]!
-      : `${names.slice(0, -1).join(", ")}${AND[of]}${names[names.length - 1]!}`;
+      : `${names.slice(0, -1).join(", ")}${t("help.and", of)}${names[names.length - 1]!}`;
 
   const onlyThese = !speaksChildLanguage(resource, lang);
-  switch (of) {
-    case "de":
-      return onlyThese ? `Spricht nur ${list}` : `Spricht ${list}`;
-    case "hi":
-      return onlyThese ? `सिर्फ़ ${list} बोलते हैं` : `${list} बोलते हैं`;
-    default:
-      return onlyThese ? `Speaks ${list} only` : `Speaks ${list}`;
-  }
+  return fill(onlyThese ? "help.speaksOnly" : "help.speaks", of, { list });
 }
 
 /**
@@ -116,25 +103,6 @@ export function sortForChild(resources: readonly Resource[], lang: string): Reso
     .map(({ resource }) => resource);
 }
 
-/** How a checked-on date reads, per language. */
-const FRESHNESS: Record<Lang, { today: string; yesterday: string; days: (n: number) => string }> = {
-  en: {
-    today: "checked today",
-    yesterday: "checked yesterday",
-    days: (n) => `checked ${n} days ago`,
-  },
-  de: {
-    today: "heute geprüft",
-    yesterday: "gestern geprüft",
-    days: (n) => `vor ${n} Tagen geprüft`,
-  },
-  hi: {
-    today: "आज जाँचा गया",
-    yesterday: "कल जाँचा गया",
-    days: (n) => `${n} दिन पहले जाँचा गया`,
-  },
-};
-
 /**
  * A short age for `Resource.retrieved_at`, so nothing looks fresher than it is.
  *
@@ -151,7 +119,7 @@ export function freshness(retrievedAt: string, lang: string = "en", now: Date = 
   const when = new Date(retrievedAt);
   if (Number.isNaN(when.getTime())) return "";
 
-  const copy = FRESHNESS[pick(lang)];
+  const of = pick(lang);
   // Whole days apart by calendar date, not by elapsed hours: something checked
   // late yesterday reads as "yesterday", not as "today" because it was 20
   // hours ago.
@@ -159,7 +127,7 @@ export function freshness(retrievedAt: string, lang: string = "en", now: Date = 
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
   const days = Math.floor((startOf(now) - startOf(when)) / 86_400_000);
 
-  if (days <= 0) return copy.today;
-  if (days === 1) return copy.yesterday;
-  return copy.days(days);
+  if (days <= 0) return t("help.checkedToday", of);
+  if (days === 1) return t("help.checkedYesterday", of);
+  return fill("help.checkedDays", of, { n: days });
 }
