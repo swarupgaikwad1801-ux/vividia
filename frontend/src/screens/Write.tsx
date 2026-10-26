@@ -229,7 +229,7 @@ export default function Write({ lang, initialText, onTextChange, onApproved, onN
       className="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 py-6 sm:max-w-2xl"
     >
       <header className="flex flex-col gap-1">
-        <h1 id="write-title" className="text-2xl font-semibold tracking-tight">
+        <h1 id="write-title" className="text-2xl">
           {t("write.title", lang)}
         </h1>
         <p id="write-hint" className="text-base text-ink-soft">

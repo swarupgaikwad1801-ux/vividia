@@ -67,7 +67,7 @@ export default function HandoffCard({
 
   return (
     <section aria-labelledby="handoff-title" className="flex flex-col gap-4">
-      <h2 id="handoff-title" className="text-3xl tracking-tight text-balance">
+      <h2 id="handoff-title" className="headline text-3xl text-balance">
         {t("handoff.title", lang)}
       </h2>
 

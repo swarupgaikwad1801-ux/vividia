@@ -65,7 +65,7 @@ export interface LanguageSetupProps {
 export default function LanguageSetup({ lang, suggested = null, onChoose }: LanguageSetupProps) {
   return (
     <section className="flex flex-col gap-8" aria-labelledby="language-setup-title">
-      <h1 id="language-setup-title" className="text-2xl font-semibold tracking-tight">
+      <h1 id="language-setup-title" className="text-2xl">
         {t("app.name", lang)}
       </h1>
 

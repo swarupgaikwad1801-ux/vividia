@@ -55,7 +55,8 @@
   --font-sans: "Inter", "Baloo 2", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Noto Sans Devanagari", "Helvetica Neue", Arial,
     sans-serif;
-  --font-display: "Baloo 2", var(--font-sans);
+  /* Headlines: Outfit 800 (Neel's pick), Baloo 2 for Hindi headlines. */
+  --font-display: "Outfit", "Baloo 2", var(--font-sans);
   --text-base: 1.0625rem;
 
   /* The smallest thing a thumb may have to hit. WCAG 2.2 target size. */
@@ -115,10 +116,24 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* Headlines: every h1, and an h2 that is a screen's question (.headline).
+     Smaller h2s are labels and stay in Inter. Tight tracking, as Neel asked,
+     to sit closer to a heavy display face. Only Outfit's 800 weight is
+     bundled, so a headline is always 800: do not add font-semibold etc. */
   h1,
-  h2 {
+  .headline {
     font-family: var(--font-display);
     font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  /* Devanagari letters join along the top line; negative tracking opens
+     gaps in it. Hindi headlines keep normal spacing. */
+  :lang(hi) h1,
+  :lang(hi) .headline,
+  h1:lang(hi),
+  .headline:lang(hi) {
+    letter-spacing: normal;
   }
 
   /* A visible focus ring is how this app is usable by keyboard and by screen

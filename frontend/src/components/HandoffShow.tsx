@@ -53,7 +53,7 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
           no sound, and nothing at all with reduced motion. */}
       <SparkleBurst />
 
-      <h1 className="text-3xl tracking-tight text-balance">{t("handoff.showThem", lang)}</h1>
+      <h1 className="text-3xl text-balance">{t("handoff.showThem", lang)}</h1>
 
       <CardLanguageSwitch lang={lang} showing={showing} onChange={setShowing} />
 

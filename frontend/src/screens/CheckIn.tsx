@@ -31,7 +31,7 @@ export interface CheckInProps {
 export default function CheckIn({ lang, onChoose }: CheckInProps) {
   return (
     <section className="flex flex-col gap-6 px-4 py-6" aria-labelledby="checkin-title">
-      <h1 id="checkin-title" className="text-3xl tracking-tight text-balance">
+      <h1 id="checkin-title" className="text-3xl text-balance">
         {t("checkin.title", lang)}
       </h1>
 

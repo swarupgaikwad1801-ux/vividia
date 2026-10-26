@@ -24,7 +24,7 @@ export interface HandoffWhereProps {
 export default function HandoffWhere({ lang, value, onChoose }: HandoffWhereProps) {
   return (
     <section aria-labelledby="handoff-where-title" className="flex flex-col gap-4">
-      <h2 id="handoff-where-title" className="text-3xl tracking-tight text-balance">
+      <h2 id="handoff-where-title" className="headline text-3xl text-balance">
         {t("where.title", lang)}
       </h2>
 

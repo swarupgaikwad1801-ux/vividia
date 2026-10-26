@@ -42,7 +42,7 @@ export default function Onboarding({ lang, onDone }: OnboardingProps) {
   return (
     <section className="flex flex-col gap-6 px-4 py-6" aria-labelledby="onboarding-title">
       <div className="flex items-center justify-between gap-3">
-        <h1 id="onboarding-title" className="text-3xl tracking-tight text-balance">
+        <h1 id="onboarding-title" className="text-3xl text-balance">
           {t("onboarding.title", lang)}
         </h1>
         {!last && (

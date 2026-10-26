@@ -3,8 +3,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 // Fonts are bundled, not fetched from a font service: the app works offline
 // and no request leaves the phone to load a typeface. Only the weights and
-// scripts the screens use. Inter for text (latin); Baloo 2 for Hindi
-// (Devanagari), which Inter does not cover; the browser picks per character.
+// scripts the screens use. Inter for text (latin); Outfit 800 for headlines
+// (Neel's pick, the closest free look to a heavy geometric display face);
+// Baloo 2 for Hindi (Devanagari), which neither covers. The browser picks
+// per character.
+import "@fontsource/outfit/latin-800.css";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-500.css";
 import "@fontsource/inter/latin-600.css";
