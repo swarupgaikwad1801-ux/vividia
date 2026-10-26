@@ -28,7 +28,7 @@ export function HelpScreen({ lang, state: region = "", onBack }: { lang: string;
 
   const load = useCallback(() => {
     setState({ status: "loading" });
-    void Promise.allSettled([emergency(lang), resources(lang, region)]).then(([numbers, found]) => {
+    void Promise.allSettled([emergency(lang).then((body) => body.contacts), resources(lang, region)]).then(([numbers, found]) => {
       const loaded = settledHelpView(numbers, found, lang);
       if (loaded.status === "error") {
         setState({ status: "error", message: childMessage(loaded.error, lang) });

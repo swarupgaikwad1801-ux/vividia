@@ -14,12 +14,12 @@ import type {
   ClarifyRequest,
   ClarifyResponse,
   Entry,
+  EmergencyResponse,
   ErrorCode,
   ErrorResponse,
   HealthResponse,
   ReportRequest,
   ReportResponse,
-  Resource,
   ResourcesResponse,
   TranslateRequest,
   TranslateResponse,
@@ -133,17 +133,15 @@ export function resources(lang: string, state = ""): Promise<ResourcesResponse> 
 }
 
 /**
- * 110 and 112, from content/helplines.json through GET /api/emergency (#30;
- * the field is `contacts`).
+ * 110 and 112, straight from content/helplines.json.
+ *
+ * No model call and outside the spending cap, so this answers on a day the
+ * demo has spent its allowance and with no API key at all - which is the
+ * whole reason the route exists (#30). Any screen showing the safety floor
+ * calls it rather than typing a number.
  */
-export async function emergency(lang = "en"): Promise<Resource[]> {
-  const body = await request<{ contacts?: Resource[] }>(
-    "/api/emergency",
-    lang,
-    { method: "GET" },
-    QUICK_MS,
-  );
-  return body.contacts ?? [];
+export function emergency(lang = "en"): Promise<EmergencyResponse> {
+  return request("/api/emergency", lang, { method: "GET" }, QUICK_MS);
 }
 
 export function health(): Promise<HealthResponse> {

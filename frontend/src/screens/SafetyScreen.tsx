@@ -26,7 +26,7 @@ export function SafetyScreen({ lang, message, onBack }: { lang: string; message:
     let live = true;
     // Whatever loaded is shown: a failed live lookup must not hide 110/112.
     // If both fail, the fixed message already names 110.
-    void Promise.allSettled([emergency(lang), resources(lang)]).then(([numbers, found]) => {
+    void Promise.allSettled([emergency(lang).then((body) => body.contacts), resources(lang)]).then(([numbers, found]) => {
       const loaded = settledHelpView(numbers, found, lang);
       if (live && loaded.status === "ready") setView(loaded.view);
     });
