@@ -18,7 +18,7 @@
  */
 
 export type Step =
-  | "language" // first run only
+  | "language" // first run, and the 🌐 button on the check-in
   | "onboarding" // three picture cards: after the language, and on request
   | "checkIn" // the emoji check-in: the step that needs no language
   // The picture questions (screens/PictureQuestions.tsx), one per screen, so
@@ -74,4 +74,12 @@ export function canGoBack(trail: Trail): boolean {
 
 export function back(trail: Trail): Trail {
   return canGoBack(trail) ? trail.slice(0, -1) : trail;
+}
+
+/**
+ * After a language is chosen: back to where the child was (the 🌐 button on
+ * the check-in), or home on first run, when there is nowhere to go back to.
+ */
+export function afterLanguage(trail: Trail): Trail {
+  return canGoBack(trail) ? back(trail) : go(trail, HOME);
 }

@@ -623,6 +623,9 @@ export const STRINGS = {
   "onboarding.skip": { en: "Skip", de: "Überspringen", hi: "छोड़ो" },
   "onboarding.start": { en: "Start", de: "Los geht's", hi: "शुरू करो" },
   "onboarding.again": { en: "What this app does", de: "Was diese App macht", hi: "यह ऐप क्या करता है" },
+  // The 🌐 button on the check-in, and the heading of the screen it opens.
+  // Hindi in the तुम form, like the rest.
+  "lang.change": { en: "Change language", de: "Sprache ändern", hi: "भाषा बदलो" },
 
   // Picture questions (screens/PictureQuestions.tsx). Open questions, never
   // yes/no, never leading, never "why" (see that file's header).

@@ -7,6 +7,7 @@ import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
 import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
+import LanguageButton from "./components/LanguageButton";
 import Onboarding from "./screens/Onboarding";
 import {
   FeelQuestion,
@@ -32,7 +33,7 @@ import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import { fill, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
-import { HOME, back, canGoBack, current, go, start, type Step } from "./lib/nav";
+import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } from "./lib/nav";
 import { MOOD_CODES } from "./lib/moods";
 import { NO_PICKS, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
 import { SCENE, mapFor } from "./lib/scenes";
@@ -176,11 +177,13 @@ export default function App() {
     (next: Lang) => {
       setLang(next);
       saveLang(next);
-      // Straight to the check-in (Neel, 26 Oct): the cards are not shown by
-      // default. "What this app does" at the bottom of the check-in opens them.
-      setStep("checkIn");
+      // First run: straight to the check-in (Neel, 26 Oct): the cards are not
+      // shown by default. "What this app does" at the bottom opens them.
+      // From the 🌐 button: back to where the child was. Only the language
+      // changes; the timeline, the draft and the picture answers are kept.
+      setTrail(afterLanguage);
     },
-    [setStep],
+    [],
   );
 
   /**
@@ -371,7 +374,12 @@ export default function App() {
           move. Reduced motion stops it anyway (index.css). */}
       <div key={step} className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}>
       {step === "language" && (
-        <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
+        <LanguageSetup
+          lang={lang}
+          suggested={setup.suggested}
+          onChoose={chooseLang}
+          changing={canGoBack(trail)}
+        />
       )}
 
       {step === "onboarding" && (
@@ -387,13 +395,16 @@ export default function App() {
           <CheckIn lang={lang} onChoose={afterCheckIn} />
           {/* The three cards, on request only: small, at the bottom, for the
               child who wants to know and for anyone they show the app to. */}
-          <button
-            type="button"
-            onClick={() => setStep("onboarding")}
-            className="squish min-h-tap mx-4 mt-2 mb-6 self-center rounded-full border-2 border-ink bg-surface px-4 text-sm font-bold text-ink"
-          >
-            {t("onboarding.again", lang)}
-          </button>
+          <div className="mx-4 mt-2 mb-6 flex flex-wrap justify-center gap-3">
+            <LanguageButton lang={lang} onOpen={() => setStep("language")} />
+            <button
+              type="button"
+              onClick={() => setStep("onboarding")}
+              className="squish min-h-tap rounded-full border-2 border-ink bg-surface px-4 text-sm font-bold text-ink"
+            >
+              {t("onboarding.again", lang)}
+            </button>
+          </div>
         </>
       )}
 
