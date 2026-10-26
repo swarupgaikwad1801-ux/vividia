@@ -835,7 +835,17 @@ Thu 29 Oct by 22:00. Day-by-day plan: see `PLAN.md`.
   - **Credits: $1.00 trial, 29 days. Account balance $0.00.** The $25 promo
     code had not arrived by email as of 24 Oct. Redeem it at Billing →
     Payments → + → "With promo code". The demo must stay up until 15 Dec, so
-    chase this; $1 is roughly 2,000 translated messages.
+    chase this. **$1 is roughly 35–40 checked sentences, not 2,000.** The
+    2,000 figure predates the full pipeline: the 24 Oct benchmark measured
+    about $0.027 per sentence on the adaptive path (~10 calls), so $25 is
+    about 900 sentences. A single pass is ~$0.002 and a German child's
+    same-language check one call. The spending cap and per-IP limit on the
+    live demo are what make it last to 15 Dec (corrected 26 Oct).
+  - **Deploy check ends with one real `POST /api/translate`** (~3 cents),
+    not with `/api/health`. Health reports which mode the code is in and
+    never calls a model, so on 26 Oct it said `"engine":"live"` while every
+    translation failed on a mis-pasted `NEBIUS_BASE_URL`. Health stays
+    unmetered on purpose (decided 26 Oct, #5).
 - **API keys live only in `.env`.** Never in any other file inside the repo
   (a txt file of keys in the repo is one `git add .` away from being public).
   Keep a personal copy outside the repo folder.
