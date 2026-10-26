@@ -184,7 +184,11 @@ other. It does **not** prove anything about Render, Vercel or live models.
 
 ## After deploying
 
-- Post the URL in issue #4 so Vernika can point the frontend at it.
+- Post both URLs on issue #3, where the deploy is tracked. The line this
+  replaces said to post the backend URL on #4 "so Vernika can point the
+  frontend at it", which was written when the two halves were deployed by two
+  people; this document now covers both, so whoever deploys already has both
+  URLs in hand. (Neel's review of this PR.)
 - Put it in the README under **Demo**, and in the Devpost submission.
 - Re-check it on **Thu 29 Oct** and again on the morning of **Fri 30 Oct**.
   A demo that dies after submission is the same as no demo.
