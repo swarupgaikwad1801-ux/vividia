@@ -8,6 +8,8 @@ import HandoffDone from "./screens/HandoffDone";
 import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
 import LanguageButton from "./components/LanguageButton";
+import DemoButton from "./components/DemoButton";
+import type { DemoSession } from "./lib-demo/demoStory";
 import Onboarding from "./screens/Onboarding";
 import {
   FeelQuestion,
@@ -31,7 +33,7 @@ import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
-import { fill, t } from "./lib/strings";
+import { fill, isLang, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
 import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } from "./lib/nav";
 import { MOOD_CODES } from "./lib/moods";
@@ -142,6 +144,9 @@ export default function App() {
   // must never do. `Write` reports every keystroke up here and reads it back
   // when it mounts again.
   const [draft, setDraft] = useState("");
+  // The language the draft is written in when it is not the screen's: only
+  // Amara's story (English) sets it. Cleared once the words are saved.
+  const [draftLang, setDraftLang] = useState<Lang | null>(null);
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
   // The child's two handoff answers, kept so Back from the big card returns
@@ -273,11 +278,33 @@ export default function App() {
       );
       // Saved, so it is no longer a draft: the next visit to Write is empty.
       setDraft("");
+      setDraftLang(null);
       refreshEntries();
       setStep("timeline");
     },
     [refreshEntries, setStep],
   );
+
+  /**
+   * "Try Amara's story" (DemoButton): the timeline is seeded with her saved
+   * entries and her sentence waits on the writing screen. Nothing is sent: the
+   * judge presses "Check my words" themselves. Back from there is the check-in.
+   */
+  const demoLoaded = useCallback(
+    (session: DemoSession) => {
+      setDraft(session.draft.text);
+      setDraftLang(isLang(session.draft.lang) ? session.draft.lang : null);
+      refreshEntries();
+      setTrail([HOME, "write"]);
+    },
+    [refreshEntries],
+  );
+
+  const demoCleared = useCallback(() => {
+    setDraft("");
+    setDraftLang(null);
+    refreshEntries();
+  }, [refreshEntries]);
 
   // The red Need help button, from every screen: the calm list of people who
   // can help (screens/HelpScreen.tsx). Back returns to where the child was.
@@ -407,6 +434,10 @@ export default function App() {
               {t("onboarding.again", lang)}
             </button>
           </div>
+          {/* For judges (CLAUDE.md: a pre-filled demo they just press send
+              on). Below everything a child needs, and it says it is made up
+              in every state. It refuses to load on top of real entries. */}
+          <DemoButton lang={lang} onLoaded={demoLoaded} onCleared={demoCleared} className="mx-4 mb-6" />
         </>
       )}
 
@@ -465,6 +496,7 @@ export default function App() {
           lang={lang}
           initialText={draft}
           onTextChange={setDraft}
+          sourceLang={draftLang ?? undefined}
           onApproved={keepWords}
         />
       )}
