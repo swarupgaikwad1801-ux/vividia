@@ -223,14 +223,15 @@ export const STRINGS = {
   },
 
   // The emoji check-in (lib/moods.ts). The codes after "mood." are stored in
-  // the timeline, so they must not change. Hindi "alone" is अकेलापन, because
-  // अकेला/अकेली would guess the child's gender.
+  // the timeline, so they must not change: "mood.alone" now reads "Lonely"
+  // (Neel, 26 Oct) but keeps its code. Hindi is अकेलापन ("loneliness"),
+  // because अकेला/अकेली would guess the child's gender.
   "mood.good": { en: "Good", de: "Gut", hi: "अच्छा" },
   "mood.ok": { en: "OK", de: "Geht so", hi: "ठीक है" },
   "mood.sad": { en: "Sad", de: "Traurig", hi: "दुखी" },
   "mood.scared": { en: "Scared", de: "Angst", hi: "डर लग रहा है" },
   "mood.angry": { en: "Angry", de: "Wütend", hi: "गुस्सा" },
-  "mood.alone": { en: "Alone", de: "Allein", hi: "अकेलापन" },
+  "mood.alone": { en: "Lonely", de: "Einsam", hi: "अकेलापन" },
 
   // Languages a helpline speaks (lib/help.ts). Only the codes that appear in
   // content/helplines.json, plus the two we ship as source languages.
