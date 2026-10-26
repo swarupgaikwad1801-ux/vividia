@@ -13,12 +13,13 @@ import Write from "./screens/Write";
 
 import QuickExitButton from "./components/QuickExitButton";
 
-import { t } from "./lib/strings";
+import { fill, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
+import { emergency } from "./lib/api";
 import { addEntry, listEntries } from "./lib/timeline";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
-import type { ReportResponse } from "./types/api";
+import type { ReportResponse, Resource } from "./types/api";
 
 /**
  * The shell: the one place that knows which screen is showing, and what the
@@ -62,10 +63,21 @@ import type { ReportResponse } from "./types/api";
  * called `history.pushState`.
  */
 
-/** Where the child is. A line, with two branches off the timeline. */
+/**
+ * Where the child is. A line, with two branches off the timeline.
+ *
+ * `locked` is deliberately NOT a member any more. Being locked is a
+ * condition, not a place, and while it was a step every `setStep` call in
+ * this file was a possible way around the lock. One of them was: the help
+ * button on the lock screen set `step` to "timeline", and the child's own
+ * words rendered with no PIN ever entered. Reproduced in a browser before
+ * this change - both `text_child` and `text_de` were readable.
+ *
+ * `unlocked` is now separate state that no navigation touches, and the lock
+ * returns early, so there is no `step` value that can reveal anything.
+ */
 type Step =
   | "language" // first run only
-  | "locked" // a PIN exists and has not been entered this session
   | "checkIn" // the emoji check-in: the step that needs no language
   | "write" // the centrepiece: find the words
   | "timeline" // everything they have written
@@ -85,13 +97,18 @@ export default function App() {
   // app choosing for the child - the picker shows nothing as chosen.
   const [setup] = useState(() => languageSetupState());
   const [lang, setLang] = useState<Lang>(setup.lang);
-  const [step, setStep] = useState<Step>(() => {
-    // "unavailable" means storage refused, so we cannot tell whether a PIN
-    // exists. Locking on that would shut a child out of their own words
-    // because of a browser setting, so only a PIN we can actually read locks.
-    if (pinStatus() === "set") return "locked";
-    return setup.needsChoice ? "language" : "checkIn";
-  });
+
+  // Kept out of `step` on purpose: see the note on Step. Nothing but the
+  // child entering their PIN may ever set this to true.
+  //
+  // "unavailable" means storage refused, so we cannot tell whether a PIN
+  // exists. Locking on that would shut a child out of their own words
+  // because of a browser setting, so only a PIN we can actually read locks.
+  const [unlocked, setUnlocked] = useState(() => pinStatus() !== "set");
+
+  const [step, setStep] = useState<Step>(() =>
+    setup.needsChoice ? "language" : "checkIn",
+  );
 
   // Carried between screens. `draft` is what the child typed and has not yet
   // approved; it survives a trip to help and back, because losing a sentence
@@ -140,7 +157,34 @@ export default function App() {
   );
 
   // Until #47's HelpScreen lands. One place to repoint when it does.
+  //
+  // NOT used by the lock any more. While locked, help is `EmergencyHelp`
+  // below, which never moves `step` - that is what the leak was.
   const needHelp = useCallback(() => setStep("timeline"), []);
+
+  // The lock, before anything else and with its own return. An early return
+  // is the point: while a PIN is outstanding there is no code path below this
+  // line, so no screen, callback or future `setStep` can render the child's
+  // words. The previous version made this a `step`, and the one control on
+  // the locked screen navigated straight past it.
+  if (!unlocked) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
+        <div className="flex justify-end px-4 pt-3">
+          <QuickExitButton lang={lang} />
+        </div>
+        <PinUnlock
+          lang={lang}
+          // Help INSIDE the lock, which is why PinUnlock asks for it as a
+          // node rather than a callback: a child who cannot get past their
+          // own PIN still needs a way to reach 110. It opens in place rather
+          // than navigating, so the lock never leaves the screen.
+          help={<EmergencyHelp lang={lang} />}
+          onUnlocked={() => setUnlocked(true)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
@@ -152,25 +196,6 @@ export default function App() {
 
       {step === "language" && (
         <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
-      )}
-
-      {step === "locked" && (
-        <PinUnlock
-          lang={lang}
-          // Help INSIDE the lock, which is why PinUnlock asks for it as a
-          // node rather than a callback: a child who cannot get past their
-          // own PIN still needs a way to reach 110.
-          help={
-            <button
-              type="button"
-              onClick={needHelp}
-              className="min-h-tap rounded-card bg-help px-4 text-base font-semibold text-page"
-            >
-              {t("help.button", lang)}
-            </button>
-          }
-          onUnlocked={() => setStep(setup.needsChoice ? "language" : "checkIn")}
-        />
       )}
 
       {step === "checkIn" && <CheckIn lang={lang} onChoose={afterCheckIn} />}
@@ -206,5 +231,77 @@ export default function App() {
 
       {step === "pinSet" && <PinSet lang={lang} onDone={() => setStep("timeline")} />}
     </div>
+  );
+}
+
+/**
+ * 110 and 112, on the locked screen, without unlocking anything.
+ *
+ * Three constraints shaped this, and together they left one design:
+ *
+ * 1. **It must not navigate.** The bug this replaces was a help button that
+ *    moved `step`. A `<details>` opens in place, so the lock stays on screen
+ *    and there is no destination to get wrong. It also needs no "back"
+ *    wording, which `strings.ts` does not have in any language.
+ * 2. **The numbers must not be written here.** `content/helplines.json` is
+ *    the only place a contact may be defined (CLAUDE.md), `GET /api/emergency`
+ *    serves 110 and 112 out of it, and `noSend.test.ts` fails any screen file
+ *    containing a contact number. So this renders what the backend sends and
+ *    nothing of its own.
+ * 3. **Hours and languages are shown, not hidden.** CLAUDE.md: both helplines
+ *    we can offer are German-only, and "the crisis screen must print each
+ *    service's languages; hiding this is worse than the gap itself."
+ *
+ * A stand-in for #47's fuller Help screen, which also covers the non-crisis
+ * routes. When it lands, this becomes one line calling it - but the lock must
+ * keep a version that does not navigate.
+ */
+function EmergencyHelp({ lang }: { lang: Lang }) {
+  const [contacts, setContacts] = useState<Resource[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  // Fetched when the panel mounts rather than when it opens: a child in a
+  // crisis should not wait on a request they have already asked for.
+  useEffect(() => {
+    let live = true;
+    emergency(lang)
+      .then((res) => live && setContacts(res.contacts))
+      .catch(() => live && setFailed(true));
+    return () => {
+      live = false;
+    };
+  }, [lang]);
+
+  return (
+    <details className="rounded-card border border-help/40 bg-help-soft">
+      <summary className="min-h-tap cursor-pointer list-none px-4 py-3 text-base font-semibold text-help">
+        {t("help.button", lang)}
+      </summary>
+
+      <div className="flex flex-col gap-3 px-4 pb-4">
+        <h2 className="text-sm font-medium text-ink-soft">{t("help.title", lang)}</h2>
+
+        {/* The network is the one thing that can fail here, and a child in a
+            crisis is owed a reason rather than an empty box. */}
+        {failed && <p className="text-base">{t("errors.network", lang)}</p>}
+
+        {contacts?.map((contact) => (
+          <section key={contact.name} className="flex flex-col gap-0.5">
+            <h3 className="text-base font-medium">{contact.name}</h3>
+            {/* A real tel: link, so one tap dials on the phone this runs on. */}
+            <a
+              href={`tel:${contact.contact.replace(/[^+\d]/g, "")}`}
+              className="min-h-tap text-xl font-semibold text-help underline"
+            >
+              {contact.contact}
+            </a>
+            <p className="text-sm text-ink-soft">{contact.hours}</p>
+            <p className="text-sm text-ink-soft">
+              {fill("help.speaks", lang, { list: contact.languages.join(", ") })}
+            </p>
+          </section>
+        ))}
+      </div>
+    </details>
   );
 }
