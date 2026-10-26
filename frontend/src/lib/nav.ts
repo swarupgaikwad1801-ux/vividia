@@ -19,6 +19,7 @@
 
 export type Step =
   | "language" // first run only
+  | "onboarding" // three picture cards: after the language, and on request
   | "checkIn" // the emoji check-in: the step that needs no language
   | "write" // the centrepiece: find the words
   | "timeline" // everything they have written

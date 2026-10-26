@@ -6,6 +6,7 @@ import FollowUp from "./screens/FollowUp";
 import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
 import LanguageSetup from "./screens/LanguageSetup";
+import Onboarding from "./screens/Onboarding";
 import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
 import Report from "./screens/Report";
@@ -130,7 +131,9 @@ export default function App() {
     (next: Lang) => {
       setLang(next);
       saveLang(next);
-      setStep("checkIn");
+      // Straight after the first choice, so it is read once in the language
+      // the child just picked. No flag is stored: a first run already is one.
+      setStep("onboarding");
     },
     [setStep],
   );
@@ -220,6 +223,8 @@ export default function App() {
         <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
       )}
 
+      {step === "onboarding" && <Onboarding lang={lang} onDone={() => setStep("checkIn")} />}
+
       {step === "checkIn" && (
         <>
           {/* Renders nothing unless the follow-up question is due (step 8).
@@ -227,6 +232,15 @@ export default function App() {
               handoff ending true. */}
           <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
           <CheckIn lang={lang} onChoose={afterCheckIn} />
+          {/* The promises stay readable after the first run, for the child
+              who skipped past them and for anyone they show the app to. */}
+          <button
+            type="button"
+            onClick={() => setStep("onboarding")}
+            className="min-h-tap mt-6 self-center rounded-card px-6 text-sm font-medium text-ink-soft underline underline-offset-4 hover:text-ink"
+          >
+            {t("onboarding.again", lang)}
+          </button>
         </>
       )}
 

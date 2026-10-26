@@ -39,6 +39,18 @@ test("back never reaches the language picker", () => {
   assert.deepEqual(backAll(trail), ["checkIn"]);
 });
 
+test("first run: language, then onboarding; Back from onboarding goes to the language", () => {
+  const trail = walk("language", "onboarding");
+  assert.deepEqual(backAll(trail), ["language"]);
+  // Start or Skip goes home, which starts a new trail.
+  assert.deepEqual(go(trail, "checkIn"), ["checkIn"]);
+});
+
+test("'What this app does' from check-in goes back to check-in", () => {
+  const trail = walk("checkIn", "onboarding");
+  assert.deepEqual(backAll(trail), ["checkIn"]);
+});
+
 test("the language picker on first run has no back", () => {
   assert.equal(canGoBack(start("language")), false);
 });
@@ -68,7 +80,7 @@ test("the PIN screen goes back to where it was opened", () => {
 test("the lock is not a step, so no trail can hold it", () => {
   // A compile-time fact, checked at runtime too: "locked" is not a Step.
   const steps: Step[] = [
-    "language", "checkIn", "write", "timeline", "report", "handoff",
+    "language", "onboarding", "checkIn", "write", "timeline", "report", "handoff",
     "handoffShow", "handoffDone", "followUp", "escalation", "pinSet",
   ];
   assert.ok(!(steps as string[]).includes("locked"));
