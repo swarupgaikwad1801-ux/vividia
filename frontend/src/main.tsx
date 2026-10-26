@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { applyDisplay, readDisplay } from "./lib/display";
 // Fonts are bundled, not fetched from a font service: the app works offline
 // and no request leaves the phone to load a typeface. Only the weights and
 // scripts the screens use. Inter for text (latin); Outfit 800 for headlines
@@ -18,6 +19,9 @@ import "@fontsource/baloo-2/devanagari-400.css";
 import "@fontsource/baloo-2/devanagari-600.css";
 import "@fontsource/baloo-2/devanagari-800.css";
 import "./index.css";
+
+// Bigger text / easier reading, before the first paint, so nothing flashes small.
+applyDisplay(readDisplay());
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root is missing from index.html");

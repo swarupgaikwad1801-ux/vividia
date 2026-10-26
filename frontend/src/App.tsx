@@ -9,6 +9,7 @@ import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
 import LanguageButton from "./components/LanguageButton";
 import DemoButton from "./components/DemoButton";
+import DisplayButton from "./components/DisplayButton";
 import ReadAloud from "./components/ReadAloud";
 import type { DemoSession } from "./lib-demo/demoStory";
 import Onboarding from "./screens/Onboarding";
@@ -354,7 +355,7 @@ export default function App() {
           including the lock. Back sits in the opposite corner and looks
           quieter, so a child reaching for Leave now does not hit it. Need
           help (red) sits left of Leave now (dark outline), a gap apart. */}
-      <div className="flex items-center justify-between gap-2 px-4 pt-1">
+      <div className="top-bar flex items-center justify-between gap-2 px-4 pt-1">
 
         {canGoBack(trail) ? (
           <button
@@ -444,6 +445,7 @@ export default function App() {
               child who wants to know and for anyone they show the app to. */}
           <div className="mx-4 mt-2 mb-6 flex flex-wrap justify-center gap-3">
             <LanguageButton lang={lang} onOpen={() => setStep("language")} />
+            <DisplayButton lang={lang} />
             <button
               type="button"
               onClick={() => setStep("onboarding")}

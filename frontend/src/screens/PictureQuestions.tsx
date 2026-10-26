@@ -136,7 +136,7 @@ function TileGrid({
     <div
       role={multi ? "group" : "radiogroup"}
       aria-labelledby={labelledBy}
-      className={`grid gap-2.5 ${cols === 2 ? "grid-cols-2" : "grid-cols-3"}`}
+      className={`tile-grid grid gap-2.5 ${cols === 2 ? "grid-cols-2" : "grid-cols-3"}`}
     >
       {tiles.map((tile, i) => (
         <TileButton

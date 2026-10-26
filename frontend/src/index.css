@@ -112,6 +112,69 @@
   animation: help-pulse 1.6s ease-in-out infinite;
 }
 
+/* Bigger text and easier reading (lib/display.ts sets these on <html>).
+   Outside @layer so they win over the base styles. Every size is in rem, so
+   raising the root size grows text, buttons and gaps together. */
+:root[data-large] {
+  font-size: 118.75%;
+}
+/* WCAG 2.2, 1.4.12 text spacing; no italics, no justified text. Headlines get
+   a little less tracking, since the 800 weight is already wide. */
+:root[data-easy-read] body,
+:root[data-easy-read] body * {
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+  word-spacing: 0.16em;
+  font-style: normal;
+}
+:root[data-easy-read] p {
+  text-align: start;
+}
+:root[data-easy-read] h1,
+:root[data-easy-read] .headline {
+  letter-spacing: 0.03em;
+}
+/* Picture tiles: three across leaves no room for "Weggenommen" at the larger
+   size or wider spacing, so either mode makes them two across. A word that
+   still does not fit breaks inside its tile rather than spilling over the
+   next one (seen at 360px in German before this rule). */
+:root[data-large] .tile-grid,
+:root[data-easy-read] .tile-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+:root[data-large] .tile-grid *,
+:root[data-easy-read] .tile-grid * {
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+/* Tile labels are one to three words, not running text: full 0.12em tracking
+   split "Geschlagen" as "Geschlage / n". Lighter tracking keeps whole words;
+   the questions and every sentence keep the full spacing. */
+:root[data-easy-read] .tile-grid * {
+  letter-spacing: 0.04em;
+}
+/* In a half-width tile, 20px still split "weggenommen". 0.9375rem is 17.8px
+   at the larger root: still bigger than the normal 17px label. */
+:root[data-large] .tile-grid {
+  font-size: 0.9375rem;
+}
+:root[data-large] .tile-grid label,
+:root[data-large] .tile-grid button {
+  font-size: inherit;
+}
+/* The top bar keeps its size and spacing in both modes: Back, Need help and
+   Leave now must stay on one line at 360px with Leave now fully on screen
+   (measured: either mode alone pushed it 20-30px off). Its buttons are
+   already bold and 44px tall. zoom undoes the larger root size exactly. */
+:root[data-large] .top-bar {
+  zoom: calc(100 / 118.75);
+}
+:root[data-easy-read] .top-bar,
+:root[data-easy-read] .top-bar * {
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
 @keyframes wiggle {
   0%, 88%, 100% { transform: rotate(0deg); }
   92% { transform: rotate(-3deg); }

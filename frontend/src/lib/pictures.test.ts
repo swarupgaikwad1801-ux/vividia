@@ -14,10 +14,13 @@ import {
   NO_PICKS,
   NO_SAY,
   OFTEN,
+  TAKEN,
   choicesFrom,
   toggle,
   WHAT,
+  WHEN,
   WHERE,
+  WHERE_ONLINE,
   WHO_KIND,
   entryFor,
   handoffWhereFor,
@@ -242,6 +245,38 @@ test("'I don't want to say' is never stored: it records nothing for that questio
 test("every tile has a label in all three languages", () => {
   for (const choice of [...WHAT, ...WHERE, ...HOW_MANY, ...WHO_KIND, ...OFTEN]) {
     for (const lang of LANGS) assert.ok(choice.label[lang].trim(), `${choice.code} has no ${lang} label`);
+  }
+});
+
+test("a long German word on a tile has a soft hyphen, so it never spills over the next tile", () => {
+  // At 360px a third-width tile holds about ten bold letters ("Geschlagen").
+  // "Ausgeschlossen" did not fit and ran into its neighbour. ­ marks a
+  // correct break that is shown only when it is used.
+  // The three-across grids (PictureQuestions.tsx); two-across tiles have room.
+  const tiles = [...WHAT, ...TAKEN, ...WHERE_ONLINE, ...WHEN];
+  for (const choice of tiles) {
+    for (const word of choice.label.de.split(" ")) {
+      if (word.replace(/­/g, "").length > 10) {
+        assert.ok(word.includes("­"), `"${word}" (${choice.code}) needs a soft hyphen`);
+      }
+    }
+  }
+});
+
+test("the card never carries a soft hyphen: it goes to an adult and the report", () => {
+  const choices = {
+    what: WHAT.map((c) => c.code).filter((c) => c !== "other"),
+    where: "classroom",
+    howMany: "several",
+    kind: "older",
+    often: "daily",
+    taken: TAKEN[0].code,
+    whereOnline: WHERE_ONLINE[0].code,
+    when: WHEN[0].code,
+  } as const;
+  for (const lang of LANGS) {
+    const entry = entryFor(choices, lang, "2026-10-26", "");
+    assert.doesNotMatch(entry.text_child + entry.text_de + (entry.people ?? ""), /­/, lang);
   }
 });
 

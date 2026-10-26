@@ -165,6 +165,9 @@ test("every storage key in the app has a decision recorded here", () => {
     // A preference, not a record of what happened. Clearing it reveals
     // nothing and only makes the app harder to read on the next open.
     "vividia.lang.v1",
+    // Bigger text / easier reading: the same kind of preference as the
+    // language, visible only inside the app, and needed to read it.
+    "vividia.display.v1",
     // Cleared by clearDemo() using the ids it seeded. Wiping the key
     // wholesale would take a child's own entries with it.
     "vividia.demo.v1",

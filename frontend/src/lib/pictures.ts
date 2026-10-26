@@ -243,7 +243,9 @@ function pick(lang: string): Lang {
 }
 
 function label<C extends string>(list: readonly Choice<C>[], code: C, lang: Lang): string {
-  return list.find((choice) => choice.code === code)?.label[lang] ?? code;
+  // Soft hyphens (­) are line-break hints for a narrow tile; the card's
+  // text goes to an adult and to the report, so it never carries them.
+  return (list.find((choice) => choice.code === code)?.label[lang] ?? code).replace(/­/g, "");
 }
 
 function line(key: StringKey, x: string, lang: Lang): string {

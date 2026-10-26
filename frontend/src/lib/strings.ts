@@ -627,6 +627,11 @@ export const STRINGS = {
   // Hinglish screens (ENGLISH_IN_HINGLISH), like the other buttons.
   "read.aloud": { en: "Read aloud", de: "Vorlesen", hi: "Padh kar sunao" },
   "read.stop": { en: "Stop reading", de: "Vorlesen stoppen", hi: "Ruko" },
+  // Bigger text and easier reading (components/DisplayButton.tsx). Buttons,
+  // so English on Hinglish screens (ENGLISH_IN_HINGLISH).
+  "display.open": { en: "Text", de: "Schrift", hi: "Text" },
+  "display.large": { en: "Bigger text", de: "Größere Schrift", hi: "Bade letters" },
+  "display.easyRead": { en: "Easier reading", de: "Leichter lesen", hi: "Aasaan padhna" },
 
   // Picture questions (screens/PictureQuestions.tsx). Open questions, never
   // yes/no, never leading, never "why" (see that file's header).
@@ -663,8 +668,11 @@ export const STRINGS = {
   "pic.what.pushed": { en: "Pushed me", de: "Geschubst", hi: "Dhakka diya" },
   "pic.what.hit": { en: "Hit me", de: "Geschlagen", hi: "Maara" },
   "pic.what.names": { en: "Called me names", de: "Beschimpft", hi: "Bure naam bole" },
-  "pic.what.taken": { en: "Took my things", de: "Sachen weggenommen", hi: "Meri cheezein li" },
-  "pic.what.left_out": { en: "Left me out", de: "Ausgeschlossen", hi: "Saath nahi liya" },
+  // ­ is a soft hyphen: a break point shown only when used. Without it
+  // these two are wider than a tile at 360px and spilled over the next one.
+  // Tile labels only; the card's German comes from the pic.say sentences.
+  "pic.what.taken": { en: "Took my things", de: "Sachen weg­ge­nommen", hi: "Meri cheezein li" },
+  "pic.what.left_out": { en: "Left me out", de: "Aus­ge­schlossen", hi: "Saath nahi liya" },
   "pic.what.online": { en: "Online", de: "Online", hi: "Online" },
   "pic.what.threatened": { en: "Threatened me", de: "Bedroht", hi: "Dhamkaya" },
   "pic.where.classroom": { en: "Classroom", de: "Klassenzimmer", hi: "Class" },
@@ -727,14 +735,16 @@ export const STRINGS = {
     de: "Du hast gesagt, es war eine erwachsene Person. Woher kennst du die Person?",
     hi: "Tumne kaha yeh koi adult hai. Yeh adult kahan se hai?",
   },
-  "pic.online.chat": { en: "Group chat", de: "Gruppenchat", hi: "Group chat" },
+  // Soft hyphen for the narrow tile; stripped from the card (pictures.ts label()).
+  "pic.online.chat": { en: "Group chat", de: "Gruppen­chat", hi: "Group chat" },
   "pic.online.game": { en: "A game", de: "Ein Spiel", hi: "Game" },
   "pic.online.social": { en: "Social media", de: "Soziale Medien", hi: "Social media" },
-  "pic.online.messages": { en: "Messages", de: "Nachrichten", hi: "Messages" },
+  "pic.online.messages": { en: "Messages", de: "Nach­richten", hi: "Messages" },
   "pic.taken.lunch": { en: "My lunch", de: "Mein Essen", hi: "Mera khana" },
   "pic.taken.money": { en: "Money", de: "Geld", hi: "Paise" },
   "pic.taken.phone": { en: "My phone", de: "Mein Handy", hi: "Mera phone" },
-  "pic.taken.school_things": { en: "School things", de: "Schulsachen", hi: "School ka saamaan" },
+  // Soft hyphen for the narrow tile; stripped from the card (pictures.ts label()).
+  "pic.taken.school_things": { en: "School things", de: "Schul­sachen", hi: "School ka saamaan" },
   "pic.body.fine": { en: "Fine", de: "Gut", hi: "Theek hai" },
   "pic.body.hurts_bit": { en: "Hurts a bit", de: "Tut ein bisschen weh", hi: "Thoda dard hai" },
   "pic.body.hurts_lot": { en: "Hurts a lot", de: "Tut sehr weh", hi: "Bahut dard hai" },
@@ -815,6 +825,9 @@ export const ENGLISH_IN_HINGLISH: ReadonlySet<StringKey> = new Set<StringKey>([
   "lang.change",
   "read.aloud",
   "read.stop",
+  "display.open",
+  "display.large",
+  "display.easyRead",
   "onboarding.title",
   "onboarding.again",
   "onboarding.next",

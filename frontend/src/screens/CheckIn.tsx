@@ -39,7 +39,7 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
         Six moods in two rows of three: the layout moods.ts was written for,
         and the one that fits a 360px phone without shrinking a tap target.
       */}
-      <ul className="grid grid-cols-3 gap-3">
+      <ul className="tile-grid grid grid-cols-3 gap-3">
         {MOODS.map((mood, i) => (
           <li key={mood.code}>
             <button
