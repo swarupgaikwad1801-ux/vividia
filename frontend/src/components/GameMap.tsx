@@ -7,7 +7,9 @@
  * Decorative for a screen reader except one sentence saying where they are.
  */
 
-import { AvatarGroup } from "../art/People";
+import { useState } from "react";
+
+import { AVATARS, AvatarGroup, AvatarHead } from "../art/People";
 import { Sparkle } from "../art/Things";
 import { MAP_PLACES } from "../lib/scenes";
 import { fill, t } from "../lib/strings";
@@ -55,13 +57,34 @@ function Glyph({ i, x, y }: { i: number; x: number; y: number }) {
   }
 }
 
-export default function GameMap({ at, avatar, lang }: { at: number; avatar: number; lang: string }) {
+export interface GameMapProps {
+  at: number;
+  avatar: number;
+  lang: string;
+  /** The child tapped their traveller and picked another head. */
+  onAvatar: (index: number) => void;
+}
+
+export default function GameMap({ at, avatar, lang, onAvatar }: GameMapProps) {
+  const [picking, setPicking] = useState(false);
   const place = MAP_PLACES[at];
   return (
-    <div className="mx-4 mt-2 rounded-card border-[3px] border-ink bg-surface/90 px-1">
+    <div className="mx-4 mt-2 flex flex-col gap-2">
+    <div className="relative rounded-card border-[3px] border-ink bg-surface/90 px-1">
       <p className="sr-only">
         {fill("map.youAreHere", lang, { place: t(place.label, lang), n: at + 1, total: MAP_PLACES.length })}
       </p>
+      {/* The traveller is the one thing on the map you can tap: it opens the
+          heads to choose from. A real button laid over the drawing, at least
+          44px, following the traveller as it moves. */}
+      <button
+        type="button"
+        onClick={() => setPicking((open) => !open)}
+        aria-expanded={picking}
+        aria-label={t("avatar.change", lang)}
+        className="absolute size-11 -translate-x-1/2 -translate-y-1/2 rounded-full transition-[left,top] duration-500"
+        style={{ left: `${(XS[at] / 340) * 100}%`, top: `${((YS[at] - 30) / 96) * 100}%` }}
+      />
       <svg viewBox="0 0 340 96" aria-hidden="true" focusable="false" className="block w-full">
         {/* The path */}
         <path
@@ -100,6 +123,37 @@ export default function GameMap({ at, avatar, lang }: { at: number; avatar: numb
           </g>
         </g>
       </svg>
+    </div>
+
+      {/* A picture only: it never talks, and it is kept on this phone. */}
+      {picking && (
+        <fieldset className="animate-pop-in rounded-card border-[3px] border-ink bg-surface p-3">
+          <legend className="sr-only">{t("avatar.pick", lang)}</legend>
+          <div className="grid grid-cols-6 gap-1.5">
+            {AVATARS.map((_, i) => (
+              <label
+                key={i}
+                className={`squish flex aspect-square cursor-pointer items-center justify-center rounded-full border-[3px] has-[:focus-visible]:outline has-[:focus-visible]:outline-3 ${
+                  i === avatar ? "border-ink bg-calm-soft" : "border-transparent"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="avatar"
+                  className="sr-only"
+                  checked={i === avatar}
+                  onChange={() => {
+                    onAvatar(i);
+                    setPicking(false);
+                  }}
+                  aria-label={fill("avatar.option", lang, { n: i + 1 })}
+                />
+                <AvatarHead index={i} className="size-full" />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
     </div>
   );
 }

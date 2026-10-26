@@ -144,9 +144,9 @@ export default function App() {
     (next: Lang) => {
       setLang(next);
       saveLang(next);
-      // Straight after the first choice, so it is read once in the language
-      // the child just picked. No flag is stored: a first run already is one.
-      setStep("onboarding");
+      // Straight to the check-in (Neel, 26 Oct): the cards are not shown by
+      // default. "What this app does" at the bottom of the check-in opens them.
+      setStep("checkIn");
     },
     [setStep],
   );
@@ -240,7 +240,17 @@ export default function App() {
         <QuickExitButton lang={lang} />
       </div>
 
-      {onMap !== null && <GameMap at={onMap} avatar={avatar} lang={lang} />}
+      {onMap !== null && (
+        <GameMap
+          at={onMap}
+          avatar={avatar}
+          lang={lang}
+          onAvatar={(next) => {
+            setAvatar(next);
+            saveAvatar(next);
+          }}
+        />
+      )}
 
       {/* Keyed by step, so each new place slides in. Quiet scenes do not
           move. Reduced motion stops it anyway (index.css). */}
@@ -250,15 +260,7 @@ export default function App() {
       )}
 
       {step === "onboarding" && (
-        <Onboarding
-          lang={lang}
-          avatar={avatar}
-          onAvatar={(next) => {
-            setAvatar(next);
-            saveAvatar(next);
-          }}
-          onDone={() => setStep("checkIn")}
-        />
+        <Onboarding lang={lang} onDone={() => setStep("checkIn")} />
       )}
 
       {step === "checkIn" && (
@@ -268,12 +270,12 @@ export default function App() {
               handoff ending true. */}
           <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
           <CheckIn lang={lang} onChoose={afterCheckIn} />
-          {/* The promises stay readable after the first run, for the child
-              who skipped past them and for anyone they show the app to. */}
+          {/* The three cards, on request only: small, at the bottom, for the
+              child who wants to know and for anyone they show the app to. */}
           <button
             type="button"
             onClick={() => setStep("onboarding")}
-            className="min-h-tap mt-6 self-center rounded-card px-6 text-sm font-medium text-ink-soft underline underline-offset-4 hover:text-ink"
+            className="squish min-h-tap mx-4 mt-2 mb-6 self-center rounded-full border-2 border-ink bg-surface px-4 text-sm font-bold text-ink"
           >
             {t("onboarding.again", lang)}
           </button>

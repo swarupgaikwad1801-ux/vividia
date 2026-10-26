@@ -39,11 +39,15 @@ test("back never reaches the language picker", () => {
   assert.deepEqual(backAll(trail), ["checkIn"]);
 });
 
-test("first run: language, then onboarding; Back from onboarding goes to the language", () => {
-  const trail = walk("language", "onboarding");
-  assert.deepEqual(backAll(trail), ["language"]);
-  // Start or Skip goes home, which starts a new trail.
-  assert.deepEqual(go(trail, "checkIn"), ["checkIn"]);
+test("first run: language goes straight to check-in, with no Back to the picker", () => {
+  // Onboarding is off by default (Neel, 26 Oct).
+  const trail = walk("language", "checkIn");
+  assert.deepEqual(trail, ["checkIn"]);
+  assert.equal(canGoBack(trail), false);
+});
+
+test("Start or Skip on the cards goes home, which starts a new trail", () => {
+  assert.deepEqual(walk("checkIn", "onboarding", "checkIn"), ["checkIn"]);
 });
 
 test("'What this app does' from check-in goes back to check-in", () => {

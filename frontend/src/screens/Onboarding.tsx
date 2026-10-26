@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { AvatarHead, AVATARS } from "../art/People";
 import { OnboardingPicture } from "../art/Things";
 import { ONBOARDING_CARDS } from "../lib/onboarding";
 import { fill, t } from "../lib/strings";
@@ -31,15 +30,11 @@ import type { Lang } from "../lib/strings";
  */
 export interface OnboardingProps {
   lang: Lang;
-  /** The traveller the child has picked for the map (lib/avatar.ts). */
-  avatar?: number;
-  /** Omitted: no picker is shown. */
-  onAvatar?: (index: number) => void;
   /** The child pressed Start or Skip. */
   onDone: () => void;
 }
 
-export default function Onboarding({ lang, avatar = 0, onAvatar, onDone }: OnboardingProps) {
+export default function Onboarding({ lang, onDone }: OnboardingProps) {
   const [index, setIndex] = useState(0);
   const card = ONBOARDING_CARDS[index];
   const last = index === ONBOARDING_CARDS.length - 1;
@@ -74,33 +69,6 @@ export default function Onboarding({ lang, avatar = 0, onAvatar, onDone }: Onboa
         </p>
       </div>
 
-      {/* The traveller for the map, on the last card. A picture only: it
-          never talks, and it is kept on this phone. */}
-      {last && onAvatar && (
-        <fieldset className="flex flex-col gap-3">
-          <legend className="mb-3 text-lg font-bold text-ink">{t("avatar.pick", lang)}</legend>
-          <div className="grid grid-cols-6 gap-1.5">
-            {AVATARS.map((_, i) => (
-              <label
-                key={i}
-                className={`squish flex aspect-square cursor-pointer items-center justify-center rounded-full border-[3px] bg-surface ${
-                  i === avatar ? "border-ink ring-4 ring-ink/20" : "border-transparent"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="avatar"
-                  className="sr-only"
-                  checked={i === avatar}
-                  onChange={() => onAvatar(i)}
-                  aria-label={fill("avatar.option", lang, { n: i + 1 })}
-                />
-                <AvatarHead index={i} className="size-full" />
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      )}
 
       <div className="flex items-center justify-center gap-2">
         <span className="sr-only">

@@ -262,6 +262,8 @@ export const STRINGS = {
   // that talks. Stored only on this phone (lib/avatar.ts).
   "avatar.pick": { en: "Pick who walks the map", de: "Wer läuft über die Karte?", hi: "नक्शे पर कौन चलेगा, चुनो" },
   "avatar.option": { en: "Traveller {n}", de: "Figur {n}", hi: "यात्री {n}" },
+  // The traveller on the map is a button: tap it to pick another head.
+  "avatar.change": { en: "Change your traveller", de: "Figur ändern", hi: "अपना यात्री बदलो" },
 
   // The language note next to each helpline. {list} is the languages joined
   // with help.and; "only" is added when the child's language is not among them.
