@@ -39,7 +39,9 @@ import { useCallback, useState } from "react";
 import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
 import type { StoredEntry } from "../lib/timeline";
-import { clearAll, isPersistent, listEntries, removeEntry } from "../lib/timeline";
+import { isPersistent, listEntries, removeEntry } from "../lib/timeline";
+import { forgetEverything } from "../lib/forgetEverything";
+import PinRemovedNotice from "../components/PinRemovedNotice";
 import TimelineDeleteAll from "../components/TimelineDeleteAll";
 import TimelineEntryCard from "../components/TimelineEntryCard";
 
@@ -75,13 +77,23 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
   );
 
   const deleteEverything = useCallback(() => {
-    clearAll();
+    // Not clearAll(): that empties the timeline and leaves the check-in
+    // schedule, the handoff record and the note about the PIN behind. A
+    // child who pressed this was told everything was gone while the app
+    // still remembered that they had taken a report to a teacher.
+    // forgetEverything() is the one place that knows the full list.
+    forgetEverything();
     setStatus(t("timeline.deletedAll", lang));
     refresh();
   }, [lang, refresh]);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
+      {/* If someone removed the PIN without knowing it, this is where the
+          child finds out. On the timeline because that is the screen they
+          open to see their own words - the place they would notice. */}
+      <PinRemovedNotice lang={lang} />
+
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">{t("timeline.title", lang)}</h1>
         {/* Only ever a claim about this list. Never about the whole app. */}

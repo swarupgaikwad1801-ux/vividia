@@ -37,6 +37,32 @@ export const STRINGS = {
     de: "Amara ist ein ausgedachtes Beispiel. Es wird kein echtes Kind gezeigt.",
     hi: "अमारा एक काल्पनिक उदाहरण है। कोई असली बच्चा नहीं दिखाया गया है।",
   },
+  // The demo button (moved from lib-demo/pendingStrings.ts, same key names).
+  // {name} is the persona name from the story, filled with fill(), never typed in.
+  "demo.loading": {
+    en: "Loading the example story…",
+    de: "Die Beispielgeschichte wird geladen…",
+    hi: "उदाहरण कहानी लोड हो रही है…",
+  },
+  "demo.loaded": {
+    en: "{name}'s story is loaded. Her sentence is written and waiting — you press send.",
+    de: "{name}s Geschichte ist geladen. Ihr Satz ist geschrieben und wartet — du drückst Senden.",
+    hi: "{name} की कहानी लोड हो गई है। उसका वाक्य लिखा हुआ तैयार है — भेजना आप दबाते हैं।",
+  },
+  "demo.clear": { en: "Clear the example", de: "Beispiel entfernen", hi: "उदाहरण हटाएँ" },
+  "demo.cleared": {
+    en: "The example is gone. The app is back to empty.",
+    de: "Das Beispiel ist weg. Die App ist wieder leer.",
+    hi: "उदाहरण हट गया। ऐप फिर से खाली है।",
+  },
+  // The refusal: the person has notes of their own, so the example was not
+  // loaded at all. Says what happened, and does not offer to load it anyway:
+  // the child's own words are what is being protected.
+  "demo.notLoadedOwnNotes": {
+    en: "You have your own notes here, so the example was not loaded. Nothing of yours has changed.",
+    de: "Du hast hier eigene Notizen, deshalb wurde das Beispiel nicht geladen. An deinen Notizen hat sich nichts geändert.",
+    hi: "यहाँ आपके अपने नोट्स हैं, इसलिए उदाहरण लोड नहीं हुआ। आपका कुछ भी नहीं बदला।",
+  },
 
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "अभी मदद चाहिए?" },
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "जो लोग मदद कर सकते हैं" },
