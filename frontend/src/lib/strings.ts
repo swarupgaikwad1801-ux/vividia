@@ -109,10 +109,12 @@ export const STRINGS = {
   "approve.change": { en: "Change it", de: "Ändern", hi: "बदलो" },
 
   "timeline.title": { en: "What happened so far", de: "Was bisher passiert ist", hi: "अब तक क्या हुआ" },
+  // Also shown on the handoff card when nothing is approved yet. Where things
+  // are stored is said once, in timeline.storageNote.
   "timeline.empty": {
-    en: "Nothing saved yet. What you save stays only on this phone.",
-    de: "Noch nichts gespeichert. Was du speicherst, bleibt nur auf diesem Handy.",
-    hi: "अभी कुछ सेव नहीं है। जो भी सेव होगा, वह सिर्फ़ इसी फ़ोन पर रहेगा।",
+    en: "Nothing saved yet.",
+    de: "Noch nichts gespeichert.",
+    hi: "अभी कुछ सेव नहीं है।",
   },
   "timeline.delete": { en: "Delete", de: "Löschen", hi: "मिटाओ" },
   "timeline.deleteAll": { en: "Delete everything", de: "Alles löschen", hi: "सब मिटाओ" },
@@ -263,18 +265,20 @@ export const STRINGS = {
   },
   "timeline.where": { en: "Where", de: "Wo", hi: "कहाँ" },
   "timeline.who": { en: "Who", de: "Wer", hi: "कौन" },
-  "timeline.buildReport": { en: "Make a report from this", de: "Einen Bericht daraus machen", hi: "इससे रिपोर्ट बनाओ" },
+  // Child text says "card", not "report": it is the card the child shows the
+  // adult. The key names keep "report" because the code and the API use it.
+  "timeline.buildReport": { en: "Make a card from this", de: "Eine Karte daraus machen", hi: "इससे कार्ड बनाओ" },
   "report.title": {
-    en: "Your report, to show someone",
-    de: "Dein Bericht zum Zeigen",
-    hi: "तुम्हारी रिपोर्ट, किसी को दिखाने के लिए",
+    en: "Your card, to show someone",
+    de: "Deine Karte zum Zeigen",
+    hi: "तुम्हारा कार्ड, किसी को दिखाने के लिए",
   },
-  "report.build": { en: "Write the report", de: "Bericht schreiben", hi: "रिपोर्ट लिखो" },
-  "report.building": { en: "Writing your report…", de: "Dein Bericht wird geschrieben…", hi: "तुम्हारी रिपोर्ट लिखी जा रही है…" },
+  "report.build": { en: "Make the card", de: "Karte machen", hi: "कार्ड बनाओ" },
+  "report.building": { en: "Making your card…", de: "Deine Karte wird gemacht…", hi: "तुम्हारा कार्ड बन रहा है…" },
   "report.needEntries": {
-    en: "Save something first. The report is made from what you save.",
-    de: "Speicher zuerst etwas. Der Bericht wird aus deinen Einträgen gemacht.",
-    hi: "पहले कुछ सेव करो। रिपोर्ट उसी से बनती है जो सेव है।",
+    en: "Save something first. The card is made from what you save.",
+    de: "Speicher zuerst etwas. Die Karte wird aus deinen Einträgen gemacht.",
+    hi: "पहले कुछ सेव करो। कार्ड उसी से बनता है जो सेव है।",
   },
   "report.childLabel": { en: "In your language", de: "In deiner Sprache", hi: "तुम्हारी भाषा में" },
   "report.germanNote": {
@@ -287,10 +291,11 @@ export const STRINGS = {
     de: "Lies alles. Niemand sieht etwas, bevor du sagst: Das stimmt.",
     hi: "पूरा पढ़ो। जब तक तुम “हाँ, सही है” न कहो, कोई कुछ नहीं देखेगा।",
   },
+  // "Nothing is sent" is said once, on the handoff choice (handoff.youDecide).
   "report.approved": {
-    en: "You said this is right. It has not been sent to anyone.",
-    de: "Du hast gesagt: Das stimmt. Es wurde an niemanden geschickt.",
-    hi: "तुमने कहा कि यह सही है। यह किसी को भेजा नहीं गया।",
+    en: "You said this is right.",
+    de: "Du hast gesagt: Das stimmt.",
+    hi: "तुमने कहा कि यह सही है।",
   },
   // Must keep saying that the words leave the phone (CLAUDE.md, privacy).
   "report.cloudNote": {
@@ -299,9 +304,9 @@ export const STRINGS = {
     hi: "जर्मन बनाने के लिए तुम्हारे शब्द इंटरनेट पर एक अनुवाद सेवा के पास जाते हैं और तुरंत लौट आते हैं। हमारा सर्वर कोई कॉपी नहीं रखता। वह सेवा भी उन्हें नहीं रखती।",
   },
   "report.offline": {
-    en: "There is no internet, so the report can't be written yet. What you saved is still here.",
-    de: "Gerade gibt es kein Internet. Darum kann der Bericht noch nicht geschrieben werden. Was du gespeichert hast, ist noch da.",
-    hi: "अभी इंटरनेट नहीं है, इसलिए रिपोर्ट अभी नहीं बन सकती। जो सेव किया था, वह यहीं है।",
+    en: "There is no internet, so the card can't be made yet. What you saved is still here.",
+    de: "Gerade gibt es kein Internet. Darum kann die Karte noch nicht gemacht werden. Was du gespeichert hast, ist noch da.",
+    hi: "अभी इंटरनेट नहीं है, इसलिए कार्ड अभी नहीं बन सकता। जो सेव किया था, वह यहीं है।",
   },
   "errors.retry": { en: "Try again", de: "Nochmal versuchen", hi: "फिर से करो" },
 
@@ -311,6 +316,21 @@ export const STRINGS = {
   "handoff.preparing": { en: "Getting your words ready…", de: "Deine Worte werden fertig gemacht…", hi: "तुम्हारे शब्द तैयार हो रहे हैं…" },
   "handoff.retry": { en: "Try again", de: "Nochmal versuchen", hi: "फिर से करो" },
   "handoff.yourWords": { en: "Your words", de: "Deine Worte", hi: "तुम्हारे शब्द" },
+  // The handoff ending (issue #3): a full-screen card, then the follow-up.
+  // Not used by a screen yet; Vernika builds it.
+  // No first person, same rule as the follow-up: the app is not a friend.
+  "handoff.showThem": { en: "Show this to them", de: "Jetzt zeigen", hi: "यह उन्हें दिखाओ" },
+  "handoff.checkLater": {
+    en: "In a few days, the app will ask how things are.",
+    de: "In ein paar Tagen fragt die App, wie es dir geht.",
+    hi: "कुछ दिनों में ऐप पूछेगा कि कैसा चल रहा है।",
+  },
+  "handoff.done": { en: "Done", de: "Fertig", hi: "हो गया" },
+
+  // Back and next on every screen (issue #3). Back stays inside the app, so
+  // quick exit still has nothing to go back to.
+  "nav.back": { en: "Back", de: "Zurück", hi: "पीछे" },
+  "nav.next": { en: "Next", de: "Weiter", hi: "आगे" },
 
   // PIN (moved from components/pinText.ts, which was English only). {seconds},
   // {count} and {when} are filled with fill().
@@ -404,10 +424,11 @@ export const STRINGS = {
     de: "Du hast seit ein paar Tagen nichts geschrieben.",
     hi: "पिछली बार कुछ लिखे हुए कुछ दिन हो गए।",
   },
+  // The privacy promise on this screen is followup.notKept, said once.
   "followup.noPressure": {
-    en: "You don't have to answer. Whatever you pick, nothing is sent to anyone.",
-    de: "Du musst nicht antworten. Egal, was du wählst: Nichts wird verschickt.",
-    hi: "जवाब देना ज़रूरी नहीं। कुछ भी चुनो, किसी को कुछ नहीं भेजा जाता।",
+    en: "You don't have to answer.",
+    de: "Du musst nicht antworten.",
+    hi: "जवाब देना ज़रूरी नहीं।",
   },
   "followup.answerBetter": { en: "A bit better", de: "Ein bisschen besser", hi: "थोड़ा अच्छा" },
   "followup.answerSame": { en: "About the same", de: "Ungefähr gleich", hi: "पहले जैसा" },
