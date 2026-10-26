@@ -51,6 +51,7 @@ import { emergency } from "./lib/api";
 import { addEntry, listEntries } from "./lib/timeline";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
+import { applyDocumentLang } from "./lib-lang/languages";
 import type { ReportResponse, Resource } from "./types/api";
 
 /**
@@ -162,7 +163,8 @@ export default function App() {
   const refreshEntries = useCallback(() => setEntries(listEntries()), []);
 
   useEffect(() => {
-    document.documentElement.lang = lang;
+    // hi-Latn for Hinglish, so a screen reader reads Roman Hindi as Hindi.
+    applyDocumentLang(lang);
   }, [lang]);
 
   // The timeline screen deletes entries in storage directly, so read them

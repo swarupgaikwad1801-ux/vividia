@@ -18,7 +18,7 @@ import type { Lang } from "../lib/strings";
  * `langSetup.title` for him to add.
  *
  * But the honest version of this is that the heading was never carrying its
- * weight. A screen showing "English / Deutsch / हिन्दी" and nothing else asks
+ * weight. A screen showing "English / Hinglish / Deutsch" and nothing else asks
  * its question in all three languages at once, which a sentence in one of them
  * cannot do. Two children in three would have been reading an instruction they
  * could not read, to find out something the buttons already told them. So the

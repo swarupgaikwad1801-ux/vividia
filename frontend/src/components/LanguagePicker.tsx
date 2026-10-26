@@ -17,7 +17,7 @@ import type { Lang } from "../lib/strings";
  * so there is no sentence here that could be mistranslated, and no key this
  * needs from `strings.ts`. That is why the control works on the very first
  * screen, before anyone knows what the child reads. A child who cannot read a
- * word of English can still find "हिन्दी".
+ * word of English can still find "Deutsch" or "Hinglish".
  *
  * ## Why one tap commits, with no "Continue"
  *
@@ -68,7 +68,7 @@ export interface LanguagePickerProps {
    * translated sentence and `strings.ts` has no key for one yet (see the PR:
    * `langSetup.groupLabel`). Each button already carries its own full name, so
    * a screen reader on the first screen announces "English, button. Deutsch,
-   * button. हिन्दी, button.", which is unambiguous without a group label.
+   * button. Hinglish, button.", which is unambiguous without a group label.
    * Pass `t("langSetup.groupLabel", lang)` once Neel has added it.
    */
   label?: string;
@@ -126,8 +126,7 @@ export default function LanguagePicker({
             {/*
               The endonym carries the option's own `lang`, inherited from the
               button, so a screen reader reads "Deutsch" with a German voice
-              and Chrome picks Noto Sans Devanagari out of the font stack for
-              "हिन्दी" instead of a system fallback.
+              and "Hinglish" (hi-Latn) as Hindi.
             */}
             <span className={stack ? "text-xl" : "text-base font-medium"}>{option.endonym}</span>
 

@@ -9,7 +9,7 @@ import type { Lang } from "../lib/strings";
  * wrong language, or handed the phone to a sibling, had no way back to it.
  *
  * The globe is drawn, not an emoji, so it looks the same on every phone, and
- * the visible text is the current language's own name ("हिन्दी", "Deutsch"):
+ * the visible text is the current language's own name ("Hinglish", "Deutsch"):
  * a child who cannot read the screen they are stuck on can still read that.
  * The accessible name says what the button does, in the current language,
  * and includes the visible name, so speech control ("tap English") works.

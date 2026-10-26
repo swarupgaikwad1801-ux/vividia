@@ -50,12 +50,14 @@
 
   /* Type. 17px base, because this is read on a cheap phone held low, often
      in a hurry. All bundled via @fontsource (main.tsx), nothing fetched.
-     Inter for text; "Baloo 2" right after it, so Hindi (Devanagari, which
-     Inter lacks) gets Baloo 2 character by character. */
+     Inter for text; "Baloo 2" right after it, so Devanagari (which Inter
+     lacks) gets Baloo 2 character by character. The screens are Hinglish in
+     Roman letters since 26 Oct; Devanagari still appears where the child
+     types it, on their card, and in the engine's questions. */
   --font-sans: "Inter", "Baloo 2", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Noto Sans Devanagari", "Helvetica Neue", Arial,
     sans-serif;
-  /* Headlines: Outfit 800 (Neel's pick), Baloo 2 for Hindi headlines. */
+  /* Headlines: Outfit 800 (Neel's pick), Baloo 2 for any Devanagari. */
   --font-display: "Outfit", "Baloo 2", var(--font-sans);
   --text-base: 1.0625rem;
 
@@ -135,15 +137,6 @@
     font-family: var(--font-display);
     font-weight: 800;
     letter-spacing: -0.02em;
-  }
-
-  /* Devanagari letters join along the top line; negative tracking opens
-     gaps in it. Hindi headlines keep normal spacing. */
-  :lang(hi) h1,
-  :lang(hi) .headline,
-  h1:lang(hi),
-  .headline:lang(hi) {
-    letter-spacing: normal;
   }
 
   /* A visible focus ring is how this app is usable by keyboard and by screen

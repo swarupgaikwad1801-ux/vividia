@@ -47,7 +47,7 @@ test("no count tapped means no doer and no count in the sentence", () => {
     text_child: "I was pushed.",
     text_de: "Ich wurde geschubst.",
   });
-  assert.equal(sentenceFor({ what: ["taken"], howMany: null }, "hi").text_child, "मेरी चीज़ें ले ली गईं।");
+  assert.equal(sentenceFor({ what: ["taken"], howMany: null }, "hi").text_child, "Meri cheezein le li.");
 });
 
 test("several people changes the German verb, not just the subject", () => {
@@ -55,9 +55,9 @@ test("several people changes the German verb, not just the subject", () => {
   assert.equal(text_de, "Mehrere haben mich geschlagen.");
 });
 
-test("Hindi uses the same verb for one person or several, because ने agrees with the object", () => {
-  assert.equal(sentenceFor({ what: ["taken"], howMany: "one" }, "hi").text_child, "किसी ने मेरी चीज़ें ले लीं।");
-  assert.equal(sentenceFor({ what: ["taken"], howMany: "several" }, "hi").text_child, "कुछ लोगों ने मेरी चीज़ें ले लीं।");
+test("Hinglish uses the same verb for one person or several, because 'ne' agrees with the object", () => {
+  assert.equal(sentenceFor({ what: ["taken"], howMany: "one" }, "hi").text_child, "Kisi ne meri cheezein le li.");
+  assert.equal(sentenceFor({ what: ["taken"], howMany: "several" }, "hi").text_child, "Kuch logon ne meri cheezein le li.");
 });
 
 test("several taps give several sentences, in tap order, and a repeat counts once", () => {
@@ -111,7 +111,7 @@ test("the sentence never says he or she, because a tap does not tell us", () => 
 
 test("who is written in the child's language, for the report to quote", () => {
   assert.equal(peopleFor({ what: ["hit"], howMany: "several", kind: "older" }, "en"), "A group, Older than me");
-  assert.equal(peopleFor({ what: ["hit"], howMany: "one", kind: "classmate" }, "hi"), "एक व्यक्ति, मेरी क्लास से");
+  assert.equal(peopleFor({ what: ["hit"], howMany: "one", kind: "classmate" }, "hi"), "Ek insaan, Meri class se");
   assert.equal(peopleFor({ what: ["hit"] }, "en"), null);
 });
 
@@ -133,10 +133,17 @@ test("'something else' for how often adds no line: it tells an adult nothing", (
   assert.deepEqual(linesFor({ what: [], often: "other" }, "en"), []);
 });
 
-test("nothing about the child is gendered in Hindi", () => {
+test("nothing about the child is gendered in Hinglish", () => {
   const all = [...WHAT, ...WHERE, ...HOW_MANY, ...WHO_KIND, ...OFTEN].map((choice) => choice.label.hi).join(" ");
-  for (const gendered of ["अकेला", "अकेली", "बड़ा", "बड़ी", "छोटा", "छोटी"]) {
-    assert.ok(!all.includes(gendered), `gendered word ${gendered} in the Hindi labels`);
+  assert.doesNotMatch(all, /(akela|akeli|bada|badi|chhota|chhoti)/i);
+  // Across every screen: no verb form that guesses the child's gender.
+  const screens = Object.values(STRINGS).map((entry) => entry.hi).join(" ");
+  assert.doesNotMatch(screens, /(karoge|karogi|sakte ho|sakti ho|rahe ho|rahi ho|akela|akeli|bhool gaya|bhool gayi)/i);
+});
+
+test("the hi screens are Hinglish in Roman letters, not Devanagari (Neel, 26 Oct)", () => {
+  for (const [key, entry] of Object.entries(STRINGS)) {
+    assert.doesNotMatch(entry.hi, /[ऀ-ॿ]/, `${key} is still in Devanagari`);
   }
 });
 

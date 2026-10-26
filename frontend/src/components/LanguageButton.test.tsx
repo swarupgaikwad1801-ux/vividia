@@ -30,7 +30,7 @@ function memoryStore() {
 }
 
 test("the button says what it does in every language, and shows the language's own name", () => {
-  const names = { en: "English", de: "Deutsch", hi: "हिन्दी" } as const;
+  const names = { en: "English", de: "Deutsch", hi: "Hinglish" } as const;
   for (const lang of LANGS) {
     const markup = renderToStaticMarkup(createElement(LanguageButton, { lang, onOpen: noop }));
     assert.ok(markup.includes(`aria-label="${STRINGS["lang.change"][lang]}: ${names[lang]}"`), lang);

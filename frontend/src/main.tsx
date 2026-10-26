@@ -5,8 +5,10 @@ import App from "./App";
 // and no request leaves the phone to load a typeface. Only the weights and
 // scripts the screens use. Inter for text (latin); Outfit 800 for headlines
 // (Neel's pick, the closest free look to a heavy geometric display face);
-// Baloo 2 for Hindi (Devanagari), which neither covers. The browser picks
-// per character.
+// Baloo 2 for Devanagari, which neither covers: the screens are Hinglish in
+// Roman letters, but a child may still type Devanagari, and it shows on their
+// card and in the engine's questions. Its files load only when a Devanagari
+// letter is on screen (unicode-range), so a Hinglish screen costs nothing.
 import "@fontsource/outfit/latin-800.css";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-500.css";
