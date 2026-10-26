@@ -42,21 +42,57 @@ def keys_anywhere(value) -> set[str]:
 # --- the guide ---------------------------------------------------------------
 
 
+# These three pinned the raw file passthrough. /api/guide is a typed,
+# language-selected response now (issue #3 step 7), so they pin the same
+# INTENT against the new shape: every step survives, every source resolves,
+# and the ladder keeps its order. The deeper contract tests live in
+# tests/test_guide_contract.py.
+
+
 def test_every_guide_step_comes_through_unchanged():
-    served = get("/api/guide")["guide"]["steps"]
-    assert served == GUIDE["guide"]["steps"]
+    for lang in ("de", "en"):
+        served = [step["text"] for step in get(f"/api/guide?lang={lang}")["steps"]]
+        assert served == [step[lang] for step in GUIDE["guide"]["steps"]], (
+            f"a step was changed or dropped in {lang}; the adult would get a "
+            "different guide from the one a person checked"
+        )
 
 
 def test_every_guide_step_names_a_source_the_payload_can_resolve():
-    """The handoff card links each step to the page it comes from."""
-    body = get("/api/guide")
-    for step in body["guide"]["steps"]:
-        assert body["sources"][step["source"]].startswith("https://")
+    """The handoff card links each step to the page it comes from.
+
+    Resolved server-side now, so the card does not carry the `sources` map.
+    """
+    served = get("/api/guide?lang=en")["steps"]
+    cited = [step for step in GUIDE["guide"]["steps"] if step.get("source")]
+
+    urls = [step["source_url"] for step in served if step["source_url"]]
+    assert len(urls) == len(cited), "a step lost its source on the way out"
+    for url in urls:
+        assert url.startswith("https://")
+        assert url in GUIDE["sources"].values()
 
 
 def test_the_escalation_ladder_comes_through_in_order():
-    served = [step["id"] for step in get("/api/guide")["escalation_ladder"]["steps"]]
-    assert served == [step["id"] for step in GUIDE["escalation_ladder"]["steps"]]
+    """Order is the content: a child already at the head of year is never
+    sent back to their form teacher.
+
+    `emergency` is dropped on purpose and lib/followups.ts leaves it out of
+    LADDER for the same reason - an emergency is not an escalation. 110 is
+    what you do INSTEAD of climbing, and it stays one tap away on every
+    screen from /api/emergency.
+    """
+    served = [rung["id"] for rung in get("/api/guide?lang=de")["ladder"]]
+    expected = [
+        step["id"] for step in GUIDE["escalation_ladder"]["steps"]
+        if step["id"] != "emergency"
+    ]
+
+    assert served == expected
+    assert "emergency" not in served, (
+        "110 was offered as the next rung up a ladder rather than as the "
+        "thing you do instead of climbing"
+    )
 
 
 # --- onboarding --------------------------------------------------------------
