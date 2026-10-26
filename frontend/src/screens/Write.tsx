@@ -5,7 +5,7 @@ import { t } from "../lib/strings.ts";
 import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
-import DangerLine from "../components/DangerLine.tsx";
+import { HelpPulse } from "../components/DangerLine.tsx";
 
 
 /**
@@ -274,10 +274,6 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
           >
             {t("write.send", lang)}
           </button>
-          {/* Said on the screen where the words are written, not buried in a
-              settings page: this is the moment the child is deciding whether
-              to trust the app at all. */}
-          <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
         </section>
       )}
 
@@ -314,12 +310,10 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
         // tabIndex -1 so the focus move above has somewhere to land; it is not
         // in the tab order.
         <div ref={resultRef} tabIndex={-1} className="flex flex-col gap-5">
-          {/* First, before the German: the safety floor (CLAUDE.md). Shown
-              because the text said something urgent — not because anyone was
-              told anything. Nothing was sent. */}
-          {/* One red line and the Need help button pulses (Neel, 26 Oct):
-              the full list is behind that button, not inline here. */}
-          {result.safety.urgent && <DangerLine lang={lang} />}
+          {/* The safety floor (CLAUDE.md): on urgent text, the red Need help
+              button in the top bar pulses. No red line here (Neel, 26 Oct:
+              "remove the emergency message"). */}
+          {result.safety.urgent && <HelpPulse />}
 
           <WriteResult
             lang={lang}
@@ -368,8 +362,6 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
               {t("approve.change", lang)}
             </button>
           </div>
-
-          <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
         </div>
       )}
     </section>

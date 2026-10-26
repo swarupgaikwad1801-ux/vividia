@@ -159,11 +159,6 @@ export const STRINGS = {
     de: "Weil es zu Hause passiert, zeigen wir dir nur Leute aus der Schule und Leute, die du anrufen kannst.",
     hi: "Yeh ghar par hota hai, isliye hum sirf school ke log aur phone par madad karne wale log dikhate hain.",
   },
-  "handoff.youDecide": {
-    en: "Nothing gets sent. You pick who sees it. You show it yourself.",
-    de: "Nichts wird verschickt. Du suchst aus, wer es sieht. Du zeigst es selbst.",
-    hi: "Kuch bhi bheja nahi jaata. Kaun dekhega, yeh tum chuno. Dikhana bhi tumhare haath mein hai.",
-  },
   // The German of these four is also what the adult reads on the card, so it
   // keeps the role names a German school uses (Vertrauenslehrkraft is a role,
   // not just "a teacher I like").
@@ -345,7 +340,6 @@ export const STRINGS = {
     de: "Lies alles. Niemand sieht etwas, bevor du sagst: Das stimmt.",
     hi: "Poora padho. Jab tak tum “Haan, sahi hai” na kaho, koi kuch nahi dekhega.",
   },
-  // "Nothing is sent" is said once, on the handoff choice (handoff.youDecide).
   "report.approved": {
     en: "You said this is right.",
     de: "Du hast gesagt: Das stimmt.",
@@ -796,8 +790,52 @@ export const STRINGS = {
 export type StringKey = keyof typeof STRINGS;
 
 /** The text for `key` in `lang`, falling back to English for unknown languages. */
+/**
+ * Names of the app's features and its buttons stay English on Hinglish
+ * screens (Neel, 26 Oct: "just keep the interactive part in the hinglish.
+ * keep the features of the app like 'What this app does' in english").
+ * Hinglish already mixes English for these ("phone", "save"), and a child
+ * who meets "Leave now" or "Need help" on every screen learns it once.
+ * The questions, answers and anything said to the child stay Hinglish.
+ */
+export const ENGLISH_IN_HINGLISH: ReadonlySet<StringKey> = new Set<StringKey>([
+  "app.poweredBy",
+  "demo.button",
+  "demo.clear",
+  "help.button",
+  "help.title",
+  "help.short",
+  "quickExit.button",
+  "nav.back",
+  "nav.next",
+  "lang.change",
+  "onboarding.title",
+  "onboarding.again",
+  "onboarding.next",
+  "onboarding.skip",
+  "onboarding.start",
+  "timeline.title",
+  "timeline.delete",
+  "timeline.deleteAll",
+  "timeline.buildReport",
+  "report.title",
+  "report.build",
+  "avatar.change",
+  "pin.set.title",
+  "pin.set.titleChange",
+  "pin.set.save",
+  "pin.set.skip",
+  "pin.remove.button",
+  "pin.unlock.title",
+  "pin.unlock.button",
+  "pin.keypad.delete",
+  "pin.keypad.clear",
+  "ladder.title",
+]);
+
 export function t(key: StringKey, lang: string): string {
   const entry: Text = STRINGS[key];
+  if (lang === "hi" && ENGLISH_IN_HINGLISH.has(key)) return entry.en;
   return (isLang(lang) && entry[lang]) || entry[FALLBACK_LANG];
 }
 

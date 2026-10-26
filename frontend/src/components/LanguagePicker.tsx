@@ -139,11 +139,7 @@ export default function LanguagePicker({
                 in the voice of the language it is naming. Left out of the
                 compact row, where there is no space for it at 360px.
               */}
-              {stack && option.englishName && (
-                <span lang="en" dir="ltr" className="text-sm font-normal text-ink-soft">
-                  {option.englishName}
-                </span>
-              )}
+              {/* No English name beside it (Neel, 26 Oct: "just keep Deutsch"). */}
 
               {/*
                 Decoration only: `aria-pressed` already tells a screen reader

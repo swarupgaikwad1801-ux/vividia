@@ -81,12 +81,6 @@ test("at school, the family option is offered and no note claims otherwise", () 
   assert.ok(!markup.includes(STRINGS["handoff.homeNote"].en));
 });
 
-test("nothing is sent: the promise is on the screen, not available", () => {
-  for (const where of ["school", "home", "online", "elsewhere"] as const) {
-    assert.ok(text(render(where)).includes(STRINGS["handoff.youDecide"].en), where);
-  }
-});
-
 test("the card has no way to send anything", () => {
   const markup = render("home").toLowerCase();
   for (const forbidden of ["mailto:", "<form", "type=\"submit\"", "sms:", "navigator.share"]) {

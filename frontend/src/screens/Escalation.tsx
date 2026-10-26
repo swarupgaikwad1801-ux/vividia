@@ -107,10 +107,6 @@ export default function Escalation({ lang, entries, today = todayIso(), onOpen }
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl" {...says("ladder.title", lang)} />
         <p className="text-base text-ink-soft" {...says("ladder.intro", lang)} />
-        {/* Already translated in lib/strings.ts: "Nothing is sent. You choose
-            who sees it, and you show it yourself." It is the promise of the
-            whole app, so it is on the screen most tempted to break it. */}
-        <p className="text-base font-medium" {...says("handoff.youDecide", lang)} />
         {notice && <p className="text-xs text-ink-soft" {...notice} />}
       </header>
 

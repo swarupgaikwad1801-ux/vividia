@@ -13,7 +13,7 @@
  *
  * Nothing on this screen contacts anybody. No send, no share, no mailto, no
  * notification, no "we've told your teacher". The child shows the card to a
- * person themselves, and `handoff.youDecide` says exactly that, on screen.
+ * person themselves.
  * A future "send" button here would break the one promise the product makes.
  *
  * The screen does no fetching of its own: the report arrives as a prop from

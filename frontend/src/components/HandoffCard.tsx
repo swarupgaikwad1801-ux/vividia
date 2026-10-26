@@ -3,9 +3,9 @@
  *
  * The card is a thing the child holds up to a person. The app does not deliver
  * it, email it, notify anyone or offer to: there is no send button here and
- * there must never be one. CLAUDE.md, "no alert behind the child's back", and
- * `handoff.youDecide` says so on screen, directly under the title, where the
- * child reads it before they pick anyone.
+ * there must never be one. CLAUDE.md, "no alert behind the child's back".
+ * The screen no longer says "nothing gets sent" (Neel, 26 Oct: a child does
+ * not understand it); the onboarding card says the app tells nobody.
  *
  * Who may be suggested is not decided here. It comes from
  * `suggestedAdults(where)`, which is the only place the child's answer to
@@ -76,10 +76,6 @@ export default function HandoffCard({
       {/* The promise, before any choice is made. Never collapse or move this
           below the fold: it is the one sentence that tells the child the app
           has not already told someone. */}
-      <p className="flex items-start gap-2 rounded-card border-[3px] border-ink bg-surface px-4 py-3 text-base font-medium text-ink">
-        <span aria-hidden="true">🔒</span>
-        <span>{t("handoff.youDecide", lang)}</span>
-      </p>
 
       {/*
         Why family is missing, in words for a child. Rendered from

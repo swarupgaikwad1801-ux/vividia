@@ -40,7 +40,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import Face from "../art/Face";
 import QuestionPicture, { type QuestionKind } from "../art/Questions";
-import DangerLine, { HelpPulse } from "../components/DangerLine";
+import { HelpPulse } from "../components/DangerLine";
 import { MOODS } from "../lib/moods";
 import {
   ADULT_WHERE,
@@ -409,11 +409,10 @@ export function PictureReview({ lang, choices, onSave, onChange, onNext, promine
 
   return (
     <Screen id="q-review" title={t("approve.title", lang)} hint={lines.length ? t("q.review.hint", lang) : undefined}>
-      {/* First, before anything else: the safety floor, as on the writing
-          screen: one red line, and Need help pulses. Built here, with no
-          model call: the taps already say it. */}
-      {help && <DangerLine lang={lang} />}
-      {!help && prominentHelp && <HelpPulse />}
+      {/* The safety floor: on danger, the red Need help button in the top bar
+          pulses. No red line in the screen (Neel, 26 Oct: "remove the
+          emergency message"); help is one tap away on every screen. */}
+      {(help || prominentHelp) && <HelpPulse />}
 
       {lines.length > 0 ? (
         <>

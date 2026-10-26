@@ -10,12 +10,12 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import QuickExitButton from "./QuickExitButton.tsx";
-import { LANGS, STRINGS } from "../lib/strings.ts";
+import { LANGS, STRINGS, t } from "../lib/strings.ts";
 
 test("the top bar shows Leave now and not the history note, in every language", () => {
   for (const lang of LANGS) {
     const markup = renderToStaticMarkup(createElement(QuickExitButton, { lang }));
-    assert.ok(markup.includes(STRINGS["quickExit.button"][lang]), lang);
+    assert.ok(markup.includes(t("quickExit.button", lang)), lang);
     assert.ok(!markup.includes(STRINGS["quickExit.note"][lang]), `${lang}: the note is back under the button`);
   }
 });

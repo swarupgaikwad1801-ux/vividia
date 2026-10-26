@@ -83,15 +83,14 @@ test("no question is a yes/no question, and none asks why", () => {
   }
 });
 
-test("'hit' or 'threatened' shows the one red danger line, not the whole help panel", () => {
+test("'hit' or 'threatened' shows no emergency message in the screen: Need help pulses instead", () => {
+  // Neel, 26 Oct: "remove the emergency message". The red Need help button
+  // in the top bar (every screen) pulses on danger; that happens in an effect,
+  // so it is not in this static markup.
   const danger = render(PictureReview, { lang: "en", choices: { what: ["threatened"] }, onSave: noop, onChange: noop, onNext: noop });
-  // Before /api/emergency answers, the line points at Need help.
-  assert.ok(danger.includes(STRINGS["help.dangerLineNoNumber"].en));
-  assert.match(danger, /role="alert"/);
+  assert.ok(!danger.includes(STRINGS["help.dangerLineNoNumber"].en));
+  assert.doesNotMatch(danger, /role="alert"/);
   assert.ok(!danger.includes(STRINGS["help.title"].en), "the full help list is not inline");
-  assert.ok(!danger.includes(STRINGS["handoff.youDecide"].en), "no duplicate promise lines");
-  const calm = render(PictureReview, { lang: "en", choices: { what: ["names"] }, onSave: noop, onChange: noop, onNext: noop });
-  assert.doesNotMatch(calm, /role="alert"/);
 });
 
 test("the check screen shows the lines the card will carry, and offers nothing to save when empty", () => {

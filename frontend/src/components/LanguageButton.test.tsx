@@ -13,7 +13,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import LanguageButton from "./LanguageButton.tsx";
 import LanguageSetup from "../screens/LanguageSetup.tsx";
 import CheckIn from "../screens/CheckIn.tsx";
-import { LANGS, STRINGS } from "../lib/strings.ts";
+import { LANGS, STRINGS, t } from "../lib/strings.ts";
 import { HOME, afterLanguage, current, go, start } from "../lib/nav.ts";
 import { readLang, saveLang, useStorage as useLangStorage } from "../lib-lang/langStore.ts";
 import { addEntry, listEntries, useStorage as useTimelineStorage } from "../lib/timeline.ts";
@@ -33,7 +33,7 @@ test("the button says what it does in every language, and shows the language's o
   const names = { en: "English", de: "Deutsch", hi: "Hinglish" } as const;
   for (const lang of LANGS) {
     const markup = renderToStaticMarkup(createElement(LanguageButton, { lang, onOpen: noop }));
-    assert.ok(markup.includes(`aria-label="${STRINGS["lang.change"][lang]}: ${names[lang]}"`), lang);
+    assert.ok(markup.includes(`aria-label="${t("lang.change", lang)}: ${names[lang]}"`), lang);
     assert.ok(markup.includes(`>${names[lang]}</span>`), `${lang}: visible name missing`);
     assert.match(markup, /min-h-tap/, "tap target under 44px");
   }

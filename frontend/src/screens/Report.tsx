@@ -146,7 +146,6 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl">{t("report.title", lang)}</h1>
-        <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
       </header>
 
       {phase === "idle" ? (
