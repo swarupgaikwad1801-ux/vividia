@@ -482,6 +482,132 @@ export const STRINGS = {
     hi: "आपके स्कूल से बाहर, और उसका हिस्सा नहीं।",
   },
   "ladder.why.helplines": { en: "Not from your school at all.", de: "Gar nicht von deiner Schule.", hi: "बिलकुल भी आपके स्कूल से नहीं।" },
+
+  // Listening: "Tell it your way" and the gentle questions (#3 proposal,
+  // 26 Oct). One soft question at a time, and every one can be skipped. The
+  // app never says "I": it is not a person, and does not pretend to be one.
+  "listen.waysTitle": { en: "How do you want to tell it?", de: "Wie möchtest du es erzählen?", hi: "आप इसे कैसे बताना चाहते हैं?" },
+  "listen.waysIntro": {
+    en: "Pick whatever feels easiest. You can change your mind at any time.",
+    de: "Nimm, was sich am leichtesten anfühlt. Du kannst jederzeit wechseln.",
+    hi: "जो सबसे आसान लगे, वह चुनें। आप कभी भी बदल सकते हैं।",
+  },
+  "listen.wayWrite": { en: "Write it", de: "Aufschreiben", hi: "लिखकर बताएँ" },
+  "listen.wayPictures": { en: "Tap pictures", de: "Bilder antippen", hi: "तस्वीरों पर टैप करें" },
+  "listen.waySpeak": { en: "Say it out loud", de: "Laut sagen", hi: "बोलकर बताएँ" },
+  // Next to "Say it out loud". Speaking can be overheard by the very person
+  // the child is telling about, so voice is never the default.
+  "listen.speakCaution": {
+    en: "Only if no one nearby can hear you.",
+    de: "Nur wenn dich niemand in der Nähe hören kann.",
+    hi: "सिर्फ़ तब, जब आस-पास कोई आपको सुन न सके।",
+  },
+  "listen.startAnywhere": {
+    en: "You can start anywhere. Even one word is enough.",
+    de: "Du kannst irgendwo anfangen. Schon ein Wort reicht.",
+    hi: "आप कहीं से भी शुरू कर सकते हैं। एक शब्द भी काफ़ी है।",
+  },
+  "listen.takeYourTime": {
+    en: "Take your time. Nothing is sent to anyone.",
+    de: "Lass dir Zeit. Nichts wird an jemanden geschickt.",
+    hi: "जितना समय चाहिए, लें। किसी को कुछ नहीं भेजा जाता।",
+  },
+  "listen.stopAnyTime": { en: "You can stop whenever you want.", de: "Du kannst aufhören, wann immer du willst.", hi: "आप जब चाहें रुक सकते हैं।" },
+  "listen.skip": { en: "Skip this", de: "Überspringen", hi: "इसे छोड़ें" },
+  "listen.notNow": { en: "Not now", de: "Jetzt nicht", hi: "अभी नहीं" },
+  "listen.dontKnow": { en: "I don't know", de: "Weiß ich nicht", hi: "मुझे नहीं पता" },
+  "listen.askWhere": {
+    en: "Do you want to say where it happened? You can skip this.",
+    de: "Möchtest du sagen, wo es passiert ist? Du kannst das überspringen.",
+    hi: "क्या आप बताना चाहते हैं कि यह कहाँ हुआ? आप इसे छोड़ भी सकते हैं।",
+  },
+  "listen.askWhen": {
+    en: "Do you want to say when it happened? You can skip this.",
+    de: "Möchtest du sagen, wann es passiert ist? Du kannst das überspringen.",
+    hi: "क्या आप बताना चाहते हैं कि यह कब हुआ? आप इसे छोड़ भी सकते हैं।",
+  },
+  "listen.askMore": {
+    en: "Is there anything else you want to add? You don't have to.",
+    de: "Möchtest du noch etwas dazusagen? Du musst nicht.",
+    hi: "क्या आप कुछ और जोड़ना चाहते हैं? ज़रूरी नहीं है।",
+  },
+  "listen.readBack": { en: "Here is what we understood. Is it right?", de: "Das haben wir verstanden. Stimmt das?", hi: "हमने यह समझा। क्या यह सही है?" },
+  "listen.readBackYes": { en: "Yes, that's right", de: "Ja, das stimmt", hi: "हाँ, यह सही है" },
+  // Not "let me fix it": in Hindi that needs a gendered verb (करूँगा/करूँगी).
+  "listen.readBackFix": { en: "Not quite, change it", de: "Nicht ganz, ändern", hi: "पूरी तरह नहीं, बदलें" },
+  "listen.thanks": {
+    en: "Thank you for putting this into words.",
+    de: "Danke, dass du das in Worte gefasst hast.",
+    hi: "इसे शब्दों में कहने के लिए धन्यवाद।",
+  },
+
+  // Voice, both ways. Reading aloud uses the device's own speechSynthesis and
+  // leaves the phone; turning speech into text usually does not stay on it,
+  // so voice.privacy must be shown wherever the mic button is.
+  "voice.speak": { en: "Speak", de: "Sprechen", hi: "बोलें" },
+  "voice.listening": {
+    en: "Listening… press Stop when you are done.",
+    de: "Hört zu … drück auf Stopp, wenn du fertig bist.",
+    hi: "सुन रहा है… पूरा होने पर 'रोकें' दबाएँ।",
+  },
+  "voice.stop": { en: "Stop", de: "Stopp", hi: "रोकें" },
+  "voice.checkText": {
+    en: "Read what we heard, and fix anything that is wrong.",
+    de: "Lies, was wir gehört haben, und korrigiere, was falsch ist.",
+    hi: "हमने जो सुना उसे पढ़ें, और जो गलत हो उसे ठीक करें।",
+  },
+  "voice.privacy": {
+    en: "To turn your voice into text, your browser sends it to a speech service, usually Google or Apple. If you type instead, no voice is sent.",
+    de: "Um deine Stimme in Text umzuwandeln, schickt dein Browser sie an einen Sprachdienst, meist Google oder Apple. Wenn du tippst, wird keine Stimme verschickt.",
+    hi: "आपकी आवाज़ को टेक्स्ट में बदलने के लिए आपका ब्राउज़र उसे एक स्पीच सेवा को भेजता है, आमतौर पर Google या Apple को। अगर आप टाइप करें, तो कोई आवाज़ नहीं भेजी जाती।",
+  },
+  "voice.unsupported": {
+    en: "Speaking does not work in this browser. You can type, or use the microphone on your keyboard.",
+    de: "Sprechen funktioniert in diesem Browser nicht. Du kannst tippen oder das Mikrofon auf deiner Tastatur benutzen.",
+    hi: "इस ब्राउज़र में बोलना काम नहीं करता। आप टाइप कर सकते हैं, या अपने कीबोर्ड का माइक्रोफ़ोन इस्तेमाल कर सकते हैं।",
+  },
+  "voice.keyboardHint": {
+    en: "You can also tap the microphone on your keyboard and speak. Your keyboard then sends your voice to its own speech service.",
+    de: "Du kannst auch auf das Mikrofon deiner Tastatur tippen und sprechen. Deine Tastatur schickt deine Stimme dann an ihren eigenen Sprachdienst.",
+    hi: "आप अपने कीबोर्ड के माइक्रोफ़ोन पर टैप करके भी बोल सकते हैं। तब आपका कीबोर्ड आपकी आवाज़ अपनी स्पीच सेवा को भेजता है।",
+  },
+  "voice.readAloud": { en: "Read aloud", de: "Vorlesen", hi: "पढ़कर सुनाएँ" },
+  "voice.stopReading": { en: "Stop reading", de: "Vorlesen stoppen", hi: "सुनाना रोकें" },
+  // Many phones have no Hindi voice installed; say so instead of a silent button.
+  "voice.noVoice": {
+    en: "This phone has no voice for your language, so reading aloud is off.",
+    de: "Dieses Handy hat keine Stimme für deine Sprache, deshalb ist Vorlesen aus.",
+    hi: "इस फ़ोन में आपकी भाषा की आवाज़ नहीं है, इसलिए पढ़कर सुनाना बंद है।",
+  },
+
+  // The helpers on the checking screen: the Nemotron steps, shown as jobs,
+  // never as friends. For a German-speaking child nothing is translated, so
+  // only the Asker applies (CLAUDE.md, "A child who already writes German").
+  // The Checker "looks for" mistakes: agreement is not correctness.
+  "helper.title": { en: "Who checks your words", de: "Wer deine Worte prüft", hi: "आपके शब्द कौन जाँचता है" },
+  "helper.writer.name": { en: "The Writer", de: "Der Schreiber", hi: "लेखक" },
+  "helper.writer.job": {
+    en: "Writes your words in German. When a sentence needs extra care, it writes several versions.",
+    de: "Schreibt deine Worte auf Deutsch. Wenn ein Satz besondere Sorgfalt braucht, schreibt er mehrere Fassungen.",
+    hi: "आपके शब्दों को जर्मन में लिखता है। जब किसी वाक्य पर ज़्यादा ध्यान चाहिए, तो वह कई रूप लिखता है।",
+  },
+  "helper.checker.name": { en: "The Checker", de: "Der Prüfer", hi: "जाँचने वाला" },
+  "helper.checker.job": {
+    en: "Compares the versions with what you wrote and looks for mistakes.",
+    de: "Vergleicht die Fassungen mit dem, was du geschrieben hast, und sucht nach Fehlern.",
+    hi: "इन रूपों की तुलना आपके लिखे से करता है और गलतियाँ ढूँढता है।",
+  },
+  "helper.asker.name": { en: "The Asker", de: "Der Frager", hi: "पूछने वाला" },
+  "helper.asker.job": {
+    en: "Notices when your words could mean two things, and asks you instead of guessing.",
+    de: "Merkt, wenn deine Worte zwei Dinge bedeuten könnten, und fragt dich, statt zu raten.",
+    hi: "ध्यान देता है कि कब आपके शब्दों के दो मतलब हो सकते हैं, और अंदाज़ा लगाने के बजाय आपसे पूछता है।",
+  },
+  "helper.note": {
+    en: "They are computer programs (NVIDIA Nemotron), not people and not friends. Only you decide what your words mean.",
+    de: "Das sind Computerprogramme (NVIDIA Nemotron), keine Menschen und keine Freunde. Nur du entscheidest, was deine Worte bedeuten.",
+    hi: "ये कंप्यूटर प्रोग्राम (NVIDIA Nemotron) हैं, इंसान या दोस्त नहीं। आपके शब्दों का मतलब सिर्फ़ आप तय करते हैं।",
+  },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;
