@@ -40,6 +40,8 @@ from pydantic import BaseModel
 from app import schemas
 from engine.config import REPO_ROOT
 
+from engine import contract
+
 API_TS = REPO_ROOT / "frontend" / "src" / "types" / "api.ts"
 
 
@@ -87,6 +89,11 @@ def canon_py(annotation) -> str:
     if origin in (typing.Union, types.UnionType):
         return _union([canon_py(arg) for arg in args])
     if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return annotation.__name__
+    # A TypedDict from engine/contract.py, for the third-copy comparison at the
+    # bottom of this file. Named rather than expanded, exactly like a model, so
+    # `list[Option]` canonicalises to "Option[]" whichever side it came from.
+    if typing.is_typeddict(annotation):
         return annotation.__name__
     raise AssertionError(
         f"canon_py does not know how to map {annotation!r}. Teach it, rather "
@@ -317,3 +324,151 @@ def test_a_retyped_field_would_be_noticed():
 def test_the_union_comparison_ignores_order_but_not_content():
     assert _union(['"a" | "b"']) == _union(['"b" | "a"'])
     assert _union(['"a" | "b"']) != _union(['"a" | "c"'])
+
+
+# --- the third copy: engine/contract.py --------------------------------------
+#
+# There are three declarations of the same shapes, not two:
+#
+#     backend/app/schemas.py       Pydantic, the HTTP boundary
+#     frontend/src/types/api.ts    TypeScript, the screens
+#     backend/engine/contract.py   TypedDict, what the engine functions take
+#
+# Everything above this line compares the first two. The third was outside the
+# comparison entirely, and `engine/contract.py` is the one the engine actually
+# consumes: `report()` is annotated `list[Entry]` with contract.py's Entry, not
+# the Pydantic model.
+#
+# #48 is what this is for. It added `note: str | None` to `schemas.Entry` and
+# `api.ts` "in the same commit, as the contract requires" - and the contract,
+# as written, is two files. The engine's Entry did not get the field, so a
+# child's clarification answer would arrive at the route, be handed to
+# `report()`, and reach code that does not know the key exists. 11/11 green.
+#
+# The direction that matters here is the opposite of the TypeScript one. There,
+# the server's output is the contract and the screens must know every field.
+# Here the route is the one receiving data and passing it inward, so the engine
+# must know every field the API accepts, or it silently drops what a child sent.
+
+# {contract.py name: schemas.py name}. The same shape under two names is normal
+# - the engine names a result, the API names a response - so the mapping is
+# explicit rather than inferred from the name.
+MIRRORED = {
+    "Option": "Option",
+    "Ambiguity": "Ambiguity",
+    "Entry": "Entry",
+    "SafetyResult": "Safety",
+    "Resource": "Resource",
+}
+
+# Envelopes, where the engine deliberately returns more than it declares and
+# the route repacks it: `translate()` also returns usage, step_summary and
+# budget_breaches, and the route moves calls_made inside `usage` and adds
+# safety and strategy_used. Comparing these field for field would fail on the
+# design rather than on a mistake, so only the fields that exist on both sides
+# are checked, and those must still agree.
+ENVELOPES = {
+    "TranslationResult": "TranslateResponse",
+    "Report": "ReportResponse",
+}
+
+
+def engine_shapes() -> dict[str, type]:
+    """The TypedDicts defined in engine/contract.py."""
+    return {
+        name: obj
+        for name, obj in vars(contract).items()
+        if typing.is_typeddict(obj) and obj.__module__ == contract.__name__
+    }
+
+
+SHAPES = engine_shapes()
+
+
+def engine_fields(name: str) -> dict[str, object]:
+    return typing.get_type_hints(SHAPES[name])
+
+
+def test_the_engine_shapes_were_actually_read():
+    """The same guard as test_api_ts_was_actually_parsed, for the same reason.
+
+    If introspection stops finding the TypedDicts, every comparison below
+    passes by iterating over nothing.
+    """
+    assert len(SHAPES) >= 5, f"only found {len(SHAPES)} TypedDicts in contract.py"
+    assert "Entry" in SHAPES
+    assert engine_fields("Entry"), "found Entry with no fields"
+
+
+def test_every_engine_shape_is_either_mirrored_or_a_documented_envelope():
+    """A new TypedDict forces a decision instead of quietly joining neither list."""
+    unaccounted = sorted(set(SHAPES) - set(MIRRORED) - set(ENVELOPES))
+    assert not unaccounted, (
+        f"{unaccounted} in engine/contract.py is in neither MIRRORED nor "
+        "ENVELOPES. Say which it is, with the reason, rather than leaving it "
+        "unchecked."
+    )
+
+
+@pytest.mark.parametrize("engine_name", sorted(MIRRORED))
+def test_the_engine_knows_every_field_the_api_accepts(engine_name):
+    """The #48 test.
+
+    A field the API accepts and the engine has never heard of is data a child
+    sent that nothing inward can read.
+    """
+    model = getattr(schemas, MIRRORED[engine_name])
+    known = engine_fields(engine_name)
+    missing = [field for field in model.model_fields if field not in known]
+    assert not missing, (
+        f"schemas.{model.__name__} has {missing}, which engine/contract.py's "
+        f"{engine_name} does not declare. Add it there in the same commit: the "
+        "engine is where the field is used, not just carried."
+    )
+
+
+@pytest.mark.parametrize("engine_name", sorted(MIRRORED))
+def test_the_engine_and_the_api_agree_on_what_each_field_is(engine_name):
+    model = getattr(schemas, MIRRORED[engine_name])
+    known = engine_fields(engine_name)
+    wrong = []
+    for field, info in model.model_fields.items():
+        if field not in known:
+            continue  # the test above reports this
+        expected = canon_py(info.annotation)
+        actual = canon_py(known[field])
+        if expected != actual:
+            wrong.append(f"{field}: schemas says {expected!r}, contract says {actual!r}")
+    assert not wrong, f"{engine_name} disagrees with schemas: " + "; ".join(wrong)
+
+
+@pytest.mark.parametrize("engine_name", sorted(ENVELOPES))
+def test_the_envelopes_agree_on_the_fields_they_share(engine_name):
+    """`confidence` must not be a float on one side and a string on the other,
+    even though the two shapes are deliberately not the same size."""
+    model = getattr(schemas, ENVELOPES[engine_name])
+    known = engine_fields(engine_name)
+    shared = sorted(set(known) & set(model.model_fields))
+    assert shared, f"{engine_name} and {model.__name__} share no field names at all"
+
+    wrong = [
+        f"{field}: schemas says {canon_py(model.model_fields[field].annotation)!r}, "
+        f"contract says {canon_py(known[field])!r}"
+        for field in shared
+        if canon_py(model.model_fields[field].annotation) != canon_py(known[field])
+    ]
+    assert not wrong, f"{engine_name} disagrees with schemas: " + "; ".join(wrong)
+
+
+def test_a_field_the_engine_does_not_declare_would_be_noticed():
+    """Mutation check, in-memory, the way the two tests above this section do it.
+
+    This is #48's `note` exactly: present on the Pydantic model, absent from
+    the TypedDict. If this comparison cannot fail, the section is decoration.
+    """
+    known = dict(engine_fields("Entry"))
+    known.pop("text_de")
+
+    missing = [field for field in schemas.Entry.model_fields if field not in known]
+
+    assert missing == ["text_de"]
