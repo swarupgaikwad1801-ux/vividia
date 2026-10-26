@@ -215,6 +215,10 @@ Write the question in {source_name}, for a child aged about 10 to 16.
 - One sentence, under 15 words.
 - Everyday words. No grammar terms, no "ambiguous", no "translation".
 - Neutral: do not hint that either answer is better or more serious.
+- Speak to the child the way a friendly adult they know would, not the way a
+  form does. In Hindi use तुम, never आप. In German use du, never Sie. The
+  app's own screens do, and a question that switches register reads as though
+  something official has taken over.
 - Never ask the child to describe what happened again. Ask only which meaning
   they intended.
 - Never suggest the child made a mistake, and never mention that a computer was

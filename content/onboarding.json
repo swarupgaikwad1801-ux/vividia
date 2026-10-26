@@ -5,37 +5,37 @@
     {
       "id": "what",
       "en": "This app helps you put into words what is happening to you, in your own language. It shows you a German version, so an adult you choose can understand you.",
-      "hi": "यह ऐप आपकी मदद करता है कि जो आपके साथ हो रहा है, उसे आप अपनी भाषा में शब्दों में कह सकें। यह आपको उसका जर्मन रूप दिखाता है, ताकि आपका चुना हुआ कोई बड़ा आपको समझ सके।",
+      "hi": "यह ऐप तुम्हारी मदद करता है कि जो तुम्हारे साथ हो रहा है, उसे तुम अपनी भाषा में कह सको। यह तुम्हें उसका जर्मन रूप दिखाता है, ताकि तुम्हारा चुना हुआ कोई बड़ा तुम्हें समझ सके।",
       "de": "Diese App hilft dir, in deiner eigenen Sprache aufzuschreiben, was dir passiert. Sie zeigt dir eine deutsche Version, damit ein Erwachsener, den du auswählst, dich verstehen kann."
     },
     {
       "id": "you-decide",
       "en": "You decide. Nothing is sent to anyone unless you choose to show it. The app never tells anyone behind your back.",
-      "hi": "फ़ैसला आपका है। जब तक आप ख़ुद न दिखाएँ, कुछ भी किसी को नहीं भेजा जाता। ऐप आपकी पीठ पीछे किसी को कुछ नहीं बताता।",
+      "hi": "फ़ैसला तुम्हारा है। जब तक तुम ख़ुद न दिखाओ, कुछ भी किसी को नहीं भेजा जाता। ऐप तुम्हारी पीठ पीछे किसी को कुछ नहीं बताता।",
       "de": "Du entscheidest. Nichts wird an jemanden geschickt, außer du zeigst es selbst. Die App erzählt niemandem etwas hinter deinem Rücken."
     },
     {
       "id": "where-words-go",
       "en": "To translate your words, the app sends them to a computer service. It does not keep them. Your list of what happened stays only on this phone, and you can delete it.",
-      "hi": "आपके शब्दों का अनुवाद करने के लिए ऐप उन्हें एक कंप्यूटर सेवा को भेजता है। वह उन्हें रखती नहीं है। जो हुआ उसकी आपकी सूची सिर्फ़ इसी फ़ोन पर रहती है, और आप उसे मिटा सकते हैं।",
+      "hi": "तुम्हारे शब्दों का अनुवाद करने के लिए ऐप उन्हें एक कंप्यूटर सेवा को भेजता है। वह उन्हें रखती नहीं है। जो हुआ उसकी तुम्हारी सूची सिर्फ़ इसी फ़ोन पर रहती है, और तुम उसे मिटा सकते हो।",
       "de": "Um deine Worte zu übersetzen, schickt die App sie an einen Computerdienst. Er speichert sie nicht. Deine Liste mit dem, was passiert ist, bleibt nur auf diesem Handy, und du kannst sie löschen."
     },
     {
       "id": "check-meaning",
       "en": "If your words could mean two things, the app asks you what you meant. It never guesses.",
-      "hi": "अगर आपके शब्दों के दो मतलब हो सकते हैं, तो ऐप आपसे पूछता है कि आपका क्या मतलब था। वह कभी अंदाज़ा नहीं लगाता।",
+      "hi": "अगर तुम्हारे शब्दों के दो मतलब हो सकते हैं, तो ऐप तुमसे पूछता है कि तुम्हारा क्या मतलब था। वह कभी अंदाज़ा नहीं लगाता।",
       "de": "Wenn deine Worte zwei Dinge bedeuten können, fragt dich die App, was du gemeint hast. Sie rät nie."
     },
     {
       "id": "not-a-person",
       "en": "This app is not a person and not a doctor. It helps you reach people who can help.",
-      "hi": "यह ऐप कोई इंसान या डॉक्टर नहीं है। यह आपको उन लोगों तक पहुँचने में मदद करता है जो मदद कर सकते हैं।",
+      "hi": "यह ऐप कोई इंसान या डॉक्टर नहीं है। यह तुम्हें उन लोगों तक पहुँचने में मदद करता है जो मदद कर सकते हैं।",
       "de": "Diese App ist kein Mensch und kein Arzt. Sie hilft dir, Menschen zu erreichen, die helfen können."
     },
     {
       "id": "help-button",
       "en": "The \"Need help now?\" button is on every screen. Quick exit closes the app at once, but it does not delete your browser history.",
-      "hi": "\"अभी मदद चाहिए?\" बटन हर स्क्रीन पर है। क्विक एग्ज़िट ऐप को तुरंत बंद कर देता है, लेकिन आपके ब्राउज़र की हिस्ट्री नहीं मिटाता।",
+      "hi": "\"अभी मदद चाहिए?\" बटन हर स्क्रीन पर है। क्विक एग्ज़िट ऐप को तुरंत बंद कर देता है, लेकिन तुम्हारे ब्राउज़र की हिस्ट्री नहीं मिटाता।",
       "de": "Der Knopf „Brauchst du jetzt Hilfe?“ ist auf jedem Bildschirm. Schnell-Ausgang schließt die App sofort, löscht aber nicht deinen Browserverlauf."
     }
   ]
