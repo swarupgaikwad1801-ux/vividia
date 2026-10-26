@@ -512,7 +512,21 @@ async def _ask_the_child(text, disputes, source_ambiguities, source_lang, usage)
     ask_about = list(found or [])
     seen = {a["phrase"].lower() for a in ask_about}
     for dispute in disputes:
-        if dispute.get("kind") == "source_ambiguous" and dispute["phrase"].lower() not in seen:
+        if dispute.get("kind") != "source_ambiguous":
+            continue
+        # "minor" is the judge's own word for a disagreement that changes
+        # nothing about who did what to whom. Asking anyway spends a question
+        # on a child who is in the middle of describing being bullied, and
+        # buys an adult nothing: Neel's live run asked whether टिफ़िन meant the
+        # box or the lunch inside it, which changes no decision anyone makes.
+        #
+        # Only an explicit "minor" is dropped. A dispute that arrives without
+        # a severity is still asked, because the lexicon's own entries set
+        # "critical" deliberately and anything unlabelled is more likely a
+        # shape we did not anticipate than a question not worth asking.
+        if dispute.get("severity") == "minor":
+            continue
+        if dispute["phrase"].lower() not in seen:
             ask_about.append(dispute)
             seen.add(dispute["phrase"].lower())
     ask_about = ask_about[:2]  # never interrupt a child with more than two questions
