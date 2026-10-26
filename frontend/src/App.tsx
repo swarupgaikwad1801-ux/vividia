@@ -13,6 +13,7 @@ import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
 import Write from "./screens/Write";
 
+import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
@@ -20,6 +21,8 @@ import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 import { fill, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
 import { back, canGoBack, current, go, start, type Step } from "./lib/nav";
+import { SCENE, mapIndex } from "./lib/scenes";
+import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
 import { addEntry, listEntries } from "./lib/timeline";
 import { pinStatus } from "./lib/pin";
@@ -120,6 +123,8 @@ export default function App() {
   // to the same choice, and so the big card names the same person.
   const [where, setWhere] = useState<WhereItHappens | null>(null);
   const [adult, setAdult] = useState<AdultId | null>(null);
+  // The child's traveller on the map: a picture, stored only on this phone.
+  const [avatar, setAvatar] = useState(() => loadAvatar());
 
   const refreshEntries = useCallback(() => setEntries(listEntries()), []);
 
@@ -129,8 +134,10 @@ export default function App() {
 
   // The timeline screen deletes entries in storage directly, so read them
   // again on every move: the card must never show a sentence the child deleted.
+  // Same for the traveller, which "delete everything" also clears.
   useEffect(() => {
     refreshEntries();
+    setAvatar(loadAvatar());
   }, [step, refreshEntries]);
 
   const chooseLang = useCallback(
@@ -184,25 +191,33 @@ export default function App() {
   // words. The previous version made this a `step`, and the one control on
   // the locked screen navigated straight past it.
   if (!unlocked) {
+    // The lock is a quiet scene: plain colour, no map, no motion.
     return (
-      <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
-        <div className="flex justify-end px-4 pt-3">
-          <QuickExitButton lang={lang} />
+      <div data-scene="quiet" className="min-h-dvh bg-scene">
+        <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
+          <div className="flex justify-end px-4 pt-3">
+            <QuickExitButton lang={lang} />
+          </div>
+          <PinUnlock
+            lang={lang}
+            // Help INSIDE the lock, which is why PinUnlock asks for it as a
+            // node rather than a callback: a child who cannot get past their
+            // own PIN still needs a way to reach 110. It opens in place rather
+            // than navigating, so the lock never leaves the screen.
+            help={<EmergencyHelp lang={lang} />}
+            onUnlocked={() => setUnlocked(true)}
+          />
         </div>
-        <PinUnlock
-          lang={lang}
-          // Help INSIDE the lock, which is why PinUnlock asks for it as a
-          // node rather than a callback: a child who cannot get past their
-          // own PIN still needs a way to reach 110. It opens in place rather
-          // than navigating, so the lock never leaves the screen.
-          help={<EmergencyHelp lang={lang} />}
-          onUnlocked={() => setUnlocked(true)}
-        />
       </div>
     );
   }
 
+  const scene = SCENE[step];
+  const onMap = mapIndex(step);
+
   return (
+    // One flat colour per place (lib/scenes.ts), filling the whole screen.
+    <div data-scene={scene} className="min-h-dvh bg-scene transition-colors duration-300">
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
@@ -225,11 +240,26 @@ export default function App() {
         <QuickExitButton lang={lang} />
       </div>
 
+      {onMap !== null && <GameMap at={onMap} avatar={avatar} lang={lang} />}
+
+      {/* Keyed by step, so each new place slides in. Quiet scenes do not
+          move. Reduced motion stops it anyway (index.css). */}
+      <div key={step} className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}>
       {step === "language" && (
         <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
       )}
 
-      {step === "onboarding" && <Onboarding lang={lang} onDone={() => setStep("checkIn")} />}
+      {step === "onboarding" && (
+        <Onboarding
+          lang={lang}
+          avatar={avatar}
+          onAvatar={(next) => {
+            setAvatar(next);
+            saveAvatar(next);
+          }}
+          onDone={() => setStep("checkIn")}
+        />
+      )}
 
       {step === "checkIn" && (
         <>
@@ -313,6 +343,8 @@ export default function App() {
       )}
 
       {step === "pinSet" && <PinSet lang={lang} onDone={() => setStep("timeline")} />}
+      </div>
+    </div>
     </div>
   );
 }

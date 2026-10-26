@@ -245,6 +245,24 @@ export const STRINGS = {
   "card.german": { en: "Auf Deutsch", de: "Auf Deutsch", hi: "Auf Deutsch" },
   "card.languageSwitch": { en: "Choose the language", de: "Sprache wählen", hi: "भाषा चुनो" },
 
+  // The game map (components/GameMap.tsx). Places, not levels: nothing is
+  // won or locked. Read out once per screen for a screen reader.
+  "map.feel": { en: "How you feel", de: "Wie es dir geht", hi: "कैसा लग रहा है" },
+  "map.words": { en: "Your words", de: "Deine Worte", hi: "तुम्हारे शब्द" },
+  "map.card": { en: "Your card", de: "Deine Karte", hi: "तुम्हारा कार्ड" },
+  "map.who": { en: "Who sees it", de: "Wer es sieht", hi: "कौन देखेगा" },
+  "map.done": { en: "Done", de: "Fertig", hi: "हो गया" },
+  "map.youAreHere": {
+    en: "You are here: {place}, place {n} of {total}.",
+    de: "Du bist hier: {place}, Ort {n} von {total}.",
+    hi: "तुम यहाँ हो: {place}, {total} में से {n}।",
+  },
+
+  // The traveller on the map: a picture the child picks, never a character
+  // that talks. Stored only on this phone (lib/avatar.ts).
+  "avatar.pick": { en: "Pick who walks the map", de: "Wer läuft über die Karte?", hi: "नक्शे पर कौन चलेगा, चुनो" },
+  "avatar.option": { en: "Traveller {n}", de: "Figur {n}", hi: "यात्री {n}" },
+
   // The language note next to each helpline. {list} is the languages joined
   // with help.and; "only" is added when the child's language is not among them.
   "help.and": { en: " and ", de: " und ", hi: " और " },

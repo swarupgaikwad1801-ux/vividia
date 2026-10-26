@@ -25,6 +25,7 @@ import {
   type WhereItHappens,
 } from "./HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
+import { AdultPicture } from "../art/People.tsx";
 import type { Entry, ReportResponse } from "../types/api.ts";
 
 export interface HandoffCardProps {
@@ -66,14 +67,14 @@ export default function HandoffCard({
 
   return (
     <section aria-labelledby="handoff-title" className="flex flex-col gap-4">
-      <h2 id="handoff-title" className="text-xl font-semibold tracking-tight">
+      <h2 id="handoff-title" className="text-3xl tracking-tight text-balance">
         {t("handoff.title", lang)}
       </h2>
 
       {/* The promise, before any choice is made. Never collapse or move this
           below the fold: it is the one sentence that tells the child the app
           has not already told someone. */}
-      <p className="flex items-start gap-2 rounded-card bg-calm-soft px-4 py-3 text-base text-ink">
+      <p className="flex items-start gap-2 rounded-card border-[3px] border-ink bg-surface px-4 py-3 text-base font-medium text-ink">
         <span aria-hidden="true">🔒</span>
         <span>{t("handoff.youDecide", lang)}</span>
       </p>
@@ -90,16 +91,18 @@ export default function HandoffCard({
         </p>
       )}
 
-      <div role="radiogroup" aria-labelledby="handoff-title" className="flex flex-col gap-3">
+      {/* Picture tiles, two by two: chunky people drawn for this app
+          (art/People.tsx). The picture is decoration; the label is the
+          answer. Only the child's language here (issue #3): the German name
+          of the role is on the big card, behind its language switch. */}
+      <div role="radiogroup" aria-labelledby="handoff-title" className="grid grid-cols-2 gap-3">
         {options.map((option) => {
           const checked = recipient?.id === option.id;
           return (
             <label
               key={option.id}
-              className={`min-h-tap flex cursor-pointer items-center gap-3 rounded-card border px-4 py-3 text-base transition-colors ${
-                checked
-                  ? "border-calm bg-calm-soft font-medium text-ink"
-                  : "border-line bg-surface text-ink hover:border-calm"
+              className={`squish relative flex cursor-pointer flex-col items-center gap-1 rounded-card border-[3px] border-ink p-2 text-center text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 ${
+                checked ? "bg-calm-soft" : "bg-surface"
               }`}
             >
               <input
@@ -108,10 +111,14 @@ export default function HandoffCard({
                 value={option.id}
                 checked={checked}
                 onChange={() => onChoose(option.id)}
-                className="size-5 shrink-0 accent-calm"
+                className="sr-only"
               />
-              {/* Only the child's language here (issue #3): the German
-                  name of the role is on the card below, for the adult. */}
+              {checked && (
+                <span aria-hidden="true" className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-ink text-sm text-page">
+                  ✓
+                </span>
+              )}
+              <AdultPicture id={option.id} className="h-24 w-full" />
               <span>{t(option.labelKey, lang)}</span>
             </label>
           );
@@ -119,7 +126,7 @@ export default function HandoffCard({
       </div>
 
       {/* The card the child holds up. */}
-      <article className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
+      <article className="flex flex-col gap-3 rounded-card border-[3px] border-ink bg-surface p-4">
         {recipient && (
           <header className="flex flex-col gap-0.5 border-b border-line pb-3">
             <span className="text-sm text-ink-soft">{t("handoff.showTo", lang)}</span>

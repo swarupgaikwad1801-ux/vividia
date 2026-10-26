@@ -67,10 +67,13 @@ test("it clears every store, not just the timeline", () => {
     markHandled([ENTRY]);
     addHandoff("teacher", "2026-10-02");
     store.setItem("vividia.pin.removed.v1", '"2026-10-21"');
+    store.setItem("vividia.avatar.v1", "3");
 
     assert.ok(store.data.size >= 3, "precondition: several stores hold something");
 
     forgetEverything();
+
+    assert.equal(store.data.has("vividia.avatar.v1"), false, "the map traveller survived");
 
     assert.equal(listEntries().length, 0, "the timeline survived");
     assert.equal(listHandoffs().length, 0, "the handoff record survived");
@@ -147,6 +150,9 @@ test("every storage key in the app has a decision recorded here", () => {
     "vividia.followup.v1", // forgetCheckIns, same module
     "vividia.handoffs.v1", // clearHandoffs
     "vividia.pin.removed.v1", // forgetPinRemoved
+    // forgetAvatar. Unlike the language, nothing needs it to find the way
+    // back, and on a shared phone a saved traveller shows the app was used.
+    "vividia.avatar.v1",
   ]);
 
   /** Deliberately kept, with the reason, so the next person need not re-decide. */

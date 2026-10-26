@@ -12,6 +12,7 @@
 
 import { WHERE_OPTIONS, type WhereItHappens } from "./HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
+import { PlacePicture } from "../art/Things.tsx";
 
 export interface HandoffWhereProps {
   lang: string;
@@ -23,7 +24,7 @@ export interface HandoffWhereProps {
 export default function HandoffWhere({ lang, value, onChoose }: HandoffWhereProps) {
   return (
     <section aria-labelledby="handoff-where-title" className="flex flex-col gap-4">
-      <h2 id="handoff-where-title" className="text-xl font-semibold tracking-tight">
+      <h2 id="handoff-where-title" className="text-3xl tracking-tight text-balance">
         {t("where.title", lang)}
       </h2>
 
@@ -33,16 +34,16 @@ export default function HandoffWhere({ lang, value, onChoose }: HandoffWhereProp
         The input is visually hidden but still focusable, so the ring lands on
         the label it belongs to.
       */}
-      <div role="radiogroup" aria-labelledby="handoff-where-title" className="flex flex-col gap-3">
+      {/* Picture tiles, two by two. The picture is decoration (aria-hidden):
+          the label is the answer a screen reader reads. */}
+      <div role="radiogroup" aria-labelledby="handoff-where-title" className="grid grid-cols-2 gap-3">
         {WHERE_OPTIONS.map((option) => {
           const checked = value === option.id;
           return (
             <label
               key={option.id}
-              className={`min-h-tap flex cursor-pointer items-center gap-3 rounded-card border px-4 py-3 text-base transition-colors ${
-                checked
-                  ? "border-calm bg-calm-soft font-medium text-ink"
-                  : "border-line bg-surface text-ink hover:border-calm"
+              className={`squish flex cursor-pointer flex-col items-center gap-1 rounded-card border-[3px] p-2 text-center text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 ${
+                checked ? "border-ink bg-calm-soft" : "border-ink bg-surface"
               }`}
             >
               <input
@@ -51,8 +52,9 @@ export default function HandoffWhere({ lang, value, onChoose }: HandoffWhereProp
                 value={option.id}
                 checked={checked}
                 onChange={() => onChoose(option.id)}
-                className="size-5 shrink-0 accent-calm"
+                className="sr-only"
               />
+              <PlacePicture id={option.id} className="h-20 w-full" />
               <span>{t(option.labelKey, lang)}</span>
             </label>
           );

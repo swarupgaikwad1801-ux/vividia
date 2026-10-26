@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { AvatarHead, AVATARS } from "../art/People";
+import { OnboardingPicture } from "../art/Things";
 import { ONBOARDING_CARDS } from "../lib/onboarding";
 import { fill, t } from "../lib/strings";
 import type { Lang } from "../lib/strings";
@@ -29,44 +31,76 @@ import type { Lang } from "../lib/strings";
  */
 export interface OnboardingProps {
   lang: Lang;
+  /** The traveller the child has picked for the map (lib/avatar.ts). */
+  avatar?: number;
+  /** Omitted: no picker is shown. */
+  onAvatar?: (index: number) => void;
   /** The child pressed Start or Skip. */
   onDone: () => void;
 }
 
-export default function Onboarding({ lang, onDone }: OnboardingProps) {
+export default function Onboarding({ lang, avatar = 0, onAvatar, onDone }: OnboardingProps) {
   const [index, setIndex] = useState(0);
   const card = ONBOARDING_CARDS[index];
   const last = index === ONBOARDING_CARDS.length - 1;
 
   return (
-    <section className="flex flex-col gap-6" aria-labelledby="onboarding-title">
+    <section className="flex flex-col gap-6 px-4 py-6" aria-labelledby="onboarding-title">
       <div className="flex items-center justify-between gap-3">
-        <h1 id="onboarding-title" className="text-2xl font-semibold tracking-tight text-balance">
+        <h1 id="onboarding-title" className="text-3xl tracking-tight text-balance">
           {t("onboarding.title", lang)}
         </h1>
         {!last && (
           <button
             type="button"
             onClick={onDone}
-            className="min-h-tap rounded-card px-4 text-base font-medium text-ink-soft underline underline-offset-4 hover:text-ink"
+            className="min-h-tap shrink-0 rounded-full bg-surface px-4 text-base font-bold text-ink"
           >
             {t("onboarding.skip", lang)}
           </button>
         )}
       </div>
 
-      {/* aria-live so a screen reader reads the new card after Next. */}
+      {/* aria-live so a screen reader reads the new card after Next. Keyed by
+          card so each one pops in. */}
       <div
+        key={card.id}
         aria-live="polite"
-        className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center"
+        className="animate-pop-in flex flex-col items-center gap-4 rounded-card border-[3px] border-ink bg-surface p-6 text-center"
       >
-        <span aria-hidden="true" className="text-6xl">
-          {card.picture}
-        </span>
-        <p className="text-lg text-ink">
+        <OnboardingPicture id={card.id} className="h-28 w-36" />
+        <p className="text-lg font-medium text-ink">
           {fill(card.key, lang, { button: t("quickExit.button", lang) })}
         </p>
       </div>
+
+      {/* The traveller for the map, on the last card. A picture only: it
+          never talks, and it is kept on this phone. */}
+      {last && onAvatar && (
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-3 text-lg font-bold text-ink">{t("avatar.pick", lang)}</legend>
+          <div className="grid grid-cols-6 gap-1.5">
+            {AVATARS.map((_, i) => (
+              <label
+                key={i}
+                className={`squish flex aspect-square cursor-pointer items-center justify-center rounded-full border-[3px] bg-surface ${
+                  i === avatar ? "border-ink ring-4 ring-ink/20" : "border-transparent"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="avatar"
+                  className="sr-only"
+                  checked={i === avatar}
+                  onChange={() => onAvatar(i)}
+                  aria-label={fill("avatar.option", lang, { n: i + 1 })}
+                />
+                <AvatarHead index={i} className="size-full" />
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <div className="flex items-center justify-center gap-2">
         <span className="sr-only">
@@ -76,7 +110,7 @@ export default function Onboarding({ lang, onDone }: OnboardingProps) {
           <span
             key={dot.id}
             aria-hidden="true"
-            className={`size-2.5 rounded-full ${i === index ? "bg-calm" : "bg-line"}`}
+            className={`h-3 rounded-full border-2 border-ink transition-all ${i === index ? "w-8 bg-ink" : "w-3 bg-surface"}`}
           />
         ))}
       </div>
@@ -84,9 +118,7 @@ export default function Onboarding({ lang, onDone }: OnboardingProps) {
       <button
         type="button"
         onClick={last ? onDone : () => setIndex(index + 1)}
-        // text-page, not text-white: --color-calm is a light teal in dark
-        // mode, where white falls below the 4.5:1 floor.
-        className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong"
+        className="squish min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
       >
         {t(last ? "onboarding.start" : "onboarding.next", lang)}
       </button>

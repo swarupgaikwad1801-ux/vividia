@@ -59,14 +59,17 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL }: QuickExitBu
   useEffect(() => bindQuickExit(document, url), [url]);
 
   return (
-    <div className="sticky top-0 z-40 border-b border-line bg-page px-4 py-2">
+    // bg-scene: the bar takes the colour of the place it sits in (index.css),
+    // so it stays readable when the page scrolls under it without looking
+    // like a white box pasted on top.
+    <div className="sticky top-0 z-40 bg-scene px-4 py-2">
       <div className="mx-auto flex max-w-sm flex-col gap-1">
         <div className="flex justify-end">
           <button
             type="button"
             onClick={() => quickExit(url)}
             aria-describedby={noteId}
-            className="min-h-tap inline-flex items-center gap-2 rounded-card border-2 border-calm bg-surface px-4 text-base font-semibold text-calm-strong"
+            className="min-h-tap inline-flex items-center gap-2 rounded-full border-[3px] border-ink bg-surface px-4 text-base font-bold text-ink"
           >
             {/* An arrow out of a door, for a child who reads the shape faster
                 than the word, or reads no German or English at all. */}

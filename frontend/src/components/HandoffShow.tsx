@@ -21,6 +21,7 @@
 import { useState } from "react";
 
 import CardLanguageSwitch from "./CardLanguageSwitch.tsx";
+import { SparkleBurst } from "../art/Things.tsx";
 import { primarySuggestion, suggestedAdults, type AdultId, type WhereItHappens } from "./HandoffSuggestions.ts";
 import { formatDay } from "../lib-followups-ui/dates.ts";
 import { t } from "../lib/strings.ts";
@@ -47,15 +48,19 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
   const recipient = suggestedAdults(where).find((option) => option.id === chosen) ?? primarySuggestion(where);
 
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 py-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-balance">
-        <span aria-hidden="true">👀 </span>
-        {t("handoff.showThem", lang)}
-      </h1>
+    <main className="relative mx-auto flex w-full max-w-sm flex-col gap-5 px-4 py-6">
+      {/* "You did it", once, as the card appears. Not "you won": no score,
+          no sound, and nothing at all with reduced motion. */}
+      <SparkleBurst />
+
+      <h1 className="text-3xl tracking-tight text-balance">{t("handoff.showThem", lang)}</h1>
 
       <CardLanguageSwitch lang={lang} showing={showing} onChange={setShowing} />
 
-      <article lang={showing} className="flex flex-col gap-4 rounded-card border-2 border-calm bg-surface p-5">
+      <article
+        lang={showing}
+        className="animate-pop-in flex flex-col gap-4 rounded-card border-[3px] border-ink bg-surface p-5 shadow-[6px_6px_0_0_#1B1B2F]"
+      >
         {recipient && (
           <p className="text-base font-medium text-ink-soft">{t(recipient.labelKey, showing)}</p>
         )}
@@ -83,7 +88,7 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
         onClick={onDone}
         // text-page, not text-white: --color-calm is a light teal in dark
         // mode, where white falls below the 4.5:1 floor.
-        className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong"
+        className="squish min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
       >
         {/* Says what the child did, not "Done": the next screen has Done.
             Nothing is recorded by pressing it. */}

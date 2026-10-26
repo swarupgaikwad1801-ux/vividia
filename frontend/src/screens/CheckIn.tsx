@@ -1,3 +1,4 @@
+import Face, { hasFace } from "../art/Face";
 import { MOODS } from "../lib/moods";
 import { t } from "../lib/strings";
 import type { Lang } from "../lib/strings";
@@ -29,8 +30,8 @@ export interface CheckInProps {
 
 export default function CheckIn({ lang, onChoose }: CheckInProps) {
   return (
-    <section className="flex flex-col gap-8" aria-labelledby="checkin-title">
-      <h1 id="checkin-title" className="text-2xl font-semibold tracking-tight text-balance">
+    <section className="flex flex-col gap-6 px-4 py-6" aria-labelledby="checkin-title">
+      <h1 id="checkin-title" className="text-3xl tracking-tight text-balance">
         {t("checkin.title", lang)}
       </h1>
 
@@ -39,22 +40,29 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
         and the one that fits a 360px phone without shrinking a tap target.
       */}
       <ul className="grid grid-cols-3 gap-3">
-        {MOODS.map((mood) => (
+        {MOODS.map((mood, i) => (
           <li key={mood.code}>
             <button
               type="button"
               onClick={() => onChoose(mood.code)}
-              className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-card border border-line bg-surface px-1 transition-colors hover:border-calm hover:bg-calm-soft active:bg-calm-soft"
+              className="squish flex w-full flex-col items-center justify-center gap-1 rounded-card border-[3px] border-ink bg-surface px-1 pt-2 pb-2 hover:bg-calm-soft"
             >
               {/*
-                The face is decoration: the label underneath is the real name
-                of the choice, so a screen reader announces "Scared", never
-                "frowning face with open mouth".
+                The face is decoration (aria-hidden, art/Face.tsx): the label
+                underneath is the real name of the choice, so a screen reader
+                announces "Scared", never a description of a drawing. Each
+                face bobs a little, out of step with its neighbours.
               */}
-              <span aria-hidden="true" className="text-4xl leading-none">
-                {mood.emoji}
+              <span className="animate-bob block" style={{ animationDelay: `${i * 180}ms` }}>
+                {hasFace(mood.code) ? (
+                  <Face code={mood.code} className="size-16" />
+                ) : (
+                  <span aria-hidden="true" className="text-4xl leading-none">
+                    {mood.emoji}
+                  </span>
+                )}
               </span>
-              <span className="text-center text-sm font-medium text-ink">
+              <span className="text-center text-base font-bold text-ink">
                 {mood.label[lang] ?? mood.label.en}
               </span>
             </button>
@@ -70,7 +78,7 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
       <button
         type="button"
         onClick={() => onChoose(null)}
-        className="min-h-tap self-center rounded-card px-6 text-base font-medium text-ink-soft underline underline-offset-4 hover:text-ink"
+        className="squish min-h-tap self-center rounded-full bg-surface px-6 text-base font-bold text-ink"
       >
         {t("checkin.skip", lang)}
       </button>

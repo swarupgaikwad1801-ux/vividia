@@ -4,58 +4,104 @@
  * Design tokens. One place for colour, type and spacing, so a screen never
  * invents a hex code (CLAUDE.md, "one design system").
  *
- * Direction: calm, plain and a little serious. The user is 10-16 and may be
- * frightened; bright primaries and cartoon rounding would read as a toy and
- * make the app harder to trust with something this big. Deep teal rather than
- * institutional blue, warm off-white rather than clinical white.
+ * Direction (26 Oct, Neel: "make it like a game"): bright and bold. Each place
+ * on the journey is one flat, saturated colour, like a scene in a picture
+ * book; content sits on white rounded cards; buttons are chunky black pills.
+ * The art is our own (src/art/), drawn in that spirit: chunky people with big
+ * heads, simple shapes, many skin tones. Nothing is copied from any app.
+ *
+ * What does NOT change: help, crisis, safety and the lock stay calm and still
+ * (the "calm" scene, no motion), there are no points, scores, streaks or
+ * badges, and no character ever speaks (CLAUDE.md: no AI friend).
+ *
+ * Contrast (checked with a script, WCAG 2.2 AA): ink and ink-soft pass on
+ * every scene colour (lowest: ink-soft on pink, 5.1:1), white on ink 16.9:1.
+ * Text on a scene colour is always ink, never white.
  */
 @theme {
   /* Surfaces and text */
-  --color-page: #faf9f6;
+  --color-page: #ffffff;
   --color-surface: #ffffff;
-  --color-ink: #1c2b2d;
-  --color-ink-soft: #566366;
-  --color-line: #e2e5e3;
+  --color-ink: #1b1b2f;
+  --color-ink-soft: #2e2e48;
+  --color-line: #d9d6e8;
 
-  /* Primary: used for the child's own actions (write, save, continue) */
-  --color-calm: #2e6e68;
-  --color-calm-strong: #22544f;
-  --color-calm-soft: #e3eeec;
+  /* Primary: the child's own actions (write, save, continue). A black pill
+     with white text. The names stay "calm" so every screen picks this up
+     without a class change. */
+  --color-calm: #1b1b2f;
+  --color-calm-strong: #000000;
+  --color-calm-soft: #f1ecff;
 
   /* Help and crisis. Serious, never an alarm colour: a child reaching for
      this is already scared, and neon red adds to that. */
   --color-help: #9e2b2b;
   --color-help-soft: #f7e8e8;
 
+  /* The scene: one flat colour per place on the map. Set by data-scene on
+     the screen's wrapper (see below), read by bg-scene. */
+  --color-scene: #ffffff;
+  --color-sun: #ffd23f;
+  --color-sky: #4cc9f0;
+  --color-grass: #38d47a;
+  --color-pink: #ff6fb5;
+  --color-lilac: #b69cff;
+  --color-quiet: #e8f1f2;
+
   /* Type. 17px base, because this is read on a cheap phone held low, often
-     in a hurry. */
+     in a hurry. Headings use a rounded face where the phone has one; no web
+     font is downloaded (a bundled one needs Vernika's yes: package.json). */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Noto Sans Devanagari", "Helvetica Neue", Arial, sans-serif;
+  --font-display: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold",
+    "Nunito", var(--font-sans);
   --text-base: 1.0625rem;
 
   /* The smallest thing a thumb may have to hit. WCAG 2.2 target size. */
   --spacing-tap: 2.75rem;
 
-  --radius-card: 0.875rem;
+  --radius-card: 1.25rem;
+
+  --animate-pop-in: pop-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-slide-in: slide-in 280ms ease-out both;
+  --animate-bob: bob 2.4s ease-in-out infinite;
+  --animate-sparkle: sparkle 900ms ease-out both;
+  --animate-wiggle: wiggle 2.8s ease-in-out infinite;
 }
 
 /*
- * Dark mode. Tailwind v4 compiles utilities to var(--color-*), so redefining
- * the variables here re-themes every utility without a second set of classes.
+ * Scenes. No dark mode in this direction: the scenes are the design, and
+ * ink on a bright colour reads the same in a dark room. (The previous dark
+ * palette was removed with the teal one.)
  */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-page: #14191a;
-    --color-surface: #1d2325;
-    --color-ink: #e8edec;
-    --color-ink-soft: #a3b0b1;
-    --color-line: #2f3739;
-    --color-calm: #74b8b0;
-    --color-calm-strong: #9ad2cb;
-    --color-calm-soft: #1f3331;
-    --color-help: #e98a8a;
-    --color-help-soft: #33201f;
-  }
+[data-scene="sun"] { --color-scene: var(--color-sun); }
+[data-scene="sky"] { --color-scene: var(--color-sky); }
+[data-scene="grass"] { --color-scene: var(--color-grass); }
+[data-scene="pink"] { --color-scene: var(--color-pink); }
+[data-scene="lilac"] { --color-scene: var(--color-lilac); }
+[data-scene="quiet"] { --color-scene: var(--color-quiet); }
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes sparkle {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.2) rotate(0deg); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(90deg); }
+}
+@keyframes wiggle {
+  0%, 88%, 100% { transform: rotate(0deg); }
+  92% { transform: rotate(-3deg); }
+  96% { transform: rotate(3deg); }
 }
 
 @layer base {
@@ -68,19 +114,38 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+  }
+
   /* A visible focus ring is how this app is usable by keyboard and by screen
      reader. Never remove it. */
   :focus-visible {
-    outline: 2px solid var(--color-calm);
+    outline: 3px solid var(--color-ink);
     outline-offset: 2px;
   }
 
+  /* Every motion in the app goes through here: with reduced motion asked for,
+     nothing bounces, slides, wiggles or sparkles. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+@layer components {
+  /* A chunky tappable thing: squishes when pressed. */
+  .squish {
+    transition: transform 120ms ease-out;
+  }
+  .squish:active {
+    transform: scale(0.94);
   }
 }
