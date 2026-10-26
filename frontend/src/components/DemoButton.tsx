@@ -44,7 +44,6 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
   // in this browser, so the clear button has to be here on first paint.
   const [status, setStatus] = useState<Status>(() => (activeDemo() ? "loaded" : "idle"));
   const [message, setMessage] = useState("");
-  const [ownEntriesKept, setOwnEntriesKept] = useState(false);
 
   useEffect(() => {
     // The persona's name belongs to the story, never to a string in the UI.
@@ -58,8 +57,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
     // a screen reader, so the live region stays quiet rather than saying it twice.
     setMessage("");
     try {
-      const { session, ownEntriesKept: kept } = await loadDemo(lang);
-      setOwnEntriesKept(kept);
+      const { session } = await loadDemo(lang);
       setStatus("loaded");
       setMessage(tp("demo.loaded", lang).replace("{name}", session.persona.name));
       onLoaded(session);
@@ -73,7 +71,6 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
 
   const clear = useCallback(() => {
     clearDemo();
-    setOwnEntriesKept(false);
     setStatus("cleared");
     setMessage(tp("demo.cleared", lang));
     onCleared?.();
@@ -126,10 +123,6 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
       >
         {message}
       </p>
-
-      {ownEntriesKept && (
-        <p className="text-sm text-ink-soft">{tp("demo.ownEntriesKept", lang)}</p>
-      )}
     </section>
   );
 }
