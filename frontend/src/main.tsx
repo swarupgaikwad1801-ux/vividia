@@ -31,3 +31,12 @@ createRoot(root).render(
     <App />
   </StrictMode>,
 );
+
+// Offline after the first visit (src/pwa/offline.ts). Built app only: in
+// development a cached build would hide every change. A failure only means
+// the app needs the network, as it did before.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
+  });
+}
