@@ -274,9 +274,11 @@ export default function App() {
           <button
             type="button"
             onClick={goBack}
-            // nowrap + shrink-0: next to Leave now and its note, the arrow
-            // otherwise wraps onto its own line at 360px.
-            className="min-h-tap shrink-0 whitespace-nowrap rounded-card px-2 text-base font-medium text-ink-soft hover:text-ink"
+            // nowrap + shrink-0: next to Leave now, the arrow otherwise wraps
+            // onto its own line at 360px. `headline`: the titles' face (Neel,
+            // 26 Oct), but small, in the softer ink and with no outline, so
+            // it stays quieter than Leave now.
+            className="headline min-h-tap shrink-0 whitespace-nowrap rounded-card px-2 text-base text-ink-soft hover:text-ink"
           >
             <span aria-hidden="true">← </span>
             {t("nav.back", lang)}
