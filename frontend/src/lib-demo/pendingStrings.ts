@@ -39,11 +39,23 @@ export const PENDING_STRINGS = {
     de: "Das Beispiel ist weg. Die App ist wieder leer.",
     hi: "उदाहरण हट गया। ऐप फिर से खाली है।",
   },
-  /** Shown only when the person already had their own entries before pressing. */
-  "demo.ownEntriesKept": {
-    en: "You already have your own notes saved. The example is added next to them, and clearing it removes only the example.",
-    de: "Du hast schon eigene Notizen gespeichert. Das Beispiel kommt daneben, und beim Entfernen wird nur das Beispiel gelöscht.",
-    hi: "आपके अपने नोट्स पहले से सेव हैं। उदाहरण उनके साथ जुड़ता है, और हटाने पर सिर्फ़ उदाहरण मिटेगा।",
+  /**
+   * The refusal: the person has notes of their own, so the example was not
+   * loaded at all.
+   *
+   * It says what happened and what to do, and it does NOT apologise or offer
+   * to load it anyway. The child's own words are the thing being protected
+   * here, and the example is the thing that can wait.
+   *
+   * Earlier wording said "the example is added next to them", from when both
+   * were kept side by side. After the refusal landed that sentence described
+   * the opposite of what happens, and a child reading it would have gone
+   * looking for entries that were never written.
+   */
+  "demo.notLoadedOwnNotes": {
+    en: "You have your own notes here, so the example was not loaded. Nothing of yours has changed.",
+    de: "Du hast hier eigene Notizen, deshalb wurde das Beispiel nicht geladen. An deinen Notizen hat sich nichts geändert.",
+    hi: "यहाँ आपके अपने नोट्स हैं, इसलिए उदाहरण लोड नहीं हुआ। आपका कुछ भी नहीं बदला।",
   },
 } as const satisfies Record<string, Text>;
 

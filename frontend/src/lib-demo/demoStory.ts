@@ -171,7 +171,7 @@ function brokenStory(lang: string): ApiError {
  * decide to clear their own timeline first.
  */
 function notOnTopOfRealEntries(lang: string): ApiError {
-  return new ApiError("invalid_input", tp("demo.ownEntriesKept", lang), false);
+  return new ApiError("invalid_input", tp("demo.notLoadedOwnNotes", lang), false);
 }
 
 /**
