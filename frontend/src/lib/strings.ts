@@ -162,10 +162,13 @@ export const STRINGS = {
   // Moved from the temporary components/WriteStrings.ts on feat/write-screen,
   // same key names. {n} is filled with fill().
   "write.yourWords": { en: "Your words", de: "Deine Worte", hi: "तुम्हारे शब्द" },
+  // Shown while the words are being checked: the moment they leave the phone,
+  // and the one place that says so now that onboarding is three cards (#72).
+  // "Checked", not "translated": a child writing German is not translated.
   "write.whatWeDo": {
-    en: "We translate your words a few times and compare them.",
-    de: "Wir übersetzen deine Worte ein paar Mal und vergleichen sie.",
-    hi: "हम तुम्हारे शब्दों का कई बार अनुवाद करते हैं और उन्हें मिलाकर देखते हैं।",
+    en: "Your words go to a computer service on the internet to be checked. It keeps nothing.",
+    de: "Deine Worte gehen zum Prüfen an einen Computerdienst im Internet. Er behält nichts.",
+    hi: "तुम्हारे शब्द जाँच के लिए इंटरनेट पर एक कंप्यूटर सेवा के पास जाते हैं। वह कुछ नहीं रखती।",
   },
   "write.stillWorking": {
     en: "Still working. Checking carefully takes a little time.",
