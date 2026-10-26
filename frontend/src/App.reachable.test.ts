@@ -110,6 +110,29 @@ test("the initial step is one of the declared steps", () => {
   }
 });
 
+test("the three screens #82 fixed are reachable by name: follow-up, escalation, PIN", () => {
+  // The generic check above counts a step reached through the question tree
+  // or a whole trail. These three must not depend on that: they are the
+  // "don't get dropped" row and the lock, and each was dead once.
+  const declared = new Set(declaredSteps());
+  for (const step of ["escalation", "pinSet"]) {
+    assert.ok(declared.has(step), `"${step}" is not a Step any more`);
+    assert.match(SOURCE, new RegExp(`setStep\\(\\s*"${step}"`), `no setStep("${step}") in App.tsx`);
+    assert.match(SOURCE, new RegExp(`step === "${step}"`), `"${step}" has no screen in App.tsx`);
+  }
+
+  // followUp is not a step (as in #82): FollowUp gates itself and is rendered
+  // on the check-in, the screen the app opens on, with the door to the ladder.
+  assert.ok(!declared.has("followUp"), "followUp is a Step again: give it a door, or keep it in place");
+  const checkIn = SOURCE.match(/step === "checkIn" && \(([\s\S]*?)\n {6}\)\}/);
+  assert.ok(checkIn, "could not find the check-in block; this test has stopped working");
+  assert.match(
+    checkIn[1],
+    /<FollowUp\b[^>]*onOpen=\{\(\) => setStep\("escalation"\)\}/,
+    "FollowUp is not on the check-in with its door to escalation",
+  );
+});
+
 test("no screen is rendered for a step that does not exist", () => {
   // The inverse mistake: deleting a member from Step but leaving its render
   // block, or renaming one and missing a call site.
