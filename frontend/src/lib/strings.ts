@@ -154,12 +154,6 @@ export const STRINGS = {
   "write.checks": { en: "{n} checks", de: "{n} Prüfungen", hi: "{n} जाँच" },
   "write.secondsLong": { en: "{n} seconds so far", de: "bisher {n} Sekunden", hi: "अब तक {n} सेकंड" },
   "clarify.important": { en: "Important", de: "Wichtig", hi: "ज़रूरी" },
-  "clarify.somethingElse": { en: "Something else", de: "Etwas anderes", hi: "कुछ और" },
-  "clarify.somethingElseHint": {
-    en: "Neither of these is what I meant",
-    de: "Keines davon habe ich gemeint",
-    hi: "इनमें से कोई भी मेरा मतलब नहीं था",
-  },
   "clarify.send": { en: "That's what I meant", de: "Das habe ich gemeint", hi: "मेरा यही मतलब था" },
   "clarify.rewrite": { en: "Say it another way", de: "Sag es anders", hi: "दूसरे तरीके से कहें" },
   "clarify.rewriteWhy": {
