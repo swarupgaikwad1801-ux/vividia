@@ -142,6 +142,10 @@ export default function App() {
   // a frightened child has just managed to write is the one thing this app
   // must never do.
   const [draft] = useState("");
+  // The face the child tapped on the way in, carried only as far as the entry
+  // it belongs to and then cleared. Empty means they skipped, which is a real
+  // answer and is stored as one.
+  const [mood, setMood] = useState("");
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
 
@@ -161,8 +165,15 @@ export default function App() {
    * The check-in is a mood, not a diagnosis. It opens the writing screen and
    * is never stored as a judgement about the child: `CLAUDE.md` is explicit
    * that the app works nothing out about them and gives no risk score.
+   *
+   * `CheckIn` has always handed the chosen code up and this threw it away, so
+   * every entry was written with `mood: ""`. `null` is the child pressing
+   * Skip, and it keeps meaning "they did not say".
    */
-  const afterCheckIn = useCallback(() => setStep("write"), []);
+  const afterCheckIn = useCallback((chosen: string | null) => {
+    setMood(chosen ?? "");
+    setStep("write");
+  }, []);
 
   /**
    * The ONLY path by which an entry is written, and it runs because the child
@@ -173,14 +184,18 @@ export default function App() {
     (approved: { text_child: string; text_de: string }) => {
       addEntry({
         date: new Date().toISOString().slice(0, 10),
-        mood: "",
+        mood,
         text_child: approved.text_child,
         text_de: approved.text_de,
       });
       refreshEntries();
+      // The mood belonged to this entry, not to the child. Leaving it set
+      // would stamp the next thing they write with a feeling they reported
+      // once, which is the inference `lib/moods.ts` says we never make.
+      setMood("");
       setStep("timeline");
     },
-    [refreshEntries],
+    [mood, refreshEntries],
   );
 
   /**
