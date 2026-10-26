@@ -4,6 +4,7 @@ import CheckIn from "./screens/CheckIn";
 import Escalation from "./screens/Escalation";
 import FollowUp from "./screens/FollowUp";
 import Handoff from "./screens/Handoff";
+import HandoffDone from "./screens/HandoffDone";
 import LanguageSetup from "./screens/LanguageSetup";
 import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
@@ -11,10 +12,13 @@ import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
 import Write from "./screens/Write";
 
+import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
+import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import { fill, t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
+import { back, canGoBack, current, go, start, type Step } from "./lib/nav";
 import { emergency } from "./lib/api";
 import { addEntry, listEntries } from "./lib/timeline";
 import { pinStatus } from "./lib/pin";
@@ -61,32 +65,24 @@ import type { ReportResponse, Resource } from "./types/api";
  * Quick exit depends on that last point: `lib/quickExit.ts` leaves with
  * nothing to go back to, and that only works because nothing here ever
  * called `history.pushState`.
- */
-
-/**
- * Where the child is. A line, with two branches off the timeline.
  *
- * `locked` is deliberately NOT a member any more. Being locked is a
- * condition, not a place, and while it was a step every `setStep` call in
- * this file was a possible way around the lock. One of them was: the help
- * button on the lock screen set `step` to "timeline", and the child's own
- * words rendered with no PIN ever entered. Reproduced in a browser before
- * this change - both `text_child` and `text_de` were readable.
+ * So the app's own Back button (issue #3) walks a trail kept in memory
+ * (`lib/nav.ts`), not the browser history. The browser's back button still
+ * leaves the app, exactly as before.
  *
- * `unlocked` is now separate state that no navigation touches, and the lock
- * returns early, so there is no `step` value that can reveal anything.
+ * WHERE THE CHILD IS
+ *
+ * `Step` lives in `lib/nav.ts`. `locked` is deliberately NOT a member. Being
+ * locked is a condition, not a place, and while it was a step every
+ * navigation in this file was a possible way around the lock. One of them
+ * was: the help button on the lock screen set `step` to "timeline", and the
+ * child's own words rendered with no PIN ever entered. Reproduced in a
+ * browser before that change - both `text_child` and `text_de` were readable.
+ *
+ * `unlocked` is separate state that no navigation touches, and the lock
+ * returns early, so there is no step - and no trail, so no Back - that can
+ * reveal anything.
  */
-type Step =
-  | "language" // first run only
-  | "checkIn" // the emoji check-in: the step that needs no language
-  | "write" // the centrepiece: find the words
-  | "timeline" // everything they have written
-  | "report" // the bilingual report, approved word by word
-  | "handoff" // choose who hears it
-  | "followUp" // has anything changed?
-  | "escalation" // the next door, if the first one did not open
-  | "pinSet"; // set or change the PIN
-
 export default function App() {
   // Both read before the first render, so the app never flashes the wrong
   // screen: a child on a shared phone must not glimpse the timeline for a
@@ -106,17 +102,23 @@ export default function App() {
   // because of a browser setting, so only a PIN we can actually read locks.
   const [unlocked, setUnlocked] = useState(() => pinStatus() !== "set");
 
-  const [step, setStep] = useState<Step>(() =>
-    setup.needsChoice ? "language" : "checkIn",
-  );
+  const [trail, setTrail] = useState(() => start(setup.needsChoice ? "language" : "checkIn"));
+  const step = current(trail);
+  const setStep = useCallback((next: Step) => setTrail((now) => go(now, next)), []);
+  const goBack = useCallback(() => setTrail((now) => back(now)), []);
 
   // Carried between screens. `draft` is what the child typed and has not yet
-  // approved; it survives a trip to help and back, because losing a sentence
+  // approved; it survives Back and a trip to help, because losing a sentence
   // a frightened child has just managed to write is the one thing this app
-  // must never do.
-  const [draft] = useState("");
+  // must never do. `Write` reports every keystroke up here and reads it back
+  // when it mounts again.
+  const [draft, setDraft] = useState("");
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
+  // The child's two handoff answers, kept so Back from the big card returns
+  // to the same choice, and so the big card names the same person.
+  const [where, setWhere] = useState<WhereItHappens | null>(null);
+  const [adult, setAdult] = useState<AdultId | null>(null);
 
   const refreshEntries = useCallback(() => setEntries(listEntries()), []);
 
@@ -124,18 +126,21 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const chooseLang = useCallback((next: Lang) => {
-    setLang(next);
-    saveLang(next);
-    setStep("checkIn");
-  }, []);
+  const chooseLang = useCallback(
+    (next: Lang) => {
+      setLang(next);
+      saveLang(next);
+      setStep("checkIn");
+    },
+    [setStep],
+  );
 
   /**
    * The check-in is a mood, not a diagnosis. It opens the writing screen and
    * is never stored as a judgement about the child: `CLAUDE.md` is explicit
    * that the app works nothing out about them and gives no risk score.
    */
-  const afterCheckIn = useCallback(() => setStep("write"), []);
+  const afterCheckIn = useCallback(() => setStep("write"), [setStep]);
 
   /**
    * The ONLY path by which an entry is written, and it runs because the child
@@ -150,17 +155,19 @@ export default function App() {
         text_child: approved.text_child,
         text_de: approved.text_de,
       });
+      // Saved, so it is no longer a draft: the next visit to Write is empty.
+      setDraft("");
       refreshEntries();
       setStep("timeline");
     },
-    [refreshEntries],
+    [refreshEntries, setStep],
   );
 
   // Until #47's HelpScreen lands. One place to repoint when it does.
   //
   // NOT used by the lock any more. While locked, help is `EmergencyHelp`
   // below, which never moves `step` - that is what the leak was.
-  const needHelp = useCallback(() => setStep("timeline"), []);
+  const needHelp = useCallback(() => setStep("timeline"), [setStep]);
 
   // The lock, before anything else and with its own return. An early return
   // is the point: while a PIN is outstanding there is no code path below this
@@ -189,8 +196,21 @@ export default function App() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
       {/* Outside the switch on purpose: the way out is on every screen,
-          including the lock. */}
-      <div className="flex justify-end px-4 pt-3">
+          including the lock. Back sits in the opposite corner and looks
+          quieter, so a child reaching for Leave now does not hit it. */}
+      <div className="flex items-center justify-between gap-4 px-4 pt-3">
+        {canGoBack(trail) ? (
+          <button
+            type="button"
+            onClick={goBack}
+            className="min-h-tap rounded-card px-2 text-base font-medium text-ink-soft hover:text-ink"
+          >
+            <span aria-hidden="true">← </span>
+            {t("nav.back", lang)}
+          </button>
+        ) : (
+          <span />
+        )}
         <QuickExitButton lang={lang} />
       </div>
 
@@ -198,10 +218,24 @@ export default function App() {
         <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
       )}
 
-      {step === "checkIn" && <CheckIn lang={lang} onChoose={afterCheckIn} />}
+      {step === "checkIn" && (
+        <>
+          {/* Renders nothing unless the follow-up question is due (step 8).
+              This is what makes "the app will ask how things are" on the
+              handoff ending true. */}
+          <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
+          <CheckIn lang={lang} onChoose={afterCheckIn} />
+        </>
+      )}
 
       {step === "write" && (
-        <Write lang={lang} initialText={draft} onApproved={keepWords} onNeedHelp={needHelp} />
+        <Write
+          lang={lang}
+          initialText={draft}
+          onTextChange={setDraft}
+          onApproved={keepWords}
+          onNeedHelp={needHelp}
+        />
       )}
 
       {step === "timeline" && (
@@ -219,7 +253,32 @@ export default function App() {
         />
       )}
 
-      {step === "handoff" && <Handoff lang={lang} report={report} />}
+      {step === "handoff" && (
+        <Handoff
+          lang={lang}
+          report={report}
+          initialWhere={where}
+          initialAdult={adult}
+          onWhereChosen={(next) => {
+            setWhere(next);
+            setAdult(null);
+          }}
+          onAdultChosen={setAdult}
+          onNext={() => setStep("handoffShow")}
+        />
+      )}
+
+      {step === "handoffShow" && report && where && (
+        <HandoffShow
+          lang={lang}
+          report={report}
+          where={where}
+          chosen={adult}
+          onDone={() => setStep("handoffDone")}
+        />
+      )}
+
+      {step === "handoffDone" && <HandoffDone lang={lang} onHome={() => setStep("checkIn")} />}
 
       {step === "followUp" && (
         <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
@@ -241,8 +300,8 @@ export default function App() {
  *
  * 1. **It must not navigate.** The bug this replaces was a help button that
  *    moved `step`. A `<details>` opens in place, so the lock stays on screen
- *    and there is no destination to get wrong. It also needs no "back"
- *    wording, which `strings.ts` does not have in any language.
+ *    and there is no destination to get wrong. It also needs no Back: the
+ *    lock has no trail (`lib/nav.ts`), so there is nothing to go back to.
  * 2. **The numbers must not be written here.** `content/helplines.json` is
  *    the only place a contact may be defined (CLAUDE.md), `GET /api/emergency`
  *    serves 110 and 112 out of it, and `noSend.test.ts` fails any screen file

@@ -47,6 +47,13 @@ export interface HandoffProps {
   onAdultChosen?: (adult: AdultId) => void;
   /** A remembered answer, e.g. from the demo story. Anything else is ignored. */
   initialWhere?: string | null;
+  /** Who the child picked last time, so Back from the big card keeps it. */
+  initialAdult?: AdultId | null;
+  /**
+   * Go on to the big card (issue #3: handoff was a dead end). The Next button
+   * appears only once there is an approved report to show.
+   */
+  onNext?: () => void;
 }
 
 export default function Handoff({
@@ -58,11 +65,15 @@ export default function Handoff({
   onWhereChosen,
   onAdultChosen,
   initialWhere = null,
+  initialAdult = null,
+  onNext,
 }: HandoffProps) {
   const remembered = isWhereItHappens(initialWhere) ? initialWhere : null;
   const [where, setWhere] = useState<WhereItHappens | null>(remembered);
   const [step, setStep] = useState<"where" | "card">(remembered ? "card" : "where");
-  const [chosen, setChosen] = useState<AdultId | null>(null);
+  // Only meaningful with a remembered place: an adult without a place is
+  // dropped, and the card drops an id that is not among its options anyway.
+  const [chosen, setChosen] = useState<AdultId | null>(remembered ? initialAdult : null);
   const [online, setOnline] = useState(isOnline);
 
   useEffect(() => {
@@ -125,6 +136,18 @@ export default function Handoff({
             error={error}
             onRetry={onRetry ?? null}
           />
+
+          {report && !loading && !error && onNext && (
+            <button
+              type="button"
+              onClick={onNext}
+              // text-page, not text-white: --color-calm is a light teal in
+              // dark mode, where white falls below the 4.5:1 floor.
+              className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong"
+            >
+              {t("nav.next", lang)}
+            </button>
+          )}
 
           <button
             type="button"
