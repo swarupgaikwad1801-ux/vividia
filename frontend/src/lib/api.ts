@@ -14,6 +14,7 @@ import type {
   ClarifyRequest,
   ClarifyResponse,
   Entry,
+  EmergencyResponse,
   ErrorCode,
   ErrorResponse,
   HealthResponse,
@@ -129,6 +130,18 @@ export function report(req: ReportRequest): Promise<ReportResponse> {
 export function resources(lang: string, state = ""): Promise<ResourcesResponse> {
   const query = new URLSearchParams({ lang, ...(state ? { state } : {}) });
   return request(`/api/resources?${query}`, lang, { method: "GET" }, QUICK_MS);
+}
+
+/**
+ * 110 and 112, straight from content/helplines.json.
+ *
+ * No model call and outside the spending cap, so this answers on a day the
+ * demo has spent its allowance and with no API key at all - which is the
+ * whole reason the route exists (#30). Any screen showing the safety floor
+ * calls it rather than typing a number.
+ */
+export function emergency(lang = "en"): Promise<EmergencyResponse> {
+  return request("/api/emergency", lang, { method: "GET" }, QUICK_MS);
 }
 
 export function health(): Promise<HealthResponse> {
