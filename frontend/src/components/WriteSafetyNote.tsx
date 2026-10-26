@@ -52,9 +52,30 @@ export interface WriteSafetyNoteProps {
   lang: string;
   safety: Safety;
   onNeedHelp: () => void;
+  /**
+   * True while a question about the child's own words is still unanswered.
+   *
+   * The safety check reads the sentence the child wrote, which is the same
+   * sentence the app is about to ask them about. For "he said he would get
+   * me after school" that means the panel can appear before the child has
+   * said whether "get me" was a threat or an offer of a lift - and a child
+   * who meant the lift reads an emergency number about their own words.
+   *
+   * We still show it first. The alternative is a child in real danger
+   * having to answer a question before the number appears, and that is a
+   * worse failure than being startled. What changes is only the claim the
+   * panel makes: with a question outstanding it says plainly that we do not
+   * know yet and are about to ask. Neel's finding 4, issue #5.
+   */
+  pendingQuestion?: boolean;
 }
 
-export default function WriteSafetyNote({ lang, safety, onNeedHelp }: WriteSafetyNoteProps) {
+export default function WriteSafetyNote({
+  lang,
+  safety,
+  onNeedHelp,
+  pendingQuestion = false,
+}: WriteSafetyNoteProps) {
   // Separate pieces of state on purpose: either list appears on its own if
   // the other fails. 110 and 112 are the ones that must survive.
   const [urgent, setUrgent] = useState<readonly Resource[]>([]);
@@ -99,6 +120,14 @@ export default function WriteSafetyNote({ lang, safety, onNeedHelp }: WriteSafet
       className="flex flex-col gap-3 rounded-card border border-help/30 bg-help-soft p-4"
     >
       <p className="text-base font-medium text-help">{safety.message_child}</p>
+
+      {/* Before the numbers, not after: it changes how the whole panel reads,
+          and a child who stops reading after two lines should still have got
+          it. Soft colour, because it is the one line here that is not an
+          instruction. */}
+      {pendingQuestion && (
+        <p className="text-sm text-ink-soft">{t("safety.notSureYet", lang)}</p>
+      )}
 
       {/* On screen, not one tap away. Each contact as the file defines it,
           with the languages it speaks, because a number that cannot answer in

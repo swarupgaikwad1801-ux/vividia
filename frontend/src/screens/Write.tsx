@@ -309,7 +309,15 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
               because the text said something urgent — not because anyone was
               told anything. Nothing was sent. */}
           {result.safety.urgent && result.safety.message_child && (
-            <WriteSafetyNote lang={lang} safety={result.safety} onNeedHelp={onNeedHelp} />
+            <WriteSafetyNote
+              lang={lang}
+              safety={result.safety}
+              onNeedHelp={onNeedHelp}
+              // The safety check ran on the same sentence the questions below
+              // are about, so while any is unanswered the panel must not read
+              // as a settled finding about the child.
+              pendingQuestion={ambiguities.length > 0}
+            />
           )}
 
           <WriteResult

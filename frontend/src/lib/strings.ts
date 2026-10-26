@@ -109,6 +109,17 @@ export const STRINGS = {
     de: "Weil es zu Hause passiert, schlagen wir nur Menschen in der Schule und Beratungsstellen vor.",
     hi: "क्योंकि यह घर पर होता है, हम सिर्फ़ स्कूल के लोग और हेल्पलाइन सुझाते हैं।",
   },
+  // Shown inside the safety panel while a question about the child's own
+  // words is still unanswered. The panel appears before the question, on
+  // purpose - a child in real danger must not have to answer anything to
+  // reach 110 - so this line is what keeps it from reading as a verdict the
+  // app has already reached about them. See WriteSafetyNote.
+  "safety.notSureYet": {
+    en: "We are not sure yet what you meant. We will ask you next. This is here in case you need it right now.",
+    de: "Wir wissen noch nicht genau, was du gemeint hast. Wir fragen dich gleich. Das steht hier, falls du es jetzt brauchst.",
+    hi: "हमें अभी पक्का नहीं पता कि तुम्हारा क्या मतलब था। हम आगे तुमसे पूछेंगे। यह यहाँ इसलिए है कि अगर तुम्हें अभी ज़रूरत हो।",
+  },
+
   "handoff.youDecide": {
     en: "Nothing is sent. You choose who sees it, and you show it yourself.",
     de: "Es wird nichts verschickt. Du entscheidest, wer es sieht, und zeigst es selbst.",
