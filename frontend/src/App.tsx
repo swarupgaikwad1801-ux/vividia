@@ -14,6 +14,9 @@ import Write from "./screens/Write";
 
 import { HelpButton } from "./components/HelpButton";
 import QuickExitButton from "./components/QuickExitButton";
+import ExampleModeBanner from "./components/ExampleModeBanner";
+
+import { useEngineMode } from "./lib/engineMode";
 
 import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
@@ -122,6 +125,10 @@ export default function App() {
   // been made it hands back the device's language so the few words around the
   // picker are readable, while still reporting `needsChoice`. That is not the
   // app choosing for the child - the picker shows nothing as chosen.
+  // Asked once for the whole session. In mock mode every screen says so, and
+  // the result card drops its agreement score: see lib/engineMode.ts.
+  const engine = useEngineMode();
+
   const [setup] = useState(() => languageSetupState());
   const [lang, setLang] = useState<Lang>(setup.lang);
 
@@ -252,6 +259,10 @@ export default function App() {
         <QuickExitButton lang={lang} />
       </div>
 
+      {/* Above every screen, including the lock and the language picker: a
+          judge who opens a mock deploy must read this before they type. */}
+      <ExampleModeBanner lang={lang} engine={engine} />
+
       {step === "language" && (
         <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
       )}
@@ -269,7 +280,13 @@ export default function App() {
       )}
 
       {step === "write" && (
-        <Write lang={lang} initialText={draft} onApproved={keepWords} onNeedHelp={openHelp} />
+        <Write
+          lang={lang}
+          initialText={draft}
+          onApproved={keepWords}
+          onNeedHelp={openHelp}
+          engine={engine}
+        />
       )}
 
       {step === "timeline" && (

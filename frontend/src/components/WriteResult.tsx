@@ -1,4 +1,5 @@
 import type { TranslateResponse } from "../types/api.ts";
+import type { EngineMode } from "../lib/engineMode.ts";
 import { fill, t } from "../lib/strings.ts";
 
 /**
@@ -32,9 +33,24 @@ export interface WriteResultProps {
   result: TranslateResponse;
   /** True once the child has answered a question and the German was redone. */
   decidedByChild: boolean;
+  /**
+   * Which engine produced this. In "mock" the German is a fixed example that
+   * ignored the child's text, and `confidence` and `calls_made` are constants
+   * in `engine/mock.py` - so the agreement score below is replaced rather
+   * than shown. The comment under it says these are "Real numbers from
+   * `usage`, never invented", and in mock mode that was not true.
+   */
+  engine?: EngineMode;
 }
 
-export default function WriteResult({ lang, childText, result, decidedByChild }: WriteResultProps) {
+export default function WriteResult({
+  lang,
+  childText,
+  result,
+  decidedByChild,
+  engine = "unknown",
+}: WriteResultProps) {
+  const isExample = engine === "mock";
   const agreement = Math.round(Math.max(0, Math.min(1, result.confidence)) * 100);
   const latencySeconds = Math.max(result.usage.latency_ms / 1000, 0.1);
 
@@ -66,6 +82,13 @@ export default function WriteResult({ lang, childText, result, decidedByChild }:
       )}
 
       <div className="flex flex-col gap-2 border-t border-line pt-3">
+        {isExample ? (
+          // No percentage, no bar, no check count. A number that was never
+          // measured is worse here than no number: the whole panel exists to
+          // show that the sentence was checked.
+          <p className="text-sm text-help">{t("example.resultNote", lang)}</p>
+        ) : (
+          <>
         <div className="flex items-baseline justify-between gap-3 text-sm">
           <span className="text-ink-soft">{t("write.agreement", lang)}</span>
           <span className="font-medium tabular-nums">{agreement}%</span>
@@ -86,6 +109,8 @@ export default function WriteResult({ lang, childText, result, decidedByChild }:
             : fill("write.checks", lang, { n: result.usage.calls_made })} ·{" "}
           {latencySeconds.toFixed(1)} s
         </p>
+          </>
+        )}
       </div>
     </section>
   );
