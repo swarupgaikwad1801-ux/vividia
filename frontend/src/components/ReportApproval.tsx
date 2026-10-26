@@ -23,7 +23,6 @@
 
 import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
-import { tPending } from "./TimelinePendingStrings";
 
 interface Props {
   lang: Lang;
@@ -39,7 +38,7 @@ export default function ReportApproval({ lang, approved, onApprove, onChange }: 
     return (
       <section className="flex flex-col gap-3 rounded-card border border-calm bg-calm-soft p-4">
         <p role="status" className="text-base font-medium">
-          {tPending("report.approved", lang)}
+          {t("report.approved", lang)}
         </p>
         {/* The promise, restated at the moment it is easiest to doubt. */}
         <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
@@ -57,7 +56,7 @@ export default function ReportApproval({ lang, approved, onApprove, onChange }: 
   return (
     <section className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
       <h2 className="text-lg font-semibold">{t("approve.title", lang)}</h2>
-      <p className="text-base text-ink-soft">{tPending("report.readAll", lang)}</p>
+      <p className="text-base text-ink-soft">{t("report.readAll", lang)}</p>
       {/* "Yes" first and full width because it is the child's own decision,
           not a risk to guard against; "change it" is equally reachable and not
           styled as a retreat. */}

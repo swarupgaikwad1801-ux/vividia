@@ -16,7 +16,6 @@ import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
 import type { StoredEntry } from "../lib/timeline";
 import { moodEmoji, moodLabel } from "../lib/moods";
-import { tPending } from "./TimelinePendingStrings";
 
 interface Props {
   entry: StoredEntry;
@@ -100,13 +99,13 @@ export default function TimelineEntryCard({ entry, lang, onDelete }: Props) {
         <dl className="mt-3 flex flex-col gap-1 text-sm text-ink-soft">
           {entry.place ? (
             <div className="flex gap-2">
-              <dt className="font-medium">{tPending("timeline.where", lang)}</dt>
+              <dt className="font-medium">{t("timeline.where", lang)}</dt>
               <dd lang={lang}>{entry.place}</dd>
             </div>
           ) : null}
           {entry.people ? (
             <div className="flex gap-2">
-              <dt className="font-medium">{tPending("timeline.who", lang)}</dt>
+              <dt className="font-medium">{t("timeline.who", lang)}</dt>
               <dd lang={lang}>{entry.people}</dd>
             </div>
           ) : null}

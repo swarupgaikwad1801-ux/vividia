@@ -42,7 +42,6 @@ import type { StoredEntry } from "../lib/timeline";
 import { clearAll, isPersistent, listEntries, removeEntry } from "../lib/timeline";
 import TimelineDeleteAll from "../components/TimelineDeleteAll";
 import TimelineEntryCard from "../components/TimelineEntryCard";
-import { tPending } from "../components/TimelinePendingStrings";
 
 export interface TimelineProps {
   lang: Lang;
@@ -77,7 +76,7 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
 
   const deleteEverything = useCallback(() => {
     clearAll();
-    setStatus(tPending("timeline.deletedAll", lang));
+    setStatus(t("timeline.deletedAll", lang));
     refresh();
   }, [lang, refresh]);
 
@@ -87,7 +86,7 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
         <h1 className="text-2xl font-semibold tracking-tight">{t("timeline.title", lang)}</h1>
         {/* Only ever a claim about this list. Never about the whole app. */}
         {persistent ? (
-          <p className="text-sm text-ink-soft">{tPending("timeline.storageNote", lang)}</p>
+          <p className="text-sm text-ink-soft">{t("timeline.storageNote", lang)}</p>
         ) : (
           <p className="rounded-card border border-help bg-help-soft p-3 text-sm font-medium text-help">
             {t("timeline.notPersistent", lang)}
@@ -126,7 +125,7 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
                    ~7.7:1 in dark. */
                 className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
               >
-                {tPending("timeline.buildReport", lang)}
+                {t("timeline.buildReport", lang)}
               </button>
             ) : null}
             {/* Last, and visually quiet: it is the child's to use, not a thing

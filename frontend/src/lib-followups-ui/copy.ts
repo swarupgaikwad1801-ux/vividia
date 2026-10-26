@@ -27,82 +27,13 @@ import { FALLBACK_LANG, STRINGS, isLang, t, type StringKey } from "../lib/string
 /**
  * English-only drafts, awaiting keys in `lib/strings.ts`.
  *
- * Tone rules these were written against (`CLAUDE.md`, and the fact that this
- * screen talks to a child whose situation may not have improved):
- * - nothing congratulatory, so "a bit better" is acknowledged, never praised
- * - nothing that reads as disappointment, so "worse" gets the same flat voice
- * - no promise that the next rung will fix it, hence `ladder.noPromise`
- * - no first person: the app is not a friend or a companion, it is a bridge
- * - no contact is named or dialled here; those come from Neel's help screen
+ * Empty: every sentence these screens use now has a key in strings.ts with
+ * German and Hindi. The mechanism stays, so a new sentence can be shipped as
+ * an honest English draft (with the English-only notice) rather than as
+ * unreviewed German, and `copy.test.ts` still fails on any draft that
+ * duplicates a key in strings.ts.
  */
-export const DRAFT_COPY = {
-  /**
-   * Shown when any draft below is still being served, and only to a child who
-   * did not ask for English. It removes itself: once Neel has translated every
-   * key, `untranslatedKeys()` is empty and the notice never renders again.
-   */
-  "app.englishOnly": "Some words in this app are only in English for now.",
-
-  // --- the follow-up check-in -------------------------------------------------
-  "followup.title": "How are things now?",
-  "followup.gap": "It has been a few days since the last thing you wrote.",
-  "followup.noPressure":
-    "You do not have to answer this. Nothing is sent to anyone, whatever you pick.",
-  "followup.answerBetter": "A bit better",
-  "followup.answerSame": "About the same",
-  "followup.answerWorse": "Worse",
-  "followup.notNow": "Not now",
-  "followup.stopAsking": "Stop asking me this",
-  "followup.stopped":
-    "This question will not come back. You can still write something down whenever you want to.",
-  // "Okay" on purpose, for both. It is the one word that is neither a
-  // congratulation for "better" nor a disappointment at "worse".
-  "followup.afterBetter": "Okay. You can write something down any time, even if it seems small.",
-  "followup.afterStill":
-    "Okay. There are other people you could show your words to, if you want to.",
-  "followup.notKept": "This answer is not saved anywhere, and nobody is told.",
-  "followup.openLadder": "See who else there is",
-
-  // --- the escalation ladder --------------------------------------------------
-  "ladder.title": "Who else there is",
-  "ladder.intro": "Other people you could show your own words to. You pick, and you show it yourself.",
-  "ladder.noPromise":
-    "None of them can promise it will stop. Each one is a different door, and you can try more than one.",
-  "ladder.carryTitle": "Your words go with you",
-  "ladder.carryWhy":
-    "The entries you already checked and approved go to the next person too, so you never have to start explaining from nothing again.",
-  "ladder.carryNone":
-    "You have not written anything down yet, so there would be nothing to show. You can write something first.",
-  "ladder.stateStart": "A place to start",
-  "ladder.stateNext": "You could try this next",
-  "ladder.stateShown": "You showed this",
-  "ladder.stateLater": "Still there if you need it",
-  "ladder.show": "Take my words here",
-  "ladder.seeWho": "See who they are",
-  "ladder.markShown": "I showed this to them",
-  "ladder.undo": "Undo",
-  "ladder.waiting": "Nothing new since you showed this. You do not have to do anything right now.",
-  "ladder.stillHappening": "Things kept happening after you showed this.",
-  "ladder.topRung":
-    "This is the last step this app knows about. If it keeps happening you can go back to any of these people again: asking twice is allowed.",
-  "ladder.dangerNow": "If you are in danger right now, use the help button in this app.",
-  "ladder.contactsElsewhere": "The app shows how to reach them under the help button.",
-
-  // Rung names. `teacher` and `trusted` already exist in strings.ts as
-  // handoff.classTeacher / handoff.trustedTeacher / handoff.socialWorker, so
-  // they are not drafted again here.
-  "ladder.rung.head": "The head of the school",
-  "ladder.rung.schoolPsychology": "The school counselling service for your area",
-  "ladder.rung.helplines": "Counsellors you can call or chat with",
-
-  // Why this door is different from the last one. Deliberately flat statements
-  // of fact: "can act" is not "will act", and none of them says it will help.
-  "ladder.why.teacher": "The person who sees your class every day.",
-  "ladder.why.trusted": "Helping with this is part of their job at school.",
-  "ladder.why.head": "Can act when a teacher has not.",
-  "ladder.why.schoolPsychology": "Outside your school, and not part of it.",
-  "ladder.why.helplines": "Not from your school at all.",
-} as const satisfies Record<string, string>;
+export const DRAFT_COPY = {} as const satisfies Record<string, string>;
 
 export type DraftKey = keyof typeof DRAFT_COPY;
 
