@@ -198,12 +198,14 @@ export default function App() {
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
           quieter, so a child reaching for Leave now does not hit it. */}
-      <div className="flex items-center justify-between gap-4 px-4 pt-3">
+      <div className="flex items-start justify-between gap-4 px-4 pt-3">
         {canGoBack(trail) ? (
           <button
             type="button"
             onClick={goBack}
-            className="min-h-tap rounded-card px-2 text-base font-medium text-ink-soft hover:text-ink"
+            // nowrap + shrink-0: next to Leave now and its note, the arrow
+            // otherwise wraps onto its own line at 360px.
+            className="min-h-tap shrink-0 whitespace-nowrap rounded-card px-2 text-base font-medium text-ink-soft hover:text-ink"
           >
             <span aria-hidden="true">← </span>
             {t("nav.back", lang)}
