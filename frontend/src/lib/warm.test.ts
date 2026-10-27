@@ -14,8 +14,11 @@ import { NO_SAY } from "./pictures";
 import { LANGS, STRINGS, type StringKey } from "./strings";
 import { ADULT_LINE, moodLine, whatLine } from "./warm";
 
-test("every face on the check-in gets a line, and a skip gets none", () => {
-  for (const code of MOOD_CODES) assert.ok(moodLine(code), code);
+test("every face on the check-in gets a line, except good (its own screen), and a skip gets none", () => {
+  for (const code of MOOD_CODES) {
+    if (code === "good") assert.equal(moodLine(code), null, "the good screen has already answered");
+    else assert.ok(moodLine(code), code);
+  }
   assert.equal(moodLine(null), null);
   assert.equal(moodLine("not-a-mood"), null);
 });
@@ -37,7 +40,7 @@ const ALL_LINES = (Object.keys(STRINGS) as StringKey[]).filter((key) => key.star
 
 test("every line the rules can choose exists, and every written line is reachable", () => {
   const chosen = new Set<StringKey>([
-    ...MOOD_CODES.map((code) => moodLine(code)!),
+    ...MOOD_CODES.flatMap((code) => moodLine(code) ?? []),
     ...["threatened", "hit", "pushed", "taken", "online", "names", "left_out", "other"].map((c) => whatLine([c])),
     whatLine([]),
     ADULT_LINE,

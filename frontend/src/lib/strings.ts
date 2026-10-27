@@ -741,14 +741,32 @@ export const STRINGS = {
   "q.other": { en: "Something else", de: "Etwas anderes", hi: "Kuch aur" },
   "q.noSay": { en: "I don't want to say", de: "Möchte ich nicht sagen", hi: "Nahi batana" },
 
+  // After the good face on the check-in (screens/GoodDay.tsx). A child who
+  // says the day was good is not asked "What happened?" as if something must
+  // have: they are asked whether anything did, and "No" is a happy ending.
+  // Hinglish: no verb that marks the child's gender ("batana ho", not
+  // "batana chahte/chahti ho").
+  "good.title": { en: "That's great to hear!", de: "Das ist schön zu hören!", hi: "Ye toh achhi baat hai!" },
+  "good.ask": {
+    en: "Did something happen anyway that you want to tell us about?",
+    de: "Ist trotzdem etwas passiert, das du uns erzählen möchtest?",
+    hi: "Kya phir bhi kuch hua hai jo batana ho?",
+  },
+  "good.yes": { en: "Yes, something happened", de: "Ja, etwas ist passiert", hi: "Haan, kuch hua hai" },
+  "good.no": { en: "No, all good", de: "Nein, alles gut", hi: "Nahi, sab theek hai" },
+  "good.done": {
+    en: "Glad to hear it. We're here whenever you need us.",
+    de: "Schön. Wir sind da, wann immer du uns brauchst.",
+    hi: "Badhiya. Jab bhi zaroorat ho, hum yahan hain.",
+  },
+  "good.home": { en: "Back to the start", de: "Zum Anfang", hi: "Shuru pe wapas" },
+
   // The warm line the app says back (lib/warm.ts chooses which). Written in
   // advance, never generated. Thanks and comfort only: never whether it is
   // true, never "you are safe", never advice, never "I".
-  "warm.mood.good": {
-    en: "Good to hear. If something happened anyway, you can tell us here.",
-    de: "Schön zu hören. Wenn trotzdem etwas passiert ist, kannst du es uns hier sagen.",
-    hi: "Achha laga sunke. Agar phir bhi kuch hua hai, toh yahan batao.",
-  },
+  // No "warm.mood.good": a good face goes to its own screen first (the
+  // "good.*" lines below), which answers it, so "What happened?" is only
+  // asked of a child who has said that something did.
   "warm.mood.ok": {
     en: "Thanks for telling us. Take your time.",
     de: "Danke, dass du es uns sagst. Lass dir Zeit.",
@@ -762,7 +780,7 @@ export const STRINGS = {
   "warm.mood.scared": {
     en: "Feeling scared is hard. Take your time. The Need help button is always at the top.",
     de: "Angst zu haben ist schwer. Lass dir Zeit. Der Knopf „Hilfe“ ist immer oben.",
-    hi: "Darr lagna mushkil hai. Aaram se batao. “Madad chahiye” ka button hamesha upar hai.",
+    hi: "Darr lagna mushkil hai. Aaram se batao. “Need help” ka button hamesha upar hai.",
   },
   "warm.mood.angry": {
     en: "It's OK to feel angry. Tell us what happened.",

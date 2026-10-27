@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import CheckIn from "./screens/CheckIn";
+import GoodDay from "./screens/GoodDay";
 import Escalation from "./screens/Escalation";
 import FollowUp from "./screens/FollowUp";
 import Handoff from "./screens/Handoff";
@@ -218,7 +219,10 @@ export default function App() {
   const afterCheckIn = useCallback(
     (mood: string | null) => {
       setCheckInMood(mood);
-      setStep("picWhat");
+      // A good day is not met with "What happened?" (Neel, 27 Oct): first
+      // whether anything did (screens/GoodDay.tsx).
+      if (mood === "good") setStep("checkInGood");
+      else setStep("picWhat");
     },
     [setStep],
   );
@@ -466,6 +470,10 @@ export default function App() {
 
       {step === "onboarding" && (
         <Onboarding lang={lang} onDone={() => setStep("checkIn")} />
+      )}
+
+      {step === "checkInGood" && (
+        <GoodDay lang={lang} onSomething={() => setStep("picWhat")} onHome={() => setTrail([HOME])} />
       )}
 
       {step === "checkIn" && (

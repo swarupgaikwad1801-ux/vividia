@@ -11,7 +11,10 @@
  * ## The rules
  *
  * - **The face from the check-in** gets one line above "What happened?".
- *   Skipping the check-in gets none: there is nothing to answer.
+ *   Skipping the check-in gets none: there is nothing to answer. The good
+ *   face gets none here either: it has its own screen first (GoodDay.tsx),
+ *   so a child who had a good day is never asked what happened as if
+ *   something must have.
  * - **"What happened?"** gets one line on the screen after it, chosen by the
  *   most serious tile tapped (`WHAT_ORDER`), so a child who taps "names" and
  *   "threatened" hears about the threat. Skipping, or "I don't want to say",
@@ -30,8 +33,9 @@
 import { NO_SAY } from "./pictures";
 import type { StringKey } from "./strings";
 
+// No line for "good": that face goes to its own screen first (GoodDay.tsx),
+// which has already answered it by the time "What happened?" comes.
 const MOOD_LINE: Readonly<Record<string, StringKey>> = {
-  good: "warm.mood.good",
   ok: "warm.mood.ok",
   sad: "warm.mood.sad",
   scared: "warm.mood.scared",
