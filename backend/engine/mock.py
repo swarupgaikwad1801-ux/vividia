@@ -132,7 +132,11 @@ def _as_written(word: str, text: str) -> str:
 _QUESTION = {
     "en": "What did you mean by “{phrase}”?",
     "de": "Was hast du mit „{phrase}“ gemeint?",
-    "hi": "“{phrase}” से तुम्हारा क्या मतलब था?",
+    # Hinglish, like the screens (#77) and like the rest of the engine's Hindi
+    # (#93). clarify.title in strings.ts is "Tumhara matlab kya tha?", so the
+    # mock asks the question the real screens ask, in the script the child is
+    # already reading everywhere else.
+    "hi": "“{phrase}” se tumhara matlab kya tha?",
 }
 
 
