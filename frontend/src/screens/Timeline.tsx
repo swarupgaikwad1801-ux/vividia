@@ -44,6 +44,7 @@ import { forgetEverything } from "../lib/forgetEverything";
 import PinRemovedNotice from "../components/PinRemovedNotice";
 import TimelineDeleteAll from "../components/TimelineDeleteAll";
 import TimelineEntryCard from "../components/TimelineEntryCard";
+import LastFourWeeks from "../components/LastFourWeeks";
 import { pinStatus } from "../lib/pin";
 
 export interface TimelineProps {
@@ -164,6 +165,8 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
         <>
           {/* Oldest first, from `listEntries()`: a pattern of incidents only
               reads as a pattern in the order it happened. */}
+          <LastFourWeeks entries={entries} lang={lang} />
+
           <ul className="flex flex-col gap-3">
             {entries.map((entry) => (
               <TimelineEntryCard key={entry.id} entry={entry} lang={lang} onDelete={deleteOne} />
