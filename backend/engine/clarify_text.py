@@ -34,7 +34,7 @@ OTHER_ID = "other"
 
 LABELS = {
     "en": "Something else — I'll explain",
-    "hi": "कुछ और — मैं बताऊँगा/बताऊँगी",
+    "hi": "Kuch aur — main bataunga/bataungi",
     "de": "Etwas anderes – ich erkläre es",
 }
 
@@ -50,7 +50,7 @@ FALLBACK_LANG = "en"
 # like a form. Found by Neel, issue #5.
 REWRITE_PROMPT = {
     "en": "Write it again in your own words. You can use your own language.",
-    "hi": "इसे अपने शब्दों में फिर से लिखो। तुम अपनी भाषा में लिख सकते हो।",
+    "hi": "Ise apne shabdon mein phir se likho. Tum apni language mein likh sakte ho.",
     "de": "Schreib es nochmal in deinen eigenen Worten. Du kannst deine eigene Sprache benutzen.",
 }
 
