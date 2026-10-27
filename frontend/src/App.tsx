@@ -259,8 +259,15 @@ export default function App() {
         <QuickExitButton lang={lang} />
       </div>
 
-      {/* Above every screen, including the lock and the language picker: a
-          judge who opens a mock deploy must read this before they type. */}
+      {/* Above every screen from the language picker onwards: a judge who
+          opens a mock deploy must read this before they type.
+
+          NOT above the lock, which #82 made an early `return` higher up so
+          that no `setStep` can get past it. That is deliberate, not the
+          oversight it looked like in review: this banner's job is to stop
+          someone believing an OUTPUT, and a child at the PIN screen has not
+          typed anything for the app to have answered. Putting it there would
+          add a second place for `engine` to go stale while guarding nothing. */}
       <ExampleModeBanner lang={lang} engine={engine} />
 
       {step === "language" && (
