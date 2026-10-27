@@ -84,14 +84,8 @@ export default function TimelineEntryCard({ entry, lang, onDelete }: Props) {
         {entry.text_child}
       </p>
 
-      <div className="mt-3 border-t border-line pt-3">
-        <p className="text-sm font-medium text-ink-soft">{t("write.german", lang)}</p>
-        {/* lang="de" so a screen reader pronounces it as German rather than
-            reading German words with the child's own phonetics. */}
-        <p lang="de" className="mt-1 whitespace-pre-wrap text-base">
-          {entry.text_de}
-        </p>
-      </div>
+      {/* Child's language only (issue #3). The German is kept with the entry
+          and shown on the card the child shows an adult, behind its switch. */}
 
       {/* Shown only when the child actually filled them in. Dropping details
           they chose to record would be a silent edit of their own account. */}

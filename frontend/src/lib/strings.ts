@@ -280,6 +280,12 @@ export const STRINGS = {
   "lang.hi": { en: "Hindi", de: "Hindi", hi: "हिंदी" },
   "lang.uk": { en: "Ukrainian", de: "Ukrainisch", hi: "यूक्रेनी" },
 
+  // The language switch on the card the child shows an adult
+  // (components/CardLanguageSwitch.tsx). "Auf Deutsch" stays German in every
+  // language: it is the adult who reads and taps it.
+  "card.german": { en: "Auf Deutsch", de: "Auf Deutsch", hi: "Auf Deutsch" },
+  "card.languageSwitch": { en: "Choose the language", de: "Sprache wählen", hi: "भाषा चुनो" },
+
   // The language note next to each helpline. {list} is the languages joined
   // with help.and; "only" is added when the child's language is not among them.
   "help.and": { en: " and ", de: " und ", hi: " और " },
@@ -340,12 +346,6 @@ export const STRINGS = {
     en: "You said this is right.",
     de: "Du hast gesagt: Das stimmt.",
     hi: "तुमने कहा कि यह सही है।",
-  },
-  // Must keep saying that the words leave the phone (CLAUDE.md, privacy).
-  "report.cloudNote": {
-    en: "To make the German, your words go to a translation service on the internet and come straight back. Our server keeps no copy. The service does not keep them either.",
-    de: "Für das Deutsch gehen deine Worte zu einem Übersetzungsdienst im Internet und kommen gleich zurück. Unser Server behält keine Kopie. Der Dienst behält sie auch nicht.",
-    hi: "जर्मन बनाने के लिए तुम्हारे शब्द इंटरनेट पर एक अनुवाद सेवा के पास जाते हैं और तुरंत लौट आते हैं। हमारा सर्वर कोई कॉपी नहीं रखता। वह सेवा भी उन्हें नहीं रखती।",
   },
   "report.offline": {
     en: "There is no internet, so the card can't be made yet. What you saved is still here.",
@@ -594,6 +594,34 @@ export const STRINGS = {
     de: "Haben nichts mit deiner Schule zu tun.",
     hi: "इनका तुम्हारे स्कूल से कोई लेना-देना नहीं।",
   },
+
+  // Onboarding (screens/Onboarding.tsx): three picture cards, one at a time.
+  // The cards are content/onboarding.json word for word; lib/onboarding.test.ts
+  // fails if the two drift, so edit both. Copied here rather than fetched so the
+  // first screen after the language works offline and never waits on the
+  // backend waking up. {button} is filled with quickExit.button.
+  "onboarding.title": { en: "Before you start", de: "Bevor du anfängst", hi: "शुरू करने से पहले" },
+  "onboarding.what": {
+    en: "This app helps you tell an adult what happened. It is not a person and not a doctor.",
+    de: "Die App hilft dir, einem Erwachsenen zu sagen, was passiert ist. Sie ist kein Mensch und kein Arzt.",
+    hi: "यह ऐप किसी बड़े को यह बताने में मदद करता है कि क्या हुआ। यह कोई इंसान या डॉक्टर नहीं है।",
+  },
+  "onboarding.youDecide": {
+    en: "You choose who sees it. The app tells nobody behind your back.",
+    de: "Du suchst aus, wer es sieht. Die App sagt niemandem heimlich etwas.",
+    hi: "कौन देखेगा, यह तुम चुनो। ऐप चुपके से किसी को कुछ नहीं बताता।",
+  },
+  "onboarding.leaveNow": {
+    en: "“{button}” at the top closes the app fast. It does not delete your browser history.",
+    de: "„{button}“ oben schließt die App sofort. Dein Browser-Verlauf wird aber nicht gelöscht.",
+    hi: "ऊपर वाला “{button}” बटन ऐप तुरंत बंद करता है। पर ब्राउज़र की हिस्ट्री नहीं मिटती।",
+  },
+  // "1 of 3" next to the dots, so a screen reader hears where it is.
+  "onboarding.step": { en: "{n} of {total}", de: "{n} von {total}", hi: "{total} में से {n}" },
+  "onboarding.next": { en: "Next", de: "Weiter", hi: "आगे" },
+  "onboarding.skip": { en: "Skip", de: "Überspringen", hi: "छोड़ो" },
+  "onboarding.start": { en: "Start", de: "Los geht's", hi: "शुरू करो" },
+  "onboarding.again": { en: "What this app does", de: "Was diese App macht", hi: "यह ऐप क्या करता है" },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;

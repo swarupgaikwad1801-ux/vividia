@@ -24,13 +24,18 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SOURCE = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "App.tsx"), "utf-8");
+const HERE = dirname(fileURLToPath(import.meta.url));
+const SOURCE = readFileSync(join(HERE, "App.tsx"), "utf-8");
+// The union moved to lib/nav.ts with the Back button (#75); App.tsx still
+// holds every navigation, so the two files are read together.
+const NAV = readFileSync(join(HERE, "lib", "nav.ts"), "utf-8");
 
 /** The members of the `Step` union, read out of the type declaration. */
 function declaredSteps(): string[] {
-  const block = SOURCE.match(/type Step =([\s\S]*?);/);
+  const block = NAV.match(/type Step =([\s\S]*?);/);
   assert.ok(block, "could not find the `Step` union; this test has stopped working");
-  return [...block[1].matchAll(/"([a-zA-Z]+)"/g)].map((m) => m[1]);
+  const code = block[1].replace(/\/\/.*$/gm, "");
+  return [...code.matchAll(/"([a-zA-Z]+)"/g)].map((m) => m[1]);
 }
 
 /** Every string literal passed to `setStep(...)`. */
@@ -67,9 +72,10 @@ test("every step has at least one setStep that reaches it", () => {
 test("the initial step is one of the declared steps", () => {
   // Guards the other direction: a typo in the initialiser would otherwise be
   // a screen that never renders, with nothing to catch it.
-  const initial = [...SOURCE.matchAll(/useState<Step>\([\s\S]{0,200}?"([a-zA-Z]+)"/g)].map(
-    (m) => m[1],
-  );
+  // The trail starts with `start(...)` (lib/nav.ts); every literal it can
+  // start on counts, both sides of the first-run condition.
+  const call = SOURCE.match(/useState\(\(\)\s*=>\s*start\(([^)]*)\)\)/);
+  const initial = call ? [...call[1].matchAll(/"([a-zA-Z]+)"/g)].map((m) => m[1]) : [];
   assert.ok(initial.length > 0, "could not find the initial step; this test has stopped working");
 
   const declared = new Set(declaredSteps());

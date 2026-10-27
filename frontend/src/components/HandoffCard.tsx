@@ -12,10 +12,9 @@
  * "where does this happen?" turns into people. Do not add a conditional to
  * this markup - that is exactly the mistake that file exists to prevent.
  *
- * The role is also printed in German whenever the child is not reading German,
- * because the adult on the other side of the card reads German. That is the
- * argument of the whole product in one line: German support for children is
- * German-only, so the card has to carry German words the child can point at.
+ * This screen speaks only the child's language (issue #3). The German is one
+ * tap away on the big card that comes next (`HandoffShow`), where the adult
+ * chooses the language they read.
  */
 
 import {
@@ -26,9 +25,11 @@ import {
   type WhereItHappens,
 } from "./HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
-import type { ReportResponse } from "../types/api.ts";
+import type { Entry, ReportResponse } from "../types/api.ts";
 
 export interface HandoffCardProps {
+  /** The child's saved entries: what the card shows, in their language. */
+  entries?: readonly Entry[];
   lang: string;
   /** The child's answer. Everything on this card is derived from it. */
   where: WhereItHappens;
@@ -45,6 +46,7 @@ export interface HandoffCardProps {
 }
 
 export default function HandoffCard({
+  entries = [],
   lang,
   where,
   chosen,
@@ -122,11 +124,6 @@ export default function HandoffCard({
           <header className="flex flex-col gap-0.5 border-b border-line pb-3">
             <span className="text-sm text-ink-soft">{t("handoff.showTo", lang)}</span>
             <span className="text-lg font-semibold">{t(recipient.labelKey, lang)}</span>
-            {lang !== "de" && (
-              <span lang="de" className="text-sm text-ink-soft">
-                {t(recipient.labelKey, "de")}
-              </span>
-            )}
           </header>
         )}
 
@@ -163,26 +160,25 @@ export default function HandoffCard({
           </div>
         )}
 
-        {!loading && !error && !report && (
-          // Nothing approved yet. The wording is Neel's existing timeline copy,
-          // which already says what happens to anything the child does save.
+        {!loading && !error && entries.length === 0 && !report && (
+          // Nothing approved yet.
           <p className="text-base text-ink-soft">{t("timeline.empty", lang)}</p>
         )}
 
-        {!loading && !error && report && (
-          <div className="flex flex-col gap-4">
-            {/* German first: it is the half of the card the adult reads. */}
-            <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-medium text-ink-soft">{t("write.german", lang)}</h3>
-              <p lang="de" className="whitespace-pre-wrap text-base text-ink">
-                {report.german_version}
-              </p>
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-medium text-ink-soft">{t("handoff.yourWords", lang)}</h3>
-              <p className="whitespace-pre-wrap text-base text-ink">{report.child_version}</p>
-            </div>
-          </div>
+        {/* The child's own approved words, in their language only. The
+            model-written report is the fallback when there are no entries. */}
+        {!loading && !error && entries.length > 0 && (
+          <ol className="flex flex-col gap-2">
+            {entries.map((entry, index) => (
+              <li key={`${entry.date}-${index}`} className="whitespace-pre-wrap text-base text-ink">
+                {entry.text_child}
+              </li>
+            ))}
+          </ol>
+        )}
+
+        {!loading && !error && entries.length === 0 && report && (
+          <p className="whitespace-pre-wrap text-base text-ink">{report.child_version}</p>
         )}
       </article>
     </section>

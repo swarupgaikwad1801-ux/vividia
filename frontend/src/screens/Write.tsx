@@ -63,6 +63,11 @@ export interface WriteProps {
    */
   initialText?: string;
   /**
+   * Every change to the text, so the app can hand it back as `initialText`
+   * after Back or a trip to help. Nothing leaves the device here.
+   */
+  onTextChange?: (text: string) => void;
+  /**
    * Called when the child approves the German. Until it is wired, the approve
    * button is not rendered at all — CLAUDE.md's quality bar says every button
    * works, and a button that silently does nothing is worse than its absence.
@@ -82,7 +87,7 @@ type Run =
   | { kind: "translate"; text: string }
   | { kind: "clarify"; text: string; choices: Record<string, string> };
 
-export default function Write({ lang, initialText, onApproved, onNeedHelp }: WriteProps) {
+export default function Write({ lang, initialText, onTextChange, onApproved, onNeedHelp }: WriteProps) {
   const [text, setText] = useState(initialText ?? "");
   const [phase, setPhase] = useState<Phase>("writing");
   const [result, setResult] = useState<TranslateResponse | null>(null);
@@ -245,7 +250,10 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
           <textarea
             ref={editorRef}
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => {
+              setText(event.target.value);
+              onTextChange?.(event.target.value);
+            }}
             // No autofocus: on Android that throws the keyboard over the
             // screen before the child has read what this page is for.
             rows={7}
