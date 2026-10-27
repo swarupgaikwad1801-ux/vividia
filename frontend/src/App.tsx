@@ -502,7 +502,13 @@ export default function App() {
           lang={lang}
           mood={checkInMood}
           onPictures={() => setStep("picWhat")}
-          onWrite={() => setStep("listen")}
+          onWrite={(words) => {
+            // The feeling words the child tapped start their text; anything
+            // they had already typed stays first.
+            if (words) setTalkDraft((now) => (now.trim() ? `${now}
+${words}` : words));
+            setStep("listen");
+          }}
           onHome={() => setTrail([HOME])}
         />
       )}
