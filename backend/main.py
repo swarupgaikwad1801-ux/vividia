@@ -302,7 +302,9 @@ async def listen(request: ListenRequest, http: Request) -> ListenResponse:
              request.lang, len(request.text), heard["kind"], written is not None)
     usage = _usage_of(heard, started)
     GUARD.record_spend(usage["estimated_cost_usd"])
-    return ListenResponse(kind=heard["kind"], safety=safety, reply=written, usage=usage)
+    return ListenResponse(
+        kind=heard["kind"], told=heard.get("told", []), safety=safety, reply=written, usage=usage,
+    )
 
 
 def _add_usage(first: dict | None, second: dict | None) -> dict | None:

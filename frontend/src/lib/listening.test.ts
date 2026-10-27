@@ -11,15 +11,17 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import type { ListenKind } from "../types/api.ts";
-import { ASKS, HELP_NUDGE, MAX_CARD_CHARS, replyFor, wordsForCard, type Turn } from "./listening.ts";
+import type { ListenDetail, ListenKind } from "../types/api.ts";
+import { ACKS, HELP_NUDGE, MAX_CARD_CHARS, replyFor, wordsForCard, type Turn } from "./listening.ts";
 import { LANGS, STRINGS, t } from "./strings.ts";
 
 const KINDS: ListenKind[] = [
-  "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "other",
+  "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "talk", "other",
 ];
 
-const turn = (kind: ListenKind, text = "x"): Turn => ({ text, kind });
+const turn = (kind: ListenKind, text = "x", told: ListenDetail[] = []): Turn => ({ text, kind, told });
+/** Every question asked over a whole conversation, in order. */
+const asks = (turns: Turn[]) => turns.map((_, i) => replyFor(i, turns).ask);
 
 test("every kind has its own sentence, in every language", () => {
   const seen = new Set<string>();
@@ -35,17 +37,71 @@ test("every kind has its own sentence, in every language", () => {
   assert.equal(seen.size, KINDS.length);
 });
 
-test("a kind is answered once, then the app just thanks and asks on", () => {
-  const turns = [turn("names"), turn("names"), turn("hurt")];
-  assert.deepEqual(replyFor(1, turns).lines, ["heard.thanks.again"]);
-  assert.deepEqual(replyFor(2, turns).lines, ["heard.thanks.again", "heard.kind.hurt"]);
+test("the thanks is said once; a new kind gets its own line, a repeat gets a short acknowledgement", () => {
+  // Neel's 27 Oct screenshot: "Thank you. We are still listening." opened every answer.
+  const turns = [turn("names"), turn("names"), turn("hurt"), turn("hurt")];
+  assert.deepEqual(replyFor(0, turns).lines, ["heard.thanks.first", "heard.kind.names"]);
+  assert.deepEqual(replyFor(1, turns).lines, [ACKS[0]]);
+  assert.deepEqual(replyFor(2, turns).lines, ["heard.kind.hurt"]);
+  assert.deepEqual(replyFor(3, turns).lines, [ACKS[1]]);
+  for (let i = 1; i < turns.length; i += 1) {
+    assert.ok(!replyFor(i, turns).lines.includes("heard.thanks.first"), `answer ${i} thanks again`);
+  }
 });
 
-test("the questions come one at a time and then stop asking", () => {
-  const many = Array.from({ length: ASKS.length + 3 }, () => turn("other"));
-  assert.equal(replyFor(0, many).ask, "heard.ask.more");
-  assert.equal(replyFor(many.length - 1, many).ask, "heard.ask.done");
+test("two answers in a row never open with the same line", () => {
+  const turns = Array.from({ length: 8 }, () => turn("names"));
+  for (let i = 1; i < turns.length; i += 1) {
+    assert.notDeepEqual(replyFor(i, turns).lines, replyFor(i - 1, turns).lines, `answers ${i - 1} and ${i}`);
+  }
+});
+
+test("'talk to me' gets an open door, never a question about something not mentioned", () => {
+  // The screenshot: "Merse baat karo please" was answered "An adult you trust
+  // can help" and then "When did it happen?".
+  const alone = replyFor(0, [turn("talk", "Merse baat karo please")]);
+  assert.deepEqual(alone, { lines: ["heard.thanks.first", "heard.kind.talk"], ask: "heard.ask.open" });
+  const later = [turn("threat"), { text: "x", kind: "other", urgent: true } as Turn, turn("talk")];
+  const reply = replyFor(2, later);
+  assert.deepEqual(reply.lines, ["heard.kind.talk"]);
+  assert.ok(!["heard.ask.where", "heard.ask.when", "heard.ask.who"].includes(reply.ask ?? ""), String(reply.ask));
+});
+
+test("the next question is the first detail the child has not given", () => {
+  // "He pushed me at school today": where and when are known, so who is asked.
+  assert.equal(replyFor(0, [turn("hurt", "x", ["where", "when"])]).ask, "heard.ask.who");
+  // Nothing given yet: where first.
+  assert.equal(replyFor(0, [turn("names")]).ask, "heard.ask.where");
+  // A detail given in a later message is not asked for afterwards.
+  const turns = [turn("taken"), turn("taken", "at the bus stop yesterday", ["where", "when"])];
+  assert.equal(replyFor(1, turns).ask, "heard.ask.who");
+});
+
+test("a threat asks when first, and something online is never asked where", () => {
+  assert.equal(replyFor(0, [turn("threat")]).ask, "heard.ask.when");
+  assert.deepEqual(asks([turn("online"), turn("online"), turn("online")]), [
+    "heard.ask.when", "heard.ask.who", "heard.ask.feel",
+  ]);
+});
+
+test("asking what to do, or a good day, gets no question; only a feeling asks what happened", () => {
+  assert.equal(replyFor(0, [turn("asking")]).ask, null);
+  assert.equal(replyFor(0, [turn("good")]).ask, null);
+  assert.equal(replyFor(0, [turn("feeling", "x", ["feeling"])]).ask, "heard.ask.what");
+});
+
+test("each question is asked once, and then the app stops asking", () => {
+  const many = Array.from({ length: 10 }, () => turn("hurt"));
+  const all = asks(many);
+  assert.deepEqual(all.slice(0, 6), [
+    "heard.ask.where", "heard.ask.when", "heard.ask.who", "heard.ask.feel", "heard.ask.else", "heard.ask.done",
+  ]);
+  assert.deepEqual(all.slice(6), [null, null, null, null]);
   assert.ok(!t("heard.ask.done", "en").includes("?"), "the last one must not be a question");
+});
+
+test("a first message no kind fits gets the open question, not 'Where did it happen?'", () => {
+  assert.equal(replyFor(0, [turn("other")]).ask, "heard.ask.more");
 });
 
 test("the app never speaks as I, in English", () => {
@@ -75,14 +131,16 @@ test("the listening screen shows no text from the server but the checked reply a
   const screen = readFileSync(new URL("../screens/Listen.tsx", import.meta.url), "utf8");
   // The response variable, not the "heard.*" string keys inside quotes.
   const used = [...screen.matchAll(/(?<!["'])\bheard\.(\w+)/g)].map((m) => m[1]);
-  assert.deepEqual([...new Set(used)].sort(), ["kind", "reply", "safety"]);
+  // `told` is a list of closed-enum codes that only choose a question; it is
+  // never shown.
+  assert.deepEqual([...new Set(used)].sort(), ["kind", "reply", "safety", "told"]);
 });
 
 test("a message the safety check flagged is answered with help, and nothing is asked", () => {
   // Found in the 360px render: "Sometimes I want to die" got "When did it
   // happen?" underneath it.
   const turns: Turn[] = [turn("names"), { text: "x", kind: "other", urgent: true }];
-  assert.deepEqual(replyFor(1, turns), { lines: ["heard.thanks.again", "heard.urgent"], ask: null });
+  assert.deepEqual(replyFor(1, turns), { lines: ["heard.urgent"], ask: null });
 });
 
 test("being hurt or threatened puts Need help inside the answer, nothing else does", () => {
