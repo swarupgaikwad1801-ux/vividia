@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 
 import AdultGuide from "./AdultGuide.tsx";
+import { useScreenAwake } from "./useScreenAwake.ts";
 import CardLanguageSwitch from "./CardLanguageSwitch.tsx";
 import SourceMark from "./SourceMark.tsx";
 import type { EntrySource } from "../lib/timeline.ts";
@@ -90,6 +91,7 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
   // (or read by a screen reader) before the adult picks it (issue #3).
   // Ctrl+P works too: beforeprint fires either way.
   const [printing, setPrinting] = useState(false);
+  const awake = useScreenAwake();
   useEffect(() => {
     const start = () => setPrinting(true);
     const end = () => setPrinting(false);
@@ -125,6 +127,8 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
       >
         {body(showing)}
       </article>
+
+      {awake && <p className="-mt-2 text-sm text-ink-soft">{t("card.awake", lang)}</p>}
 
       {/* Under the child's words, not above them: the card is what the child
           holds up, and the guide is for the person now reading it. It follows
