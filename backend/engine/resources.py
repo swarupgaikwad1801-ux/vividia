@@ -18,7 +18,9 @@ dependency either.
 """
 
 import json
+import logging
 import os
+import re
 import time
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -30,9 +32,28 @@ import httpx
 from engine.config import REPO_ROOT
 from engine.contract import Resource
 
+log = logging.getLogger(__name__)
+
 CONTENT_FILE = REPO_ROOT / "content" / "helplines.json"
 TAVILY_URL = "https://api.tavily.com/search"
+TAVILY_EXTRACT_URL = "https://api.tavily.com/extract"
 TIMEOUT_S = 6.0
+
+# Every live Tavily request counts, search and extract alike. Past the cap the
+# child still gets the curated helplines, so the only thing a spent budget
+# costs is the local service - never the list itself.
+#
+# The count is persisted with the cache: a cap that reset on redeploy would not
+# be a cap, and a public demo has to survive until judging closes on 15 Dec.
+DEFAULT_DAILY_CAP = 20
+
+
+def daily_cap() -> int:
+    """Read at call time, not import time, so a test or deploy can set it."""
+    try:
+        return max(0, int(os.getenv("TAVILY_DAILY_CAP", DEFAULT_DAILY_CAP)))
+    except ValueError:
+        return DEFAULT_DAILY_CAP
 
 # One official site per state, each checked by hand on 24 Oct 2026. A code
 # missing here gets the national helplines only, never an open web search.
@@ -62,7 +83,98 @@ _transport: httpx.AsyncBaseTransport | None = None
 # not move overnight, and the public demo must not burn Tavily credits before
 # 15 Dec. Only successful lookups are cached, so a failure is retried.
 CACHE_SECONDS = 24 * 60 * 60
-_cache: dict[str, tuple[float, list[Resource]]] = {}
+
+# The cache and the day's spend live in one small file so a redeploy or a
+# second instance does not pay for the same sixteen states again.
+#
+# Expiry is WALL CLOCK, not time.monotonic(). monotonic() counts from an
+# arbitrary zero per process, so a monotonic deadline written to disk means
+# nothing to the next process - every entry would read as either long expired
+# or valid forever. Wall clock can jump; a stale entry for a day is a far
+# smaller problem than a cache that never expires.
+STATE_FILE = REPO_ROOT / ".tavily_state.json"
+
+# Shape: {"day": "YYYY-MM-DD", "spent": int,
+#         "entries": {"BW": {"expires": <epoch>, "resources": [...]}}}
+_state: dict | None = None
+
+
+def _today() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _blank_state() -> dict:
+    return {"day": _today(), "spent": 0, "entries": {}}
+
+
+def _load_state() -> dict:
+    """Read the state file, tolerating every way it can be unusable.
+
+    A child asking for help must never see this fail, so anything unreadable
+    is treated as an empty cache rather than raised: worst case we pay for a
+    lookup we had already paid for.
+    """
+    global _state
+    if _state is not None:
+        return _state
+    try:
+        loaded = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        if not isinstance(loaded, dict) or not isinstance(loaded.get("entries"), dict):
+            raise ValueError("unexpected shape")
+        loaded.setdefault("day", _today())
+        loaded["spent"] = int(loaded.get("spent", 0))
+        _state = loaded
+    except (OSError, ValueError, TypeError):
+        _state = _blank_state()
+    # A new UTC day resets the allowance. The cached lookups keep their own
+    # expiry: they are still good, and re-fetching them is what costs.
+    if _state.get("day") != _today():
+        _state["day"] = _today()
+        _state["spent"] = 0
+    return _state
+
+
+def _save_state() -> None:
+    """Persist best-effort. A read-only disk must not break a lookup."""
+    if _state is None:
+        return
+    try:
+        STATE_FILE.write_text(json.dumps(_state), encoding="utf-8")
+    except OSError as error:
+        log.warning("could not persist Tavily state to %s: %s", STATE_FILE, error)
+
+
+def _spend(n: int = 1) -> bool:
+    """Claim n credits for today. False means the cap is reached: do not call.
+
+    Claimed BEFORE the request goes out, so a timeout or a 500 still counts.
+    Tavily bills the request, not the answer, and a cap that only counted
+    successes could be walked straight through by a failing endpoint.
+    """
+    state = _load_state()
+    cap = daily_cap()
+    if state["spent"] + n > cap:
+        log.info("Tavily daily cap reached (%d/%d); serving curated helplines",
+                 state["spent"], cap)
+        return False
+    state["spent"] += n
+    _save_state()
+    return True
+
+
+def tavily_status() -> dict[str, str]:
+    """For /api/health, so the budget can be watched while the demo is public."""
+    state = _load_state()
+    return {
+        "tavily_spent_today": str(state["spent"]),
+        "tavily_daily_cap": str(daily_cap()),
+        "tavily_cached_states": str(len(state["entries"])),
+    }
+
+
+def _reset_state_for_tests() -> None:
+    global _state
+    _state = None
 
 
 @lru_cache(maxsize=1)
@@ -98,12 +210,136 @@ def _on_site(url: str, domain: str) -> bool:
     return host == domain or host.endswith("." + domain)
 
 
+# A phone number is only taken when the page LABELS it as one. Pulling the
+# first number-shaped run of characters off a page would happily return a
+# postcode, a house number, a file reference or a date, and a wrong number on
+# a child-safety screen is worse than no number: "Siehe Webseite" is honest,
+# an unanswered line is not. So: a label, then something phone-shaped, then a
+# digit count that a German number actually has.
+_PHONE_LABEL = re.compile(
+    r"(?:Tel\.?|Telefon(?:nummer)?|Fon|Rufnummer|Hotline)\s*:?\s*"
+    r"((?:\+49|0)[\d\s/()–-]{5,24}|11[68]\s?\d{3})",
+    re.IGNORECASE,
+)
+# Opening hours have to name a day and say "Uhr"; anything looser matches
+# prose. Kept as the page writes it, never reformatted into our own words.
+_HOURS = re.compile(
+    # \b on the day names is load-bearing, not tidiness. Without it, and
+    # with IGNORECASE, the two-letter days match INSIDE ordinary words:
+    # "Di" in "Die", "Mi" in "Termine", "So" in "also". Measured before the
+    # boundaries went in:
+    #
+    #   "Termine gibt es also nach Vereinbarung ab 8 Uhr"
+    #       -> "mine gibt es also nach Vereinbarung ab 8 Uhr"
+    #   "Die Direktion ist bis 16 Uhr erreichbar"
+    #       -> "Die Direktion ist bis 16 Uhr"
+    #
+    # Both would have been shown to a child as a helpline's opening hours.
+    # The phone pattern was guarded against exactly this; this one was not.
+    r"(\b(?:Mo|Di|Mi|Do|Fr|Sa|So|Montag|Dienstag|Mittwoch|Donnerstag"
+    r"|Freitag|Samstag|Sonntag)\b[^.;\n]{3,70}?Uhr)",
+    re.IGNORECASE,
+)
+
+# A state portal (berlin.de, hamburg.de, saarland.de, schleswig-holstein.de)
+# carries the press office, the switchboard and other departments on one
+# page, and _phone_from takes the first number it sees. A correct number for
+# the wrong office is the same failure as a wrong number, reached from the
+# other direction, so a number only counts when the page puts it near the
+# service we were actually looking for.
+_NEAR_CHARS = 300
+_SERVICE_WORDS = re.compile(r"Schulpsycholog|Beratung", re.IGNORECASE)
+
+
+def _near_service(text: str, position: int) -> bool:
+    """Does the page mention the service we searched for, near this number?
+
+    Judged on the window around the number rather than on the page as a
+    whole: a state portal mentions "Beratung" somewhere on almost every page,
+    so a whole-page test would pass everything and close nothing.
+    """
+    window = text[max(0, position - _NEAR_CHARS): position + _NEAR_CHARS]
+    return bool(_SERVICE_WORDS.search(window))
+
+
+def _phone_from(text: str) -> str | None:
+    """A labelled German phone number near the service, or None.
+
+    Two separate guards, because they catch different mistakes:
+
+    - the LABEL stops a postcode, a house number, an Aktenzeichen or a year
+      being read as a phone number at all;
+    - the PROXIMITY stops a real, correctly-read number belonging to the
+      press office or the switchboard of a state portal
+      (berlin.de, hamburg.de, saarland.de, schleswig-holstein.de all serve
+      the whole state) being handed to a child as the counselling service.
+
+    A child who rings the wrong office is turned away by someone who has
+    never heard of them, which is worse than being shown a link.
+    """
+    for match in _PHONE_LABEL.finditer(text):
+        raw = match.group(1).strip(" \u2013-/()")
+        digits = re.sub(r"\D", "", raw)
+        # 116 111 and 110 are short codes; a full German number runs to 15
+        # digits with the country code. Below 6 it is not a number, above 15
+        # the regex has run into the next paragraph.
+        if not (3 <= len(digits) <= 15):
+            continue
+        if len(digits) < 6 and not digits.startswith("11"):
+            continue
+        if not _near_service(text, match.start()):
+            continue
+        return " ".join(raw.split())
+    return None
+
+
+def _hours_from(text: str) -> str | None:
+    match = _HOURS.search(text)
+    if not match:
+        return None
+    return " ".join(match.group(1).split())[:120]
+
+
+async def _extract_details(url: str, domain: str, key: str) -> tuple[str | None, str | None]:
+    """Phone and hours off the page we already found. Never raises.
+
+    Costs one credit, so it runs for the best result only - which is also
+    what the 32-credit estimate for a 16-state measured run assumes.
+    """
+    # Checked again rather than trusted: this is the one place where a URL
+    # from Tavily's answer is fed back into an outbound request, so a host we
+    # never vetted must not reach it even if the caller already filtered.
+    if not _on_site(url, domain):
+        return None, None
+    if not _spend():
+        return None, None
+    try:
+        async with httpx.AsyncClient(timeout=TIMEOUT_S, transport=_transport) as client:
+            response = await client.post(
+                TAVILY_EXTRACT_URL,
+                json={"urls": [url], "extract_depth": "basic"},
+                headers={"Authorization": f"Bearer {key}"},
+            )
+            response.raise_for_status()
+            results = response.json().get("results") or []
+    except (httpx.HTTPError, ValueError, KeyError, TypeError):
+        return None, None
+    if not results:
+        return None, None
+    text = (results[0] or {}).get("raw_content") or ""
+    if not isinstance(text, str):
+        return None, None
+    return _phone_from(text), _hours_from(text)
+
+
 async def _search_local(state: str) -> list[Resource]:
     """Live lookup for one state. Returns [] on any failure; never raises."""
     key = os.getenv("TAVILY_API_KEY")
     site = STATE_SITES.get(state.upper())
     if not key or not site:
         return []
+    if not _spend():
+        return []  # out of allowance today: the curated helplines still stand
     state_name, domain = site
     payload = {
         "query": f"Schulpsychologische Beratungsstelle {state_name} Kontakt",
@@ -137,17 +373,41 @@ async def _search_local(state: str) -> list[Resource]:
             "source_url": url,
             "retrieved_at": now,
         })
+
+    # One extract, on the best result only. If it finds nothing, or fails, or
+    # the cap bites, the entry stays exactly as it was: the link, and "Siehe
+    # Webseite". That was already an honest answer; this only improves on it
+    # when the page actually says so.
+    if found:
+        best = found[0]
+        # source_url already points at the page; contact is replaced by the
+        # number, so the link survives the swap and stays checkable.
+        phone, hours = await _extract_details(best["source_url"], domain, key)
+        if phone:
+            best["contact"] = phone
+            log.info("Tavily extract: phone for %s from %s", state, best["source_url"])
+        if hours:
+            best["hours"] = hours
     return found
 
 
 async def _cached_local(state: str) -> list[Resource]:
     key = state.upper()
-    hit = _cache.get(key)
-    if hit and hit[0] > time.monotonic():
-        return hit[1]
+    state_data = _load_state()
+    hit = state_data["entries"].get(key)
+    if isinstance(hit, dict) and float(hit.get("expires", 0)) > time.time():
+        cached = hit.get("resources")
+        if isinstance(cached, list) and cached:
+            return cached
     found = await _search_local(key)
     if found:
-        _cache[key] = (time.monotonic() + CACHE_SECONDS, found)
+        # Only successful lookups are cached, so a failure is retried rather
+        # than remembered for a day.
+        state_data["entries"][key] = {
+            "expires": time.time() + CACHE_SECONDS,
+            "resources": found,
+        }
+        _save_state()
     return found
 
 

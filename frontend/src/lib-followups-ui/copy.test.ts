@@ -28,30 +28,35 @@ test("every draft is a key strings.ts does not have yet", () => {
 });
 
 test("a key that exists in strings.ts comes from strings.ts, not from here", () => {
-  const result = copy("handoff.youDecide", "de");
+  const result = copy("ladder.intro", "de");
   assert.equal(result.fromStrings, true);
   assert.equal(result.lang, "de");
-  assert.equal(result.text, STRINGS["handoff.youDecide"].de);
+  assert.equal(result.text, STRINGS["ladder.intro"].de);
 });
 
-test("a draft is served in English and says so", () => {
+test("the ladder and follow-up wording now comes from strings.ts in the child's language", () => {
   const result = copy("ladder.carryTitle", "de");
-  assert.equal(result.fromStrings, false);
-  // Marked as English even though the child asked for German, so a screen
-  // reader does not read an English sentence with German phonemes.
-  assert.equal(result.lang, "en");
-  assert.equal(result.text, DRAFT_COPY["ladder.carryTitle"]);
+  assert.equal(result.fromStrings, true);
+  assert.equal(result.lang, "de");
+  assert.equal(result.text, STRINGS["ladder.carryTitle"].de);
 });
 
 test("an unknown language falls back to English rather than an empty screen", () => {
-  assert.equal(copy("handoff.youDecide", "fr").lang, "en");
-  assert.equal(copy("handoff.youDecide", "fr").text, STRINGS["handoff.youDecide"].en);
+  assert.equal(copy("ladder.intro", "fr").lang, "en");
+  assert.equal(copy("ladder.intro", "fr").text, STRINGS["ladder.intro"].en);
+});
+
+test("a feature name on Hinglish screens is English, and tagged as English", () => {
+  assert.deepEqual(says("ladder.title", "hi"), {
+    lang: "en",
+    children: STRINGS["ladder.title"].en,
+  });
 });
 
 test("says() carries the text and the language it is in together", () => {
-  assert.deepEqual(says("ladder.title", "hi"), {
-    lang: "en",
-    children: DRAFT_COPY["ladder.title"],
+  assert.deepEqual(says("ladder.intro", "hi"), {
+    lang: "hi",
+    children: STRINGS["ladder.intro"].hi,
   });
   assert.deepEqual(says("handoff.classTeacher", "hi"), {
     lang: "hi",
@@ -60,24 +65,29 @@ test("says() carries the text and the language it is in together", () => {
 });
 
 test("no draft is empty or only whitespace", () => {
-  for (const [key, text] of Object.entries(DRAFT_COPY)) {
+  for (const [key, text] of Object.entries(DRAFT_COPY as Record<string, string>)) {
     assert.ok(text.trim().length > 0, `${key} is blank`);
   }
 });
 
-test("no draft contains a number that could be read as a contact", () => {
+test("no follow-up or ladder sentence contains a number that could be read as a contact", () => {
   // CLAUDE.md: content/helplines.json is the only place a contact may be
-  // defined. A digit in a sentence on this screen is almost certainly someone
+  // defined. A digit in a sentence on these screens is almost certainly someone
   // typing a helpline in by hand, so the whole set is simply digit-free.
-  for (const [key, text] of Object.entries(DRAFT_COPY)) {
+  const texts = [
+    ...Object.entries(DRAFT_COPY as Record<string, string>),
+    ...Object.entries(STRINGS)
+      .filter(([key]) => key.startsWith("followup.") || key.startsWith("ladder."))
+      .flatMap(([key, text]) => Object.values(text).map((value) => [key, value] as const)),
+  ];
+  for (const [key, text] of texts) {
     assert.ok(!/\d/.test(text), `${key} contains a digit: ${text}`);
   }
 });
 
-test("the English-only notice shows only when it is both true and useful", () => {
+test("the English-only notice takes itself off once nothing is English-only", () => {
   assert.equal(englishOnlyNotice("en"), null, "nothing to disclose to an English reader");
-  assert.ok(untranslatedKeys().length > 0, "drafts still exist, so the notice applies");
-  const notice = englishOnlyNotice("de");
-  assert.ok(notice !== null);
-  assert.equal(notice.lang, "en");
+  assert.deepEqual(untranslatedKeys(), [], "every draft has a key in strings.ts now");
+  assert.equal(englishOnlyNotice("de"), null);
+  assert.equal(englishOnlyNotice("hi"), null);
 });

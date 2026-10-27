@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import PinKeypad from "../components/PinKeypad";
 import PinNotice from "../components/PinNotice";
-import { pinText } from "../components/pinText";
+import { fill } from "../lib/strings";
 import { isValidPin, pinStatus, setPin, clearPin } from "../lib/pin";
 import type { PinStore } from "../lib/pin";
 import { onQuickExit } from "../lib/quickExit";
@@ -78,7 +78,7 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
 
   const next = (): void => {
     if (!isValidPin(first)) {
-      setNotice({ tone: "problem", text: pinText("pin.set.tooShort", lang) });
+      setNotice({ tone: "problem", text: fill("pin.set.tooShort", lang) });
       return;
     }
     setNotice(null);
@@ -92,7 +92,7 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
       // PIN they meant the first time, and making them start over implies they
       // got that wrong too.
       setAgain("");
-      setNotice({ tone: "problem", text: pinText("pin.set.mismatch", lang) });
+      setNotice({ tone: "problem", text: fill("pin.set.mismatch", lang) });
       return;
     }
 
@@ -104,7 +104,7 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
       setFirst("");
       setAgain("");
       setStatus(pinStatus(store));
-      setNotice({ tone: "good", text: pinText("pin.set.saved", lang) });
+      setNotice({ tone: "good", text: fill("pin.set.saved", lang) });
       setStage("saved");
       return;
     }
@@ -113,12 +113,12 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
       // The honest branch. `lib/pin.ts` refuses to pretend, so neither does
       // this: no "PIN saved" screen, and the child is told the device is the
       // problem rather than left to discover it next time they open the app.
-      setNotice({ tone: "problem", text: pinText("pin.set.noStorage", lang) });
+      setNotice({ tone: "problem", text: fill("pin.set.noStorage", lang) });
       setStatus("unavailable");
       return;
     }
 
-    setNotice({ tone: "problem", text: pinText("pin.set.tooShort", lang) });
+    setNotice({ tone: "problem", text: fill("pin.set.tooShort", lang) });
     setStage("enter");
   };
 
@@ -128,7 +128,7 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
     setFirst("");
     setAgain("");
     setStatus(pinStatus(store));
-    setNotice({ tone: "good", text: pinText("pin.remove.done", lang) });
+    setNotice({ tone: "good", text: fill("pin.remove.done", lang) });
     setStage("removed");
   };
 
@@ -147,12 +147,12 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
   return (
     <section className="mx-auto flex max-w-sm flex-col gap-5 px-4 py-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {pinText(status === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
+        <h1 className="text-2xl">
+          {fill(status === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
         </h1>
-        <p className="text-base text-ink-soft">{pinText("pin.set.hint", lang)}</p>
+        <p className="text-base text-ink-soft">{fill("pin.set.hint", lang)}</p>
         {/* Not a footnote. See the file comment. */}
-        <p className="text-sm text-ink-soft">{pinText("pin.set.limit", lang)}</p>
+        <p className="text-sm text-ink-soft">{fill("pin.set.limit", lang)}</p>
       </header>
 
       {notice ? <PinNotice tone={notice.tone}>{notice.text}</PinNotice> : null}
@@ -161,10 +161,10 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
         // No keypad at all: this device cannot keep a PIN, and offering the
         // pad would be inviting the child to type one into nothing.
         <>
-          <PinNotice tone="problem">{pinText("pin.set.noStorage", lang)}</PinNotice>
+          <PinNotice tone="problem">{fill("pin.set.noStorage", lang)}</PinNotice>
           {onDone ? (
             <button type="button" onClick={onDone} className={primary}>
-              {pinText("pin.set.done", lang)}
+              {fill("pin.set.done", lang)}
             </button>
           ) : null}
         </>
@@ -173,14 +173,14 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
           {stage === "enter" ? (
             <>
               <PinKeypad
-                label={pinText("pin.set.enter", lang)}
+                label={fill("pin.set.enter", lang)}
                 value={first}
                 onChange={setFirst}
                 onSubmit={next}
                 lang={lang}
               />
               <button type="button" onClick={next} disabled={!isValidPin(first)} className={primary}>
-                {pinText("pin.set.next", lang)}
+                {fill("pin.set.next", lang)}
               </button>
             </>
           ) : null}
@@ -188,7 +188,7 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
           {stage === "confirm" ? (
             <>
               <PinKeypad
-                label={pinText("pin.set.again", lang)}
+                label={fill("pin.set.again", lang)}
                 value={again}
                 onChange={setAgain}
                 onSubmit={() => void save()}
@@ -201,10 +201,10 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
                 disabled={busy || !isValidPin(again)}
                 className={primary}
               >
-                {pinText("pin.set.save", lang)}
+                {fill("pin.set.save", lang)}
               </button>
               <button type="button" onClick={restart} className={secondary}>
-                {pinText("pin.set.startAgain", lang)}
+                {fill("pin.set.startAgain", lang)}
               </button>
             </>
           ) : null}
@@ -213,12 +213,12 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
             <div className="flex flex-col gap-3">
               {stage === "removed" ? (
                 <button type="button" onClick={restart} className={primary}>
-                  {pinText("pin.set.title", lang)}
+                  {fill("pin.set.title", lang)}
                 </button>
               ) : null}
               {onDone ? (
                 <button type="button" onClick={onDone} className={stage === "removed" ? secondary : primary}>
-                  {pinText("pin.set.done", lang)}
+                  {fill("pin.set.done", lang)}
                 </button>
               ) : null}
             </div>
@@ -229,21 +229,21 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
             <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
               {asking ? (
                 <>
-                  <p className="text-base">{pinText("pin.remove.ask", lang)}</p>
+                  <p className="text-base">{fill("pin.remove.ask", lang)}</p>
                   <button
                     type="button"
                     onClick={remove}
                     className="min-h-tap rounded-card bg-help-soft px-4 text-base font-semibold text-help"
                   >
-                    {pinText("pin.remove.yes", lang)}
+                    {fill("pin.remove.yes", lang)}
                   </button>
                   <button type="button" onClick={() => setAsking(false)} className={secondary}>
-                    {pinText("pin.remove.no", lang)}
+                    {fill("pin.remove.no", lang)}
                   </button>
                 </>
               ) : (
                 <button type="button" onClick={() => setAsking(true)} className={secondary}>
-                  {pinText("pin.remove.button", lang)}
+                  {fill("pin.remove.button", lang)}
                 </button>
               )}
             </div>
@@ -255,7 +255,7 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
               onClick={onDone}
               className="min-h-tap rounded-card px-4 text-base text-ink-soft underline"
             >
-              {pinText("pin.set.skip", lang)}
+              {fill("pin.set.skip", lang)}
             </button>
           ) : null}
         </>

@@ -227,6 +227,32 @@ def _ambiguous_words() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))["languages"]
 
 
+# A word edge for matching another language's list: not a letter, digit or
+# underscore, and not Devanagari, whose vowel signs are not \w in Python's re.
+_WORD_EDGE = r"[\wऀ-ॿ]"
+
+
+def _whole_word(form: str, text: str) -> bool:
+    """True when `form` appears in `text` as whole words, case-insensitively.
+
+    Matched on the raw text rather than `_normalise`d, because `_normalise`
+    drops Devanagari vowel signs: कला (art) becomes कल, and "kal" would
+    match inside "nikal" or "kaleidoscope" as a substring.
+    """
+    flat = re.sub(r"\s+", " ", text.casefold())
+    pattern = rf"(?<!{_WORD_EDGE}){re.escape(form.casefold())}(?!{_WORD_EDGE})"
+    return re.search(pattern, flat) is not None
+
+
+def _lexicon_item(entry: dict) -> dict:
+    return {
+        "phrase": entry["word"],
+        "readings": entry["readings"],
+        "severity": "critical",
+        "source": "lexicon",
+    }
+
+
 def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
     """Known two-meaning words, matched in code rather than asked of a model.
 
@@ -235,10 +261,17 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
     sentence sometimes produced a question and sometimes nothing. A knife
     threat losing its timing is not something to leave to that. The model
     check still runs alongside this and catches words the list does not have.
+
+    Every language's list is read, not only `source_lang`'s. `source_lang` is
+    the language of the child's screens, and a child who reads English best
+    may still write Hindi, usually in Latin letters: "kal chhutti ke baad".
+    Reading only the English list, that sentence never asked about kal or
+    chhutti, the knife-threat case this list exists for.
     """
     haystack = _normalise(text)
+    words = _ambiguous_words()
     found = []
-    for entry in _ambiguous_words().get(source_lang, []):
+    for entry in words.get(source_lang, []):
         # Some words are only ambiguous without their context. Hindi "kal" is
         # both tomorrow and yesterday, but a future or past verb settles it,
         # and asking anyway spends a question the child does not owe us.
@@ -246,12 +279,23 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
         if any(re.search(pattern, text, re.IGNORECASE | re.UNICODE) for pattern in skip):
             continue
         if any(_normalise(form) in haystack for form in entry["forms"]):
-            found.append({
-                "phrase": entry["word"],
-                "readings": entry["readings"],
-                "severity": "critical",
-                "source": "lexicon",
-            })
+            found.append(_lexicon_item(entry))
+
+    for lang, entries in words.items():
+        if lang == source_lang or lang.startswith("_"):
+            continue
+        for entry in entries:
+            # Whole words only: a word from another language inside a word of
+            # this one ("kal" in "kale") is not that word.
+            #
+            # And no skip_when. Those patterns read the list language's own
+            # grammar, and in mixed text they collide with the screen
+            # language: Hindi past-tense "the" (थे) is English "the", so "kal"
+            # in "kal the teacher hit me" would be skipped, and the app would
+            # silently choose between yesterday and tomorrow. Asking once too
+            # often costs a tap; choosing wrongly loses a threat's timing.
+            if any(_whole_word(form, text) for form in entry["forms"]):
+                found.append(_lexicon_item(entry))
     return found
 
 
