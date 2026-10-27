@@ -85,46 +85,6 @@ def _phrasebook() -> dict[str, str]:
     }
 
 
-@lru_cache(maxsize=1)
-def _forms_by_word() -> dict[str, tuple[str, ...]]:
-    """{headword: every form of it}, from the same reviewed word list."""
-    words = json.loads(
-        (REPO_ROOT / "content" / "ambiguous_words.json").read_text(encoding="utf-8")
-    )["languages"]
-    return {
-        entry["word"]: tuple(entry["forms"])
-        for entries in words.values()
-        if isinstance(entries, list)
-        for entry in entries
-    }
-
-
-def _as_written(word: str, text: str) -> str:
-    """The form the child actually typed, not the word list's headword.
-
-    `lexicon_ambiguities()` reports a hit under its canonical word: a child
-    who writes "chhedte" is reported under "chhedna", and one who writes "कल"
-    under "kal". Quoting the headword back would put a word on screen in
-    quotation marks that the child did not write, which is the one thing a
-    clarification question must never do - and it would do it in the Latin
-    alphabet to a child who had just written Devanagari.
-
-    The longest form wins, so "get me" is preferred over an overlapping
-    shorter one, and the match is loose about spacing and punctuation because
-    that is how `lexicon_ambiguities` found it in the first place.
-
-    (The live engine quotes the headword here too. Same bug, different file;
-    reported separately rather than stacked onto this one, because
-    translate.py already has two unmerged branches on it.)
-    """
-    for form in sorted(_forms_by_word().get(word, ()), key=len, reverse=True):
-        loose = r"[\s\W_]*".join(re.escape(part) for part in form.split())
-        found = re.search(loose, text, re.IGNORECASE | re.UNICODE)
-        if found:
-            return found.group(0)
-    return word
-
-
 # Example wording, shown only in mock mode. In live mode the question itself
 # is written by the judge model in the child's language, which is why there is
 # no fixed template in translate.py to reuse. Like the rest of our
@@ -154,7 +114,9 @@ def _question_for(item: dict, text: str, lang: str) -> dict:
     """
     readings = item["readings"][:2]
     template = _QUESTION.get(lang) or _QUESTION["en"]
-    phrase = _as_written(item["phrase"], text)
+    # Already the form the child typed, not the word list's headword:
+    # lexicon_ambiguities() does that for the live engine and this alike.
+    phrase = item["phrase"]
     return {
         "phrase": phrase,
         "question": template.format(phrase=phrase),
