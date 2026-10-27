@@ -197,8 +197,9 @@ class Entry(BaseModel):
     note: str | None = Field(
         default=None,
         description=(
-            "The child's own answer to a clarification question, in their own "
-            "words. Printed verbatim beside the entry and never paraphrased."
+            "The child's answer to a clarification question, exactly as the "
+            "child gave it (an option they tapped or words they typed). Printed "
+            "verbatim beside the entry and never paraphrased."
         ),
     )
 

@@ -136,7 +136,8 @@ export interface Entry {
   place?: string | null;
   people?: string | null;
   /**
-   * The child's own answer to a clarification question, kept word for word.
+   * The child's answer to a clarification question, exactly as the child gave
+   * it: an option they tapped (our wording, their choice) or words they typed.
    *
    * A Hindi or English speaker's answer changes the German, so it needs no
    * home of its own. A German speaker's does not: there is nothing to
