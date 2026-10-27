@@ -63,10 +63,6 @@ INFORMAL = re.compile(f"{_INFORMAL_DEV}|{_INFORMAL_LAT}", re.IGNORECASE)
 # when something has gone wrong or they are being asked a question.
 DEVANAGARI = re.compile(r"[\u0900-\u097F]")
 
-# content/onboarding.json is still Devanagari on main; #77 converts it along
-# with the screens, and it is Neel's file. Delete this the moment #77 lands.
-NOT_YET_CONVERTED = "onboarding.json"
-
 
 def hindi_strings_a_child_reads():
     """Every Hindi string the app shows the child, with a label for failures."""
@@ -120,9 +116,6 @@ def test_the_engine_writes_hindi_in_the_script_the_screens_use(where, text):
     sweep above fixed WHICH second person we use; this fixes whether the child
     can read it at all.
     """
-    if NOT_YET_CONVERTED in where:
-        pytest.skip(f"{NOT_YET_CONVERTED} is converted by #77, which owns that file")
-
     found = DEVANAGARI.findall(text)
     assert not found, (
         f"{where} is written in Devanagari while the screens are Hinglish. "
