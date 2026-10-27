@@ -153,7 +153,7 @@ available: for most of a child's week, it is not.
 | + | **Quick exit + PIN lock** | Must |
 | + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
 | + | **Picture incident builder**: tap icons for what happened, where and who (pushed, hit, names, things taken, online, left out). For children who can't write either | Tier A |
-| + | **Read-aloud** of every screen and question in the child's language, using the device's own speech engine (nothing leaves the phone) | Tier A |
+| + | **Read-aloud**: removed on 27 Oct (Neel: not good enough to ship); future work | Removed |
 | + | **Hindi and English** as source languages, German as target (decided 24 Oct, see the language gate) | Tier A |
 | + | **Installable PWA, offline-first**: everything except translation works without network | Tier A |
 | + | **Accessibility**: WCAG 2.2 AA, screen-reader labels, large-text and dyslexia-friendly mode | Tier A |

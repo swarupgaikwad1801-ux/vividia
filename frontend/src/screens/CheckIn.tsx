@@ -1,5 +1,4 @@
 import Face, { hasFace } from "../art/Face";
-import { SpokenQuestion } from "../components/ReadAloud";
 import { MOODS } from "../lib/moods";
 import { t } from "../lib/strings";
 import type { Lang } from "../lib/strings";
@@ -32,7 +31,9 @@ export interface CheckInProps {
 export default function CheckIn({ lang, onChoose }: CheckInProps) {
   return (
     <section className="flex flex-col gap-6 px-4 py-6" aria-labelledby="checkin-title">
-      <SpokenQuestion lang={lang} id="checkin-title" text={t("checkin.title", lang)} className="text-3xl text-balance" />
+      <h1 id="checkin-title" className="text-3xl text-balance">
+        {t("checkin.title", lang)}
+      </h1>
 
       {/*
         Six moods in two rows of three: the layout moods.ts was written for,

@@ -381,8 +381,7 @@ export default function App() {
       )}
 
       {/* Keyed by step, so each new place slides in. Quiet scenes do not
-          move. Reduced motion stops it anyway (index.css). Read-aloud sits
-          beside each screen's question (components/ReadAloud.tsx). */}
+          move. Reduced motion stops it anyway (index.css). */}
       <div key={step} className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}>
       {step === "language" && (
         <LanguageSetup

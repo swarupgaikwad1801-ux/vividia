@@ -29,7 +29,6 @@ import { AdultPicture } from "../art/People.tsx";
 import type { Entry, ReportResponse } from "../types/api.ts";
 import type { EntrySource } from "../lib/timeline.ts";
 import SourceMark from "./SourceMark.tsx";
-import { SpokenQuestion } from "./ReadAloud.tsx";
 
 export interface HandoffCardProps {
   /** The child's saved entries: what the card shows, in their language. */
@@ -70,13 +69,9 @@ export default function HandoffCard({
 
   return (
     <section aria-labelledby="handoff-title" className="flex flex-col gap-4">
-      <SpokenQuestion
-        as="h2"
-        lang={lang}
-        id="handoff-title"
-        text={t("handoff.title", lang)}
-        className="headline text-3xl text-balance"
-      />
+      <h2 id="handoff-title" className="headline text-3xl text-balance">
+        {t("handoff.title", lang)}
+      </h2>
 
       {/* The promise, before any choice is made. Never collapse or move this
           below the fold: it is the one sentence that tells the child the app
