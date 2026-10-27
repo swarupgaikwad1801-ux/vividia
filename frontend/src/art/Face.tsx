@@ -1,7 +1,9 @@
 /**
  * The check-in faces: one round face per mood, drawn for this app.
  *
- * Flat colour, thick ink outline, big eyes, rosy cheeks. Faces, not people:
+ * Flat colour, thick ink outline, simple eyes. No rosy cheeks since 27 Oct:
+ * the app is for young people up to about 20, and blush read as "for small
+ * children". Faces, not people:
  * the mood is the child's, so no face has a skin tone, hair or age. They are
  * decoration (aria-hidden): the label under each is the real name of the
  * choice, read out by a screen reader.
@@ -13,7 +15,6 @@
 import type { ReactNode } from "react";
 
 const INK = "#1B1B2F";
-const CHEEK = "#FF8FB8";
 
 interface FaceParts {
   fill: string;
@@ -38,12 +39,8 @@ const FACES: Record<string, FaceParts> = {
         <path d="M57 45 q7 -9 14 0" fill="none" stroke={INK} strokeWidth="4.5" strokeLinecap="round" />
       </>
     ),
-    mouth: (
-      <>
-        <path d="M31 58 q19 24 38 0 z" fill={INK} />
-        <path d="M41 68 q9 6 18 0 q-9 -5 -18 0 z" fill="#FF6F91" />
-      </>
-    ),
+    // A plain open smile; the pink tongue it used to have read as a toddler's face.
+    mouth: <path d="M33 59 q17 20 34 0 z" fill={INK} />,
   },
   ok: {
     fill: "#9EE6C2",
@@ -116,8 +113,6 @@ export default function Face({ code, className }: { code: string; className?: st
   return (
     <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false" className={className}>
       <circle cx="50" cy="52" r="42" fill={face.fill} stroke={INK} strokeWidth="4.5" />
-      <circle cx="26" cy="60" r="7" fill={CHEEK} opacity="0.7" />
-      <circle cx="74" cy="60" r="7" fill={CHEEK} opacity="0.7" />
       {face.eyes}
       {face.mouth}
       {face.extra}
