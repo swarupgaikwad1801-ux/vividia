@@ -190,6 +190,11 @@
   animation: help-pulse 1.6s ease-in-out infinite;
 }
 
+/* Privacy cover (main.tsx): blank while the app is hidden. */
+:root[data-covered] #root,
+:root[data-covered] .print-only { visibility: hidden; }
+:root[data-covered] body { background: var(--color-page); }
+
 /* The handoff card in full screen (HandoffShow.tsx): the stage fills the
    screen with the scene's paper colour, the card text grows, and it
    scrolls if the words run long. */
