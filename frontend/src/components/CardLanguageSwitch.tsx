@@ -41,8 +41,10 @@ export default function CardLanguageSwitch({ lang, showing, onChange }: CardLang
             lang={option.code}
             aria-pressed={on}
             onClick={() => onChange(option.code)}
-            className={`min-h-tap flex-1 rounded-full border-2 px-4 text-base font-semibold transition-colors ${
-              on ? "border-ink bg-ink text-page" : "border-line bg-surface text-ink hover:border-ink"
+            // Stickers, like every other tappable thing; the chosen side is
+            // the filled one, pressed in (aria-pressed carries it for readers).
+            className={`sticker min-h-tap flex-1 rounded-full px-4 text-base font-bold motion-safe:active:translate-y-1 active:shadow-none ${
+              on ? "sticker-on bg-ink! text-page" : "bg-surface text-ink"
             }`}
           >
             {option.label}

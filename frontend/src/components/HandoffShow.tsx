@@ -22,7 +22,6 @@ import { useState } from "react";
 
 import AdultGuide from "./AdultGuide.tsx";
 import CardLanguageSwitch from "./CardLanguageSwitch.tsx";
-import { SparkleBurst } from "../art/Things.tsx";
 import SourceMark from "./SourceMark.tsx";
 import type { EntrySource } from "../lib/timeline.ts";
 import { primarySuggestion, suggestedAdults, type AdultId, type WhereItHappens } from "./HandoffSuggestions.ts";
@@ -44,6 +43,9 @@ export interface HandoffShowProps {
 
 export default function HandoffShow({ lang, entries, report, where, chosen, onDone }: HandoffShowProps) {
   const [showing, setShowing] = useState(lang);
+  // False until the adult first switches language: the card pops in once,
+  // then turns over like a real card each time the language changes.
+  const [turned, setTurned] = useState(false);
   const german = showing === "de";
 
   // The same rule as HandoffCard, so the big card names the person the small
@@ -52,17 +54,25 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
 
   return (
     <main className="relative mx-auto flex w-full max-w-sm flex-col gap-5 px-4 py-6">
-      {/* "You did it", once, as the card appears. Not "you won": no score,
-          no sound, and nothing at all with reduced motion. */}
-      <SparkleBurst />
+      {/* No sparkle burst here any more (27 Oct): the app is for young people
+          up to about 20, and the card itself appearing is the moment. */}
 
       <h1 className="text-3xl text-balance">{t("handoff.showThem", lang)}</h1>
 
-      <CardLanguageSwitch lang={lang} showing={showing} onChange={setShowing} />
+      <CardLanguageSwitch
+        lang={lang}
+        showing={showing}
+        onChange={(next) => {
+          if (next !== showing) setTurned(true);
+          setShowing(next);
+        }}
+      />
 
       <article
+        // Keyed by language, so a switch remounts the card and plays the turn.
+        key={showing}
         lang={showing}
-        className="animate-pop-in flex flex-col gap-4 rounded-card border-[3px] border-ink bg-surface p-5 shadow-[6px_6px_0_0_#1B1B2F]"
+        className={`${turned ? "animate-card-flip" : "animate-pop-in"} flex flex-col gap-4 rounded-card border-[3px] border-ink bg-surface p-5 shadow-[6px_6px_0_0_#1B1B2F]`}
       >
         {recipient && (
           <p className="text-base font-medium text-ink-soft">{t(recipient.labelKey, showing)}</p>
