@@ -589,6 +589,19 @@ async def _question(phrase, readings, source_lang, usage) -> Ambiguity | None:
     }
 
 
+# The decisions are interpolated into a system prompt, and since the fix for
+# /api/clarify they arrive from the client rather than from our own last
+# response. A newline is all it takes to end our bullet list and start writing
+# instructions of one's own, so the text is flattened to a single line and
+# bounded before it goes near a prompt.
+_FLATTEN = re.compile(r"\s+")
+MAX_MEANING_CHARS = 200
+
+
+def _one_line(text: str) -> str:
+    return _FLATTEN.sub(" ", str(text)).strip()[:MAX_MEANING_CHARS]
+
+
 def _decided_pairs(ambiguities, choices) -> list[tuple[str, str]]:
     """(phrase, the German the child chose for it) for every answered phrase.
 
@@ -596,6 +609,11 @@ def _decided_pairs(ambiguities, choices) -> list[tuple[str, str]]:
     check that the prompt was obeyed read it, because a check with its own
     second copy of this rule would eventually disagree with the instruction it
     is checking - and would then pass the exact output it exists to catch.
+
+    `ambiguities` is the list the client echoed back, so nothing in it is
+    trusted: each phrase and meaning is flattened to one line and truncated.
+    An option the child did not choose contributes nothing, and an option that
+    is not in the list we were given cannot be chosen at all.
 
     The "something else" option is skipped. Picking it says neither reading was
     right, so there is no decision to render and nothing to tell the
@@ -606,11 +624,18 @@ def _decided_pairs(ambiguities, choices) -> list[tuple[str, str]]:
     pairs = []
     for ambiguity in ambiguities:
         chosen = choices.get(ambiguity["phrase"])
-        for option in ambiguity["options"]:
+        if chosen is None:
+            continue
+        for option in ambiguity.get("options", []):
             if is_other(option["id"]):
                 continue
             if option["id"] == chosen or option["label"] == chosen:
-                pairs.append((ambiguity["phrase"], option["meaning_de"]))
+                meaning = _one_line(option.get("meaning_de", ""))
+                if not meaning:
+                    # Nothing to render: an option with no German (the
+                    # "something else" escape) is not a decision.
+                    continue
+                pairs.append((_one_line(ambiguity["phrase"]), meaning))
     return pairs
 
 

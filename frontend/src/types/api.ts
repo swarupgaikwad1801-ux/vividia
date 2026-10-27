@@ -113,6 +113,11 @@ export interface ListenResponse {
 /**
  * POST /api/clarify — re-translate with the child's answers applied.
  * The child decides the meaning; the model never resolves an ambiguity alone.
+ *
+ * The server bounds both collections, because every answered decision is
+ * rendered into a prompt: at most 3 `ambiguities` (it never offers more than
+ * 2) and at most 10 `choices`. Over either, it answers 422. Echo back what you
+ * were given and neither limit can be reached.
  */
 export interface ClarifyRequest {
   text: string;
@@ -120,6 +125,15 @@ export interface ClarifyRequest {
   target_lang?: string;
   /** { [ambiguity.phrase]: option.id } */
   choices: Record<string, string>;
+  /**
+   * The `ambiguities` from the TranslateResponse, sent back unchanged.
+   *
+   * Required: an option id on its own means nothing to the server, because the
+   * id -> meaning_de mapping only exists in the response you are holding.
+   * Omitting it used to make the server translate as if the child had never
+   * answered; it is now a 422 you can see.
+   */
+  ambiguities: Ambiguity[];
 }
 
 /** Same shape as TranslateResponse; `ambiguities` should come back empty. */
