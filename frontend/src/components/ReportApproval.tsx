@@ -9,15 +9,9 @@
  *
  * And approval is not the same as sending. Nothing leaves this phone towards
  * an adult here: approving marks the words as the child's own, so that a later
- * screen can offer to show them. A child who thinks pressing "yes" tells a
- * teacher will press nothing at all, so it is said twice and in both states:
- * `approve.nothingGoes` above the button, while they are still deciding, and
- * `handoff.youDecide` after, when it is easiest to doubt.
- *
- * Both are scoped to **people**, never to the phone. The German in a report
- * was written by a model in the cloud, so "nothing leaves this phone" is the
- * one claim `CLAUDE.md` forbids outright. "No adult is shown anything until
- * you press yes" is both true and the thing the child is actually deciding.
+ * screen can offer to show them. Neel removed the "nothing gets sent" lines
+ * (26 Oct), so neither `handoff.youDecide` nor #81's `approve.nothingGoes`
+ * is shown here.
  *
  * ## "Change it" stays available after approval
  *
@@ -29,7 +23,6 @@
 
 import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
-import { tPending } from "./TimelinePendingStrings";
 
 interface Props {
   lang: Lang;
@@ -45,10 +38,8 @@ export default function ReportApproval({ lang, approved, onApprove, onChange }: 
     return (
       <section className="flex flex-col gap-3 rounded-card border border-calm bg-calm-soft p-4">
         <p role="status" className="text-base font-medium">
-          {tPending("report.approved", lang)}
+          {t("report.approved", lang)}
         </p>
-        {/* The promise, restated at the moment it is easiest to doubt. */}
-        <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
         <button
           type="button"
           onClick={onChange}
@@ -63,12 +54,7 @@ export default function ReportApproval({ lang, approved, onApprove, onChange }: 
   return (
     <section className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
       <h2 className="text-lg font-semibold">{t("approve.title", lang)}</h2>
-      <p className="text-base text-ink-soft">{tPending("report.readAll", lang)}</p>
-      {/* Before the button, not after. The approved state below says the same
-          thing, but by then the child has already decided; the sentence only
-          changes anything while they are still looking at "yes" and wondering
-          whether pressing it tells a teacher. */}
-      <p className="text-sm text-ink-soft">{t("approve.nothingGoes", lang)}</p>
+      <p className="text-base text-ink-soft">{t("report.readAll", lang)}</p>
       {/* "Yes" first and full width because it is the child's own decision,
           not a risk to guard against; "change it" is equally reachable and not
           styled as a retreat. */}

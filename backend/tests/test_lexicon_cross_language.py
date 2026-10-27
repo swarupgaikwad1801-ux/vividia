@@ -16,7 +16,7 @@ from engine.translate import lexicon_ambiguities
 
 
 def phrases(text: str, lang: str) -> set[str]:
-    return {found["phrase"] for found in lexicon_ambiguities(text, lang)}
+    return {found["word"] for found in lexicon_ambiguities(text, lang)}
 
 
 @pytest.mark.parametrize(
@@ -64,31 +64,25 @@ def test_another_languages_word_inside_a_longer_word_is_not_that_word(text):
 
 
 @pytest.mark.parametrize(
-    "text, lang",
+    "text, lang, expected",
     [
-        ("he said he would get me after school", "en"),
-        ("woh kal", "hi"),
-        ("कल स्कूल के बाद", "hi"),
-        ("woh kal aaya tha", "hi"),  # tense settles it: still not asked
+        ("he said he would get me after school", "en", ["get me"]),
+        ("woh kal", "hi", ["kal"]),
+        ("कल स्कूल के बाद", "hi", ["kal"]),
+        ("woh kal aaya tha", "hi", []),  # tense settles it: still not asked
     ],
 )
-def test_the_screen_languages_own_list_behaves_exactly_as_before(text, lang):
-    """Nothing changes for a child writing in their screen language: same
-    matching, same tense skips. Only other languages' lists are new."""
-    from engine import translate
+def test_the_screen_languages_own_list_is_unchanged(text, lang, expected):
+    """A child writing in their screen language gets the same questions.
 
-    own_only = []
-    haystack = translate._normalise(text)
-    for entry in translate._ambiguous_words().get(lang, []):
-        skip = entry.get("skip_when", {}).get("patterns", [])
-        if any(translate.re.search(p, text, translate.re.IGNORECASE | translate.re.UNICODE) for p in skip):
-            continue
-        if any(translate._normalise(form) in haystack for form in entry["forms"]):
-            own_only.append(entry["word"])
-
-    found = [item["phrase"] for item in lexicon_ambiguities(text, lang)]
-    assert found[: len(own_only)] == own_only, "the screen language's own matches must come first, unchanged"
-    assert set(found) - set(own_only) == set(), f"a foreign-list match appeared in {text!r}: {found}"
+    The expectations are written out rather than recomputed from the lexicon.
+    An earlier version of this test rebuilt `own_only` here with the same
+    `_normalise`-and-substring rule the function used, so it asserted that
+    the code agreed with itself. It passed while that rule was silently
+    wrong for Devanagari - see test_lexicon_devanagari.py. A test that
+    reimplements what it is testing cannot fail for the reason that matters.
+    """
+    assert [item["word"] for item in lexicon_ambiguities(text, lang)] == expected
 
 
 def test_a_german_speaking_child_writing_hinglish_is_asked_too():

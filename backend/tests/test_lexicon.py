@@ -16,7 +16,7 @@ from engine.translate import lexicon_ambiguities
 
 
 def asks_about_kal(text: str) -> bool:
-    return any(found["phrase"] == "kal" for found in lexicon_ambiguities(text, "hi"))
+    return any(found["word"] == "kal" for found in lexicon_ambiguities(text, "hi"))
 
 
 @pytest.mark.parametrize(

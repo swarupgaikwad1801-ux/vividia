@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from engine.client import ROLES
-from engine.config import REPO_ROOT
+from engine.config import REPO_ROOT, base_url_problem
 from engine.errors import message_for, safe_traceback, status_for, to_error_response
 from engine.resources import emergency_numbers
 from app.limits import Guard, client_key
@@ -40,6 +40,8 @@ from app.schemas import (
     Strategy,
     TranslateRequest,
     TranslateResponse,
+    ListenRequest,
+    ListenResponse,
 )
 # ENGINE_MODE=live uses real Nemotron calls; anything else (the default)
 # uses the mock, so the app runs with no API key and costs nothing.
@@ -90,6 +92,21 @@ ADULT_GUIDE = REPO_ROOT / "content" / "adult_guide.json"
 ONBOARDING = REPO_ROOT / "content" / "onboarding.json"
 log.info("demo limits: %s, %d requests per %ds per client",
          GUARD.status(), GUARD.per_ip_requests, int(GUARD.per_ip_window_s))
+
+
+def _base_url_problem() -> str | None:
+    """Only live mode calls Nebius, so only live mode can be broken by this."""
+    if not ENGINE.__name__.endswith("live"):
+        return None
+    return base_url_problem(os.getenv("NEBIUS_BASE_URL", "").strip())
+
+
+# Said once at startup, in the deploy log people actually read. The service
+# still starts: the helplines and the guide do not need Nebius, and a crash
+# here would leave Render serving the previous container with nobody told.
+if _base_url_problem():
+    log.error("NEBIUS_BASE_URL %s - every translation will fail until it is fixed",
+              _base_url_problem())
 
 
 def _metered(request: Request, lang: str) -> None:
@@ -188,11 +205,19 @@ async def health() -> HealthResponse:
     live = ENGINE.__name__.endswith("live")
     models = {role: spec.model for role, spec in ROLES.items()} if live else {}
     # "degraded" is what the contract's status field is for: the app is up and
-    # help is reachable, but translation is not available right now.
+    # help is reachable, but translation is not available right now. A bad
+    # base URL is that too, and health used to report "ok" through it (#3).
+    url_problem = _base_url_problem()
+    if url_problem:
+        models["nebius_base_url"] = url_problem
     return HealthResponse(
-        status="ok" if GUARD.remaining_today() > 0 else "degraded",
+        status="ok" if GUARD.remaining_today() > 0 and not url_problem else "degraded",
         engine="live" if live else "mock",
         models={**models, **getattr(ENGINE, "STATUS", {})},
+        # Watchable while the demo is public: the Tavily allowance has to last
+        # until judging closes on 15 Dec, and a cap nobody can see is a cap
+        # nobody notices hitting.
+        budget=getattr(ENGINE, "tavily_status", dict)(),
     )
 
 
@@ -240,6 +265,56 @@ async def translate(request: TranslateRequest, http: Request) -> TranslateRespon
         strategy_used=result.get("strategy_used", request.strategy),
         usage=usage,
     )
+
+
+@app.post("/api/listen", response_model=ListenResponse)
+async def listen(request: ListenRequest, http: Request) -> ListenResponse:
+    """Answer the child before offering anything: what kind of thing they said.
+
+    The safety check runs here too, on every message, for the same reason it
+    is folded into translate: a child who writes "I want to die" while
+    talking must be shown help at once, not after they ask for a card.
+    """
+    started = time.perf_counter()
+    _metered(http, request.lang)
+    try:
+        heard, safety = await asyncio.gather(
+            ENGINE.listen(request.text, request.lang),
+            ENGINE.safety_check(request.text, request.lang),
+        )
+    except Exception as error:  # noqa: BLE001 - the child must never see a traceback
+        raise ChildSafeError(error, request.lang) from error
+
+    # A written reply only where no reviewed sentence fits, and never for a
+    # message the safety check flagged: a child in crisis gets fixed, sourced
+    # words only. Sequential on purpose - it needs both answers above.
+    written = None
+    if heard["kind"] == "other" and not safety["urgent"]:
+        try:
+            answer = await ENGINE.reply(request.text, request.lang)
+        except Exception:  # noqa: BLE001 - the reviewed sentence is always there
+            answer = {"reply": None}
+        written = answer.get("reply")
+        heard = {**heard, "usage": _add_usage(heard.get("usage"), answer.get("usage"))}
+
+    # The length, the kind and whether a reply was written, never the text.
+    log.info("listen lang=%s chars=%d kind=%s written=%s",
+             request.lang, len(request.text), heard["kind"], written is not None)
+    usage = _usage_of(heard, started)
+    GUARD.record_spend(usage["estimated_cost_usd"])
+    return ListenResponse(
+        kind=heard["kind"], told=heard.get("told", []), safety=safety, reply=written, usage=usage,
+    )
+
+
+def _add_usage(first: dict | None, second: dict | None) -> dict | None:
+    """Two engine usages as one, so the cap counts the reply's calls too."""
+    if not first or not second:
+        return first or second
+    return {
+        key: first.get(key, 0) + second.get(key, 0) if key != "latency_ms" else max(first.get(key, 0), second.get(key, 0))
+        for key in ("calls_made", "input_tokens", "output_tokens", "latency_ms", "estimated_cost_usd")
+    }
 
 
 @app.post("/api/clarify", response_model=TranslateResponse)

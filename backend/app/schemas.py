@@ -96,6 +96,72 @@ class TranslateResponse(BaseModel):
     usage: Usage
 
 
+# --- POST /api/listen --------------------------------------------------------
+
+
+class ListenKind(str, Enum):
+    """What kind of thing the child just told us (engine/listen.py KINDS).
+
+    Picks one of the fixed, reviewed sentences the listening screen answers
+    with (`heard.*` in strings.ts). Never shown, never stored.
+    """
+
+    HURT = "hurt"
+    NAMES = "names"
+    LEFT_OUT = "left_out"
+    TAKEN = "taken"
+    ONLINE = "online"
+    THREAT = "threat"
+    FEELING = "feeling"
+    GOOD = "good"
+    ASKING = "asking"
+    TALK = "talk"
+    OTHER = "other"
+
+
+class ListenDetail(str, Enum):
+    """A detail the child's message already gives (engine/listen.py DETAILS).
+
+    The listening screen asks only for the details still missing, so a child
+    who wrote "at school today" is not then asked where and when. Never shown.
+    """
+
+    WHERE = "where"
+    WHEN = "when"
+    WHO = "who"
+    FEELING = "feeling"
+
+
+class ListenRequest(BaseModel):
+    """One message from the child, before any card exists.
+
+    Only the newest message is sent, not the conversation so far: the kind
+    sentence answers what they just said, and the less of a child's words
+    leave the phone, the better.
+    """
+
+    text: str = Field(min_length=1, max_length=2000)
+    lang: str = Field(description="ISO 639-1, the child's language")
+
+
+class ListenResponse(BaseModel):
+    kind: ListenKind
+    told: list[ListenDetail] = Field(
+        default_factory=list,
+        description="Details this message already gives; the screen does not ask for them.",
+    )
+    safety: Safety
+    reply: str | None = Field(
+        default=None,
+        description=(
+            "Only for kind 'other' and only when safety is not urgent: a short "
+            "answer written by the model that passed both checks in "
+            "engine/listen.py. null means show the reviewed sentence."
+        ),
+    )
+    usage: Usage
+
+
 # --- POST /api/clarify -------------------------------------------------------
 
 
@@ -128,6 +194,14 @@ class Entry(BaseModel):
     text_de: str
     place: str | None = None
     people: str | None = None
+    note: str | None = Field(
+        default=None,
+        description=(
+            "The child's answer to a clarification question, exactly as the "
+            "child gave it (an option they tapped or words they typed). Printed "
+            "verbatim beside the entry and never paraphrased."
+        ),
+    )
 
 
 class ReportRequest(BaseModel):
@@ -251,6 +325,15 @@ class HealthResponse(BaseModel):
     status: Literal["ok", "degraded"]
     engine: Literal["mock", "live"]
     models: dict[str, str] = Field(description="role -> model id, e.g. {'fanout': '...', 'judge': '...'}")
+    budget: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Spend to watch while the demo is public, values as strings: "
+            "tavily_spent_today, tavily_daily_cap, tavily_cached_states. "
+            "Empty in mock mode, which spends nothing. Optional, so an older "
+            "client is unaffected."
+        ),
+    )
 
 
 # --- errors ------------------------------------------------------------------

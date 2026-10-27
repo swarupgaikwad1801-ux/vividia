@@ -68,6 +68,49 @@ export interface TranslateResponse {
 }
 
 /**
+ * What kind of thing the child just told us. Picks one of the fixed,
+ * reviewed sentences the listening screen answers with (`heard.*`).
+ */
+export type ListenKind =
+  | "hurt"
+  | "names"
+  | "left_out"
+  | "taken"
+  | "online"
+  | "threat"
+  | "feeling"
+  | "good"
+  | "asking"
+  | "talk"
+  | "other";
+
+/**
+ * A detail the child's message already gives. The listening screen asks only
+ * for the details still missing. Never shown.
+ */
+export type ListenDetail = "where" | "when" | "who" | "feeling";
+
+/** POST /api/listen — one message, before any card exists. */
+export interface ListenRequest {
+  text: string;
+  /** ISO 639-1, the child's language */
+  lang: string;
+}
+
+export interface ListenResponse {
+  kind: ListenKind;
+  /** Details this message already gives; the screen does not ask for them. */
+  told: ListenDetail[];
+  safety: Safety;
+  /**
+   * Only for kind "other" and never when safety is urgent: a short answer the
+   * model wrote that passed both checks. null means show the reviewed sentence.
+   */
+  reply: string | null;
+  usage: Usage;
+}
+
+/**
  * POST /api/clarify — re-translate with the child's answers applied.
  * The child decides the meaning; the model never resolves an ambiguity alone.
  */
@@ -92,6 +135,19 @@ export interface Entry {
   text_de: string;
   place?: string | null;
   people?: string | null;
+  /**
+   * The child's answer to a clarification question, exactly as the child gave
+   * it: an option they tapped (our wording, their choice) or words they typed.
+   *
+   * A Hindi or English speaker's answer changes the German, so it needs no
+   * home of its own. A German speaker's does not: there is nothing to
+   * re-render, and inventing a "clearer" sentence would be exactly the
+   * paraphrase that `report.py` refuses to let a model produce. So the answer
+   * sits beside the entry as the child's own note.
+   *
+   * Printed verbatim. Never summarised, never rewritten.
+   */
+  note?: string | null;
 }
 
 /** POST /api/report */
@@ -207,6 +263,16 @@ export interface HealthResponse {
   engine: "mock" | "live";
   /** role -> model id, e.g. { fanout: "...", judge: "..." } */
   models: Record<string, string>;
+  /**
+   * Spend to watch while the demo is public, values as strings:
+   * `tavily_spent_today`, `tavily_daily_cap`, `tavily_cached_states`.
+   *
+   * Empty in mock mode, which spends nothing. Optional, so a client written
+   * before this field is unaffected — no screen depends on it. It exists so a
+   * person can watch the Tavily allowance, which has to last until judging
+   * closes on 15 Dec.
+   */
+  budget?: Record<string, string>;
 }
 
 export type ErrorCode =
