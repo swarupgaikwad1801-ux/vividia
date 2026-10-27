@@ -6,6 +6,30 @@
  * Moving on walks the traveller forward; Back walks it back. There is nothing
  * to collect and no score: places are not "levels", and none is locked.
  * Decorative for a screen reader except one sentence saying where they are.
+ *
+ * Made the hero rather than a strip (#3, Neel's pattern 1 + 6). It was 96px
+ * tall with 24px stops, which at 360px read as decoration: too small to see
+ * where you were, too small to touch, and the one element that could carry
+ * "you are going somewhere, with someone" was a progress bar in a costume.
+ *
+ * Four changes, all inside this file so the question screens stay Neel's:
+ *
+ * 1. The path has real vertical travel, so it looks walked rather than
+ *    printed, and the stop you are on is half as big again as the rest.
+ * 2. Three states a child can tell apart without counting: **been there**
+ *    (full colour), **here** (enlarged, ringed, the traveller on it) and
+ *    **not yet** (outlined, waiting). No locks: ahead is pale, never barred.
+ * 3. Every stop is tappable and says its own name, so "what is that one?"
+ *    is answerable without walking there. The name of wherever you are
+ *    looking is always written under the map - orientation in words, not
+ *    only in position.
+ * 4. A thin bar for how much is left, because "place 2 of 9" was only ever
+ *    said to screen readers, and nine steps is a long way when you are
+ *    frightened.
+ *
+ * No new strings: every stop already has a translated label, so this reads
+ * in all three languages without touching `strings.ts`, which the screen
+ * stack is editing at the same time.
  */
 
 import { useState } from "react";
@@ -26,21 +50,35 @@ const SCENE_FILL: Record<string, string> = {
 
 /**
  * Where each stop sits: evenly spaced across the 340-wide drawing,
- * alternating low and high (low enough that the traveller on a high stop
- * stays inside the frame), and a radius that shrinks a little when the
+ * alternating low and high, and a radius that shrinks a little when the
  * child's answers add stops, so they never touch.
+ *
+ * The two bands are 36 apart rather than 16. A path that barely moves looks
+ * printed; one that climbs and drops looks walked, which is the only thing
+ * on screen saying this has a shape and an end. The high band leaves room
+ * above it for the traveller to stand without leaving the frame.
  */
+const TOP = 50;
+const BOTTOM = 92;
+/**
+ * How far above its stop the traveller stands.
+ *
+ * On a low stop this puts its head level with the high stops on either
+ * side, so the bands are far enough apart that the hair clears them.
+ */
+const STAND = 30;
+
 function layout(n: number) {
   const step = 296 / Math.max(1, n - 1);
   const xs = Array.from({ length: n }, (_, i) => 22 + i * step);
-  const ys = Array.from({ length: n }, (_, i) => (i % 2 === 0 ? 70 : 54));
-  const r = Math.min(12, step * 0.42);
+  const ys = Array.from({ length: n }, (_, i) => (i % 2 === 0 ? BOTTOM : TOP));
+  const r = Math.min(13, step * 0.42);
   const path = xs.reduce((d, x, i) => {
     if (i === 0) return `M${x} ${ys[0]}`;
     const mid = (xs[i - 1] + x) / 2;
     return `${d} C ${mid} ${ys[i - 1]}, ${mid} ${ys[i]}, ${x} ${ys[i]}`;
   }, "");
-  return { xs, ys, r, path };
+  return { xs, ys, r, step, path };
 }
 
 /** A tiny glyph per stop, drawn at 12px radius and scaled to the stop. */
@@ -147,14 +185,31 @@ export interface GameMapProps {
 
 export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapProps) {
   const [picking, setPicking] = useState(false);
+  /**
+   * The stop the child tapped to ask "what is that one?". It only changes
+   * what is written under the map; it never moves the traveller, because
+   * looking ahead is not the same as going there.
+   */
+  const [peek, setPeek] = useState<{ at: number; i: number } | null>(null);
   const place = places[at];
-  const { xs: XS, ys: YS, r: R, path: PATH } = layout(places.length);
+  const { xs: XS, ys: YS, r: R, step: STEP, path: PATH } = layout(places.length);
+
+  // Looking at whichever stop was tapped, otherwise at where they are. The
+  // peek records the stop it was made from, so moving on clears it without
+  // an effect: a question asked on one screen should not still be answered
+  // on the next.
+  const asked = peek && peek.at === at && peek.i < places.length ? peek.i : null;
+  const looking = asked ?? at;
+  const done = looking < at;
+  const here = looking === at;
+
   return (
     <div className="mx-4 mt-2 flex flex-col gap-2">
-    <div className="relative rounded-card border-[3px] border-ink bg-surface/90 px-1">
+    <div className="relative rounded-card border-[3px] border-ink bg-surface/90 px-1 pt-1">
       <p className="sr-only">
         {fill("map.youAreHere", lang, { place: t(place.label, lang), n: at + 1, total: places.length })}
       </p>
+
       {/* The traveller is the one thing on the map you can tap: it opens the
           heads to choose from. A real button laid over the drawing, at least
           44px, following the traveller as it moves. */}
@@ -163,35 +218,132 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
         onClick={() => setPicking((open) => !open)}
         aria-expanded={picking}
         aria-label={t("avatar.change", lang)}
-        className="absolute size-11 -translate-x-1/2 -translate-y-1/2 rounded-full transition-[left,top] duration-500"
-        style={{ left: `${(XS[at] / 340) * 100}%`, top: `${((YS[at] - 28) / 96) * 100}%` }}
+        className="absolute z-10 size-11 -translate-x-1/2 -translate-y-1/2 rounded-full transition-[left,top] duration-500"
+        style={{ left: `${(XS[at] / 340) * 100}%`, top: `${(((YS[at] - STAND) / 120) * 100).toFixed(2)}%` }}
       />
-      <svg viewBox="0 0 340 96" aria-hidden="true" focusable="false" className="block w-full">
+
+      {/* One real button per stop, laid over the drawing. A child who wants
+          to know what is coming should be able to ask the map instead of
+          walking there to find out.
+
+          These are as wide as the stops are apart, which with nine stops on
+          a 360px phone is ~36px rather than the 44 a touch target wants.
+          Widening them would make neighbours overlap, and a tap landing on
+          the wrong stop is worse than a small one: the only thing it costs
+          is a word under the map, and the same word is already read out in
+          the sentence above. */}
+      {places.map((p, i) => (
+        <button
+          key={`hit-${p.label}-${i}`}
+          type="button"
+          onClick={() => setPeek(asked === i ? null : { at, i })}
+          aria-label={t(p.label, lang)}
+          aria-pressed={asked === i}
+          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full focus-visible:outline focus-visible:outline-3 focus-visible:outline-ink"
+          style={{
+            left: `${(XS[i] / 340) * 100}%`,
+            top: `${((YS[i] / 120) * 100).toFixed(2)}%`,
+            width: `${Math.max(28, Math.min(44, STEP))}px`,
+            height: "44px",
+          }}
+        />
+      ))}
+
+      <svg viewBox="0 0 340 120" aria-hidden="true" focusable="false" className="block w-full">
         {/* The path */}
         <path d={PATH} fill="none" stroke="#D9D6E8" strokeWidth="9" strokeLinecap="round" />
         <path d={PATH} fill="none" stroke={INK} strokeWidth="2.5" strokeDasharray="2 8" strokeLinecap="round" />
-        {/* The stops. The ones already passed are filled; the rest are pale,
-            so the child can see how far along they are without a number. */}
-        {places.map((p, i) => (
-          <g key={`${p.label}-${i}`} opacity={i <= at ? 1 : 0.55}>
-            <circle cx={XS[i]} cy={YS[i]} r={i === at ? R + 3 : R} fill={SCENE_FILL[p.scene]} stroke={INK} strokeWidth="3" />
-            <Glyph kind={p.glyph} x={XS[i]} y={YS[i]} s={R / 12} />
-          </g>
-        ))}
-        <Sparkle x={326} y={16} size={6} fill="#FFD23F" />
+
+        {/* Three states, readable at a glance and without counting:
+            been there - full colour, the glyph in white;
+            here       - half as big again, with a ring around it;
+            not yet    - outlined and waiting, never locked. */}
+        {places.map((p, i) => {
+          const isHere = i === at;
+          const passed = i < at;
+          const r = isHere ? R * 1.5 : R;
+          return (
+            <g key={`${p.label}-${i}`}>
+              {isHere && (
+                <circle cx={XS[i]} cy={YS[i]} r={r + 5} fill="none" stroke={INK} strokeWidth="2" opacity="0.35" />
+              )}
+              <circle
+                cx={XS[i]}
+                cy={YS[i]}
+                r={r}
+                fill={passed || isHere ? SCENE_FILL[p.scene] : "#FFFFFF"}
+                stroke={INK}
+                strokeWidth="3"
+                opacity={passed || isHere ? 1 : 0.5}
+              />
+              <g opacity={passed || isHere ? 1 : 0.45}>
+                <Glyph kind={p.glyph} x={XS[i]} y={YS[i]} s={r / 12} />
+              </g>
+              {/* The stop the child is asking about, outlined where they can
+                  see which one answered. */}
+              {asked === i && !isHere && (
+                <circle cx={XS[i]} cy={YS[i]} r={r + 5} fill="none" stroke={INK} strokeWidth="2.5" />
+              )}
+            </g>
+          );
+        })}
+
+        <Sparkle x={326} y={18} size={6} fill="#FFD23F" />
         <Sparkle x={160} y={14} size={5} fill="#FF6FB5" />
+
         {/* The traveller: slides to the stop, then bobs gently. */}
         <g
           style={{
-            transform: `translate(${XS[at]}px, ${YS[at] - 28}px)`,
+            transform: `translate(${XS[at]}px, ${YS[at] - STAND}px)`,
             transition: "transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1)",
           }}
         >
           <g className="animate-bob">
-            <AvatarGroup index={avatar} x={0} y={0} r={12} />
+            <AvatarGroup index={avatar} x={0} y={0} r={13} />
           </g>
         </g>
       </svg>
+
+      {/* How much is left, under the drawing rather than over it: at the top
+          it collided with the traveller's head and read as a stray black
+          mark rather than as progress. */}
+      <div className="mx-2 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
+        <div
+          className="h-full rounded-full bg-ink/70 transition-[width] duration-500"
+          style={{ width: `${((at + 1) / places.length) * 100}%` }}
+        />
+      </div>
+
+      {/* The answer to a tapped stop, and only that.
+
+          It used to name wherever the child was looking, including the stop
+          they were standing on - which printed "What happened" directly
+          above the heading "What happened?". A line that repeats the next
+          line teaches people to stop reading both. So the map stays quiet
+          while they walk, and speaks when asked. The height is held either
+          way so nothing below it jumps. */}
+      <p
+        aria-hidden="true"
+        className="flex h-7 items-center justify-center gap-1.5 px-2 text-center text-sm font-medium"
+      >
+        {asked !== null && (
+          <>
+            {done && (
+              <svg viewBox="0 0 16 16" className="size-4 shrink-0">
+                <path
+                  d="M3 8.5 L6.5 12 L13 4.5"
+                  fill="none"
+                  stroke={INK}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+            <span className={here ? "text-ink" : "text-ink-soft"}>{t(places[looking].label, lang)}</span>
+          </>
+        )}
+      </p>
     </div>
 
       {/* A picture only: it never talks, and it is kept on this phone. */}
