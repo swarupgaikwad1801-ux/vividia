@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from engine.client import ROLES
-from engine.config import REPO_ROOT
+from engine.config import REPO_ROOT, base_url_problem
 from engine.errors import message_for, safe_traceback, status_for, to_error_response
 from engine.resources import emergency_numbers
 from app.limits import Guard, client_key
@@ -90,6 +90,21 @@ ADULT_GUIDE = REPO_ROOT / "content" / "adult_guide.json"
 ONBOARDING = REPO_ROOT / "content" / "onboarding.json"
 log.info("demo limits: %s, %d requests per %ds per client",
          GUARD.status(), GUARD.per_ip_requests, int(GUARD.per_ip_window_s))
+
+
+def _base_url_problem() -> str | None:
+    """Only live mode calls Nebius, so only live mode can be broken by this."""
+    if not ENGINE.__name__.endswith("live"):
+        return None
+    return base_url_problem(os.getenv("NEBIUS_BASE_URL", "").strip())
+
+
+# Said once at startup, in the deploy log people actually read. The service
+# still starts: the helplines and the guide do not need Nebius, and a crash
+# here would leave Render serving the previous container with nobody told.
+if _base_url_problem():
+    log.error("NEBIUS_BASE_URL %s - every translation will fail until it is fixed",
+              _base_url_problem())
 
 
 def _metered(request: Request, lang: str) -> None:
@@ -188,9 +203,13 @@ async def health() -> HealthResponse:
     live = ENGINE.__name__.endswith("live")
     models = {role: spec.model for role, spec in ROLES.items()} if live else {}
     # "degraded" is what the contract's status field is for: the app is up and
-    # help is reachable, but translation is not available right now.
+    # help is reachable, but translation is not available right now. A bad
+    # base URL is that too, and health used to report "ok" through it (#3).
+    url_problem = _base_url_problem()
+    if url_problem:
+        models["nebius_base_url"] = url_problem
     return HealthResponse(
-        status="ok" if GUARD.remaining_today() > 0 else "degraded",
+        status="ok" if GUARD.remaining_today() > 0 and not url_problem else "degraded",
         engine="live" if live else "mock",
         models={**models, **getattr(ENGINE, "STATUS", {})},
         # Watchable while the demo is public: the Tavily allowance has to last
