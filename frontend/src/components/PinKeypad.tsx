@@ -1,7 +1,7 @@
 import { useEffect, useId } from "react";
 
 import { MAX_DIGITS } from "../lib/pin";
-import { pinText } from "./pinText";
+import { fill } from "../lib/strings";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
 
@@ -100,7 +100,7 @@ export default function PinKeypad({
         className="min-h-tap flex items-center justify-center gap-2 rounded-card border border-line bg-surface px-3"
       >
         {value.length === 0 ? (
-          <span className="text-base text-ink-soft">{pinText("pin.keypad.empty", lang)}</span>
+          <span className="text-base text-ink-soft">{fill("pin.keypad.empty", lang)}</span>
         ) : (
           [...value].map((_, index) => (
             <span key={index} className="h-3 w-3 rounded-full bg-calm" />
@@ -108,7 +108,7 @@ export default function PinKeypad({
         )}
       </div>
       <p aria-live="polite" className="sr-only">
-        {pinText("pin.keypad.entered", lang, { count: String(value.length) })}
+        {fill("pin.keypad.entered", lang, { count: String(value.length) })}
       </p>
 
       <div role="group" aria-labelledby={labelId} className="grid grid-cols-3 gap-2">
@@ -137,7 +137,7 @@ export default function PinKeypad({
           type="button"
           disabled={disabled}
           onClick={() => onChange(value.slice(0, -1))}
-          aria-label={pinText("pin.keypad.delete", lang)}
+          aria-label={fill("pin.keypad.delete", lang)}
           className={`${digitClass} flex items-center justify-center`}
         >
           {/* Drawn rather than the ⌫ character, which is missing from the font
@@ -164,7 +164,7 @@ export default function PinKeypad({
         onClick={() => onChange("")}
         className="min-h-tap self-center rounded-card px-4 text-base text-ink-soft underline disabled:opacity-40"
       >
-        {pinText("pin.keypad.clear", lang)}
+        {fill("pin.keypad.clear", lang)}
       </button>
     </div>
   );

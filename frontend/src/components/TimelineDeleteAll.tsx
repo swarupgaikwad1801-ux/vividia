@@ -28,7 +28,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
-import { tPending } from "./TimelinePendingStrings";
 
 interface Props {
   lang: Lang;
@@ -81,7 +80,7 @@ export default function TimelineDeleteAll({ lang, onConfirm }: Props) {
              dark mode, where white text on it fails contrast. */
           className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
         >
-          {tPending("timeline.deleteAllNo", lang)}
+          {t("timeline.deleteAllNo", lang)}
         </button>
         <button
           type="button"
@@ -91,7 +90,7 @@ export default function TimelineDeleteAll({ lang, onConfirm }: Props) {
           }}
           className="min-h-tap rounded-card border border-help bg-surface px-4 text-base font-semibold text-help"
         >
-          {tPending("timeline.deleteAllYes", lang)}
+          {t("timeline.deleteAllYes", lang)}
         </button>
       </div>
     </section>

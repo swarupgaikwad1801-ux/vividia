@@ -90,10 +90,32 @@ test("it is written in every language we ship", () => {
   assert.notEqual(t("example.body", "hi"), t("example.body", "en"));
 });
 
-test("the Hindi speaks to the child as तुम", () => {
+test("the Hindi speaks to the child as तुम, in whichever script it is written", () => {
   const hi = t("example.body", "hi") + " " + t("example.resultNote", "hi");
-  assert.ok(hi.includes("तुम"));
-  assert.ok(!/(?:^|\s)आप(?:का|की|के|को|से|ने)?(?:\s|।|$)/.test(hi));
+
+  // This used to look for तुम only, which passed when these strings were
+  // Devanagari and failed the moment #77 made every screen Hinglish - not
+  // because the register changed, but because the alphabet did. Register is
+  // a property of the word, not of the script it is spelled in, so a check
+  // that reads one script is half blind: an app that went back to formal
+  // "aapko" would have sailed past the old version of this test.
+  assert.ok(/तुम|\btum/i.test(hi), "it addresses the child informally");
+  assert.ok(
+    !/(?:^|\s)आप(?:का|की|के|को|से|ने)?(?:\s|।|$)/.test(hi) && !/\baap\b/i.test(hi),
+    "and never formally, in either alphabet",
+  );
+});
+
+test("the Hindi is Hinglish, like every other string the child reads", () => {
+  // #77 for the screens, #93 for the engine. A child reading Latin script
+  // everywhere should not meet Devanagari in the one banner that explains
+  // the app is not really checking their words.
+  for (const key of ["example.title", "example.body", "example.resultNote"] as const) {
+    assert.ok(
+      !/[ऀ-ॿ]/.test(t(key, "hi")),
+      `${key} is still in Devanagari while the screens are Hinglish`,
+    );
+  }
 });
 
 // --- the result card ---------------------------------------------------------

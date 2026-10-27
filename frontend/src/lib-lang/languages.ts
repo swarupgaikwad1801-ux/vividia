@@ -48,7 +48,8 @@ export interface LanguageOption {
   /** The language's name as its own speakers write it. The real label. */
   endonym: string;
   /**
-   * The English name, or `null` when it would only repeat the endonym.
+   * The English name, or `null` when it would only repeat the endonym
+   * ("English", "Hinglish").
    *
    * English gets `null`: "English / English" is noise on the one row that
    * needs no help. German and Hindi get theirs, because the child this app is
@@ -67,18 +68,19 @@ export interface LanguageOption {
  * Names, keyed by the shipped language codes.
  *
  * These are endonyms, not translations, so no reviewer is needed for them the
- * way `strings.ts` needs one for Hindi copy: "Deutsch" and "हिन्दी" are how
- * those languages name themselves and are the same on every screen.
+ * way `strings.ts` needs one for Hindi copy: "Deutsch" is how German names
+ * itself and is the same on every screen.
  *
- * "हिन्दी" is spelled with the conjunct (न + ् + द), which is how the language
- * writes its own name. `lib/help.ts` uses "हिंदी" with an anusvara for the
- * helpline language list; both are read without trouble, and that file is
- * shared and not ours to change.
+ * The code `hi` is labelled "Hinglish" (Neel, 26 Oct): its screens are Hindi
+ * in Roman letters, because the children we build for read that more easily
+ * than Devanagari. "Hinglish" is also what those children call it, and it is
+ * the same word in English, so it needs no second name. `hi-Latn` tells the
+ * browser and a screen reader the text is Hindi written in Latin script.
  */
 const NAMES: Record<Lang, Omit<LanguageOption, "code" | "dir">> = {
   en: { endonym: "English", englishName: null, htmlLang: "en" },
   de: { endonym: "Deutsch", englishName: "German", htmlLang: "de" },
-  hi: { endonym: "हिन्दी", englishName: "Hindi", htmlLang: "hi" },
+  hi: { endonym: "Hinglish", englishName: null, htmlLang: "hi-Latn" },
 };
 
 /**

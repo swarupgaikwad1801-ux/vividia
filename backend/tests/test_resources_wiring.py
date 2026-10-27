@@ -48,10 +48,16 @@ def tavily_failing():
 
 
 @pytest.fixture(autouse=True)
-def no_real_network(monkeypatch):
+def no_real_network(monkeypatch, tmp_path):
     monkeypatch.setenv("TAVILY_API_KEY", "test-key")
     monkeypatch.setattr(res, "_transport", tavily_returning([]))
-    res._cache.clear()
+    # The cache is a file now, so each test gets its own rather than sharing
+    # one and writing into the working tree. Replaces _cache.clear().
+    monkeypatch.setattr(res, "STATE_FILE", tmp_path / "tavily_state.json")
+    monkeypatch.delenv("TAVILY_DAILY_CAP", raising=False)
+    res._reset_state_for_tests()
+    yield
+    res._reset_state_for_tests()
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ import { t } from "../lib/strings.ts";
 import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
-import WriteSafetyNote from "../components/WriteSafetyNote.tsx";
+import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDialog.tsx";
 import type { EngineMode } from "../lib/engineMode.ts";
 
 
@@ -70,16 +70,22 @@ export interface WriteProps {
    */
   initialText?: string;
   /**
+   * Every change to the text, so the app can hand it back as `initialText`
+   * after Back or a trip to help. Nothing leaves the device here.
+   */
+  onTextChange?: (text: string) => void;
+  /**
    * Called when the child approves the German. Until it is wired, the approve
    * button is not rendered at all — CLAUDE.md's quality bar says every button
    * works, and a button that silently does nothing is worse than its absence.
    */
   onApproved?: (approved: ApprovedWords) => void;
   /**
-   * Route to the help list. Required, because the safety floor must have
-   * somewhere to go: see WriteSafetyNote.
+   * Route to the help list. The safety floor now points at the red Need help
+   * button in the top bar and the danger pop-up, so this screen no longer calls it;
+   * kept so callers need not change.
    */
-  onNeedHelp: () => void;
+  onNeedHelp?: () => void;
 }
 
 type Phase = "writing" | "checking" | "result" | "error";
@@ -92,8 +98,8 @@ type Run =
 export default function Write({
   lang,
   initialText,
+  onTextChange,
   onApproved,
-  onNeedHelp,
   engine = "unknown",
 }: WriteProps) {
   const [text, setText] = useState(initialText ?? "");
@@ -106,6 +112,10 @@ export default function Write({
   const [failure, setFailure] = useState<{ message: string; retryable: boolean } | null>(null);
   const [lastRun, setLastRun] = useState<Run | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  /** The danger pop-up is open. */
+  const [danger, setDanger] = useState(false);
+  /** The text the pop-up was last opened for: once per urgent result. */
+  const dangerShownFor = useRef<string | null>(null);
   // Assume online unless the browser actually says otherwise: `onLine` is
   // missing in some runtimes, and a false "you are offline" banner would stop
   // a child who has a perfectly good connection from sending anything.
@@ -144,6 +154,13 @@ export default function Write({
       window.removeEventListener("offline", goOffline);
     };
   }, []);
+
+  // The safety floor: an urgent result opens the danger pop-up, once.
+  useEffect(() => {
+    if (!opensForResult(result, checkedText, dangerShownFor.current)) return;
+    dangerShownFor.current = checkedText;
+    setDanger(true);
+  }, [result, checkedText]);
 
   // Move the reader to the German when it arrives. Without this a screen
   // reader user is left at the bottom of a form that has silently changed.
@@ -237,7 +254,7 @@ export default function Write({
       className="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 py-6 sm:max-w-2xl"
     >
       <header className="flex flex-col gap-1">
-        <h1 id="write-title" className="text-2xl font-semibold tracking-tight">
+        <h1 id="write-title" className="text-2xl">
           {t("write.title", lang)}
         </h1>
         <p id="write-hint" className="text-base text-ink-soft">
@@ -258,7 +275,10 @@ export default function Write({
           <textarea
             ref={editorRef}
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => {
+              setText(event.target.value);
+              onTextChange?.(event.target.value);
+            }}
             // No autofocus: on Android that throws the keyboard over the
             // screen before the child has read what this page is for.
             rows={7}
@@ -278,10 +298,6 @@ export default function Write({
           >
             {t("write.send", lang)}
           </button>
-          {/* Said on the screen where the words are written, not buried in a
-              settings page: this is the moment the child is deciding whether
-              to trust the app at all. */}
-          <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
         </section>
       )}
 
@@ -314,16 +330,16 @@ export default function Write({
         </section>
       )}
 
+      {/* Continue only closes it: `text` and the result stay as they are. */}
+      {danger && <DangerDialog lang={lang} message={result?.safety.message_child} onClose={() => setDanger(false)} />}
+
       {phase === "result" && result && (
         // tabIndex -1 so the focus move above has somewhere to land; it is not
         // in the tab order.
         <div ref={resultRef} tabIndex={-1} className="flex flex-col gap-5">
-          {/* First, before the German: the safety floor (CLAUDE.md). Shown
-              because the text said something urgent — not because anyone was
-              told anything. Nothing was sent. */}
-          {result.safety.urgent && result.safety.message_child && (
-            <WriteSafetyNote lang={lang} safety={result.safety} onNeedHelp={onNeedHelp} />
-          )}
+          {/* The safety floor (CLAUDE.md): on urgent text, the danger pop-up
+              opens once (above) and Need help in the top bar glows. */}
+          {result.safety.urgent && <HelpPulse />}
 
           <WriteResult
             lang={lang}
@@ -373,8 +389,6 @@ export default function Write({
               {t("approve.change", lang)}
             </button>
           </div>
-
-          <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
         </div>
       )}
     </section>
