@@ -309,9 +309,42 @@ def _said_by_the_child(phrase: str, text: str) -> bool:
     return _form_in(phrase, text)
 
 
-def _lexicon_item(entry: dict) -> dict:
+def _as_written(entry: dict, text: str) -> str:
+    """The form of this word the child actually typed, exactly as typed.
+
+    The word list files every form under one headword: "chhedte" under
+    "chhedna", "कल" under "kal". Quoting the headword back put a word on the
+    child's screen, in quotation marks, that they never wrote - and in the
+    Latin alphabet to a child who had just written Devanagari. That is the
+    thing `_said_by_the_child` exists to stop, and lexicon hits never went
+    through it.
+
+    The longest form wins, so "get me" beats an overlapping shorter form. A
+    Latin match is widened to the whole word it sits in, because `_form_in`
+    lets "chhed" find "chhedkar" and a child should see "chhedkar", not a
+    fragment of it. Devanagari forms already match whole words only.
+    """
+    for form in sorted(entry["forms"], key=len, reverse=True):
+        loose = r"[\s\W_]*".join(re.escape(part) for part in form.split())
+        found = re.search(loose, text, re.IGNORECASE | re.UNICODE)
+        if not found or not _form_in(form, text) and not _whole_word(form, text):
+            continue
+        start, end = found.span()
+        if not _DEVANAGARI.search(form):
+            while start > 0 and text[start - 1].isalnum():
+                start -= 1
+            while end < len(text) and text[end].isalnum():
+                end += 1
+        return text[start:end]
+    return entry["word"]
+
+
+def _lexicon_item(entry: dict, text: str) -> dict:
     return {
-        "phrase": entry["word"],
+        "phrase": _as_written(entry, text),
+        # The headword, for code that needs to know WHICH entry this is.
+        # Never shown: the child sees `phrase`, which is their own spelling.
+        "word": entry["word"],
         "readings": entry["readings"],
         "severity": "critical",
         "source": "lexicon",
@@ -345,7 +378,7 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
         if any(re.search(pattern, text, re.IGNORECASE | re.UNICODE) for pattern in skip):
             continue
         if any(_form_in(form, text) for form in entry["forms"]):
-            found.append((_rank(entry), _lexicon_item(entry)))
+            found.append((_rank(entry), _lexicon_item(entry, text)))
 
     for lang, entries in words.items():
         if lang == source_lang or lang.startswith("_"):
@@ -361,7 +394,7 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
             # silently choose between yesterday and tomorrow. Asking once too
             # often costs a tap; choosing wrongly loses a threat's timing.
             if any(_whole_word(form, text) for form in entry["forms"]):
-                found.append((_rank(entry), _lexicon_item(entry)))
+                found.append((_rank(entry), _lexicon_item(entry, text)))
 
     # Only two questions ever reach the child (`ask_about[:2]`), so when more
     # than two words match, which two is a safety decision and not an

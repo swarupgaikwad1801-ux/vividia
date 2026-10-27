@@ -10,11 +10,8 @@
  *
  * ## The rules
  *
- * - **The face from the check-in** gets one line above "What happened?".
- *   Skipping the check-in gets none: there is nothing to answer. The good
- *   face gets none here either: it has its own screen first (GoodDay.tsx),
- *   so a child who had a good day is never asked what happened as if
- *   something must have.
+ * - **The face from the check-in** is answered by its own screen, before any
+ *   question (screens/MoodReply.tsx, lib/moodReply.ts). Nothing here repeats it.
  * - **"What happened?"** gets one line on the screen after it, chosen by the
  *   most serious tile tapped (`WHAT_ORDER`), so a child who taps "names" and
  *   "threatened" hears about the threat. Skipping, or "I don't want to say",
@@ -32,21 +29,6 @@
 
 import { NO_SAY } from "./pictures";
 import type { StringKey } from "./strings";
-
-// No line for "good": that face goes to its own screen first (GoodDay.tsx),
-// which has already answered it by the time "What happened?" comes.
-const MOOD_LINE: Readonly<Record<string, StringKey>> = {
-  ok: "warm.mood.ok",
-  sad: "warm.mood.sad",
-  scared: "warm.mood.scared",
-  angry: "warm.mood.angry",
-  alone: "warm.mood.alone",
-};
-
-/** The line for the face the child tapped, or null for a skip or unknown code. */
-export function moodLine(mood: string | null): StringKey | null {
-  return (mood && MOOD_LINE[mood]) || null;
-}
 
 /** Most serious first: the line answers the worst thing the child tapped. */
 const WHAT_ORDER: readonly { code: string; line: StringKey }[] = [

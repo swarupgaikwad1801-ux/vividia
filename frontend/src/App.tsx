@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 
 import CheckIn from "./screens/CheckIn";
-import GoodDay from "./screens/GoodDay";
 import Escalation from "./screens/Escalation";
 import FollowUp from "./screens/FollowUp";
 import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
 import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
+import MoodReply from "./screens/MoodReply";
 import LanguageButton from "./components/LanguageButton";
 import DisplayButton from "./components/DisplayButton";
 import Onboarding from "./screens/Onboarding";
@@ -26,6 +26,7 @@ import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
 import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
+import Listen from "./screens/Listen";
 import Write from "./screens/Write";
 
 import DemoButton from "./components/DemoButton";
@@ -44,7 +45,7 @@ import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } f
 import { MOOD_CODES } from "./lib/moods";
 import { NO_PICKS, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
 import { SCENE, mapFor } from "./lib/scenes";
-import { ADULT_LINE, moodLine, whatLine } from "./lib/warm";
+import { ADULT_LINE, whatLine } from "./lib/warm";
 import WarmLine from "./components/WarmLine";
 import {
   ANSWER_OF,
@@ -59,6 +60,7 @@ import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
+import type { Turn } from "./lib/listening";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
 import { applyDocumentLang } from "./lib-lang/languages";
@@ -164,6 +166,14 @@ export default function App() {
   // The demo button also fills it, with Amara's sentence; nothing else may
   // put text in a child's mouth.
   const [draft, setDraft] = useState("");
+  // The listening conversation and its unsent message, kept here for the
+  // same reason as `draft`: Back, Help or a language change must not lose a
+  // word of it. Cleared only when it has become an entry, or the demo ends.
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [talkDraft, setTalkDraft] = useState("");
+  // "Make a card" on the listening screen: the writing screen checks the
+  // German straight away, because the child has already said everything.
+  const [autoCheck, setAutoCheck] = useState(false);
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
   // The child's two handoff answers, kept so Back from the big card returns
@@ -219,10 +229,9 @@ export default function App() {
   const afterCheckIn = useCallback(
     (mood: string | null) => {
       setCheckInMood(mood);
-      // A good day is not met with "What happened?" (Neel, 27 Oct): first
-      // whether anything did (screens/GoodDay.tsx).
-      if (mood === "good") setStep("checkInGood");
-      else setStep("picWhat");
+      // An answer to the face first (screens/MoodReply.tsx), not "What
+      // happened?": after "Good" that question assumed something had.
+      setStep("checkInReply");
     },
     [setStep],
   );
@@ -256,8 +265,10 @@ export default function App() {
       const own = questionsFor(picks, checkInMood).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
       setPicks(NO_PICKS);
       if (own) {
-        setDraft(own);
-        setTrail([HOME, "write"]);
+        // Their own words start the conversation, in the box, not yet sent:
+        // the child presses "Write it down" themselves.
+        setTalkDraft(own);
+        setTrail([HOME, "listen"]);
       } else {
         setTrail([HOME, "picMore"]);
       }
@@ -298,6 +309,10 @@ export default function App() {
       );
       // Saved, so it is no longer a draft: the next visit to Write is empty.
       setDraft("");
+      // The conversation those words came from is filed with them.
+      setTurns([]);
+      setTalkDraft("");
+      setAutoCheck(false);
       refreshEntries();
       // Those words are an entry now. Leaving them in `draft` would refill the
       // writing screen with a sentence the child has already filed the next
@@ -332,8 +347,11 @@ export default function App() {
         setLang(storyLang);
       }
       refreshEntries();
-      setDraft(session.draft.text);
-      setStep("write");
+      // Into the listening screen's box, not the writing screen's: the judge
+      // presses "Write it down" and sees the app answer before any card.
+      setTurns([]);
+      setTalkDraft(session.draft.text);
+      setStep("listen");
     },
     [refreshEntries, setStep],
   );
@@ -346,6 +364,8 @@ export default function App() {
   const endDemo = useCallback(() => {
     refreshEntries();
     setDraft("");
+    setTurns([]);
+    setTalkDraft("");
     setStep("checkIn");
   }, [refreshEntries, setStep]);
 
@@ -472,10 +492,6 @@ export default function App() {
         <Onboarding lang={lang} onDone={() => setStep("checkIn")} />
       )}
 
-      {step === "checkInGood" && (
-        <GoodDay lang={lang} onSomething={() => setStep("picWhat")} onHome={() => setTrail([HOME])} />
-      )}
-
       {step === "checkIn" && (
         <>
           {/* Renders nothing unless the follow-up question is due (step 8).
@@ -505,11 +521,21 @@ export default function App() {
         </>
       )}
 
+      {step === "checkInReply" && (
+        <MoodReply
+          lang={lang}
+          mood={checkInMood}
+          onPictures={() => setStep("picWhat")}
+          onWrite={() => setStep("listen")}
+          onHome={() => setTrail([HOME])}
+        />
+      )}
+
       {/* The picture questions: one per screen, each skippable. Which comes
           next depends on the answers so far (lib/questions.ts). */}
       {/* One kind line, written in advance and chosen by a rule (lib/warm.ts):
-          to the face the child tapped, to what happened, and to an adult. */}
-      {step === "picWhat" && <WarmLine line={moodLine(checkInMood)} lang={lang} />}
+          to what happened, and to an adult. The face the child tapped is
+          answered before this, by MoodReply. */}
       {step !== "picWhat" && step === afterWhat && <WarmLine line={whatLine(picks.what)} lang={lang} />}
       {step === "picAdultWhere" && <WarmLine line={ADULT_LINE} lang={lang} />}
       {step === "picWhat" && (
@@ -557,12 +583,36 @@ export default function App() {
         />
       )}
       {step === "picMore" && (
-        <MoreQuestion lang={lang} onWrite={() => setStep("write")} onNoThanks={() => setStep("handoff")} />
+        <MoreQuestion
+          lang={lang}
+          onWrite={() => setStep("listen")}
+          onMakeCard={() => setStep("handoff")}
+          // The answers are saved by now; "No thanks" means nothing more today.
+          onNoThanks={() => setTrail([HOME])}
+        />
+      )}
+
+      {step === "listen" && (
+        <Listen
+          lang={lang}
+          turns={turns}
+          onTurnsChange={setTurns}
+          draft={talkDraft}
+          onDraftChange={setTalkDraft}
+          onMakeCard={(words) => {
+            setDraft(words);
+            setAutoCheck(true);
+            setStep("write");
+          }}
+          onHome={() => setTrail([HOME])}
+          onNeedHelp={needHelp}
+        />
       )}
 
       {step === "write" && (
         <Write
           lang={lang}
+          autoCheck={autoCheck}
           initialText={draft}
           onTextChange={setDraft}
           onApproved={keepWords}

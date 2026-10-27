@@ -16,7 +16,7 @@ from engine.translate import lexicon_ambiguities
 
 
 def phrases(text: str, lang: str) -> set[str]:
-    return {found["phrase"] for found in lexicon_ambiguities(text, lang)}
+    return {found["word"] for found in lexicon_ambiguities(text, lang)}
 
 
 @pytest.mark.parametrize(
@@ -82,7 +82,7 @@ def test_the_screen_languages_own_list_is_unchanged(text, lang, expected):
     wrong for Devanagari - see test_lexicon_devanagari.py. A test that
     reimplements what it is testing cannot fail for the reason that matters.
     """
-    assert [item["phrase"] for item in lexicon_ambiguities(text, lang)] == expected
+    assert [item["word"] for item in lexicon_ambiguities(text, lang)] == expected
 
 
 def test_a_german_speaking_child_writing_hinglish_is_asked_too():
