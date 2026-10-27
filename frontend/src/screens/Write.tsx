@@ -6,6 +6,7 @@ import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
 import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDialog.tsx";
+import type { EngineMode } from "../lib/engineMode.ts";
 
 
 /**
@@ -57,6 +58,12 @@ export interface WriteProps {
   /** The child's language: "en", "hi", or "de" for a German-speaking child. */
   lang: string;
   /**
+   * Which engine the backend reported. In "mock" the German is a fixed
+   * example, so the result card must not show an agreement score for it.
+   * Defaults to "unknown", which behaves exactly as before.
+   */
+  engine?: EngineMode;
+  /**
    * Pre-filled draft, for "Try Amara's story" (a judge presses send, nothing
    * more). Read once, when the screen mounts: remount with a new `key` to
    * replace a draft the child may have started.
@@ -88,7 +95,13 @@ type Run =
   | { kind: "translate"; text: string }
   | { kind: "clarify"; text: string; choices: Record<string, string> };
 
-export default function Write({ lang, initialText, onTextChange, onApproved }: WriteProps) {
+export default function Write({
+  lang,
+  initialText,
+  onTextChange,
+  onApproved,
+  engine = "unknown",
+}: WriteProps) {
   const [text, setText] = useState(initialText ?? "");
   const [phase, setPhase] = useState<Phase>("writing");
   const [result, setResult] = useState<TranslateResponse | null>(null);
@@ -333,6 +346,7 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
             childText={checkedText}
             result={result}
             decidedByChild={decidedByChild}
+            engine={engine}
           />
 
           {ambiguities.length > 0 && (

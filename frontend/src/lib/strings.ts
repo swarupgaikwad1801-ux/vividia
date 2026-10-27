@@ -70,6 +70,30 @@ export const STRINGS = {
     hi: "Yahan tumhare apne notes hain, isliye example nahi khula. Tumhare notes waise hi hain.",
   },
 
+  // Shown on every screen when the backend reports engine: "mock", and once
+  // more in place of the agreement score. ENGINE_MODE defaults to mock, so a
+  // deploy that forgets it serves a fixed German sentence about a bag being
+  // taken, whatever the child wrote, under an invented 82%. See
+  // lib/engineMode.ts.
+  //
+  // Hinglish, like every other child-facing Hindi string since #77 and #93:
+  // this branch predates both and carried Devanagari.
+  "example.title": {
+    en: "Example mode",
+    de: "Beispiel-Modus",
+    hi: "Example mode",
+  },
+  "example.body": {
+    en: "The app is not checking your words right now. The German it shows is a fixed example, not a translation of what you wrote.",
+    de: "Die App prüft deine Worte gerade nicht. Das Deutsche, das sie zeigt, ist ein festes Beispiel und keine Übersetzung von dem, was du geschrieben hast.",
+    hi: "App abhi tumhari baat check nahi kar raha. Jo German dikh raha hai woh ek fixed example hai, tumne jo likha uska translation nahi.",
+  },
+  "example.resultNote": {
+    en: "Example numbers. Nothing was checked, and the German above is not your words.",
+    de: "Beispielzahlen. Es wurde nichts geprüft, und das Deutsche oben sind nicht deine Worte.",
+    hi: "Example numbers. Kuch bhi check nahi hua, aur upar ka German tumhari baat nahi hai.",
+  },
+
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "Abhi madad chahiye?" },
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "Yeh log madad kar sakte hain" },
   // The red pill in the top bar: short, so it fits beside Leave now at 360px.

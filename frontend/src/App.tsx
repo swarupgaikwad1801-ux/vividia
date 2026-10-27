@@ -31,9 +31,11 @@ import DemoButton from "./components/DemoButton";
 import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
+import ExampleModeBanner from "./components/ExampleModeBanner";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import type { DemoSession } from "./lib-demo/demoStory";
+import { useEngineMode } from "./lib/engineMode";
 
 import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
@@ -131,6 +133,10 @@ export default function App() {
   // been made it hands back the device's language so the few words around the
   // picker are readable, while still reporting `needsChoice`. That is not the
   // app choosing for the child - the picker shows nothing as chosen.
+  // Asked once for the whole session. In mock mode every screen says so, and
+  // the result card drops its agreement score: see lib/engineMode.ts.
+  const engine = useEngineMode();
+
   const [setup] = useState(() => languageSetupState());
   const [lang, setLang] = useState<Lang>(setup.lang);
 
@@ -417,6 +423,18 @@ export default function App() {
         />
       </div>
 
+      {/* Above every screen from the language picker onwards, and above the
+          map: a judge who opens a mock deploy must read this before they
+          type.
+
+          NOT above the lock, which #82 made an early `return` higher up so
+          that no `setStep` can get past it. That is deliberate, not the
+          oversight it looked like in review: this banner's job is to stop
+          someone believing an OUTPUT, and a child at the PIN screen has not
+          typed anything for the app to have answered. Putting it there would
+          add a second place for `engine` to go stale while guarding nothing. */}
+      <ExampleModeBanner lang={lang} engine={engine} />
+
       {onMap !== null && (
         <GameMap
           places={onMap.places}
@@ -531,6 +549,7 @@ export default function App() {
           initialText={draft}
           onTextChange={setDraft}
           onApproved={keepWords}
+          engine={engine}
         />
       )}
 
