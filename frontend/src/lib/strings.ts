@@ -209,10 +209,19 @@ export const STRINGS = {
     de: "Danke, dass du uns das erzählst.",
     hi: "Humein batane ke liye thank you.",
   },
-  "heard.thanks.again": {
-    en: "Thank you. We are still listening.",
-    de: "Danke. Wir hören dir weiter zu.",
-    hi: "Thank you. Hum abhi bhi sun rahe hain.",
+  // Said when the line for what the child just wrote was already said, in
+  // turn, so two answers in a row never open the same way (Neel, 27 Oct: the
+  // same "Thank you. We are still listening." opened every answer).
+  "heard.ack.more": {
+    en: "Thank you for telling us more.",
+    de: "Danke, dass du uns mehr erzählst.",
+    hi: "Aur batane ke liye thank you.",
+  },
+  "heard.ack.read": { en: "Okay. We read that.", de: "Okay. Wir haben das gelesen.", hi: "Okay. Humne padh liya." },
+  "heard.ack.here": {
+    en: "We're still here, reading every word.",
+    de: "Wir sind noch da und lesen jedes Wort.",
+    hi: "Hum abhi bhi yahan hain, har word padh rahe hain.",
   },
   "heard.kind.hurt": {
     en: "Nobody is allowed to hurt you. That is not okay.",
@@ -268,6 +277,15 @@ export const STRINGS = {
     de: "Das aufzuschreiben ist mutig.",
     hi: "Ye likhne ke liye himmat chahiye.",
   },
+  // "Talk to me, please" (Neel's 27 Oct screenshot: "Merse baat karo please"
+  // got "An adult you trust can help" and "When did it happen?"). An open
+  // door, said as "we", with no promise of a person and no question about
+  // something the child has not mentioned. Hinglish avoids "likhoge/likhogi".
+  "heard.kind.talk": {
+    en: "We're here, and we read everything you write. You can tell us anything, in your own words.",
+    de: "Wir sind da und lesen alles, was du schreibst. Du kannst uns alles erzählen, mit deinen eigenen Worten.",
+    hi: "Hum yahan hain, aur tumhara likha sab padhte hain. Apne shabdon mein kuch bhi batao.",
+  },
   // After a message the safety check flagged. The danger pop-up has the
   // numbers; this is what stays in the conversation once it is closed. The
   // button is "Need help" in Hinglish too (ENGLISH_IN_HINGLISH below), so the
@@ -277,9 +295,16 @@ export const STRINGS = {
     de: "Was du geschrieben hast, ist sehr wichtig. Du musst damit nicht allein sein. Tipp oben auf Hilfe, jederzeit.",
     hi: "Tumne jo likha, woh bahut important hai. Iske saath akele rehna zaroori nahi. Upar Need help dabao, kabhi bhi.",
   },
-  // The gentle questions, one after each answer, in this order. Every one is
-  // optional: the child can answer, write something else, or make the card.
+  // The gentle questions, one after each answer, chosen by lib/listening.ts
+  // from what the child has not said yet. Every one is optional: the child
+  // can answer, write something else, or make the card.
   "heard.ask.more": { en: "Do you want to tell us more?", de: "Möchtest du uns mehr erzählen?", hi: "Aur kuch batana hai?" },
+  "heard.ask.open": { en: "What would you like to tell us?", de: "Was möchtest du uns erzählen?", hi: "Kya batana hai?" },
+  "heard.ask.what": {
+    en: "Do you want to tell us what happened?",
+    de: "Möchtest du uns erzählen, was passiert ist?",
+    hi: "Kya hua, batana hai?",
+  },
   "heard.ask.where": { en: "Where did it happen?", de: "Wo ist es passiert?", hi: "Ye kahan hua?" },
   "heard.ask.when": { en: "When did it happen?", de: "Wann ist es passiert?", hi: "Ye kab hua?" },
   "heard.ask.who": { en: "Who was there?", de: "Wer war dabei?", hi: "Wahan kaun tha?" },
