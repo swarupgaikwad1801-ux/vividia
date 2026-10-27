@@ -135,8 +135,8 @@ def test_the_frame_still_says_the_child_both_chose_and_approved(lang):
     # The two claims that are true of a tapped line and a typed line alike.
     # Written per language rather than as a keyword search, so a wording change
     # in one language cannot quietly pass on another language's word.
-    chose = {"en": "picked or wrote", "de": "ausgewählt oder geschrieben", "hi": "चुना या लिखा"}
-    approved = {"en": "approved", "de": "bestätigt", "hi": "मंज़ूर"}
+    chose = {"en": "picked or wrote", "de": "ausgewählt oder geschrieben", "hi": "chune ya likhe"}
+    approved = {"en": "approved", "de": "bestätigt", "hi": "manzoor"}
     frame = HEADER[lang] + " " + FOOTER[lang]
     assert chose[lang] in frame
     assert approved[lang] in frame

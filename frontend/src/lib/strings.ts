@@ -42,25 +42,6 @@ export const STRINGS = {
     hi: "NVIDIA Nemotron se bana",
   },
 
-  "demo.button": { en: "Try Amara's story", de: "Amaras Geschichte ausprobieren", hi: "Amara ki kahani dekho" },
-  // The demo button (moved from lib-demo/pendingStrings.ts, same key names).
-  // {name} is the persona name from the story, filled with fill(), never typed in.
-  "demo.loading": {
-    en: "Opening the story…",
-    de: "Die Geschichte wird geöffnet…",
-    hi: "Kahani khul rahi hai…",
-  },
-  "demo.loaded": {
-    en: "{name}'s story is ready. Her words are already written. Press “Write it down”.",
-    de: "{name}s Geschichte ist da. Ihre Worte sind schon geschrieben. Drück auf „Aufschreiben“.",
-    hi: "{name} ki kahani ready hai. Uski baat pehle se likhi hai. Ab “Likh do” dabao.",
-  },
-  "demo.clear": { en: "Remove the example", de: "Beispiel löschen", hi: "Example hatao" },
-  "demo.cleared": {
-    en: "The example is gone. The app is empty again.",
-    de: "Das Beispiel ist weg. Die App ist wieder leer.",
-    hi: "Example hat gaya. App phir se khaali hai.",
-  },
   // The refusal: the person has notes of their own, so the example was not
   // loaded at all. Says what happened, and does not offer to load it anyway:
   // the child's own words are what is being protected.
@@ -329,6 +310,23 @@ export const STRINGS = {
     hi: "Ye page bhar gaya. Ab card banao, ya baad mein wapas aao.",
   },
   "heard.retry": { en: "Try again", de: "Nochmal versuchen", hi: "Phir se try karo" },
+  // Clearing the chat (Neel, 27 Oct). Asked once more before anything goes,
+  // because losing words a child managed to write is the one thing this app
+  // must never do by accident. Says only what is true: the words leave this
+  // screen and cannot be brought back. Cards already saved are not touched.
+  "heard.clear": { en: "Clear this chat", de: "Diesen Chat löschen", hi: "Ye chat clear karo" },
+  "heard.clearAsk": {
+    en: "Clear everything you wrote here? It can't be brought back. Cards you already saved stay.",
+    de: "Alles löschen, was du hier geschrieben hast? Das kann man nicht zurückholen. Gespeicherte Karten bleiben.",
+    hi: "Yahan jo likha, sab clear karna hai? Wapas nahi aayega. Jo cards save hain, woh rahenge.",
+  },
+  "heard.clearYes": { en: "Yes, clear it", de: "Ja, löschen", hi: "Haan, clear karo" },
+  "heard.clearNo": { en: "No, keep it", de: "Nein, behalten", hi: "Nahi, rehne do" },
+  "heard.cleared": {
+    en: "The chat is cleared. You can start again any time.",
+    de: "Der Chat ist gelöscht. Du kannst jederzeit neu anfangen.",
+    hi: "Chat clear ho gaya. Jab chaho, phir se shuru karo.",
+  },
 
   "write.title": { en: "What happened?", de: "Was ist passiert?", hi: "Kya hua?" },
   "write.hint": {
@@ -911,6 +909,55 @@ export const STRINGS = {
   // On every question, always the last two tiles, in this order.
   "q.other": { en: "Something else", de: "Etwas anderes", hi: "Kuch aur" },
   "q.noSay": { en: "I don't want to say", de: "Möchte ich nicht sagen", hi: "Nahi batana" },
+
+  // The warm line the app says back (lib/warm.ts chooses which). Written in
+  // advance, never generated. Thanks and comfort only: never whether it is
+  // true, never "you are safe", never advice, never "I".
+  "warm.what.threatened": {
+    en: "Thank you for telling us. A threat is serious, and telling someone is the right thing.",
+    de: "Danke, dass du es uns sagst. Eine Drohung ist ernst, und es jemandem zu sagen ist richtig.",
+    hi: "Batane ke liye shukriya. Dhamki serious baat hai, aur kisi ko batana sahi hai.",
+  },
+  "warm.what.hurt": {
+    en: "Thank you for telling us. Nobody is allowed to hurt you.",
+    de: "Danke, dass du es uns sagst. Niemand darf dir wehtun.",
+    hi: "Batane ke liye shukriya. Kisi ko bhi tumhe chot pahunchane ka haq nahi hai.",
+  },
+  "warm.what.taken": {
+    en: "Your things belong to you. Thank you for telling us.",
+    de: "Deine Sachen gehören dir. Danke, dass du es uns sagst.",
+    hi: "Tumhari cheezein tumhari hain. Batane ke liye shukriya.",
+  },
+  "warm.what.online": {
+    en: "What happens online is real too. Thank you for telling us.",
+    de: "Was online passiert, ist auch echt. Danke, dass du es uns sagst.",
+    hi: "Online jo hota hai, woh bhi sach mein hota hai. Batane ke liye shukriya.",
+  },
+  "warm.what.names": {
+    en: "Mean words can hurt a lot. They don't decide who you are.",
+    de: "Gemeine Worte können sehr wehtun. Sie bestimmen nicht, wer du bist.",
+    hi: "Buri baatein bahut chubhti hain. Woh tay nahi karti ki tum kaun ho.",
+  },
+  "warm.what.left_out": {
+    en: "Being left out hurts. It is not your fault.",
+    de: "Ausgeschlossen zu werden tut weh. Es ist nicht deine Schuld.",
+    hi: "Alag chhod diya jaana dukh deta hai. Yeh tumhari galti nahi hai.",
+  },
+  "warm.what.other": {
+    en: "Thank you for telling us. You can say it in your own words.",
+    de: "Danke, dass du es uns sagst. Du kannst es mit deinen eigenen Worten sagen.",
+    hi: "Batane ke liye shukriya. Apne shabdon mein batao.",
+  },
+  "warm.what.noSay": {
+    en: "That's OK. Tell us only what you want to.",
+    de: "Das ist okay. Sag uns nur, was du sagen möchtest.",
+    hi: "Koi baat nahi. Sirf utna batao jitna tum chaho.",
+  },
+  "warm.adult": {
+    en: "Thank you for telling us. An adult must never treat a child like this. Stopping it is a job for other adults, not for you.",
+    de: "Danke, dass du es uns sagst. So darf ein Erwachsener ein Kind nie behandeln. Das zu stoppen ist die Aufgabe von anderen Erwachsenen, nicht deine.",
+    hi: "Batane ke liye shukriya. Kisi bade ko kabhi kisi bachche ke saath aisa nahi karna chahiye. Ise rokna doosre badon ka kaam hai, tumhara nahi.",
+  },
   "q.review.hint": { en: "This is what the card will say.", de: "Das steht dann auf der Karte.", hi: "Card par yahi likha hoga." },
   "q.review.nothing": {
     en: "You did not pick anything. That is okay.",
@@ -1067,9 +1114,6 @@ export const STRINGS = {
   // The first screen: each language card greets in its own language, and the
   // big greeting is in the device's language (LanguageSetup.tsx).
   "langSetup.hello": { en: "Hello!", de: "Hallo!", hi: "Namaste!" },
-  // The check-in screen: the example story sits under this heading, apart
-  // from the child's own choices, because it is for the adult showing the app.
-  "home.grownUps": { en: "For grown-ups", de: "Für Erwachsene", hi: "Bado ke liye" },
   // Under the map: where you are, in words, as well as on the path.
   "map.step": { en: "Step {n} of {total}", de: "Schritt {n} von {total}", hi: "{total} mein se step {n}" },
 } as const satisfies Record<string, Text>;
@@ -1087,8 +1131,6 @@ export type StringKey = keyof typeof STRINGS;
  */
 export const ENGLISH_IN_HINGLISH: ReadonlySet<StringKey> = new Set<StringKey>([
   "app.poweredBy",
-  "demo.button",
-  "demo.clear",
   "help.button",
   "help.title",
   "help.short",

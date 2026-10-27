@@ -29,14 +29,13 @@ import Timeline from "./screens/Timeline";
 import Listen from "./screens/Listen";
 import Write from "./screens/Write";
 
-import DemoButton from "./components/DemoButton";
 import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
 import ExampleModeBanner from "./components/ExampleModeBanner";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
-import type { DemoSession } from "./lib-demo/demoStory";
+import { activeDemo, clearDemo } from "./lib-demo/demoStory";
 import { useEngineMode } from "./lib/engineMode";
 
 import { t } from "./lib/strings";
@@ -45,6 +44,8 @@ import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } f
 import { MOOD_CODES } from "./lib/moods";
 import { NO_PICKS, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
 import { SCENE, mapFor } from "./lib/scenes";
+import { ADULT_LINE, whatLine } from "./lib/warm";
+import WarmLine from "./components/WarmLine";
 import {
   ANSWER_OF,
   adultRoute,
@@ -56,6 +57,7 @@ import {
 } from "./lib/questions";
 import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
+import { BUILT_IN_EMERGENCY } from "./lib/contacts";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
 import type { Turn } from "./lib/listening";
@@ -160,13 +162,11 @@ export default function App() {
   // approved; it survives Back and a trip to help, because losing a sentence
   // a frightened child has just managed to write is the one thing this app
   // must never do. `Write` reports every keystroke up here and reads it back
-  // when it mounts again.
-  // The demo button also fills it, with Amara's sentence; nothing else may
-  // put text in a child's mouth.
+  // when it mounts again. Nothing else may put text in a child's mouth.
   const [draft, setDraft] = useState("");
   // The listening conversation and its unsent message, kept here for the
   // same reason as `draft`: Back, Help or a language change must not lose a
-  // word of it. Cleared only when it has become an entry, or the demo ends.
+  // word of it. Cleared only when it has become an entry.
   const [turns, setTurns] = useState<Turn[]>([]);
   const [talkDraft, setTalkDraft] = useState("");
   // "Make a card" on the listening screen: the writing screen checks the
@@ -191,6 +191,17 @@ export default function App() {
   );
 
   const refreshEntries = useCallback(() => setEntries(listEntries()), []);
+
+  // Amara's story is gone from the app (Neel, 27 Oct). A browser that loaded
+  // it before keeps her five example entries, and with the button went the
+  // only way to remove them, so they are taken out once here. clearDemo()
+  // removes only the ids the example seeded; the child's own entries stay.
+  useEffect(() => {
+    if (activeDemo()) {
+      clearDemo();
+      refreshEntries();
+    }
+  }, [refreshEntries]);
 
   useEffect(() => {
     // hi-Latn for Hinglish, so a screen reader reads Roman Hindi as Hindi.
@@ -250,7 +261,7 @@ export default function App() {
    */
   const finishPictures = useCallback(
     (save: boolean) => {
-      const choices = answersFor(picks);
+      const choices = answersFor(picks, checkInMood);
       if (save) {
         const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
         addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
@@ -260,7 +271,7 @@ export default function App() {
       // answer wins over anything remembered.
       const start = handoffWhereFor(choices.where, choices.adultWhere, Boolean(choices.whereOnline));
       setWhere((now) => (start === "home" ? "home" : now ?? start));
-      const own = questionsFor(picks).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
+      const own = questionsFor(picks, checkInMood).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
       setPicks(NO_PICKS);
       if (own) {
         // Their own words start the conversation, in the box, not yet sent:
@@ -284,9 +295,9 @@ export default function App() {
     (from: QuestionStep) => (skipped?: boolean) => {
       const key = ANSWER_OF[from];
       const now = skipped ? { ...picks, [key]: [], ...(from === "picWho" ? { kind: [] } : {}) } : picks;
-      setStep(nextQuestion(from, now));
+      setStep(nextQuestion(from, now, checkInMood));
     },
-    [picks, setStep],
+    [picks, checkInMood, setStep],
   );
 
   /**
@@ -320,52 +331,6 @@ export default function App() {
     },
     [refreshEntries, setStep],
   );
-
-  /**
-   * "Try Amara's story": the judge's way in, and the first button pressed on
-   * the demo URL.
-   *
-   * `DemoButton` has already fetched the story and seeded the timeline by the
-   * time this runs, so all that is left is the part only the shell can do:
-   * show the five entries it added, put the live sentence in the writing
-   * screen, and go there. Nothing is translated and nothing is sent - the
-   * judge presses send themselves, which is the moment the demo exists for.
-   *
-   * The language follows the story rather than the other way round. Amara
-   * writes English, so `Write` would otherwise be told to translate an English
-   * sentence *from* whatever the UI happened to be set to, and a Hindi or
-   * German source language on English text is a wrong answer we asked for.
-   * `saveLang` is deliberately not called: this is the example's language for
-   * as long as the example is loaded, not a choice the child made.
-   */
-  const startDemo = useCallback(
-    (session: DemoSession) => {
-      const storyLang = session.draft.lang;
-      if (storyLang === "en" || storyLang === "de" || storyLang === "hi") {
-        setLang(storyLang);
-      }
-      refreshEntries();
-      // Into the listening screen's box, not the writing screen's: the judge
-      // presses "Write it down" and sees the app answer before any card.
-      setTurns([]);
-      setTalkDraft(session.draft.text);
-      setStep("listen");
-    },
-    [refreshEntries, setStep],
-  );
-
-  /**
-   * The example has been taken back out, so the app has to look like it never
-   * ran: the seeded entries are gone from storage and the prefilled sentence
-   * must go with them, or the writing screen still holds Amara's words.
-   */
-  const endDemo = useCallback(() => {
-    refreshEntries();
-    setDraft("");
-    setTurns([]);
-    setTalkDraft("");
-    setStep("checkIn");
-  }, [refreshEntries, setStep]);
 
   // The red Need help button, from every screen: the calm list of people who
   // can help (screens/HelpScreen.tsx). Back returns to where the child was.
@@ -402,7 +367,9 @@ export default function App() {
   }
 
   const scene = SCENE[step];
-  const onMap = mapFor(step, picks);
+  const onMap = mapFor(step, picks, checkInMood);
+  // The screen right after "What happened?", where the warm line answers it.
+  const afterWhat = nextQuestion("picWhat", picks, checkInMood);
 
   return (
     // One flat colour per place (lib/scenes.ts), filling the whole screen.
@@ -513,19 +480,6 @@ export default function App() {
               {t("onboarding.again", lang)}
             </button>
           </div>
-
-          {/* Below the check-in, not above it: a child who opens the app gets
-              their own question first, and the example is for the visitor.
-              It is on this screen because this is where both of them land, and
-              a judge should not have to find it. Set apart under its own
-              heading, behind a dashed rule, so it does not read as one of the
-              child's choices. */}
-          <footer aria-labelledby="grown-ups" className="mx-4 mt-8 mb-8 flex flex-col gap-3 border-t-[2.5px] border-dashed border-ink/50 pt-5">
-            <h2 id="grown-ups" className="text-sm font-bold text-ink">
-              {t("home.grownUps", lang)}
-            </h2>
-            <DemoButton lang={lang} onLoaded={startDemo} onCleared={endDemo} />
-          </footer>
         </>
       )}
 
@@ -541,6 +495,11 @@ export default function App() {
 
       {/* The picture questions: one per screen, each skippable. Which comes
           next depends on the answers so far (lib/questions.ts). */}
+      {/* One kind line, written in advance and chosen by a rule (lib/warm.ts):
+          to what happened, and to an adult. The face the child tapped is
+          answered before this, by MoodReply. */}
+      {step !== "picWhat" && step === afterWhat && <WarmLine line={whatLine(picks.what)} lang={lang} />}
+      {step === "picAdultWhere" && <WarmLine line={ADULT_LINE} lang={lang} />}
       {step === "picWhat" && (
         <WhatQuestion lang={lang} value={picks.what} onChange={pick("what")} onNext={advance("picWhat")} />
       )}
@@ -578,7 +537,7 @@ export default function App() {
       {step === "picReview" && (
         <PictureReview
           lang={lang}
-          choices={answersFor(picks)}
+          choices={answersFor(picks, checkInMood)}
           onSave={keepPictures}
           onChange={() => setStep("picWhat")}
           onNext={() => finishPictures(false)}
@@ -715,16 +674,16 @@ export default function App() {
  * one thing CLAUDE.md says this screen may not leave out.
  */
 function EmergencyHelp({ lang }: { lang: Lang }) {
-  const [contacts, setContacts] = useState<Resource[] | null>(null);
-  const [failed, setFailed] = useState(false);
+  // Built into the app (lib/contacts.ts): 110 and 112 show even offline or
+  // while the server wakes up. The fetch only refreshes them, and a failure
+  // keeps them on screen.
+  const [contacts, setContacts] = useState<readonly Resource[]>(BUILT_IN_EMERGENCY);
 
-  // Fetched when the panel mounts rather than when it opens: a child in a
-  // crisis should not wait on a request they have already asked for.
   useEffect(() => {
     let live = true;
     emergency(lang)
-      .then((res) => live && setContacts(res.contacts))
-      .catch(() => live && setFailed(true));
+      .then((res) => live && res.contacts.length > 0 && setContacts(res.contacts))
+      .catch(() => {});
     return () => {
       live = false;
     };
@@ -738,10 +697,6 @@ function EmergencyHelp({ lang }: { lang: Lang }) {
 
       <div className="flex flex-col gap-3 px-4 pb-4">
         <h2 className="text-sm font-medium text-ink-soft">{t("help.title", lang)}</h2>
-
-        {/* The network is the one thing that can fail here, and a child in a
-            crisis is owed a reason rather than an empty box. */}
-        {failed && <p className="text-base">{t("errors.network", lang)}</p>}
 
         {/* What "Leave now" does and does not do, said here once (it is no
             longer under the button on every screen). */}

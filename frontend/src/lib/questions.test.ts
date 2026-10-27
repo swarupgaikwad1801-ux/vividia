@@ -65,6 +65,16 @@ test("an adult gets one gentle question, then straight to the card", () => {
   assert.equal(nextQuestion("picAdultWhere", picks({ kind: ["adult"] })), "picReview");
 });
 
+test("a face tapped at the check-in is not asked about again; a skipped check-in is", () => {
+  assert.deepEqual(questionsFor(NO_PICKS, "sad"), ["picWhat", "picWhere", "picWho", "picOften"]);
+  assert.ok(questionsFor(NO_PICKS, null).includes("picFeel"));
+  assert.equal(nextQuestion("picOften", NO_PICKS, "scared"), "picReview");
+  assert.equal(nextQuestion("picOften", NO_PICKS, null), "picFeel");
+  // The map loses the stop too, so the traveller never walks to a question
+  // that will not come.
+  assert.equal(mapFor("picWhat", NO_PICKS, "sad")?.places.length, 1 + 4 + 3);
+});
+
 test("'I don't want to say' on Who? never opens the adult question", () => {
   assert.ok(!questionsFor(picks({ howMany: [NO_SAY], kind: [] })).includes("picAdultWhere"));
 });
