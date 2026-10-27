@@ -7,6 +7,7 @@ import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
 import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
+import MoodReply from "./screens/MoodReply";
 import LanguageButton from "./components/LanguageButton";
 import DisplayButton from "./components/DisplayButton";
 import Onboarding from "./screens/Onboarding";
@@ -226,7 +227,9 @@ export default function App() {
   const afterCheckIn = useCallback(
     (mood: string | null) => {
       setCheckInMood(mood);
-      setStep("picWhat");
+      // An answer to the face first (screens/MoodReply.tsx), not "What
+      // happened?": after "Good" that question assumed something had.
+      setStep("checkInReply");
     },
     [setStep],
   );
@@ -514,6 +517,16 @@ export default function App() {
         </>
       )}
 
+      {step === "checkInReply" && (
+        <MoodReply
+          lang={lang}
+          mood={checkInMood}
+          onPictures={() => setStep("picWhat")}
+          onWrite={() => setStep("listen")}
+          onHome={() => setTrail([HOME])}
+        />
+      )}
+
       {/* The picture questions: one per screen, each skippable. Which comes
           next depends on the answers so far (lib/questions.ts). */}
       {step === "picWhat" && (
@@ -561,7 +574,13 @@ export default function App() {
         />
       )}
       {step === "picMore" && (
-        <MoreQuestion lang={lang} onWrite={() => setStep("listen")} onNoThanks={() => setStep("handoff")} />
+        <MoreQuestion
+          lang={lang}
+          onWrite={() => setStep("listen")}
+          onMakeCard={() => setStep("handoff")}
+          // The answers are saved by now; "No thanks" means nothing more today.
+          onNoThanks={() => setTrail([HOME])}
+        />
       )}
 
       {step === "listen" && (

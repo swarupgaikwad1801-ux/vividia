@@ -21,6 +21,7 @@ export type Step =
   | "language" // first run, and the 🌐 button on the check-in
   | "onboarding" // three picture cards: after the language, and on request
   | "checkIn" // the emoji check-in: the step that needs no language
+  | "checkInReply" // an answer to the face, then pictures, writing, or stop
   // The picture questions (screens/PictureQuestions.tsx), one per screen, so
   // Back goes one question back.
   | "picWhat"

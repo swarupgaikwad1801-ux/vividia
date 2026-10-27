@@ -530,11 +530,18 @@ export function PictureReview({ lang, choices, onSave, onChange, onNext, promine
 export interface MoreQuestionProps {
   lang: string;
   onWrite: () => void;
+  /** "No thanks": nothing more today. The answers are already saved. */
   onNoThanks: () => void;
+  /**
+   * "Make a card", the card as its own choice. "No thanks" used to lead
+   * straight to choosing who sees it, but saying no to writing is not asking
+   * for a card (Swarup, 27 Oct). Not rendered when absent.
+   */
+  onMakeCard?: () => void;
 }
 
 /** "Thank you." and the offer to say more in their own words. Optional. */
-export function MoreQuestion({ lang, onWrite, onNoThanks }: MoreQuestionProps) {
+export function MoreQuestion({ lang, onWrite, onNoThanks, onMakeCard }: MoreQuestionProps) {
   return (
     <Screen id="q-more" title={t("q.more.title", lang)}>
       <p className="text-xl font-bold text-ink">{t("q.thanks", lang)}</p>
@@ -546,6 +553,15 @@ export function MoreQuestion({ lang, onWrite, onNoThanks }: MoreQuestionProps) {
         <span aria-hidden="true">✏️ </span>
         {t("q.more.yes", lang)}
       </button>
+      {onMakeCard && (
+        <button
+          type="button"
+          onClick={onMakeCard}
+          className="squish min-h-tap rounded-full border-[3px] border-ink bg-sun px-4 text-lg font-bold text-ink"
+        >
+          {t("heard.makeCard", lang)}
+        </button>
+      )}
       <button type="button" onClick={onNoThanks} className="squish min-h-tap rounded-full border-[3px] border-ink bg-surface px-4 text-lg font-bold text-ink">
         {t("q.more.no", lang)}
       </button>

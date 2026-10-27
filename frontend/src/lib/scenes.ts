@@ -23,6 +23,7 @@ export const SCENE: Record<Step, Scene> = {
   language: "sky",
   onboarding: "lilac",
   checkIn: "sun",
+  checkInReply: "sun",
   picWhat: "sky",
   picBody: "sun",
   picTaken: "lilac",
@@ -96,7 +97,7 @@ export function mapFor(step: Step, picks: Picks): { places: MapPlace[]; at: numb
   const places = [CHECK_IN, ...questions.map((q) => QUESTION_PLACE[q]), ...ENDING];
   const card = 1 + questions.length;
   let at: number;
-  if (step === "checkIn") at = 0;
+  if (step === "checkIn" || step === "checkInReply") at = 0;
   else if (isQuestion(step)) {
     const i = questions.indexOf(step);
     // A question the answers no longer lead to (seen after Back): stand on

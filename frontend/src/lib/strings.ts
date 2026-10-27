@@ -159,6 +159,43 @@ export const STRINGS = {
   "checkin.title": { en: "How are you today?", de: "Wie geht es dir heute?", hi: "Aaj kaisa lag raha hai?" },
   "checkin.skip": { en: "Skip", de: "Überspringen", hi: "Chhodo" },
 
+  // Right after the check-in (screens/MoodReply.tsx, lib/moodReply.ts): an
+  // answer to the face, then the child's choice. Swarup, 27 Oct: "Good" used
+  // to be followed by "What happened?". DRAFT for Neel's review.
+  "moodReply.good": { en: "That's great to hear!", de: "Das ist schön zu hören!", hi: "Ye sun ke achha laga!" },
+  "moodReply.ok": { en: "Thanks for telling us.", de: "Danke, dass du es uns sagst.", hi: "Batane ke liye thank you." },
+  "moodReply.sad": {
+    en: "We're sorry you feel sad.",
+    de: "Es tut uns leid, dass du traurig bist.",
+    hi: "Ye sun ke bura laga ki tum dukhi ho.",
+  },
+  "moodReply.scared": { en: "Feeling scared is hard.", de: "Angst zu haben ist schwer.", hi: "Darr lagna mushkil hota hai." },
+  "moodReply.angry": { en: "It's okay to feel angry.", de: "Es ist okay, wütend zu sein.", hi: "Gussa aana theek hai." },
+  "moodReply.alone": {
+    en: "Feeling lonely is hard.",
+    de: "Sich einsam zu fühlen ist schwer.",
+    hi: "Akela mehsoos karna mushkil hota hai.",
+  },
+  "moodReply.skipped": {
+    en: "Do you want to tell us something?",
+    de: "Möchtest du uns etwas erzählen?",
+    hi: "Kuch batana hai?",
+  },
+  "moodReply.anything": {
+    en: "If something still happened, you can tell us. You don't have to.",
+    de: "Wenn trotzdem etwas passiert ist, kannst du es uns erzählen. Du musst nicht.",
+    hi: "Agar phir bhi kuch hua, toh humein batao. Zaroori nahi hai.",
+  },
+  "moodReply.tellUs": {
+    en: "Do you want to tell us what happened?",
+    de: "Möchtest du uns erzählen, was passiert ist?",
+    hi: "Kya hua, batana hai?",
+  },
+  "moodReply.pictures": { en: "Tap pictures", de: "Bilder antippen", hi: "Pictures dabao" },
+  "moodReply.write": { en: "Write it my way", de: "Selbst schreiben", hi: "Apne tareeke se likho" },
+  "moodReply.done": { en: "That's all for today", de: "Das war's für heute", hi: "Aaj ke liye bas" },
+  "moodReply.bye": { en: "Okay! Come back any time.", de: "Okay! Komm jederzeit wieder.", hi: "Okay! Jab chaho wapas aao." },
+
   // The listening screen (screens/Listen.tsx). Swarup, 27 Oct: "listen to
   // the child first and talk to them, then offer the card".
   //
