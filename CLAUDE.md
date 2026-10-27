@@ -149,7 +149,7 @@ available: for most of a child's week, it is not.
 | 4 | **Choose who hears it**: handoff card for one trusted adult, with a 5-minute guide for that adult. Child-initiated only | Must |
 | 7 | **Talk to a professional**: route to krisenchat / 116 111, bringing the words already written | Must |
 | 8 | **Don't get dropped**: follow-up check-ins + escalation ladder that carries the timeline | Must |
-| + | **Safety floor**: if the child writes about danger or self-harm, show 110/112 and krisenchat at once. Nothing is sent to anyone | Must |
+| + | **Safety floor**: if the child writes about danger or self-harm, or picks "hit" or "threatened", a pop-up opens at once with 110/112 as tap-to-call buttons and krisenchat with its languages; "Continue" closes it and keeps what the child entered. The red Need help glow stays as well. Nothing is sent to anyone | Must |
 | + | **Quick exit + PIN lock** | Must |
 | + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
 | + | **Picture incident builder**: tap icons for what happened, where and who (pushed, hit, names, things taken, online, left out). For children who can't write either | Tier A |
