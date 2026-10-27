@@ -62,6 +62,8 @@ import {
   type Choices,
 } from "../lib/pictures";
 import { t, type StringKey } from "../lib/strings";
+import { SpokenQuestion } from "../components/ReadAloud";
+
 
 // --- the pieces ----------------------------------------------------------------
 
@@ -172,13 +174,24 @@ function Footer({ lang, ready, onNext, onSkip }: { lang: string; ready: boolean;
   );
 }
 
-function Screen({ id, title, hint, children }: { id: string; title: string; hint?: string; children: ReactNode }) {
+function Screen({
+  lang,
+  id,
+  title,
+  hint,
+  children,
+}: {
+  lang: string;
+  id: string;
+  title: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-4 px-4 py-5">
       <header className="flex flex-col gap-1">
-        <h1 id={id} className="text-3xl text-balance">
-          {title}
-        </h1>
+        {/* Every screen here asks one question; the speaker reads just that. */}
+        <SpokenQuestion lang={lang} id={id} text={title} className="text-3xl text-balance" />
         {hint && <p className="text-base font-medium text-ink">{hint}</p>}
       </header>
       {children}
@@ -219,7 +232,7 @@ export interface QuestionProps {
 /** What happened? Several answers allowed. */
 export function WhatQuestion({ lang, value, onChange, onNext }: QuestionProps) {
   return (
-    <Screen id="q-what" title={t("q.what.title", lang)} hint={t("q.what.hint", lang)}>
+    <Screen lang={lang} id="q-what" title={t("q.what.title", lang)} hint={t("q.what.hint", lang)}>
       <TileGrid tiles={tilesFor("what", WHAT, lang)} value={value} multi name="q-what" labelledBy="q-what" onChange={onChange} />
       <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
@@ -229,7 +242,7 @@ export function WhatQuestion({ lang, value, onChange, onNext }: QuestionProps) {
 /** Where? One answer. */
 export function WhereQuestion({ lang, value, onChange, onNext }: QuestionProps) {
   return (
-    <Screen id="q-where" title={t("q.where.title", lang)} hint={t("q.pickOne", lang)}>
+    <Screen lang={lang} id="q-where" title={t("q.where.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tilesFor("where", WHERE, lang)} value={value} multi={false} name="q-where" labelledBy="q-where" onChange={onChange} cols={2} />
       <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
@@ -239,7 +252,7 @@ export function WhereQuestion({ lang, value, onChange, onNext }: QuestionProps) 
 /** How often? One answer. */
 export function OftenQuestion({ lang, value, onChange, onNext }: QuestionProps) {
   return (
-    <Screen id="q-often" title={t("q.often.title", lang)} hint={t("q.pickOne", lang)}>
+    <Screen lang={lang} id="q-often" title={t("q.often.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tilesFor("often", OFTEN, lang)} value={value} multi={false} name="q-often" labelledBy="q-often" onChange={onChange} cols={2} />
       <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
@@ -265,7 +278,7 @@ export function WhoQuestion({ lang, howMany, kind, onChange, onNext }: WhoQuesti
   const noSayTile = tilesFor("who", HOW_MANY, lang).find((tile) => tile.code === NO_SAY)!;
   const answered = noSay || howMany.length > 0 || kind.length > 0;
   return (
-    <Screen id="q-who" title={t("q.who.title", lang)}>
+    <Screen lang={lang} id="q-who" title={t("q.who.title", lang)}>
       <h2 id="q-who-many" className="text-lg font-bold text-ink">
         {t("q.who.howMany", lang)}
       </h2>
@@ -317,7 +330,7 @@ export function FeelQuestion({ lang, value, onChange, onNext }: QuestionProps) {
     { code: NO_SAY, label: t("q.noSay", lang), picture: <QuestionPicture kind="what" code={NO_SAY} className="h-14 w-full" /> },
   ];
   return (
-    <Screen id="q-feel" title={t("q.feel.title", lang)} hint={t("q.pickOne", lang)}>
+    <Screen lang={lang} id="q-feel" title={t("q.feel.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tiles} value={value} multi={false} name="q-feel" labelledBy="q-feel" onChange={onChange} />
       <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
@@ -350,7 +363,7 @@ export function FollowUpQuestion({ step, lang, value, onChange, onNext }: Follow
   const q = FOLLOW_UPS[step];
   const id = `q-${step}`;
   return (
-    <Screen id={id} title={t(q.title, lang)} hint={t("q.pickOne", lang)}>
+    <Screen lang={lang} id={id} title={t(q.title, lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tilesFor(q.kind, q.list, lang)} value={value} multi={false} name={id} labelledBy={id} onChange={onChange} cols={q.cols} />
       <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
@@ -365,7 +378,7 @@ export function FollowUpQuestion({ step, lang, value, onChange, onNext }: Follow
 export function OwnWordsQuestion({ lang, value, onChange, onNext }: QuestionProps) {
   const text = value[0] ?? "";
   return (
-    <Screen id="q-own" title={t("q.own.title", lang)} hint={t("q.own.hint", lang)}>
+    <Screen lang={lang} id="q-own" title={t("q.own.title", lang)} hint={t("q.own.hint", lang)}>
       <textarea
         aria-labelledby="q-own"
         value={text}
@@ -408,7 +421,7 @@ export function PictureReview({ lang, choices, onSave, onChange, onNext, promine
   const help = needsHelpRoute(choices);
 
   return (
-    <Screen id="q-review" title={t("approve.title", lang)} hint={lines.length ? t("q.review.hint", lang) : undefined}>
+    <Screen lang={lang} id="q-review" title={t("approve.title", lang)} hint={lines.length ? t("q.review.hint", lang) : undefined}>
       {/* The safety floor: on danger, the red Need help button in the top bar
           pulses. No red line in the screen (Neel, 26 Oct: "remove the
           emergency message"); help is one tap away on every screen. */}
@@ -459,7 +472,7 @@ export interface MoreQuestionProps {
 /** "Thank you." and the offer to say more in their own words. Optional. */
 export function MoreQuestion({ lang, onWrite, onNoThanks }: MoreQuestionProps) {
   return (
-    <Screen id="q-more" title={t("q.more.title", lang)}>
+    <Screen lang={lang} id="q-more" title={t("q.more.title", lang)}>
       <p className="text-xl font-bold text-ink">{t("q.thanks", lang)}</p>
       <button
         type="button"

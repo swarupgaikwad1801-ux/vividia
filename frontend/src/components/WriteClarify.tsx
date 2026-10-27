@@ -1,5 +1,6 @@
 import type { Ambiguity } from "../types/api.ts";
 import { t } from "../lib/strings.ts";
+import { SpokenQuestion } from "./ReadAloud.tsx";
 
 /**
  * The question to the child — the thing this whole product is for.
@@ -82,7 +83,7 @@ export default function WriteClarify({
       className="flex flex-col gap-4 rounded-card border border-calm/30 bg-surface p-4"
     >
       <header className="flex flex-col gap-1">
-        <h2 className="text-lg font-medium">{t("clarify.title", lang)}</h2>
+        <SpokenQuestion as="h2" lang={lang} text={t("clarify.title", lang)} className="text-lg font-medium" />
         <p className="text-sm text-ink-soft">{t("clarify.hint", lang)}</p>
       </header>
 

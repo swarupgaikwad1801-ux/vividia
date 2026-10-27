@@ -25,6 +25,7 @@
  */
 
 import { says } from "../lib-followups-ui/copy.ts";
+import { SpokenQuestion } from "./ReadAloud.tsx";
 
 /** The child's own word for how things are. Never inferred, never scored. */
 export type CheckInAnswer = "better" | "same" | "worse";
@@ -56,7 +57,13 @@ export default function FollowUpCheckIn({
       aria-labelledby="followup-title"
       className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
     >
-      <h2 id="followup-title" className="text-lg font-medium" {...says("followup.title", lang)} />
+      <SpokenQuestion
+        as="h2"
+        id="followup-title"
+        lang={says("followup.title", lang).lang}
+        text={says("followup.title", lang).children}
+        className="text-lg font-medium"
+      />
       <p className="text-base text-ink-soft" {...says("followup.gap", lang)} />
       {/* Read before choosing, not after: the child should know nothing leaves
           this phone before they touch any of the three buttons. */}

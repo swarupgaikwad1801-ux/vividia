@@ -18,9 +18,13 @@
  *
  * - `en`: any local English voice.
  * - `de`: a local German voice.
- * - `hi` (Hinglish, Roman letters): a local Hindi voice first, then Indian
- *   English, which reads romanised Hindi the way the child would say it.
- *   A British or American voice would mangle it, so it is not offered.
+ * - `hi` (Hinglish, Roman letters): Indian English first, which reads
+ *   romanised Hindi the way the child would say it; a Hindi voice only as a
+ *   fallback, because on Neel's phone (27 Oct) it mangled Roman letters. A
+ *   British or American voice would too, so it is not offered.
+ *
+ * The utterance carries the language of the voice it uses, so the engine
+ * never reads with one voice under another language's rules.
  */
 
 import type { Lang } from "./strings.ts";
@@ -37,11 +41,8 @@ export interface VoiceLike {
 const WANTED: Record<Lang, readonly string[]> = {
   en: ["en"],
   de: ["de"],
-  hi: ["hi", "en-in"],
+  hi: ["en-in", "hi"],
 };
-
-/** The tag the utterance carries, so the engine knows how to read the text. */
-export const UTTERANCE_LANG: Record<Lang, string> = { en: "en", de: "de-DE", hi: "hi-IN" };
 
 /** The best on-device voice for a screen's language, or null if it has none. */
 export function pickVoice<V extends VoiceLike>(voices: readonly V[], lang: Lang): V | null {
@@ -92,14 +93,14 @@ export function stopSpeaking(): void {
  * Returns false when it could not start. `onEnd` runs when it finishes or is
  * stopped.
  */
-export function speak(text: string, lang: Lang, voice: SpeechSynthesisVoice, onEnd: () => void): boolean {
+export function speak(text: string, voice: SpeechSynthesisVoice, onEnd: () => void): boolean {
   const engine = synth();
   if (!engine || !text.trim() || typeof SpeechSynthesisUtterance === "undefined") return false;
   try {
     engine.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.voice = voice;
-    utterance.lang = UTTERANCE_LANG[lang];
+    utterance.lang = utteranceLang(voice);
     utterance.rate = 0.9;
     utterance.onend = onEnd;
     utterance.onerror = onEnd;
@@ -110,16 +111,7 @@ export function speak(text: string, lang: Lang, voice: SpeechSynthesisVoice, onE
   }
 }
 
-/**
- * A screen's visible text (`innerText` of the live screen, which skips hidden
- * parts) as one string to read. Each line ends with a full stop, so the voice
- * pauses between a title and each choice instead of running them together.
- */
-export function readableText(visible: string): string {
-  return visible
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => (/[.?!:…।]$/.test(line) ? line : `${line}.`))
-    .join(" ");
+/** The voice's own language, as a BCP-47 tag ("en_IN" on Android becomes "en-IN"). */
+export function utteranceLang(voice: Pick<VoiceLike, "lang">): string {
+  return voice.lang.replace("_", "-");
 }

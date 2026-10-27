@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, clarify, translate } from "../lib/api.ts";
 import type { TranslateResponse } from "../types/api.ts";
 import { t } from "../lib/strings.ts";
+import { SpokenQuestion } from "../components/ReadAloud.tsx";
 import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
@@ -230,9 +231,7 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
       className="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 py-6 sm:max-w-2xl"
     >
       <header className="flex flex-col gap-1">
-        <h1 id="write-title" className="text-2xl">
-          {t("write.title", lang)}
-        </h1>
+        <SpokenQuestion lang={lang} id="write-title" text={t("write.title", lang)} className="text-2xl" />
         <p id="write-hint" className="text-base text-ink-soft">
           {t("write.hint", lang)}
         </p>

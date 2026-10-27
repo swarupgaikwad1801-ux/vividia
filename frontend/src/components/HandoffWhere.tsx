@@ -13,6 +13,7 @@
 import { WHERE_OPTIONS, type WhereItHappens } from "./HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
 import { PlacePicture } from "../art/Things.tsx";
+import { SpokenQuestion } from "./ReadAloud.tsx";
 
 export interface HandoffWhereProps {
   lang: string;
@@ -24,9 +25,13 @@ export interface HandoffWhereProps {
 export default function HandoffWhere({ lang, value, onChoose }: HandoffWhereProps) {
   return (
     <section aria-labelledby="handoff-where-title" className="flex flex-col gap-4">
-      <h2 id="handoff-where-title" className="headline text-3xl text-balance">
-        {t("where.title", lang)}
-      </h2>
+      <SpokenQuestion
+        as="h2"
+        lang={lang}
+        id="handoff-where-title"
+        text={t("where.title", lang)}
+        className="headline text-3xl text-balance"
+      />
 
       {/*
         Real radios rather than buttons: this is one answer out of four, and a

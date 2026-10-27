@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import CheckIn from "./screens/CheckIn";
 import Escalation from "./screens/Escalation";
@@ -9,7 +9,6 @@ import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
 import LanguageButton from "./components/LanguageButton";
 import DisplayButton from "./components/DisplayButton";
-import ReadAloud from "./components/ReadAloud";
 import Onboarding from "./screens/Onboarding";
 import {
   FeelQuestion,
@@ -144,8 +143,6 @@ export default function App() {
   // must never do. `Write` reports every keystroke up here and reads it back
   // when it mounts again.
   const [draft, setDraft] = useState("");
-  // The screen being shown, for the read-aloud button to read.
-  const screenRef = useRef<HTMLDivElement>(null);
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
   // The child's two handoff answers, kept so Back from the big card returns
@@ -376,24 +373,10 @@ export default function App() {
         />
       )}
 
-      {/* Read-aloud for the screen below, on-device voices only, and only
-          where the phone has one for this language (lib/speech.ts). Outside
-          the screen, so it does not read its own label; keyed by step, so
-          moving on stops the voice. Not on the first-run language picker,
-          whose words are the language names themselves. */}
-      {step !== "language" && (
-        <div className="flex justify-end px-4 pt-2">
-          <ReadAloud key={step} lang={lang} target={screenRef} />
-        </div>
-      )}
-
       {/* Keyed by step, so each new place slides in. Quiet scenes do not
-          move. Reduced motion stops it anyway (index.css). */}
-      <div
-        key={step}
-        ref={screenRef}
-        className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}
-      >
+          move. Reduced motion stops it anyway (index.css). Read-aloud sits
+          beside each screen's question (components/ReadAloud.tsx). */}
+      <div key={step} className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}>
       {step === "language" && (
         <LanguageSetup
           lang={lang}
