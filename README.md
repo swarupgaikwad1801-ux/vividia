@@ -260,9 +260,9 @@ English**, and that the architecture is language-independent.
 
 ## Demo
 
-- Live demo: _TBD_. No API key needed: press **"Try the demo story"** to load
-  Amara's timeline, then send the prefilled sentence and watch the app ask
-  what she meant. Amara is a made-up example; no real child is shown.
+- Live demo: _TBD_. No API key needed: tap a face, choose **"Write it my
+  way"**, and write a sentence such as *"He said he would get me after
+  school"*, then make a card and watch the app ask what was meant.
 - Video: _TBD_
 - Benchmark: 50 English and 30 Hindi sentences, drafted by the team with
   Claude's help and then read line by line by a team member who speaks the
