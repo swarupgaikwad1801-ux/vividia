@@ -149,7 +149,7 @@ available: for most of a child's week, it is not.
 | 4 | **Choose who hears it**: handoff card for one trusted adult, with a 5-minute guide for that adult. Child-initiated only | Must |
 | 7 | **Talk to a professional**: route to krisenchat / 116 111, bringing the words already written | Must |
 | 8 | **Don't get dropped**: follow-up check-ins + escalation ladder that carries the timeline | Must |
-| + | **Safety floor**: if the child writes about danger or self-harm, show 110/112 and krisenchat at once. Nothing is sent to anyone | Must |
+| + | **Safety floor**: if the child writes about danger or self-harm, or picks "hit" or "threatened", a pop-up opens at once with 110/112 as tap-to-call buttons and krisenchat with its languages; "Continue" closes it and keeps what the child entered. The red Need help glow stays as well. Nothing is sent to anyone | Must |
 | + | **Quick exit + PIN lock** | Must |
 | + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
 | + | **Picture incident builder**: tap icons for what happened, where and who (pushed, hit, names, things taken, online, left out). For children who can't write either | Tier A |
@@ -425,6 +425,13 @@ machine-graded score in a language nobody on the team can check.
 Honesty rule that follows: we say the system is **built and measured for
 Hindi and English**, and that the architecture is language-independent. We do
 not claim it works in Arabic, Ukrainian or Turkish, and we do not demo them.
+
+**Screens for `hi` are Hinglish** (Hindi in Latin letters, informal "tum").
+Feature names and buttons ("Leave now", "Need help") stay
+English on those screens (`ENGLISH_IN_HINGLISH` in `strings.ts`); questions,
+answers and anything said to the child are Hinglish. Hindi copy is unreviewed
+(`HINDI_REVIEWED = false`). The language code stays `hi`. Engine questions, errors and safety
+messages for `hi` are Hinglish too (#93).
 
 The demo child is Hindi-speaking. Pick the name with the team; "Amira" no
 longer fits.

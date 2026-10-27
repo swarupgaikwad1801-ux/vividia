@@ -5,28 +5,55 @@ import Escalation from "./screens/Escalation";
 import FollowUp from "./screens/FollowUp";
 import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
-import { HelpScreen } from "./screens/HelpScreen";
+import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
+import LanguageButton from "./components/LanguageButton";
+import DisplayButton from "./components/DisplayButton";
 import Onboarding from "./screens/Onboarding";
+import {
+  FeelQuestion,
+  FollowUpQuestion,
+  MoreQuestion,
+  OwnWordsQuestion,
+  OftenQuestion,
+  PictureReview,
+  WhatQuestion,
+  WhereQuestion,
+  WhoQuestion,
+} from "./screens/PictureQuestions";
 import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
 import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
 import Write from "./screens/Write";
 
+import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
-import { HelpButton } from "./components/HelpButton";
 import QuickExitButton from "./components/QuickExitButton";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
-import { back, canGoBack, current, go, start, type Step } from "./lib/nav";
+import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } from "./lib/nav";
+import { MOOD_CODES } from "./lib/moods";
+import { NO_PICKS, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
+import { SCENE, mapFor } from "./lib/scenes";
+import {
+  ANSWER_OF,
+  adultRoute,
+  answersFor,
+  nextQuestion,
+  questionsFor,
+  wroteOwnWords,
+  type QuestionStep,
+} from "./lib/questions";
+import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
+import { applyDocumentLang } from "./lib-lang/languages";
 import type { ReportResponse, Resource } from "./types/api";
 
 /**
@@ -52,8 +79,8 @@ import type { ReportResponse, Resource } from "./types/api";
  *
  * 3. **Help is reachable from everywhere**, including from inside the lock.
  *    `lib/pin.ts` says it plainly: a child who has forgotten their PIN still
- *    needs 110. `HelpButton` therefore sits outside the switch beside the
- *    quick exit, and help is a step on the Back trail (`lib/nav.ts`), so
+ *    needs 110. The red Need help pill therefore sits outside the switch,
+ *    beside Leave now in the quick exit's bar, and help is a step on the Back trail (`lib/nav.ts`), so
  *    "back" returns them to the screen they left rather than to the start.
  *
  *    Behind the lock it is `EmergencyHelp` instead, which opens in place and
@@ -129,36 +156,112 @@ export default function App() {
   // to the same choice, and so the big card names the same person.
   const [where, setWhere] = useState<WhereItHappens | null>(null);
   const [adult, setAdult] = useState<AdultId | null>(null);
+  // The child's traveller on the map: a picture, stored only on this phone.
+  const [avatar, setAvatar] = useState(() => loadAvatar());
+  // The picture answers, question by question, kept here so Back returns to
+  // each question as the child left it. Nothing is stored until the child
+  // says the lines are right.
+  const [picks, setPicks] = useState<Picks>(NO_PICKS);
+  const [checkInMood, setCheckInMood] = useState<string | null>(null);
+  const pick = useCallback(
+    (question: keyof Picks) => (next: string[]) => setPicks((now) => ({ ...now, [question]: next })),
+    [],
+  );
 
   const refreshEntries = useCallback(() => setEntries(listEntries()), []);
 
   useEffect(() => {
-    document.documentElement.lang = lang;
+    // hi-Latn for Hinglish, so a screen reader reads Roman Hindi as Hindi.
+    applyDocumentLang(lang);
   }, [lang]);
 
   // The timeline screen deletes entries in storage directly, so read them
   // again on every move: the card must never show a sentence the child deleted.
+  // Same for the traveller, which "delete everything" also clears.
   useEffect(() => {
     refreshEntries();
+    setAvatar(loadAvatar());
   }, [step, refreshEntries]);
 
   const chooseLang = useCallback(
     (next: Lang) => {
       setLang(next);
       saveLang(next);
-      // Straight after the first choice, so it is read once in the language
-      // the child just picked. No flag is stored: a first run already is one.
-      setStep("onboarding");
+      // First run: straight to the check-in (Neel, 26 Oct): the cards are not
+      // shown by default. "What this app does" at the bottom opens them.
+      // From the 🌐 button: back to where the child was. Only the language
+      // changes; the timeline, the draft and the picture answers are kept.
+      setTrail(afterLanguage);
+    },
+    [],
+  );
+
+  /**
+   * The check-in is a mood, not a diagnosis. It opens the picture questions
+   * (Neel, 26 Oct: ask, don't make the child write) and is never stored as a
+   * judgement about the child: `CLAUDE.md` is explicit that the app works
+   * nothing out about them and gives no risk score.
+   */
+  const afterCheckIn = useCallback(
+    (mood: string | null) => {
+      setCheckInMood(mood);
+      setStep("picWhat");
     },
     [setStep],
   );
 
   /**
-   * The check-in is a mood, not a diagnosis. It opens the writing screen and
-   * is never stored as a judgement about the child: `CLAUDE.md` is explicit
-   * that the app works nothing out about them and gives no risk score.
+   * The picture answers become one entry, saved because the child pressed
+   * "Yes, save it" on the lines it will carry. Marked as chosen from
+   * pictures, so the card never shows a tapped tile as a quote. Then the
+   * offer to write; Back from there goes home rather than to a screen that
+   * could save the same answers twice.
    */
-  const afterCheckIn = useCallback(() => setStep("write"), [setStep]);
+  /**
+   * The end of the questions, with or without saving. The child's own words
+   * (from "Something else") go to the writing screen, prefilled, where the
+   * German is checked and they approve it; otherwise the offer to write.
+   * Back from there goes home rather than to a screen that could save the
+   * same answers twice.
+   */
+  const finishPictures = useCallback(
+    (save: boolean) => {
+      const choices = answersFor(picks);
+      if (save) {
+        const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
+        addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
+        refreshEntries();
+      }
+      // An adult from home means the handoff must not suggest family: that
+      // answer wins over anything remembered.
+      const start = handoffWhereFor(choices.where, choices.adultWhere, Boolean(choices.whereOnline));
+      setWhere((now) => (start === "home" ? "home" : now ?? start));
+      const own = questionsFor(picks).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
+      setPicks(NO_PICKS);
+      if (own) {
+        setDraft(own);
+        setTrail([HOME, "write"]);
+      } else {
+        setTrail([HOME, "picMore"]);
+      }
+    },
+    [picks, checkInMood, lang, refreshEntries],
+  );
+  const keepPictures = useCallback(() => finishPictures(true), [finishPictures]);
+
+  /**
+   * Go on from a question. Skip has just cleared the answer, but that state
+   * update lands after this call, so the next question is worked out from
+   * the cleared answers here rather than from the stale ones.
+   */
+  const advance = useCallback(
+    (from: QuestionStep) => (skipped?: boolean) => {
+      const key = ANSWER_OF[from];
+      const now = skipped ? { ...picks, [key]: [], ...(from === "picWho" ? { kind: [] } : {}) } : picks;
+      setStep(nextQuestion(from, now));
+    },
+    [picks, setStep],
+  );
 
   /**
    * The ONLY path by which an entry is written, and it runs because the child
@@ -167,12 +270,15 @@ export default function App() {
    */
   const keepWords = useCallback(
     (approved: { text_child: string; text_de: string }) => {
-      addEntry({
-        date: new Date().toISOString().slice(0, 10),
-        mood: "",
-        text_child: approved.text_child,
-        text_de: approved.text_de,
-      });
+      addEntry(
+        {
+          date: new Date().toISOString().slice(0, 10),
+          mood: "",
+          text_child: approved.text_child,
+          text_de: approved.text_de,
+        },
+        "words",
+      );
       // Saved, so it is no longer a draft: the next visit to Write is empty.
       setDraft("");
       refreshEntries();
@@ -181,9 +287,8 @@ export default function App() {
     [refreshEntries, setStep],
   );
 
-  // The red Need help button, from every screen: the people who can help
-  // (screens/HelpScreen.tsx, #85). It goes on the trail like any other step,
-  // so Back returns to the screen the child was on, with their draft kept.
+  // The red Need help button, from every screen: the calm list of people who
+  // can help (screens/HelpScreen.tsx). Back returns to where the child was.
   //
   // NOT used by the lock. While locked, help is `EmergencyHelp` below, which
   // never moves `step` - a lock with a button that navigates was the leak.
@@ -195,37 +300,49 @@ export default function App() {
   // words. The previous version made this a `step`, and the one control on
   // the locked screen navigated straight past it.
   if (!unlocked) {
+    // The lock is a quiet scene: plain colour, no map, no motion.
     return (
-      <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
-        <div className="flex justify-end px-4 pt-3">
-          <QuickExitButton lang={lang} />
+      <div data-scene="quiet" className="min-h-dvh bg-scene">
+        <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
+          <div className="flex justify-end px-4 pt-3">
+            <QuickExitButton lang={lang} />
+          </div>
+          <PinUnlock
+            lang={lang}
+            // Help INSIDE the lock, which is why PinUnlock asks for it as a
+            // node rather than a callback: a child who cannot get past their
+            // own PIN still needs a way to reach 110. It opens in place rather
+            // than navigating, so the lock never leaves the screen.
+            help={<EmergencyHelp lang={lang} />}
+            onUnlocked={() => setUnlocked(true)}
+          />
         </div>
-        <PinUnlock
-          lang={lang}
-          // Help INSIDE the lock, which is why PinUnlock asks for it as a
-          // node rather than a callback: a child who cannot get past their
-          // own PIN still needs a way to reach 110. It opens in place rather
-          // than navigating, so the lock never leaves the screen.
-          help={<EmergencyHelp lang={lang} />}
-          onUnlocked={() => setUnlocked(true)}
-        />
       </div>
     );
   }
 
+  const scene = SCENE[step];
+  const onMap = mapFor(step, picks);
+
   return (
+    // One flat colour per place (lib/scenes.ts), filling the whole screen.
+    <div data-scene={scene} className="min-h-dvh bg-scene transition-colors duration-300">
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
-          quieter, so a child reaching for Leave now does not hit it. */}
-      <div className="flex items-start justify-between gap-4 px-4 pt-3">
+          quieter, so a child reaching for Leave now does not hit it. Need
+          help (red) sits left of Leave now (dark outline), a gap apart. */}
+      <div className="top-bar flex items-center justify-between gap-2 px-4 pt-1">
+
         {canGoBack(trail) ? (
           <button
             type="button"
             onClick={goBack}
-            // nowrap + shrink-0: next to Leave now and its note, the arrow
-            // otherwise wraps onto its own line at 360px.
-            className="min-h-tap shrink-0 whitespace-nowrap rounded-card px-2 text-base font-medium text-ink-soft hover:text-ink"
+            // nowrap + shrink-0: next to Leave now, the arrow otherwise wraps
+            // onto its own line at 360px. `headline`: the titles' face (Neel,
+            // 26 Oct), but small, in the softer ink and with no outline, so
+            // it stays quieter than Leave now.
+            className="headline min-h-tap shrink-0 whitespace-nowrap rounded-card text-base text-ink-soft hover:text-ink"
           >
             <span aria-hidden="true">← </span>
             {t("nav.back", lang)}
@@ -233,24 +350,52 @@ export default function App() {
         ) : (
           <span />
         )}
-        {/* Need help (#85) beside Leave now, hidden on the help screen, where
-            it would point at itself. `shrink-0`: at 360px the quick exit's
-            line takes the rest of the row. */}
-        <div className="flex items-start gap-3">
-          {step !== "help" && (
-            <div className="shrink-0">
-              <HelpButton lang={lang} onOpen={needHelp} />
-            </div>
-          )}
-          <QuickExitButton lang={lang} />
-        </div>
+        <QuickExitButton
+          lang={lang}
+          beside={
+            step === "help" ? null : (
+              <button
+                type="button"
+                onClick={needHelp}
+                // need-help: pulses while a danger line is on screen (index.css).
+                className="need-help min-h-tap shrink-0 whitespace-nowrap rounded-full border-[3px] border-help bg-help px-2.5 text-sm font-bold text-page"
+              >
+                {t("help.short", lang)}
+              </button>
+            )
+          }
+        />
       </div>
 
-      {step === "language" && (
-        <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
+      {onMap !== null && (
+        <GameMap
+          places={onMap.places}
+          at={onMap.at}
+          avatar={avatar}
+          lang={lang}
+          onAvatar={(next) => {
+            setAvatar(next);
+            saveAvatar(next);
+          }}
+        />
       )}
 
-      {step === "onboarding" && <Onboarding lang={lang} onDone={() => setStep("checkIn")} />}
+      {/* Keyed by step, so each new place slides in. Quiet scenes do not
+          move. Reduced motion stops it anyway (index.css). Read-aloud sits
+          beside each screen's question (components/ReadAloud.tsx). */}
+      <div key={step} className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}>
+      {step === "language" && (
+        <LanguageSetup
+          lang={lang}
+          suggested={setup.suggested}
+          onChoose={chooseLang}
+          changing={canGoBack(trail)}
+        />
+      )}
+
+      {step === "onboarding" && (
+        <Onboarding lang={lang} onDone={() => setStep("checkIn")} />
+      )}
 
       {step === "checkIn" && (
         <>
@@ -259,16 +404,70 @@ export default function App() {
               handoff ending true. */}
           <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
           <CheckIn lang={lang} onChoose={afterCheckIn} />
-          {/* The promises stay readable after the first run, for the child
-              who skipped past them and for anyone they show the app to. */}
-          <button
-            type="button"
-            onClick={() => setStep("onboarding")}
-            className="min-h-tap mt-6 self-center rounded-card px-6 text-sm font-medium text-ink-soft underline underline-offset-4 hover:text-ink"
-          >
-            {t("onboarding.again", lang)}
-          </button>
+          {/* The three cards, on request only: small, at the bottom, for the
+              child who wants to know and for anyone they show the app to. */}
+          <div className="mx-4 mt-2 mb-6 flex flex-wrap justify-center gap-3">
+            <LanguageButton lang={lang} onOpen={() => setStep("language")} />
+            <DisplayButton lang={lang} />
+            <button
+              type="button"
+              onClick={() => setStep("onboarding")}
+              className="squish min-h-tap rounded-full border-2 border-ink bg-surface px-4 text-sm font-bold text-ink"
+            >
+              {t("onboarding.again", lang)}
+            </button>
+          </div>
         </>
+      )}
+
+      {/* The picture questions: one per screen, each skippable. Which comes
+          next depends on the answers so far (lib/questions.ts). */}
+      {step === "picWhat" && (
+        <WhatQuestion lang={lang} value={picks.what} onChange={pick("what")} onNext={advance("picWhat")} />
+      )}
+      {(step === "picBody" || step === "picTaken" || step === "picWhereOnline" || step === "picWhen" || step === "picAdultWhere") && (
+        <FollowUpQuestion
+          key={step}
+          step={step}
+          lang={lang}
+          value={picks[ANSWER_OF[step]]}
+          onChange={pick(ANSWER_OF[step])}
+          onNext={advance(step)}
+        />
+      )}
+      {step === "picOwn" && (
+        <OwnWordsQuestion lang={lang} value={picks.own} onChange={pick("own")} onNext={advance("picOwn")} />
+      )}
+      {step === "picWhere" && (
+        <WhereQuestion lang={lang} value={picks.where} onChange={pick("where")} onNext={advance("picWhere")} />
+      )}
+      {step === "picWho" && (
+        <WhoQuestion
+          lang={lang}
+          howMany={picks.howMany}
+          kind={picks.kind}
+          onChange={(next) => setPicks((now) => ({ ...now, ...next }))}
+          onNext={(skipped) => advance("picWho")(skipped)}
+        />
+      )}
+      {step === "picOften" && (
+        <OftenQuestion lang={lang} value={picks.often} onChange={pick("often")} onNext={advance("picOften")} />
+      )}
+      {step === "picFeel" && (
+        <FeelQuestion lang={lang} value={picks.feel} onChange={pick("feel")} onNext={advance("picFeel")} />
+      )}
+      {step === "picReview" && (
+        <PictureReview
+          lang={lang}
+          choices={answersFor(picks)}
+          onSave={keepPictures}
+          onChange={() => setStep("picWhat")}
+          onNext={() => finishPictures(false)}
+          prominentHelp={adultRoute(picks)}
+        />
+      )}
+      {step === "picMore" && (
+        <MoreQuestion lang={lang} onWrite={() => setStep("write")} onNoThanks={() => setStep("handoff")} />
       )}
 
       {step === "write" && (
@@ -277,7 +476,6 @@ export default function App() {
           initialText={draft}
           onTextChange={setDraft}
           onApproved={keepWords}
-          onNeedHelp={needHelp}
         />
       )}
 
@@ -335,9 +533,9 @@ export default function App() {
 
       {step === "pinSet" && <PinSet lang={lang} onDone={() => setStep("timeline")} />}
 
-      {/* Back to the screen they left, not to the start: help is a step on
-          the trail like any other (lib/nav.ts). */}
-      {step === "help" && <HelpScreen lang={lang} onBack={goBack} />}
+      {step === "help" && <HelpScreen lang={lang} />}
+      </div>
+    </div>
     </div>
   );
 }
@@ -400,6 +598,10 @@ function EmergencyHelp({ lang }: { lang: Lang }) {
         {/* The network is the one thing that can fail here, and a child in a
             crisis is owed a reason rather than an empty box. */}
         {failed && <p className="text-base">{t("errors.network", lang)}</p>}
+
+        {/* What "Leave now" does and does not do, said here once (it is no
+            longer under the button on every screen). */}
+        <p className="text-sm text-ink-soft">{t("quickExit.note", lang)}</p>
 
         {contacts?.map((contact) => (
           <section key={contact.name} className="flex flex-col gap-0.5">

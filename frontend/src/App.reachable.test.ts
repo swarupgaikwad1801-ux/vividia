@@ -24,6 +24,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { NO_PICKS, WHAT, type Picks } from "./lib/pictures.ts";
+import { nextQuestion, questionsFor } from "./lib/questions.ts";
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SOURCE = readFileSync(join(HERE, "App.tsx"), "utf-8");
 // The union moved to lib/nav.ts with the Back button (#75); App.tsx still
@@ -38,9 +41,32 @@ function declaredSteps(): string[] {
   return [...code.matchAll(/"([a-zA-Z]+)"/g)].map((m) => m[1]);
 }
 
-/** Every string literal passed to `setStep(...)`. */
+/**
+ * Every step App.tsx can navigate to: a literal passed to `setStep(...)`, a
+ * literal in a trail set whole (`setTrail([HOME, "picMore"])`), and every
+ * step the question tree can hand to `setStep(nextQuestion(...))`. The tree's
+ * steps are not guessed from its source: the tree is asked, once per answer to
+ * "What happened?" and once for the adult route, so a question it can never
+ * produce does not count as reached.
+ */
 function assignedSteps(): Set<string> {
-  return new Set([...SOURCE.matchAll(/setStep\(\s*"([a-zA-Z]+)"/g)].map((m) => m[1]));
+  const steps = new Set([...SOURCE.matchAll(/setStep\(\s*"([a-zA-Z]+)"/g)].map((m) => m[1]));
+  for (const call of SOURCE.matchAll(/setTrail\(\s*\[([^\]]*)\]/g)) {
+    for (const m of call[1].matchAll(/"([a-zA-Z]+)"/g)) steps.add(m[1]);
+  }
+  if (/setStep\(\s*nextQuestion\(/.test(SOURCE)) {
+    const routes: Picks[] = [
+      NO_PICKS,
+      ...WHAT.map((choice) => ({ ...NO_PICKS, what: [choice.code] })),
+      { ...NO_PICKS, kind: ["adult"] },
+    ];
+    for (const picks of routes) {
+      const asked = questionsFor(picks);
+      for (const step of asked) steps.add(step);
+      steps.add(nextQuestion(asked[asked.length - 1], picks));
+    }
+  }
+  return steps;
 }
 
 test("the Step union is not empty, so the reader above is still working", () => {
@@ -82,6 +108,29 @@ test("the initial step is one of the declared steps", () => {
   for (const step of initial) {
     assert.ok(declared.has(step), `the initialiser can return "${step}", which is not a Step`);
   }
+});
+
+test("the three screens #82 fixed are reachable by name: follow-up, escalation, PIN", () => {
+  // The generic check above counts a step reached through the question tree
+  // or a whole trail. These three must not depend on that: they are the
+  // "don't get dropped" row and the lock, and each was dead once.
+  const declared = new Set(declaredSteps());
+  for (const step of ["escalation", "pinSet"]) {
+    assert.ok(declared.has(step), `"${step}" is not a Step any more`);
+    assert.match(SOURCE, new RegExp(`setStep\\(\\s*"${step}"`), `no setStep("${step}") in App.tsx`);
+    assert.match(SOURCE, new RegExp(`step === "${step}"`), `"${step}" has no screen in App.tsx`);
+  }
+
+  // followUp is not a step (as in #82): FollowUp gates itself and is rendered
+  // on the check-in, the screen the app opens on, with the door to the ladder.
+  assert.ok(!declared.has("followUp"), "followUp is a Step again: give it a door, or keep it in place");
+  const checkIn = SOURCE.match(/step === "checkIn" && \(([\s\S]*?)\n {6}\)\}/);
+  assert.ok(checkIn, "could not find the check-in block; this test has stopped working");
+  assert.match(
+    checkIn[1],
+    /<FollowUp\b[^>]*onOpen=\{\(\) => setStep\("escalation"\)\}/,
+    "FollowUp is not on the check-in with its door to escalation",
+  );
 });
 
 test("no screen is rendered for a step that does not exist", () => {

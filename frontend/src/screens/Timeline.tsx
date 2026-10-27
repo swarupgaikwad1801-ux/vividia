@@ -107,7 +107,7 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
       <PinRemovedNotice lang={lang} />
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("timeline.title", lang)}</h1>
+        <h1 className="text-2xl">{t("timeline.title", lang)}</h1>
         {/* Only ever a claim about this list. Never about the whole app. */}
         {persistent ? (
           <p className="text-sm text-ink-soft">{t("timeline.storageNote", lang)}</p>

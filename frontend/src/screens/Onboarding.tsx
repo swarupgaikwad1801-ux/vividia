@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { OnboardingPicture } from "../art/Things";
 import { ONBOARDING_CARDS } from "../lib/onboarding";
 import { fill, t } from "../lib/strings";
 import type { Lang } from "../lib/strings";
@@ -39,34 +40,35 @@ export default function Onboarding({ lang, onDone }: OnboardingProps) {
   const last = index === ONBOARDING_CARDS.length - 1;
 
   return (
-    <section className="flex flex-col gap-6" aria-labelledby="onboarding-title">
+    <section className="flex flex-col gap-6 px-4 py-6" aria-labelledby="onboarding-title">
       <div className="flex items-center justify-between gap-3">
-        <h1 id="onboarding-title" className="text-2xl font-semibold tracking-tight text-balance">
+        <h1 id="onboarding-title" className="text-3xl text-balance">
           {t("onboarding.title", lang)}
         </h1>
         {!last && (
           <button
             type="button"
             onClick={onDone}
-            className="min-h-tap rounded-card px-4 text-base font-medium text-ink-soft underline underline-offset-4 hover:text-ink"
+            className="min-h-tap shrink-0 rounded-full bg-surface px-4 text-base font-bold text-ink"
           >
             {t("onboarding.skip", lang)}
           </button>
         )}
       </div>
 
-      {/* aria-live so a screen reader reads the new card after Next. */}
+      {/* aria-live so a screen reader reads the new card after Next. Keyed by
+          card so each one pops in. */}
       <div
+        key={card.id}
         aria-live="polite"
-        className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface p-6 text-center"
+        className="animate-pop-in flex flex-col items-center gap-4 rounded-card border-[3px] border-ink bg-surface p-6 text-center"
       >
-        <span aria-hidden="true" className="text-6xl">
-          {card.picture}
-        </span>
-        <p className="text-lg text-ink">
+        <OnboardingPicture id={card.id} className="h-28 w-36" />
+        <p className="text-lg font-medium text-ink">
           {fill(card.key, lang, { button: t("quickExit.button", lang) })}
         </p>
       </div>
+
 
       <div className="flex items-center justify-center gap-2">
         <span className="sr-only">
@@ -76,7 +78,7 @@ export default function Onboarding({ lang, onDone }: OnboardingProps) {
           <span
             key={dot.id}
             aria-hidden="true"
-            className={`size-2.5 rounded-full ${i === index ? "bg-calm" : "bg-line"}`}
+            className={`h-3 rounded-full border-2 border-ink transition-all ${i === index ? "w-8 bg-ink" : "w-3 bg-surface"}`}
           />
         ))}
       </div>
@@ -84,9 +86,7 @@ export default function Onboarding({ lang, onDone }: OnboardingProps) {
       <button
         type="button"
         onClick={last ? onDone : () => setIndex(index + 1)}
-        // text-page, not text-white: --color-calm is a light teal in dark
-        // mode, where white falls below the 4.5:1 floor.
-        className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong"
+        className="squish min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
       >
         {t(last ? "onboarding.start" : "onboarding.next", lang)}
       </button>

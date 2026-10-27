@@ -22,7 +22,7 @@
  * `lang` is also how a reader is told honestly which parts are not translated.
  */
 
-import { FALLBACK_LANG, STRINGS, isLang, t, type StringKey } from "../lib/strings.ts";
+import { ENGLISH_IN_HINGLISH, FALLBACK_LANG, STRINGS, isLang, t, type StringKey } from "../lib/strings.ts";
 
 /**
  * English-only drafts, awaiting keys in `lib/strings.ts`.
@@ -51,9 +51,12 @@ export interface Copy {
 /** The sentence for `key`, preferring `lib/strings.ts` over the English draft. */
 export function copy(key: CopyKey, lang: string): Copy {
   if (key in STRINGS) {
+    // A feature name shown in English on Hinglish screens is English text,
+    // so it is tagged "en" and not read aloud in a Hindi voice.
+    const english = lang === "hi" && ENGLISH_IN_HINGLISH.has(key as StringKey);
     return {
       text: t(key as StringKey, lang),
-      lang: isLang(lang) ? lang : FALLBACK_LANG,
+      lang: english ? "en" : isLang(lang) ? lang : FALLBACK_LANG,
       fromStrings: true,
     };
   }

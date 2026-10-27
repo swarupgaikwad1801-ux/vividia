@@ -13,7 +13,7 @@
  *
  * Nothing on this screen contacts anybody. No send, no share, no mailto, no
  * notification, no "we've told your teacher". The child shows the card to a
- * person themselves, and `handoff.youDecide` says exactly that, on screen.
+ * person themselves.
  * A future "send" button here would break the one promise the product makes.
  *
  * The screen does no fetching of its own: the report arrives as a prop from
@@ -28,11 +28,12 @@ import HandoffWhere from "../components/HandoffWhere.tsx";
 import { isWhereItHappens, type AdultId, type WhereItHappens } from "../components/HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
 import type { Entry, ReportResponse } from "../types/api.ts";
+import type { EntrySource } from "../lib/timeline.ts";
 
 export interface HandoffProps {
   lang: string;
   /** The child's saved entries: what the card shows. */
-  entries?: readonly Entry[];
+  entries?: readonly (Entry & { source?: EntrySource })[];
   /** The report the child approved in step 3, or null if there is none yet. */
   report?: ReportResponse | null;
   /** True while that report is being built. */

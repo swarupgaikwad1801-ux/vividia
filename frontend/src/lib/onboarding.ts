@@ -19,12 +19,11 @@ export interface OnboardingCard {
   /** The `id` in `content/onboarding.json`. */
   id: string;
   key: StringKey;
-  /** The picture on the card. Decorative: the sentence says it all. */
-  picture: string;
 }
 
+// Each card's picture is drawn in art/Things.tsx (OnboardingPicture), by id.
 export const ONBOARDING_CARDS: readonly OnboardingCard[] = [
-  { id: "what", key: "onboarding.what", picture: "💬" },
-  { id: "you-decide", key: "onboarding.youDecide", picture: "👀" },
-  { id: "leave-now", key: "onboarding.leaveNow", picture: "🚪" },
+  { id: "what", key: "onboarding.what" },
+  { id: "you-decide", key: "onboarding.youDecide" },
+  { id: "leave-now", key: "onboarding.leaveNow" },
 ];

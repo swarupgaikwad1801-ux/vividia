@@ -1,24 +1,24 @@
 {
-  "_comment": "First-run screens, in the child's language. Neel owns this file. Every promise here must be true of the shipped app (see CLAUDE.md 'What we may and may not say about privacy'); if a feature changes, change this file in the same PR. Hindi is a DRAFT until a native Hindi speaker on the team reviews it. The screen shows these from frontend/src/lib/strings.ts (onboarding.*), so it works offline and never waits on the backend waking up; frontend/src/lib/onboarding.test.ts fails if the two differ, so edit both together. 26 Oct (issue #3): cut from six cards to three picture cards in simple words, because six cards of promises made the app feel like an interview. Each promise now sits where it matters instead: 'nothing is sent' on the handoff choice, where the words go on the screens that send them, 'the app asks when words could mean two things' on the question itself. 'Not a person, not a doctor' stays here because nowhere else says it. {button} is filled with the real 'Leave now' label (quickExit.button), so the card can never name a button that is spelled differently.",
+  "_comment": "First-run screens, in the child's language. Neel owns this file. Every promise here must be true of the shipped app (see CLAUDE.md 'What we may and may not say about privacy'); if a feature changes, change this file in the same PR. Hindi (code hi) is shown as Hinglish in Roman letters since 26 Oct (Neel: children can't read formal Hindi), and is a DRAFT until a native Hindi speaker on the team reviews it. The screen shows these from frontend/src/lib/strings.ts (onboarding.*), so it works offline and never waits on the backend waking up; frontend/src/lib/onboarding.test.ts fails if the two differ, so edit both together. 26 Oct (issue #3): cut from six cards to three picture cards in simple words, because six cards of promises made the app feel like an interview. Each promise now sits where it matters instead: 'nothing is sent' on the handoff choice, where the words go on the screens that send them, 'the app asks when words could mean two things' on the question itself. 'Not a person, not a doctor' stays here because nowhere else says it. {button} is filled with the real 'Leave now' label (quickExit.button), so the card can never name a button that is spelled differently.",
   "_review": {"hi": null},
   "screens": [
     {
       "id": "what",
       "en": "This app helps you tell an adult what happened. It is not a person and not a doctor.",
       "de": "Die App hilft dir, einem Erwachsenen zu sagen, was passiert ist. Sie ist kein Mensch und kein Arzt.",
-      "hi": "यह ऐप किसी बड़े को यह बताने में मदद करता है कि क्या हुआ। यह कोई इंसान या डॉक्टर नहीं है।"
+      "hi": "Yeh app kisi bade ko yeh batane mein madad karta hai ki kya hua. Yeh koi insaan ya doctor nahi hai."
     },
     {
       "id": "you-decide",
       "en": "You choose who sees it. The app tells nobody behind your back.",
       "de": "Du suchst aus, wer es sieht. Die App sagt niemandem heimlich etwas.",
-      "hi": "कौन देखेगा, यह तुम चुनो। ऐप चुपके से किसी को कुछ नहीं बताता।"
+      "hi": "Kaun dekhega, yeh tum chuno. App chupke se kisi ko kuch nahi batata."
     },
     {
       "id": "leave-now",
       "en": "“{button}” at the top closes the app fast. It does not delete your browser history.",
       "de": "„{button}“ oben schließt die App sofort. Dein Browser-Verlauf wird aber nicht gelöscht.",
-      "hi": "ऊपर वाला “{button}” बटन ऐप तुरंत बंद करता है। पर ब्राउज़र की हिस्ट्री नहीं मिटती।"
+      "hi": "Upar wala “{button}” button app turant band karta hai. Par browser history delete nahi hoti."
     }
   ]
 }

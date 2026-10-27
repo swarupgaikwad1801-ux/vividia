@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, clarify, translate } from "../lib/api.ts";
 import type { TranslateResponse } from "../types/api.ts";
 import { t } from "../lib/strings.ts";
+import { SpokenQuestion } from "../components/ReadAloud.tsx";
 import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
-import WriteSafetyNote from "../components/WriteSafetyNote.tsx";
+import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDialog.tsx";
 
 
 /**
@@ -74,10 +75,11 @@ export interface WriteProps {
    */
   onApproved?: (approved: ApprovedWords) => void;
   /**
-   * Route to the help list. Required, because the safety floor must have
-   * somewhere to go: see WriteSafetyNote.
+   * Route to the help list. The safety floor now points at the red Need help
+   * button in the top bar and the danger pop-up, so this screen no longer calls it;
+   * kept so callers need not change.
    */
-  onNeedHelp: () => void;
+  onNeedHelp?: () => void;
 }
 
 type Phase = "writing" | "checking" | "result" | "error";
@@ -87,7 +89,7 @@ type Run =
   | { kind: "translate"; text: string }
   | { kind: "clarify"; text: string; choices: Record<string, string> };
 
-export default function Write({ lang, initialText, onTextChange, onApproved, onNeedHelp }: WriteProps) {
+export default function Write({ lang, initialText, onTextChange, onApproved }: WriteProps) {
   const [text, setText] = useState(initialText ?? "");
   const [phase, setPhase] = useState<Phase>("writing");
   const [result, setResult] = useState<TranslateResponse | null>(null);
@@ -98,6 +100,10 @@ export default function Write({ lang, initialText, onTextChange, onApproved, onN
   const [failure, setFailure] = useState<{ message: string; retryable: boolean } | null>(null);
   const [lastRun, setLastRun] = useState<Run | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  /** The danger pop-up is open. */
+  const [danger, setDanger] = useState(false);
+  /** The text the pop-up was last opened for: once per urgent result. */
+  const dangerShownFor = useRef<string | null>(null);
   // Assume online unless the browser actually says otherwise: `onLine` is
   // missing in some runtimes, and a false "you are offline" banner would stop
   // a child who has a perfectly good connection from sending anything.
@@ -136,6 +142,13 @@ export default function Write({ lang, initialText, onTextChange, onApproved, onN
       window.removeEventListener("offline", goOffline);
     };
   }, []);
+
+  // The safety floor: an urgent result opens the danger pop-up, once.
+  useEffect(() => {
+    if (!opensForResult(result, checkedText, dangerShownFor.current)) return;
+    dangerShownFor.current = checkedText;
+    setDanger(true);
+  }, [result, checkedText]);
 
   // Move the reader to the German when it arrives. Without this a screen
   // reader user is left at the bottom of a form that has silently changed.
@@ -229,9 +242,7 @@ export default function Write({ lang, initialText, onTextChange, onApproved, onN
       className="mx-auto flex w-full max-w-sm flex-col gap-5 px-4 py-6 sm:max-w-2xl"
     >
       <header className="flex flex-col gap-1">
-        <h1 id="write-title" className="text-2xl font-semibold tracking-tight">
-          {t("write.title", lang)}
-        </h1>
+        <SpokenQuestion lang={lang} id="write-title" text={t("write.title", lang)} className="text-2xl" />
         <p id="write-hint" className="text-base text-ink-soft">
           {t("write.hint", lang)}
         </p>
@@ -273,14 +284,6 @@ export default function Write({ lang, initialText, onTextChange, onApproved, onN
           >
             {t("write.send", lang)}
           </button>
-          {/* `handoff.youDecide` ("Nothing is sent") used to sit here, directly
-              under the button that sends the child's words to Nebius for
-              inference. It is true on the handoff screen, where it means no
-              adult has been told; under this button it reads as "your words
-              do not leave this phone", which is the claim CLAUDE.md says must
-              never ship. Nothing replaces it, because the honest sentence is
-              about the cloud, not about adults, and this screen does not have
-              one yet. */}
         </section>
       )}
 
@@ -313,16 +316,16 @@ export default function Write({ lang, initialText, onTextChange, onApproved, onN
         </section>
       )}
 
+      {/* Continue only closes it: `text` and the result stay as they are. */}
+      {danger && <DangerDialog lang={lang} message={result?.safety.message_child} onClose={() => setDanger(false)} />}
+
       {phase === "result" && result && (
         // tabIndex -1 so the focus move above has somewhere to land; it is not
         // in the tab order.
         <div ref={resultRef} tabIndex={-1} className="flex flex-col gap-5">
-          {/* First, before the German: the safety floor (CLAUDE.md). Shown
-              because the text said something urgent — not because anyone was
-              told anything. Nothing was sent. */}
-          {result.safety.urgent && result.safety.message_child && (
-            <WriteSafetyNote lang={lang} safety={result.safety} onNeedHelp={onNeedHelp} />
-          )}
+          {/* The safety floor (CLAUDE.md): on urgent text, the danger pop-up
+              opens once (above) and Need help in the top bar glows. */}
+          {result.safety.urgent && <HelpPulse />}
 
           <WriteResult
             lang={lang}
@@ -371,11 +374,6 @@ export default function Write({ lang, initialText, onTextChange, onApproved, onN
               {t("approve.change", lang)}
             </button>
           </div>
-
-          {/* The same sentence stood here, after the round trip. By this phase
-              the words have already been to the cloud and back - the German on
-              screen is the proof - so "Nothing is sent" is not merely unclear
-              here, it is contradicted by what the child is looking at. */}
         </div>
       )}
     </section>

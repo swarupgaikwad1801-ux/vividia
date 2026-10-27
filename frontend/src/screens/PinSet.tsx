@@ -147,7 +147,7 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
   return (
     <section className="mx-auto flex max-w-sm flex-col gap-5 px-4 py-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-2xl">
           {fill(status === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
         </h1>
         <p className="text-base text-ink-soft">{fill("pin.set.hint", lang)}</p>

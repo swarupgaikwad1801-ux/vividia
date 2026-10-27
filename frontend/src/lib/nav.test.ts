@@ -29,6 +29,16 @@ test("the main journey goes back the way it came, ending at check-in", () => {
   assert.deepEqual(backAll(trail), ["handoffShow", "handoff", "report", "timeline", "write", "checkIn"]);
 });
 
+test("the picture questions go back one question at a time, to the check-in", () => {
+  const trail = walk("checkIn", "picWhat", "picWhere", "picWho", "picOften", "picFeel", "picReview");
+  assert.deepEqual(backAll(trail), ["picFeel", "picOften", "picWho", "picWhere", "picWhat", "checkIn"]);
+});
+
+test("'Change it' on the check screen returns to the first question without a loop", () => {
+  const trail = walk("checkIn", "picWhat", "picWhere", "picWho", "picOften", "picFeel", "picReview", "picWhat");
+  assert.deepEqual(trail, ["checkIn", "picWhat"]);
+});
+
 test("check-in has no back: it is the first step", () => {
   assert.equal(canGoBack(start(HOME)), false);
   assert.deepEqual(back(start(HOME)), [HOME]);
@@ -39,11 +49,15 @@ test("back never reaches the language picker", () => {
   assert.deepEqual(backAll(trail), ["checkIn"]);
 });
 
-test("first run: language, then onboarding; Back from onboarding goes to the language", () => {
-  const trail = walk("language", "onboarding");
-  assert.deepEqual(backAll(trail), ["language"]);
-  // Start or Skip goes home, which starts a new trail.
-  assert.deepEqual(go(trail, "checkIn"), ["checkIn"]);
+test("first run: language goes straight to check-in, with no Back to the picker", () => {
+  // Onboarding is off by default (Neel, 26 Oct).
+  const trail = walk("language", "checkIn");
+  assert.deepEqual(trail, ["checkIn"]);
+  assert.equal(canGoBack(trail), false);
+});
+
+test("Start or Skip on the cards goes home, which starts a new trail", () => {
+  assert.deepEqual(walk("checkIn", "onboarding", "checkIn"), ["checkIn"]);
 });
 
 test("'What this app does' from check-in goes back to check-in", () => {
@@ -81,7 +95,8 @@ test("the PIN screen goes back to where it was opened", () => {
 test("the lock is not a step, so no trail can hold it", () => {
   // A compile-time fact, checked at runtime too: "locked" is not a Step.
   const steps: Step[] = [
-    "language", "onboarding", "checkIn", "write", "timeline", "report", "handoff",
+    "language", "onboarding", "checkIn",
+    "picWhat", "picWhere", "picWho", "picOften", "picFeel", "picReview", "picMore", "write", "timeline", "report", "handoff",
     "handoffShow", "handoffDone", "escalation", "pinSet",
   ];
   assert.ok(!(steps as string[]).includes("locked"));

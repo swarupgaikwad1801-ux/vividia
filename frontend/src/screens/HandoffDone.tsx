@@ -10,6 +10,7 @@
  */
 
 import { t } from "../lib/strings.ts";
+import { SproutPicture } from "../art/Things.tsx";
 
 export interface HandoffDoneProps {
   lang: string;
@@ -19,14 +20,16 @@ export interface HandoffDoneProps {
 export default function HandoffDone({ lang, onHome }: HandoffDoneProps) {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-col items-center gap-6 px-4 py-10 text-center">
-      <span aria-hidden="true" className="text-6xl">
-        🌱
+      <span className="animate-bob block">
+        <SproutPicture className="size-32" />
       </span>
-      <p className="text-xl text-ink text-balance">{t("handoff.checkLater", lang)}</p>
+      <p className="rounded-card border-[3px] border-ink bg-surface px-5 py-4 text-xl font-bold text-ink text-balance">
+        {t("handoff.checkLater", lang)}
+      </p>
       <button
         type="button"
         onClick={onHome}
-        className="min-h-tap w-full rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong"
+        className="squish min-h-tap w-full rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
       >
         {t("handoff.done", lang)}
       </button>

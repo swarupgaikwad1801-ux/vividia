@@ -18,9 +18,25 @@
  */
 
 export type Step =
-  | "language" // first run only
+  | "language" // first run, and the 🌐 button on the check-in
   | "onboarding" // three picture cards: after the language, and on request
   | "checkIn" // the emoji check-in: the step that needs no language
+  // The picture questions (screens/PictureQuestions.tsx), one per screen, so
+  // Back goes one question back.
+  | "picWhat"
+  // Follow-ups, asked only after the answer they follow (lib/questions.ts).
+  | "picBody"
+  | "picTaken"
+  | "picWhereOnline"
+  | "picWhen"
+  | "picOwn"
+  | "picWhere"
+  | "picWho"
+  | "picAdultWhere"
+  | "picOften"
+  | "picFeel"
+  | "picReview" // the child checks the lines before they are saved
+  | "picMore" // "Want to say more in your own words?": optional writing
   | "write" // the centrepiece: find the words
   | "timeline" // everything they have written
   | "report" // the bilingual card, approved word by word
@@ -29,7 +45,7 @@ export type Step =
   | "handoffDone" // "in a few days, the app will ask how things are"
   | "escalation" // the next door, if the first one did not open
   | "pinSet" // set or change the PIN
-  | "help"; // the people who can help, behind the Need help button
+  | "help"; // the people who can help, behind the red Need help button
 
 /*
  * Every member must have a door: some navigation in App.tsx that reaches it
@@ -64,4 +80,12 @@ export function canGoBack(trail: Trail): boolean {
 
 export function back(trail: Trail): Trail {
   return canGoBack(trail) ? trail.slice(0, -1) : trail;
+}
+
+/**
+ * After a language is chosen: back to where the child was (the 🌐 button on
+ * the check-in), or home on first run, when there is nowhere to go back to.
+ */
+export function afterLanguage(trail: Trail): Trail {
+  return canGoBack(trail) ? back(trail) : go(trail, HOME);
 }

@@ -134,7 +134,7 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
   if (entries.length === 0) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("report.title", lang)}</h1>
+        <h1 className="text-2xl">{t("report.title", lang)}</h1>
         <p className="rounded-card border border-line bg-surface p-4 text-base text-ink-soft">
           {t("report.needEntries", lang)}
         </p>
@@ -145,8 +145,7 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("report.title", lang)}</h1>
-        <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
+        <h1 className="text-2xl">{t("report.title", lang)}</h1>
       </header>
 
       {phase === "idle" ? (
