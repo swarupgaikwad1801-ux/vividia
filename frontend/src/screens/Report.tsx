@@ -46,7 +46,6 @@ import { t } from "../lib/strings";
 import { listEntries, toEntries } from "../lib/timeline";
 import ReportApproval from "../components/ReportApproval";
 import ReportVersion from "../components/ReportVersion";
-import { tPending } from "../components/TimelinePendingStrings";
 
 type Phase = "idle" | "loading" | "review" | "approved" | "error";
 
@@ -130,9 +129,9 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
   if (entries.length === 0) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
-        <h1 className="text-2xl font-semibold tracking-tight">{tPending("report.title", lang)}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("report.title", lang)}</h1>
         <p className="rounded-card border border-line bg-surface p-4 text-base text-ink-soft">
-          {tPending("report.needEntries", lang)}
+          {t("report.needEntries", lang)}
         </p>
       </main>
     );
@@ -141,7 +140,7 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">{tPending("report.title", lang)}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("report.title", lang)}</h1>
         <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
       </header>
 
@@ -151,11 +150,11 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
               says the child's words leave the phone, and it is only honest if
               they read it while they can still decide not to. */}
           <p className="rounded-card border border-line bg-surface p-4 text-sm text-ink-soft">
-            {tPending("report.cloudNote", lang)}
+            {t("report.cloudNote", lang)}
           </p>
           {online ? null : (
             <p className="rounded-card border border-help bg-help-soft p-3 text-sm font-medium text-help">
-              {tPending("report.offline", lang)}
+              {t("report.offline", lang)}
             </p>
           )}
           <button
@@ -166,7 +165,7 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
                mode and white on it fails contrast. */
             className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50"
           >
-            {tPending("report.build", lang)}
+            {t("report.build", lang)}
           </button>
         </section>
       ) : null}
@@ -177,7 +176,7 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
           aria-busy="true"
           className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
         >
-          <p className="text-base font-medium">{tPending("report.building", lang)}</p>
+          <p className="text-base font-medium">{t("report.building", lang)}</p>
           {/* A plain bar rather than a spinner, and `animate-pulse` is stopped
               by the reduced-motion rule in index.css. */}
           <div className="h-1.5 w-full overflow-hidden rounded-card bg-calm-soft">
@@ -197,7 +196,7 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
             disabled={!online}
             className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50"
           >
-            {tPending("errors.retry", lang)}
+            {t("errors.retry", lang)}
           </button>
         </section>
       ) : null}
@@ -207,13 +206,13 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
           {/* The child's own language first: they read their account before
               they read the version someone else will. */}
           <ReportVersion
-            label={tPending("report.childLabel", lang)}
+            label={t("report.childLabel", lang)}
             text={result.child_version}
             textLang={lang}
           />
           <ReportVersion
             label={t("write.german", lang)}
-            note={tPending("report.germanNote", lang)}
+            note={t("report.germanNote", lang)}
             text={result.german_version}
             textLang="de"
           />

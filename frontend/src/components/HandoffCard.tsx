@@ -25,7 +25,6 @@ import {
   type AdultId,
   type WhereItHappens,
 } from "./HandoffSuggestions.ts";
-import { tTemp } from "./HandoffTempStrings.ts";
 import { t } from "../lib/strings.ts";
 import type { ReportResponse } from "../types/api.ts";
 
@@ -128,7 +127,7 @@ export default function HandoffCard({
       <article className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
         {recipient && (
           <header className="flex flex-col gap-0.5 border-b border-line pb-3">
-            <span className="text-sm text-ink-soft">{tTemp("handoff.showTo", lang)}</span>
+            <span className="text-sm text-ink-soft">{t("handoff.showTo", lang)}</span>
             <span className="text-lg font-semibold">{t(recipient.labelKey, lang)}</span>
             {lang !== "de" && (
               <span lang="de" className="text-sm text-ink-soft">
@@ -152,7 +151,7 @@ export default function HandoffCard({
 
         {loading && (
           <p aria-live="polite" className="text-base text-ink-soft">
-            {tTemp("handoff.preparing", lang)}
+            {t("handoff.preparing", lang)}
           </p>
         )}
 
@@ -165,7 +164,7 @@ export default function HandoffCard({
                 onClick={onRetry}
                 className="min-h-tap rounded-card border border-calm px-4 text-base font-medium text-calm"
               >
-                {tTemp("handoff.retry", lang)}
+                {t("handoff.retry", lang)}
               </button>
             )}
           </div>
@@ -187,7 +186,7 @@ export default function HandoffCard({
               </p>
             </div>
             <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-medium text-ink-soft">{tTemp("handoff.yourWords", lang)}</h3>
+              <h3 className="text-sm font-medium text-ink-soft">{t("handoff.yourWords", lang)}</h3>
               <p className="whitespace-pre-wrap text-base text-ink">{report.child_version}</p>
             </div>
           </div>

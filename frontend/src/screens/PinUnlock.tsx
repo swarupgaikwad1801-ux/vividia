@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import PinKeypad from "../components/PinKeypad";
 import PinNotice from "../components/PinNotice";
-import { pinText } from "../components/pinText";
+import { fill } from "../lib/strings";
 import { checkPin, clearPin, isValidPin, pinStatus } from "../lib/pin";
 import type { PinStore } from "../lib/pin";
 import { onQuickExit } from "../lib/quickExit";
@@ -140,7 +140,7 @@ export default function PinUnlock({ lang, help, onUnlocked, store }: PinUnlockPr
         // Cleared, so the next try starts from nothing rather than from a
         // wrong number the child has to spot and delete.
         setDigits("");
-        setNotice({ tone: "problem", text: pinText("pin.unlock.wrong", lang) });
+        setNotice({ tone: "problem", text: fill("pin.unlock.wrong", lang) });
         if (result.retryInMs > 0) startWait(result.retryInMs);
         break;
 
@@ -149,7 +149,7 @@ export default function PinUnlock({ lang, help, onUnlocked, store }: PinUnlockPr
         break;
 
       case "format":
-        setNotice({ tone: "problem", text: pinText("pin.set.tooShort", lang) });
+        setNotice({ tone: "problem", text: fill("pin.set.tooShort", lang) });
         break;
 
       case "none":
@@ -178,19 +178,19 @@ export default function PinUnlock({ lang, help, onUnlocked, store }: PinUnlockPr
           before the keypad, with a screen reader or with their eyes. */}
       {help}
 
-      <h1 className="text-2xl font-semibold tracking-tight">{pinText("pin.unlock.title", lang)}</h1>
-      <p className="text-base text-ink-soft">{pinText("pin.unlock.hint", lang)}</p>
+      <h1 className="text-2xl font-semibold tracking-tight">{fill("pin.unlock.title", lang)}</h1>
+      <p className="text-base text-ink-soft">{fill("pin.unlock.hint", lang)}</p>
 
       {waitMs > 0 ? (
         <PinNotice tone="problem">
-          {pinText("pin.unlock.wait", lang, { seconds: String(seconds) })}
+          {fill("pin.unlock.wait", lang, { seconds: String(seconds) })}
         </PinNotice>
       ) : notice ? (
         <PinNotice tone={notice.tone}>{notice.text}</PinNotice>
       ) : null}
 
       <PinKeypad
-        label={pinText("pin.unlock.title", lang)}
+        label={fill("pin.unlock.title", lang)}
         value={digits}
         onChange={setDigits}
         onSubmit={() => void submit()}
@@ -204,7 +204,7 @@ export default function PinUnlock({ lang, help, onUnlocked, store }: PinUnlockPr
         disabled={busy || waitMs > 0 || !isValidPin(digits)}
         className={primary}
       >
-        {busy ? pinText("pin.unlock.checking", lang) : pinText("pin.unlock.button", lang)}
+        {busy ? fill("pin.unlock.checking", lang) : fill("pin.unlock.button", lang)}
       </button>
 
       {/* Never disabled, not even during the wait: the wait is there to slow
@@ -213,21 +213,21 @@ export default function PinUnlock({ lang, help, onUnlocked, store }: PinUnlockPr
       <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
         {forgot ? (
           <>
-            <p className="text-base">{pinText("pin.unlock.forgotHelp", lang)}</p>
+            <p className="text-base">{fill("pin.unlock.forgotHelp", lang)}</p>
             <button
               type="button"
               onClick={forget}
               className="min-h-tap rounded-card bg-help-soft px-4 text-base font-semibold text-help"
             >
-              {pinText("pin.remove.yes", lang)}
+              {fill("pin.remove.yes", lang)}
             </button>
             <button type="button" onClick={() => setForgot(false)} className={secondary}>
-              {pinText("pin.remove.no", lang)}
+              {fill("pin.remove.no", lang)}
             </button>
           </>
         ) : (
           <button type="button" onClick={() => setForgot(true)} className={secondary}>
-            {pinText("pin.unlock.forgot", lang)}
+            {fill("pin.unlock.forgot", lang)}
           </button>
         )}
       </div>

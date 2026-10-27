@@ -37,6 +37,32 @@ export const STRINGS = {
     de: "Amara ist ein ausgedachtes Beispiel. Es wird kein echtes Kind gezeigt.",
     hi: "अमारा एक काल्पनिक उदाहरण है। कोई असली बच्चा नहीं दिखाया गया है।",
   },
+  // The demo button (moved from lib-demo/pendingStrings.ts, same key names).
+  // {name} is the persona name from the story, filled with fill(), never typed in.
+  "demo.loading": {
+    en: "Loading the example story…",
+    de: "Die Beispielgeschichte wird geladen…",
+    hi: "उदाहरण कहानी लोड हो रही है…",
+  },
+  "demo.loaded": {
+    en: "{name}'s story is loaded. Her sentence is written and waiting — you press send.",
+    de: "{name}s Geschichte ist geladen. Ihr Satz ist geschrieben und wartet — du drückst Senden.",
+    hi: "{name} की कहानी लोड हो गई है। उसका वाक्य लिखा हुआ तैयार है — भेजना आप दबाते हैं।",
+  },
+  "demo.clear": { en: "Clear the example", de: "Beispiel entfernen", hi: "उदाहरण हटाएँ" },
+  "demo.cleared": {
+    en: "The example is gone. The app is back to empty.",
+    de: "Das Beispiel ist weg. Die App ist wieder leer.",
+    hi: "उदाहरण हट गया। ऐप फिर से खाली है।",
+  },
+  // The refusal: the person has notes of their own, so the example was not
+  // loaded at all. Says what happened, and does not offer to load it anyway:
+  // the child's own words are what is being protected.
+  "demo.notLoadedOwnNotes": {
+    en: "You have your own notes here, so the example was not loaded. Nothing of yours has changed.",
+    de: "Du hast hier eigene Notizen, deshalb wurde das Beispiel nicht geladen. An deinen Notizen hat sich nichts geändert.",
+    hi: "यहाँ आपके अपने नोट्स हैं, इसलिए उदाहरण लोड नहीं हुआ। आपका कुछ भी नहीं बदला।",
+  },
 
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "अभी मदद चाहिए?" },
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "जो लोग मदद कर सकते हैं" },
@@ -114,15 +140,6 @@ export const STRINGS = {
   "approve.title": { en: "Is this right?", de: "Stimmt das so?", hi: "क्या यह सही है?" },
   "approve.yes": { en: "Yes, save it", de: "Ja, speichern", hi: "हाँ, सेव करें" },
   "approve.change": { en: "Change it", de: "Ändern", hi: "बदलें" },
-  // Deliberately scoped to adults rather than "nothing leaves": the German was
-  // written in the cloud, so a flat "nothing leaves this phone" would be the
-  // claim CLAUDE.md forbids. What is true, and what the child is deciding
-  // about, is that no person is shown anything until they press yes.
-  "approve.nothingGoes": {
-    en: "Nothing goes to an adult until you press yes.",
-    de: "Nichts geht an Erwachsene, bevor du auf Ja drückst.",
-    hi: "जब तक आप हाँ नहीं दबाते, कुछ भी किसी बड़े के पास नहीं जाता।",
-  },
 
   "timeline.title": { en: "What happened so far", de: "Was bisher passiert ist", hi: "अब तक क्या हुआ" },
   "timeline.empty": {
@@ -204,12 +221,6 @@ export const STRINGS = {
   "write.checks": { en: "{n} checks", de: "{n} Prüfungen", hi: "{n} जाँच" },
   "write.secondsLong": { en: "{n} seconds so far", de: "bisher {n} Sekunden", hi: "अब तक {n} सेकंड" },
   "clarify.important": { en: "Important", de: "Wichtig", hi: "ज़रूरी" },
-  "clarify.somethingElse": { en: "Something else", de: "Etwas anderes", hi: "कुछ और" },
-  "clarify.somethingElseHint": {
-    en: "Neither of these is what I meant",
-    de: "Keines davon habe ich gemeint",
-    hi: "इनमें से कोई भी मेरा मतलब नहीं था",
-  },
   "clarify.send": { en: "That's what I meant", de: "Das habe ich gemeint", hi: "मेरा यही मतलब था" },
   "clarify.rewrite": { en: "Say it another way", de: "Sag es anders", hi: "दूसरे तरीके से कहें" },
   "clarify.rewriteWhy": {
@@ -258,6 +269,286 @@ export const STRINGS = {
   "help.checkedToday": { en: "checked today", de: "heute geprüft", hi: "आज जाँचा गया" },
   "help.checkedYesterday": { en: "checked yesterday", de: "gestern geprüft", hi: "कल जाँचा गया" },
   "help.checkedDays": { en: "checked {n} days ago", de: "vor {n} Tagen geprüft", hi: "{n} दिन पहले जाँचा गया" },
+  "app.englishOnly": {
+    en: "Some words in this app are only in English for now.",
+    de: "Manche Wörter in dieser App gibt es bisher nur auf Englisch.",
+    hi: "इस ऐप के कुछ शब्द अभी सिर्फ़ अंग्रेज़ी में हैं।",
+  },
+
+  // Timeline and report (moved from components/TimelinePendingStrings.ts).
+  "timeline.storageNote": {
+    en: "This list is saved only in this browser. You can delete it whenever you want.",
+    de: "Diese Liste wird nur in diesem Browser gespeichert. Du kannst sie jederzeit löschen.",
+    hi: "यह सूची सिर्फ़ इसी ब्राउज़र में सेव होती है। आप इसे जब चाहें मिटा सकते हैं।",
+  },
+  "timeline.deleteAllYes": { en: "Yes, delete everything", de: "Ja, alles löschen", hi: "हाँ, सब कुछ मिटाएँ" },
+  "timeline.deleteAllNo": { en: "No, keep it", de: "Nein, behalten", hi: "नहीं, रहने दें" },
+  "timeline.deletedAll": {
+    en: "Everything you saved has been deleted.",
+    de: "Alles, was du gespeichert hast, ist gelöscht.",
+    hi: "आपने जो सेव किया था, सब मिट गया है।",
+  },
+  "timeline.where": { en: "Where", de: "Wo", hi: "कहाँ" },
+  "timeline.who": { en: "Who", de: "Wer", hi: "कौन" },
+  "timeline.buildReport": { en: "Make a report from this", de: "Daraus einen Bericht machen", hi: "इससे एक रिपोर्ट बनाएँ" },
+  "report.title": {
+    en: "The report you can show someone",
+    de: "Der Bericht, den du jemandem zeigen kannst",
+    hi: "वह रिपोर्ट जो आप किसी को दिखा सकते हैं",
+  },
+  "report.build": { en: "Write the report", de: "Bericht schreiben", hi: "रिपोर्ट लिखें" },
+  "report.building": { en: "Writing your report…", de: "Dein Bericht wird geschrieben…", hi: "आपकी रिपोर्ट लिखी जा रही है…" },
+  "report.needEntries": {
+    en: "Save something first. The report is made from what you saved.",
+    de: "Speicher zuerst etwas. Der Bericht entsteht aus dem, was du gespeichert hast.",
+    hi: "पहले कुछ सेव करें। रिपोर्ट उसी से बनती है जो आपने सेव किया है।",
+  },
+  "report.childLabel": { en: "In your language", de: "In deiner Sprache", hi: "आपकी भाषा में" },
+  "report.germanNote": {
+    en: "This is the part an adult would read.",
+    de: "Diesen Teil würde eine erwachsene Person lesen.",
+    hi: "यह हिस्सा कोई बड़ा व्यक्ति पढ़ेगा।",
+  },
+  "report.readAll": {
+    en: "Read all of it. Nothing can be shown to anyone until you say it is right.",
+    de: "Lies alles durch. Niemandem kann etwas gezeigt werden, bevor du sagst, dass es stimmt.",
+    hi: "पूरा पढ़ें। जब तक आप यह न कहें कि यह सही है, किसी को कुछ नहीं दिखाया जा सकता।",
+  },
+  "report.approved": {
+    en: "You said this is right. It has not been sent to anyone.",
+    de: "Du hast gesagt, dass das stimmt. Es wurde an niemanden geschickt.",
+    hi: "आपने कहा कि यह सही है। यह किसी को नहीं भेजा गया है।",
+  },
+  "report.cloudNote": {
+    en: "To write the German, your words are sent to a translation service and come straight back. Our server keeps no copy, and the service does not store them afterwards.",
+    de: "Um das Deutsch zu schreiben, werden deine Worte an einen Übersetzungsdienst geschickt und kommen direkt zurück. Unser Server behält keine Kopie, und der Dienst speichert sie danach nicht.",
+    hi: "जर्मन लिखने के लिए आपके शब्द एक अनुवाद सेवा को भेजे जाते हैं और सीधे वापस आ जाते हैं। हमारा सर्वर कोई कॉपी नहीं रखता, और वह सेवा उन्हें बाद में सेव नहीं करती।",
+  },
+  "report.offline": {
+    en: "You are offline, so the report cannot be written yet. What you saved is still here.",
+    de: "Du bist offline, deshalb kann der Bericht noch nicht geschrieben werden. Was du gespeichert hast, ist noch da.",
+    hi: "आप ऑफ़लाइन हैं, इसलिए रिपोर्ट अभी नहीं लिखी जा सकती। आपने जो सेव किया है वह अभी भी यहीं है।",
+  },
+  "errors.retry": { en: "Try again", de: "Noch einmal versuchen", hi: "फिर कोशिश करें" },
+
+  // Handoff (moved from components/HandoffTempStrings.ts, which was English only).
+  "handoff.showTo": { en: "Show this to", de: "Wem du das zeigst", hi: "किसे दिखाना है" },
+  "handoff.changeWhere": { en: "Change where this happens", de: "Ändern, wo das passiert", hi: "यह कहाँ होता है, बदलें" },
+  "handoff.preparing": { en: "Getting your words ready…", de: "Deine Worte werden vorbereitet…", hi: "आपके शब्द तैयार हो रहे हैं…" },
+  "handoff.retry": { en: "Try again", de: "Noch einmal versuchen", hi: "फिर कोशिश करें" },
+  "handoff.yourWords": { en: "Your words", de: "Deine Worte", hi: "आपके शब्द" },
+
+  // PIN (moved from components/pinText.ts, which was English only). {seconds},
+  // {count} and {when} are filled with fill().
+  "pin.set.title": { en: "Set a PIN", de: "PIN festlegen", hi: "PIN सेट करें" },
+  "pin.set.titleChange": { en: "Change your PIN", de: "Deine PIN ändern", hi: "अपना PIN बदलें" },
+  "pin.set.hint": {
+    en: "A PIN is 4 to 6 numbers. You type it to open the app.",
+    de: "Eine PIN hat 4 bis 6 Ziffern. Du gibst sie ein, um die App zu öffnen.",
+    hi: "PIN 4 से 6 अंकों का होता है। ऐप खोलने के लिए आप इसे टाइप करते हैं।",
+  },
+  "pin.set.limit": {
+    en: "It stops someone picking up this phone and reading your words. It will not stop someone who knows phones well.",
+    de: "Sie hält jemanden ab, der dieses Handy nimmt und deine Worte lesen will. Jemanden, der sich gut mit Handys auskennt, hält sie nicht auf.",
+    hi: "इससे कोई यह फ़ोन उठाकर आपके शब्द नहीं पढ़ पाएगा। पर जो फ़ोन के बारे में बहुत जानता है, उसे यह नहीं रोकेगा।",
+  },
+  "pin.set.enter": { en: "Choose your PIN", de: "Wähle deine PIN", hi: "अपना PIN चुनें" },
+  "pin.set.again": { en: "Type the same PIN again", de: "Gib dieselbe PIN noch einmal ein", hi: "वही PIN फिर से टाइप करें" },
+  "pin.set.next": { en: "Next", de: "Weiter", hi: "आगे" },
+  "pin.set.save": { en: "Save my PIN", de: "PIN speichern", hi: "मेरा PIN सेव करें" },
+  "pin.set.startAgain": { en: "Start again", de: "Neu anfangen", hi: "फिर से शुरू करें" },
+  "pin.set.mismatch": {
+    en: "Those two were not the same. Type your PIN again.",
+    de: "Die beiden waren nicht gleich. Gib deine PIN noch einmal ein.",
+    hi: "दोनों एक जैसे नहीं थे। अपना PIN फिर से टाइप करें।",
+  },
+  "pin.set.tooShort": { en: "A PIN is 4 to 6 numbers.", de: "Eine PIN hat 4 bis 6 Ziffern.", hi: "PIN 4 से 6 अंकों का होता है।" },
+  "pin.set.saved": {
+    en: "Your PIN is saved. You will need it to open the app.",
+    de: "Deine PIN ist gespeichert. Du brauchst sie, um die App zu öffnen.",
+    hi: "आपका PIN सेव हो गया। ऐप खोलने के लिए आपको इसकी ज़रूरत होगी।",
+  },
+  "pin.set.noStorage": {
+    en: "This phone is not letting the app save anything, so a PIN cannot be set here. Nothing was saved.",
+    de: "Dieses Handy lässt die App nichts speichern, deshalb kann hier keine PIN festgelegt werden. Es wurde nichts gespeichert.",
+    hi: "यह फ़ोन ऐप को कुछ भी सेव नहीं करने दे रहा, इसलिए यहाँ PIN सेट नहीं हो सकता। कुछ भी सेव नहीं हुआ।",
+  },
+  "pin.set.skip": { en: "Not now", de: "Nicht jetzt", hi: "अभी नहीं" },
+  "pin.set.done": { en: "Done", de: "Fertig", hi: "हो गया" },
+  "pin.remove.button": { en: "Remove the PIN", de: "PIN entfernen", hi: "PIN हटाएँ" },
+  "pin.remove.ask": {
+    en: "Remove the PIN? The app will open without one. Nothing you saved is deleted.",
+    de: "PIN entfernen? Die App öffnet sich dann ohne PIN. Nichts, was du gespeichert hast, wird gelöscht.",
+    hi: "PIN हटाएँ? ऐप बिना PIN के खुलेगा। आपका सेव किया हुआ कुछ भी नहीं मिटेगा।",
+  },
+  "pin.remove.yes": { en: "Yes, remove it", de: "Ja, entfernen", hi: "हाँ, हटाएँ" },
+  "pin.remove.no": { en: "Keep the PIN", de: "PIN behalten", hi: "PIN रहने दें" },
+  "pin.remove.done": {
+    en: "The PIN is removed. You can set a new one whenever you want.",
+    de: "Die PIN ist entfernt. Du kannst jederzeit eine neue festlegen.",
+    hi: "PIN हट गया। आप जब चाहें नया सेट कर सकते हैं।",
+  },
+  "pin.unlock.title": { en: "Type your PIN", de: "Gib deine PIN ein", hi: "अपना PIN टाइप करें" },
+  "pin.unlock.hint": { en: "4 to 6 numbers.", de: "4 bis 6 Ziffern.", hi: "4 से 6 अंक।" },
+  "pin.unlock.button": { en: "Open", de: "Öffnen", hi: "खोलें" },
+  "pin.unlock.checking": { en: "Checking…", de: "Wird geprüft…", hi: "जाँच हो रही है…" },
+  "pin.unlock.wrong": {
+    en: "That is not the PIN. Try again.",
+    de: "Das ist nicht die PIN. Versuch es noch einmal.",
+    hi: "यह सही PIN नहीं है। फिर कोशिश करें।",
+  },
+  "pin.unlock.wait": {
+    en: "Wait {seconds} seconds, then try again.",
+    de: "Warte {seconds} Sekunden, dann versuch es noch einmal.",
+    hi: "{seconds} सेकंड रुकें, फिर कोशिश करें।",
+  },
+  // Hindi avoids भूल गया/गई: the child's gender is never assumed.
+  "pin.unlock.forgot": { en: "I forgot my PIN", de: "Ich habe meine PIN vergessen", hi: "मुझे अपना PIN याद नहीं" },
+  "pin.unlock.forgotHelp": {
+    en: "You can remove the PIN and get back in. Nothing you saved is deleted. Anyone holding this phone could do the same, which is the honest limit of a PIN like this.",
+    de: "Du kannst die PIN entfernen und wieder hineinkommen. Nichts, was du gespeichert hast, wird gelöscht. Jeder, der dieses Handy in der Hand hat, könnte das auch – das ist die ehrliche Grenze einer solchen PIN.",
+    hi: "आप PIN हटाकर फिर से अंदर आ सकते हैं। आपका सेव किया हुआ कुछ भी नहीं मिटेगा। जिसके हाथ में भी यह फ़ोन हो, वह भी ऐसा कर सकता है — ऐसे PIN की यही सच्ची सीमा है।",
+  },
+  "pin.removed.notice": {
+    en: "The PIN was removed on {when}. If that was not you, someone else may have opened the app.",
+    de: "Die PIN wurde am {when} entfernt. Wenn du das nicht warst, hat vielleicht jemand anderes die App geöffnet.",
+    hi: "PIN {when} को हटाया गया था। अगर यह आपने नहीं किया, तो हो सकता है किसी और ने ऐप खोला हो।",
+  },
+  "pin.keypad.empty": { en: "No numbers typed yet", de: "Noch keine Ziffern eingegeben", hi: "अभी कोई अंक टाइप नहीं हुआ" },
+  "pin.keypad.entered": { en: "{count} numbers typed", de: "{count} Ziffern eingegeben", hi: "{count} अंक टाइप हुए" },
+  "pin.keypad.delete": { en: "Delete the last number", de: "Letzte Ziffer löschen", hi: "आखिरी अंक मिटाएँ" },
+  "pin.keypad.clear": { en: "Clear", de: "Leeren", hi: "साफ़ करें" },
+
+  // Follow-up check-in (moved from lib-followups-ui/copy.ts DRAFT_COPY, which
+  // was English only). Tone: never praise "better", never sound let down by
+  // "worse", no first person (the app is not a friend).
+  "followup.title": { en: "How are things now?", de: "Wie läuft es jetzt?", hi: "अब हालात कैसे हैं?" },
+  "followup.gap": {
+    en: "It has been a few days since the last thing you wrote.",
+    de: "Seit deinem letzten Eintrag sind ein paar Tage vergangen.",
+    hi: "आपने आख़िरी बार कुछ लिखा था, उसे कुछ दिन हो गए हैं।",
+  },
+  "followup.noPressure": {
+    en: "You do not have to answer this. Nothing is sent to anyone, whatever you pick.",
+    de: "Du musst darauf nicht antworten. Egal, was du wählst, es wird an niemanden geschickt.",
+    hi: "इसका जवाब देना ज़रूरी नहीं है। आप कुछ भी चुनें, किसी को कुछ नहीं भेजा जाता।",
+  },
+  "followup.answerBetter": { en: "A bit better", de: "Ein bisschen besser", hi: "थोड़ा बेहतर" },
+  "followup.answerSame": { en: "About the same", de: "Ungefähr gleich", hi: "लगभग वैसा ही" },
+  "followup.answerWorse": { en: "Worse", de: "Schlechter", hi: "पहले से बुरा" },
+  "followup.notNow": { en: "Not now", de: "Nicht jetzt", hi: "अभी नहीं" },
+  "followup.stopAsking": { en: "Stop asking me this", de: "Frag mich das nicht mehr", hi: "यह सवाल दोबारा न पूछें" },
+  "followup.stopped": {
+    en: "This question will not come back. You can still write something down whenever you want to.",
+    de: "Diese Frage kommt nicht wieder. Du kannst trotzdem jederzeit etwas aufschreiben.",
+    hi: "यह सवाल दोबारा नहीं आएगा। आप जब चाहें, फिर भी कुछ लिख सकते हैं।",
+  },
+  "followup.afterBetter": {
+    en: "Okay. You can write something down any time, even if it seems small.",
+    de: "Okay. Du kannst jederzeit etwas aufschreiben, auch wenn es klein wirkt.",
+    hi: "ठीक है। आप कभी भी कुछ लिख सकते हैं, चाहे वह छोटी बात लगे।",
+  },
+  "followup.afterStill": {
+    en: "Okay. There are other people you could show your words to, if you want to.",
+    de: "Okay. Es gibt noch andere Menschen, denen du deine Worte zeigen könntest, wenn du willst.",
+    hi: "ठीक है। अगर आप चाहें, तो और भी लोग हैं जिन्हें आप अपने शब्द दिखा सकते हैं।",
+  },
+  "followup.notKept": {
+    en: "This answer is not saved anywhere, and nobody is told.",
+    de: "Diese Antwort wird nirgends gespeichert, und niemand erfährt davon.",
+    hi: "यह जवाब कहीं सेव नहीं होता, और किसी को बताया नहीं जाता।",
+  },
+  "followup.openLadder": { en: "See who else there is", de: "Sehen, wer noch da ist", hi: "देखें और कौन है" },
+
+  // Escalation ladder (moved from DRAFT_COPY). "Can act" is not "will act":
+  // no rung promises it will help.
+  "ladder.title": { en: "Who else there is", de: "Wer noch da ist", hi: "और कौन है" },
+  "ladder.intro": {
+    en: "Other people you could show your own words to. You pick, and you show it yourself.",
+    de: "Andere Menschen, denen du deine eigenen Worte zeigen könntest. Du wählst aus, und du zeigst es selbst.",
+    hi: "और लोग जिन्हें आप अपने शब्द दिखा सकते हैं। आप चुनते हैं, और ख़ुद दिखाते हैं।",
+  },
+  "ladder.noPromise": {
+    en: "None of them can promise it will stop. Each one is a different door, and you can try more than one.",
+    de: "Niemand von ihnen kann versprechen, dass es aufhört. Jede Person ist eine andere Tür, und du kannst mehr als eine ausprobieren.",
+    hi: "इनमें से कोई वादा नहीं कर सकता कि यह रुक जाएगा। हर एक अलग दरवाज़ा है, और आप एक से ज़्यादा आज़मा सकते हैं।",
+  },
+  "ladder.carryTitle": { en: "Your words go with you", de: "Deine Worte gehen mit dir", hi: "आपके शब्द आपके साथ जाते हैं" },
+  "ladder.carryWhy": {
+    en: "The entries you already checked and approved go to the next person too, so you never have to start explaining from nothing again.",
+    de: "Die Einträge, die du schon geprüft und bestätigt hast, gehen auch an die nächste Person. So musst du nie wieder ganz von vorne erklären.",
+    hi: "जो बातें आप पहले ही जाँचकर सही कह चुके हैं, वे अगले व्यक्ति तक भी जाती हैं, ताकि आपको कभी फिर से शुरू से समझाना न पड़े।",
+  },
+  "ladder.carryNone": {
+    en: "You have not written anything down yet, so there would be nothing to show. You can write something first.",
+    de: "Du hast noch nichts aufgeschrieben, deshalb gäbe es nichts zu zeigen. Du kannst zuerst etwas aufschreiben.",
+    hi: "आपने अभी तक कुछ नहीं लिखा है, इसलिए दिखाने के लिए कुछ नहीं होगा। आप पहले कुछ लिख सकते हैं।",
+  },
+  "ladder.stateStart": { en: "A place to start", de: "Ein Anfang", hi: "शुरू करने की जगह" },
+  "ladder.stateNext": { en: "You could try this next", de: "Das könntest du als Nächstes versuchen", hi: "आप आगे इसे आज़मा सकते हैं" },
+  "ladder.stateShown": { en: "You showed this", de: "Das hast du gezeigt", hi: "आपने यह दिखाया" },
+  "ladder.stateLater": { en: "Still there if you need it", de: "Noch da, wenn du es brauchst", hi: "ज़रूरत हो तो अब भी मौजूद" },
+  "ladder.show": { en: "Take my words here", de: "Meine Worte hierhin mitnehmen", hi: "मेरे शब्द यहाँ ले जाएँ" },
+  "ladder.seeWho": { en: "See who they are", de: "Sehen, wer das ist", hi: "देखें ये कौन हैं" },
+  "ladder.markShown": { en: "I showed this to them", de: "Ich habe es ihnen gezeigt", hi: "मैंने उन्हें यह दिखाया" },
+  "ladder.undo": { en: "Undo", de: "Rückgängig", hi: "वापस लें" },
+  "ladder.waiting": {
+    en: "Nothing new since you showed this. You do not have to do anything right now.",
+    de: "Seit du das gezeigt hast, ist nichts Neues passiert. Du musst gerade nichts tun.",
+    hi: "यह दिखाने के बाद से कुछ नया नहीं हुआ। अभी आपको कुछ करने की ज़रूरत नहीं है।",
+  },
+  "ladder.stillHappening": {
+    en: "Things kept happening after you showed this.",
+    de: "Nachdem du das gezeigt hast, ist es weiter passiert.",
+    hi: "यह दिखाने के बाद भी चीज़ें होती रहीं।",
+  },
+  "ladder.topRung": {
+    en: "This is the last step this app knows about. If it keeps happening you can go back to any of these people again: asking twice is allowed.",
+    de: "Das ist der letzte Schritt, den diese App kennt. Wenn es weiter passiert, kannst du zu jeder dieser Personen zurückgehen: Zweimal fragen ist erlaubt.",
+    hi: "यह आख़िरी कदम है जो यह ऐप जानता है। अगर यह होता रहे, तो आप इनमें से किसी के पास भी फिर जा सकते हैं: दो बार पूछना ठीक है।",
+  },
+  "ladder.dangerNow": {
+    en: "If you are in danger right now, use the help button in this app.",
+    de: "Wenn du gerade in Gefahr bist, nutze den Hilfe-Knopf in dieser App.",
+    hi: "अगर आप अभी ख़तरे में हैं, तो इस ऐप का मदद वाला बटन दबाएँ।",
+  },
+  "ladder.contactsElsewhere": {
+    en: "The app shows how to reach them under the help button.",
+    de: "Wie du sie erreichst, zeigt die App unter dem Hilfe-Knopf.",
+    hi: "इन तक कैसे पहुँचें, यह ऐप मदद वाले बटन में दिखाता है।",
+  },
+  "ladder.rung.head": { en: "The head of the school", de: "Die Schulleitung", hi: "स्कूल के प्रिंसिपल" },
+  "ladder.rung.schoolPsychology": {
+    en: "The school counselling service for your area",
+    de: "Die schulpsychologische Beratungsstelle in deiner Gegend",
+    hi: "आपके इलाके की स्कूल काउंसलिंग सेवा",
+  },
+  "ladder.rung.helplines": {
+    en: "Counsellors you can call or chat with",
+    de: "Beratung, die du anrufen oder mit der du chatten kannst",
+    hi: "काउंसलर जिन्हें आप फ़ोन कर सकते हैं या चैट कर सकते हैं",
+  },
+  "ladder.why.teacher": {
+    en: "The person who sees your class every day.",
+    de: "Die Person, die deine Klasse jeden Tag sieht.",
+    hi: "वह व्यक्ति जो रोज़ आपकी क्लास को देखता है।",
+  },
+  "ladder.why.trusted": {
+    en: "Helping with this is part of their job at school.",
+    de: "Bei so etwas zu helfen gehört zu ihrer Aufgabe an der Schule.",
+    hi: "इसमें मदद करना स्कूल में उनके काम का हिस्सा है।",
+  },
+  "ladder.why.head": {
+    en: "Can act when a teacher has not.",
+    de: "Kann handeln, wenn eine Lehrkraft es nicht getan hat.",
+    hi: "जब किसी टीचर ने कुछ न किया हो, तब कदम उठा सकते हैं।",
+  },
+  "ladder.why.schoolPsychology": {
+    en: "Outside your school, and not part of it.",
+    de: "Außerhalb deiner Schule und kein Teil davon.",
+    hi: "आपके स्कूल से बाहर, और उसका हिस्सा नहीं।",
+  },
+  "ladder.why.helplines": { en: "Not from your school at all.", de: "Gar nicht von deiner Schule.", hi: "बिलकुल भी आपके स्कूल से नहीं।" },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;
@@ -269,7 +560,7 @@ export function t(key: StringKey, lang: string): string {
 }
 
 /** `t()` with `{name}` placeholders filled in, e.g. fill("help.checkedDays", "de", { n: 3 }). */
-export function fill(key: StringKey, lang: string, values: Record<string, string | number>): string {
+export function fill(key: StringKey, lang: string, values: Readonly<Record<string, string | number>> = {}): string {
   return t(key, lang).replace(/\{(\w+)\}/g, (whole, name: string) =>
     name in values ? String(values[name]) : whole,
   );

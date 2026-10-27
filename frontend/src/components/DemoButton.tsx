@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../lib/api";
-import { t } from "../lib/strings";
+import { fill, t } from "../lib/strings";
 import { activeDemo, clearDemo, loadDemo } from "../lib-demo/demoStory";
 import type { DemoSession } from "../lib-demo/demoStory";
-import { tp } from "../lib-demo/pendingStrings";
 
 /**
  * "Try Amara's story": the one button a judge presses.
@@ -48,7 +47,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
   useEffect(() => {
     // The persona's name belongs to the story, never to a string in the UI.
     const session = activeDemo();
-    if (session) setMessage(tp("demo.loaded", lang).replace("{name}", session.persona.name));
+    if (session) setMessage(fill("demo.loaded", lang, { name: session.persona.name }));
   }, [lang]);
 
   const press = useCallback(async () => {
@@ -59,7 +58,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
     try {
       const { session } = await loadDemo(lang);
       setStatus("loaded");
-      setMessage(tp("demo.loaded", lang).replace("{name}", session.persona.name));
+      setMessage(fill("demo.loaded", lang, { name: session.persona.name }));
       onLoaded(session);
     } catch (error) {
       setStatus("error");
@@ -72,7 +71,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
   const clear = useCallback(() => {
     clearDemo();
     setStatus("cleared");
-    setMessage(tp("demo.cleared", lang));
+    setMessage(t("demo.cleared", lang));
     onCleared?.();
   }, [lang, onCleared]);
 
@@ -90,7 +89,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
           onClick={clear}
           className="min-h-tap rounded-card border border-line bg-surface px-4 text-base font-medium text-ink transition-colors hover:border-calm"
         >
-          {tp("demo.clear", lang)}
+          {t("demo.clear", lang)}
         </button>
       ) : (
         <button
@@ -102,7 +101,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
           // mode, where white measures about 2.3:1 against the 4.5:1 floor.
           className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong disabled:opacity-60"
         >
-          {loading ? tp("demo.loading", lang) : t("demo.button", lang)}
+          {loading ? t("demo.loading", lang) : t("demo.button", lang)}
         </button>
       )}
 

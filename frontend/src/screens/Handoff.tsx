@@ -25,7 +25,6 @@ import { useEffect, useState } from "react";
 
 import HandoffCard from "../components/HandoffCard.tsx";
 import HandoffWhere from "../components/HandoffWhere.tsx";
-import { tTemp } from "../components/HandoffTempStrings.ts";
 import { isWhereItHappens, type AdultId, type WhereItHappens } from "../components/HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
 import type { ReportResponse } from "../types/api.ts";
@@ -132,7 +131,7 @@ export default function Handoff({
             onClick={() => setStep("where")}
             className="min-h-tap self-start rounded-card px-2 text-base font-medium text-calm underline"
           >
-            {tTemp("handoff.changeWhere", lang)}
+            {t("handoff.changeWhere", lang)}
           </button>
         </>
       )}
