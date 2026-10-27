@@ -4,12 +4,12 @@
   "messages": {
     "danger": {
       "en": "If someone can hurt you right now, call 110. You do not have to write anything else first.",
-      "hi": "अगर कोई अभी तुम्हें चोट पहुँचा सकता है, तो 110 पर कॉल करो। पहले कुछ और लिखने की ज़रूरत नहीं है।",
+      "hi": "Agar koi abhi tumhe chot pahuncha sakta hai, to 110 par call karo. Pehle kuch aur likhne ki zaroorat nahi hai.",
       "de": "Wenn dir gerade jemand wehtun kann, ruf 110 an. Du musst vorher nichts weiter schreiben."
     },
     "self_harm": {
       "en": "What you wrote sounds heavy. You can talk to someone right now at krisenchat.de, by text. You do not have to be in danger to write to them.",
-      "hi": "तुमने जो लिखा वह भारी लगता है। तुम अभी krisenchat.de पर किसी से लिखकर बात कर सकते हो। बात करने के लिए खतरे में होना ज़रूरी नहीं है।",
+      "hi": "Tumne jo likha woh bhaari lagta hai. Tum abhi krisenchat.de par kisi se likhkar baat kar sakte ho. Baat karne ke liye khatre mein hona zaroori nahi hai.",
       "de": "Was du geschrieben hast, klingt schwer. Du kannst gerade jetzt mit jemandem schreiben, auf krisenchat.de. Du musst nicht in Gefahr sein, um dort zu schreiben."
     }
   },
