@@ -6,7 +6,7 @@ import { SpokenQuestion } from "../components/ReadAloud.tsx";
 import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
-import { HelpPulse } from "../components/DangerLine.tsx";
+import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDialog.tsx";
 
 
 /**
@@ -76,7 +76,7 @@ export interface WriteProps {
   onApproved?: (approved: ApprovedWords) => void;
   /**
    * Route to the help list. The safety floor now points at the red Need help
-   * button in the top bar (DangerLine), so this screen no longer calls it;
+   * button in the top bar and the danger pop-up, so this screen no longer calls it;
    * kept so callers need not change.
    */
   onNeedHelp?: () => void;
@@ -100,6 +100,10 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
   const [failure, setFailure] = useState<{ message: string; retryable: boolean } | null>(null);
   const [lastRun, setLastRun] = useState<Run | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
+  /** The danger pop-up is open. */
+  const [danger, setDanger] = useState(false);
+  /** The text the pop-up was last opened for: once per urgent result. */
+  const dangerShownFor = useRef<string | null>(null);
   // Assume online unless the browser actually says otherwise: `onLine` is
   // missing in some runtimes, and a false "you are offline" banner would stop
   // a child who has a perfectly good connection from sending anything.
@@ -138,6 +142,13 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
       window.removeEventListener("offline", goOffline);
     };
   }, []);
+
+  // The safety floor: an urgent result opens the danger pop-up, once.
+  useEffect(() => {
+    if (!opensForResult(result, checkedText, dangerShownFor.current)) return;
+    dangerShownFor.current = checkedText;
+    setDanger(true);
+  }, [result, checkedText]);
 
   // Move the reader to the German when it arrives. Without this a screen
   // reader user is left at the bottom of a form that has silently changed.
@@ -305,13 +316,15 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
         </section>
       )}
 
+      {/* Continue only closes it: `text` and the result stay as they are. */}
+      {danger && <DangerDialog lang={lang} onClose={() => setDanger(false)} />}
+
       {phase === "result" && result && (
         // tabIndex -1 so the focus move above has somewhere to land; it is not
         // in the tab order.
         <div ref={resultRef} tabIndex={-1} className="flex flex-col gap-5">
-          {/* The safety floor (CLAUDE.md): on urgent text, the red Need help
-              button in the top bar pulses. No red line here (Neel, 26 Oct:
-              "remove the emergency message"). */}
+          {/* The safety floor (CLAUDE.md): on urgent text, the danger pop-up
+              opens once (above) and Need help in the top bar glows. */}
           {result.safety.urgent && <HelpPulse />}
 
           <WriteResult

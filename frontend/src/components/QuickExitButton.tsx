@@ -78,6 +78,8 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: Qui
           <button
             type="button"
             onClick={() => quickExit(url)}
+            // DangerDialog keeps this in its Tab cycle, so it stays reachable.
+            data-quick-exit
             className="min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-[3px] border-ink bg-surface px-3 text-base font-bold text-ink"
           >
             {/* An arrow out of a door, for a child who reads the shape faster

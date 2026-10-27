@@ -36,11 +36,11 @@
  * it: the answers live in App.tsx, not here.
  */
 
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 
 import Face from "../art/Face";
 import QuestionPicture, { type QuestionKind } from "../art/Questions";
-import { HelpPulse } from "../components/DangerLine";
+import DangerDialog, { HelpPulse, opensForTiles } from "../components/DangerDialog";
 import { MOODS } from "../lib/moods";
 import {
   ADULT_WHERE,
@@ -231,9 +231,17 @@ export interface QuestionProps {
 
 /** What happened? Several answers allowed. */
 export function WhatQuestion({ lang, value, onChange, onNext }: QuestionProps) {
+  // The safety floor: picking "hit" or "threatened" opens the danger pop-up,
+  // once, on the tap that adds danger to a pick that had none.
+  const [danger, setDanger] = useState(false);
+  const choose = (next: string[]) => {
+    if (opensForTiles(value, next)) setDanger(true);
+    onChange(next);
+  };
   return (
     <Screen lang={lang} id="q-what" title={t("q.what.title", lang)} hint={t("q.what.hint", lang)}>
-      <TileGrid tiles={tilesFor("what", WHAT, lang)} value={value} multi name="q-what" labelledBy="q-what" onChange={onChange} />
+      {danger && <DangerDialog lang={lang} onClose={() => setDanger(false)} />}
+      <TileGrid tiles={tilesFor("what", WHAT, lang)} value={value} multi name="q-what" labelledBy="q-what" onChange={choose} />
       <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );

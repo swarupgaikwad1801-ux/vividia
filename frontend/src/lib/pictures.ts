@@ -107,7 +107,7 @@ const WHAT_SENTENCE: Record<WhatCode, { say: Copy; passive: Copy }> = {
 
 /**
  * Taps that get the same help route the writing screen shows for danger
- * (the red 110 line, and Need help pulses), at once and without a model call.
+ * (the 110/112 pop-up, and Need help glows), at once and without a model call.
  */
 export const DANGER: readonly WhatCode[] = ["hit", "threatened"];
 

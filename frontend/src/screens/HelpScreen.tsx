@@ -11,8 +11,8 @@ import { t } from "../lib/strings.ts";
  * Until 26 Oct this was a big panel shown inline under a dangerous answer
  * (WriteSafetyNote). Neel: "just keep a red button saying need help on the
  * top right". So the full list lives here, one tap away from every screen,
- * and a dangerous answer now shows one red line (DangerLine) and makes the
- * button pulse instead.
+ * and a dangerous answer now opens a pop-up with 110/112 (DangerDialog) and
+ * makes the button glow.
  *
  * ## Calm and still
  *

@@ -79,10 +79,17 @@ export const STRINGS = {
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "Yeh log madad kar sakte hain" },
   // The red pill in the top bar: short, so it fits beside Leave now at 360px.
   "help.short": { en: "Need help", de: "Hilfe", hi: "Madad chahiye" },
-  // The one red line on danger. Split around the number, which comes from
-  // /api/emergency (content/helplines.json), never typed here.
-  "help.dangerBefore": { en: "In danger right now? Call", de: "Gerade in Gefahr? Ruf die", hi: "Abhi khatra hai?" },
-  "help.dangerAfter": { en: ".", de: " an.", hi: " par call karo." },
+  // The danger pop-up (components/DangerDialog.tsx). Calm and short; the
+  // numbers come from /api/emergency (content/helplines.json), never typed here.
+  "danger.title": { en: "Are you in danger right now?", de: "Bist du gerade in Gefahr?", hi: "Kya tum abhi khatre mein ho?" },
+  "danger.hint": {
+    en: "You can call one of these now. Tap a number to call.",
+    de: "Du kannst jetzt eine dieser Nummern anrufen. Tipp darauf.",
+    hi: "Tum abhi inme se kisi ko call kar sakte ho. Number dabao.",
+  },
+  "danger.orWrite": { en: "Or write to someone", de: "Oder schreib jemandem", hi: "Ya kisi ko likho" },
+  "danger.continue": { en: "Continue", de: "Weiter", hi: "Aage chalo" },
+  // Shown in the pop-up when /api/emergency cannot be reached.
   "help.dangerLineNoNumber": {
     en: "In danger right now? Tap Need help at the top.",
     de: "Gerade in Gefahr? Tipp oben auf Hilfe.",
