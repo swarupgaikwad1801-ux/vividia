@@ -5,6 +5,7 @@ import DangerDialog, { HelpPulse } from "../components/DangerDialog.tsx";
 import { ApiError, listen } from "../lib/api.ts";
 import { HELP_NUDGE, MAX_CARD_CHARS, replyFor, wordsForCard, type Turn } from "../lib/listening.ts";
 import { t } from "../lib/strings.ts";
+import SentenceStarters, { withStarter } from "../components/SentenceStarters";
 
 /**
  * "Tell us what happened": the child talks, and we answer every message
@@ -296,6 +297,19 @@ export default function Listen({
         <p className="rounded-card border-[3px] border-ink bg-surface p-3 text-base text-ink">{t("heard.full", lang)}</p>
       ) : (
         <div className="flex flex-col gap-2 rounded-card border-[3px] border-ink bg-surface p-2">
+          <SentenceStarters
+            lang={lang}
+            onPick={(starter) => {
+              const next = withStarter(draft, starter);
+              if (next.length > room) return;
+              onDraftChange(next);
+              requestAnimationFrame(() => {
+                const box = editorRef.current;
+                box?.focus();
+                box?.setSelectionRange(next.length, next.length);
+              });
+            }}
+          />
           <textarea
             ref={editorRef}
             value={draft}

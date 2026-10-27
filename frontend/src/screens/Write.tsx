@@ -7,6 +7,7 @@ import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
 import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDialog.tsx";
 import type { EngineMode } from "../lib/engineMode.ts";
+import SentenceStarters, { withStarter } from "../components/SentenceStarters";
 
 
 /**
@@ -292,6 +293,19 @@ export default function Write({
 
       {phase === "writing" && (
         <section className="flex flex-col gap-3">
+          <SentenceStarters
+            lang={lang}
+            onPick={(starter) => {
+              const next = withStarter(text, starter);
+              setText(next);
+              onTextChange?.(next);
+              requestAnimationFrame(() => {
+                const box = editorRef.current;
+                box?.focus();
+                box?.setSelectionRange(next.length, next.length);
+              });
+            }}
+          />
           <textarea
             ref={editorRef}
             value={text}
