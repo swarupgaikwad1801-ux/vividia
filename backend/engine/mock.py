@@ -51,9 +51,14 @@ async def translate(
 
 async def report(entries: list[Entry], child_lang: str) -> Report:
     await asyncio.sleep(1.0)
+    # Singular at one, because a timeline of one is the first card anyone sees
+    # and "In 1 Fällen" is what a judge would read in mock mode.
+    count = len(entries)
+    times = "once" if count == 1 else f"{count} times"
+    cases = "In einem Fall" if count == 1 else f"In {count} Fällen"
     return {
-        "child_version": f"{len(entries)} times something happened at school. (example text)",
-        "german_version": f"In {len(entries)} Fällen ist in der Schule etwas passiert. (Beispieltext)",
+        "child_version": f"Something happened at school {times}. (example text)",
+        "german_version": f"{cases} ist in der Schule etwas passiert. (Beispieltext)",
     }
 
 

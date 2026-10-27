@@ -35,6 +35,7 @@ What the template buys:
 from engine.client import EngineError, Usage
 from engine.contract import Entry, Report
 from engine.report_text import (
+    count_label_for,
     footer_for,
     format_date,
     header_for,
@@ -75,7 +76,7 @@ def _entry_block(entry: Entry, lang: str, text_key: str) -> str:
 def _period(entries: list[Entry], lang: str) -> str:
     labels = labels_for(lang)
     dates = sorted(entry["date"] for entry in entries if entry.get("date"))
-    count = f"{len(entries)} {labels['entries']}"
+    count = count_label_for(len(entries), lang)
     if not dates:
         return count
     first, last = format_date(dates[0], lang), format_date(dates[-1], lang)
