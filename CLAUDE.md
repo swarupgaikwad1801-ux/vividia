@@ -151,7 +151,7 @@ available: for most of a child's week, it is not.
 | 8 | **Don't get dropped**: follow-up check-ins + escalation ladder that carries the timeline | Must |
 | + | **Safety floor**: if the child writes about danger or self-harm, or picks "hit" or "threatened", a pop-up opens at once with 110/112 as tap-to-call buttons and krisenchat with its languages; "Continue" closes it and keeps what the child entered. The red Need help glow stays as well. Nothing is sent to anyone | Must |
 | + | **Quick exit + PIN lock** | Must |
-| + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
+| + | ~~**"Try Amira's story"**: one-click pre-filled demo for judges~~ Removed 27 Oct (Neel). `content/demo_story.json` stays: the mock engine and the backend tests read it | Removed |
 | + | **Picture incident builder**: tap icons for what happened, where and who (pushed, hit, names, things taken, online, left out). For children who can't write either | Tier A |
 | + | **Read-aloud**: removed on 27 Oct (Neel: not good enough to ship); future work | Removed |
 | + | **Hindi and English** as source languages, German as target (decided 24 Oct, see the language gate) | Tier A |

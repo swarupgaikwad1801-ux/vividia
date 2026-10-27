@@ -42,25 +42,6 @@ export const STRINGS = {
     hi: "NVIDIA Nemotron se bana",
   },
 
-  "demo.button": { en: "Try Amara's story", de: "Amaras Geschichte ausprobieren", hi: "Amara ki kahani dekho" },
-  // The demo button (moved from lib-demo/pendingStrings.ts, same key names).
-  // {name} is the persona name from the story, filled with fill(), never typed in.
-  "demo.loading": {
-    en: "Opening the story…",
-    de: "Die Geschichte wird geöffnet…",
-    hi: "Kahani khul rahi hai…",
-  },
-  "demo.loaded": {
-    en: "{name}'s story is ready. Her words are already written. Press “Write it down”.",
-    de: "{name}s Geschichte ist da. Ihre Worte sind schon geschrieben. Drück auf „Aufschreiben“.",
-    hi: "{name} ki kahani ready hai. Uski baat pehle se likhi hai. Ab “Likh do” dabao.",
-  },
-  "demo.clear": { en: "Remove the example", de: "Beispiel löschen", hi: "Example hatao" },
-  "demo.cleared": {
-    en: "The example is gone. The app is empty again.",
-    de: "Das Beispiel ist weg. Die App ist wieder leer.",
-    hi: "Example hat gaya. App phir se khaali hai.",
-  },
   // The refusal: the person has notes of their own, so the example was not
   // loaded at all. Says what happened, and does not offer to load it anyway:
   // the child's own words are what is being protected.
@@ -1077,8 +1058,6 @@ export type StringKey = keyof typeof STRINGS;
  */
 export const ENGLISH_IN_HINGLISH: ReadonlySet<StringKey> = new Set<StringKey>([
   "app.poweredBy",
-  "demo.button",
-  "demo.clear",
   "help.button",
   "help.title",
   "help.short",
