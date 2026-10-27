@@ -329,6 +329,23 @@ export const STRINGS = {
     hi: "Ye page bhar gaya. Ab card banao, ya baad mein wapas aao.",
   },
   "heard.retry": { en: "Try again", de: "Nochmal versuchen", hi: "Phir se try karo" },
+  // Clearing the chat (Neel, 27 Oct). Asked once more before anything goes,
+  // because losing words a child managed to write is the one thing this app
+  // must never do by accident. Says only what is true: the words leave this
+  // screen and cannot be brought back. Cards already saved are not touched.
+  "heard.clear": { en: "Clear this chat", de: "Diesen Chat löschen", hi: "Ye chat clear karo" },
+  "heard.clearAsk": {
+    en: "Clear everything you wrote here? It can't be brought back. Cards you already saved stay.",
+    de: "Alles löschen, was du hier geschrieben hast? Das kann man nicht zurückholen. Gespeicherte Karten bleiben.",
+    hi: "Yahan jo likha, sab clear karna hai? Wapas nahi aayega. Jo cards save hain, woh rahenge.",
+  },
+  "heard.clearYes": { en: "Yes, clear it", de: "Ja, löschen", hi: "Haan, clear karo" },
+  "heard.clearNo": { en: "No, keep it", de: "Nein, behalten", hi: "Nahi, rehne do" },
+  "heard.cleared": {
+    en: "The chat is cleared. You can start again any time.",
+    de: "Der Chat ist gelöscht. Du kannst jederzeit neu anfangen.",
+    hi: "Chat clear ho gaya. Jab chaho, phir se shuru karo.",
+  },
 
   "write.title": { en: "What happened?", de: "Was ist passiert?", hi: "Kya hua?" },
   "write.hint": {
