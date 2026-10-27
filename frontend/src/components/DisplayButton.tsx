@@ -5,10 +5,16 @@ import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
 
 /**
- * "Aa Text" on the check-in: opens three switches, bigger text, easier
- * reading and darker colours (lib/display.ts). Each applies at once and is kept in this browser
+ * "Aa Text" on the check-in: opens the display switches, bigger text,
+ * easier reading, darker colours and (where the phone can) vibrate on tap
+ * (lib/display.ts). Each applies at once and is kept in this browser
  * only. Closed by default, so the check-in stays as plain as it was.
  */
+/** Only phones that can vibrate get the switch (not iPhones, not desktops). */
+function canVibrate(): boolean {
+  return typeof navigator !== "undefined" && typeof navigator.vibrate === "function";
+}
+
 export default function DisplayButton({ lang }: { lang: Lang }) {
   const [open, setOpen] = useState(false);
   const [display, setDisplay] = useState<Display>(() => readDisplay());
@@ -63,6 +69,20 @@ export default function DisplayButton({ lang }: { lang: Lang }) {
           >
             {t("display.night", lang)}
           </button>
+          {canVibrate() && (
+            <button
+              type="button"
+              aria-pressed={display.haptics}
+              onClick={() => {
+                // One tick as it turns on, so the child feels what they chose.
+                if (!display.haptics) navigator.vibrate(12);
+                set({ haptics: !display.haptics });
+              }}
+              className={`${pill} ${display.haptics ? "bg-ink text-page" : "bg-surface text-ink"}`}
+            >
+              {t("display.haptics", lang)}
+            </button>
+          )}
         </div>
       )}
     </>

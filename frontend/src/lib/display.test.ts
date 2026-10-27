@@ -34,8 +34,8 @@ test("nothing saved means plain text", () => {
 test("a choice is kept for the next visit", () => {
   const store = memoryStore();
   useStorage(store);
-  saveDisplay({ large: true, easyRead: false, night: false });
-  assert.deepEqual(readDisplay(), { large: true, easyRead: false, night: false });
+  saveDisplay({ large: true, easyRead: false, night: false, haptics: false });
+  assert.deepEqual(readDisplay(), { large: true, easyRead: false, night: false, haptics: false });
   useStorage(null);
 });
 
@@ -49,21 +49,29 @@ test("damaged data reads as plain, never a throw", () => {
 
 test("storage that refuses still keeps the choice for this visit", () => {
   useStorage(memoryStore(undefined, true));
-  saveDisplay({ large: false, easyRead: true, night: false });
-  assert.deepEqual(readDisplay(), { large: false, easyRead: true, night: false });
+  saveDisplay({ large: false, easyRead: true, night: false, haptics: false });
+  assert.deepEqual(readDisplay(), { large: false, easyRead: true, night: false, haptics: false });
   useStorage(null);
 });
 
 test("with no document, applying does nothing and does not throw", () => {
-  assert.doesNotThrow(() => applyDisplay({ large: true, easyRead: true, night: true }));
+  assert.doesNotThrow(() => applyDisplay({ large: true, easyRead: true, night: true, haptics: true }));
 });
 
 test("darker colours are kept, and a setting saved before they existed reads as off", () => {
   useStorage(memoryStore());
-  saveDisplay({ large: false, easyRead: false, night: true });
+  saveDisplay({ large: false, easyRead: false, night: true, haptics: false });
   assert.equal(readDisplay().night, true);
   useStorage(memoryStore('{"large":true,"easyRead":false}'));
-  assert.deepEqual(readDisplay(), { large: true, easyRead: false, night: false });
+  assert.deepEqual(readDisplay(), { large: true, easyRead: false, night: false, haptics: false });
+  useStorage(null);
+});
+
+test("vibration is off unless the child turns it on", () => {
+  useStorage(memoryStore());
+  assert.equal(readDisplay().haptics, false);
+  saveDisplay({ ...PLAIN, haptics: true });
+  assert.equal(readDisplay().haptics, true);
   useStorage(null);
 });
 

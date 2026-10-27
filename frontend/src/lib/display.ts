@@ -14,8 +14,13 @@
  *   An option, not the default: in Garrido et al. 2024 most young people
  *   (13-25) liked dark palettes, but some found dark gloomy.
  *
+ * - **Vibrate on tap** (27 Oct): a short tick when a button or tile is
+ *   pressed (main.tsx). Off by default and never automatic: a phone that
+ *   buzzes can be heard in a quiet room, which matters for a child using
+ *   this without others knowing. Android only; iPhones ignore it.
+ *
  * Applied as attributes on <html> (`data-large`, `data-easy-read`,
- * `data-night`) and read
+ * `data-night`, `data-haptics`) and read
  * before the first paint (main.tsx), so the app never flashes small first.
  * Storage that refuses is not an error: the setting holds for this visit.
  */
@@ -26,9 +31,10 @@ export interface Display {
   large: boolean;
   easyRead: boolean;
   night: boolean;
+  haptics: boolean;
 }
 
-export const PLAIN: Display = { large: false, easyRead: false, night: false };
+export const PLAIN: Display = { large: false, easyRead: false, night: false, haptics: false };
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -59,7 +65,7 @@ export function readDisplay(): Display {
     const raw = storage()?.getItem(DISPLAY_KEY);
     if (!raw) return memory;
     const v = JSON.parse(raw) as Partial<Display> | null;
-    return { large: v?.large === true, easyRead: v?.easyRead === true, night: v?.night === true };
+    return { large: v?.large === true, easyRead: v?.easyRead === true, night: v?.night === true, haptics: v?.haptics === true };
   } catch {
     return memory;
   }
@@ -82,6 +88,7 @@ export function applyDisplay(display: Display): void {
     root.toggleAttribute("data-large", display.large);
     root.toggleAttribute("data-easy-read", display.easyRead);
     root.toggleAttribute("data-night", display.night);
+    root.toggleAttribute("data-haptics", display.haptics);
   } catch {
     // Nothing worth breaking a screen over.
   }
