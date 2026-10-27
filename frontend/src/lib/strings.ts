@@ -911,6 +911,55 @@ export const STRINGS = {
   // On every question, always the last two tiles, in this order.
   "q.other": { en: "Something else", de: "Etwas anderes", hi: "Kuch aur" },
   "q.noSay": { en: "I don't want to say", de: "Möchte ich nicht sagen", hi: "Nahi batana" },
+
+  // The warm line the app says back (lib/warm.ts chooses which). Written in
+  // advance, never generated. Thanks and comfort only: never whether it is
+  // true, never "you are safe", never advice, never "I".
+  "warm.what.threatened": {
+    en: "Thank you for telling us. A threat is serious, and telling someone is the right thing.",
+    de: "Danke, dass du es uns sagst. Eine Drohung ist ernst, und es jemandem zu sagen ist richtig.",
+    hi: "Batane ke liye shukriya. Dhamki serious baat hai, aur kisi ko batana sahi hai.",
+  },
+  "warm.what.hurt": {
+    en: "Thank you for telling us. Nobody is allowed to hurt you.",
+    de: "Danke, dass du es uns sagst. Niemand darf dir wehtun.",
+    hi: "Batane ke liye shukriya. Kisi ko bhi tumhe chot pahunchane ka haq nahi hai.",
+  },
+  "warm.what.taken": {
+    en: "Your things belong to you. Thank you for telling us.",
+    de: "Deine Sachen gehören dir. Danke, dass du es uns sagst.",
+    hi: "Tumhari cheezein tumhari hain. Batane ke liye shukriya.",
+  },
+  "warm.what.online": {
+    en: "What happens online is real too. Thank you for telling us.",
+    de: "Was online passiert, ist auch echt. Danke, dass du es uns sagst.",
+    hi: "Online jo hota hai, woh bhi sach mein hota hai. Batane ke liye shukriya.",
+  },
+  "warm.what.names": {
+    en: "Mean words can hurt a lot. They don't decide who you are.",
+    de: "Gemeine Worte können sehr wehtun. Sie bestimmen nicht, wer du bist.",
+    hi: "Buri baatein bahut chubhti hain. Woh tay nahi karti ki tum kaun ho.",
+  },
+  "warm.what.left_out": {
+    en: "Being left out hurts. It is not your fault.",
+    de: "Ausgeschlossen zu werden tut weh. Es ist nicht deine Schuld.",
+    hi: "Alag chhod diya jaana dukh deta hai. Yeh tumhari galti nahi hai.",
+  },
+  "warm.what.other": {
+    en: "Thank you for telling us. You can say it in your own words.",
+    de: "Danke, dass du es uns sagst. Du kannst es mit deinen eigenen Worten sagen.",
+    hi: "Batane ke liye shukriya. Apne shabdon mein batao.",
+  },
+  "warm.what.noSay": {
+    en: "That's OK. Tell us only what you want to.",
+    de: "Das ist okay. Sag uns nur, was du sagen möchtest.",
+    hi: "Koi baat nahi. Sirf utna batao jitna tum chaho.",
+  },
+  "warm.adult": {
+    en: "Thank you for telling us. An adult must never treat a child like this. Stopping it is a job for other adults, not for you.",
+    de: "Danke, dass du es uns sagst. So darf ein Erwachsener ein Kind nie behandeln. Das zu stoppen ist die Aufgabe von anderen Erwachsenen, nicht deine.",
+    hi: "Batane ke liye shukriya. Kisi bade ko kabhi kisi bachche ke saath aisa nahi karna chahiye. Ise rokna doosre badon ka kaam hai, tumhara nahi.",
+  },
   "q.review.hint": { en: "This is what the card will say.", de: "Das steht dann auf der Karte.", hi: "Card par yahi likha hoga." },
   "q.review.nothing": {
     en: "You did not pick anything. That is okay.",
