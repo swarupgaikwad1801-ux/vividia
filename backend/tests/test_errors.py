@@ -374,7 +374,9 @@ def test_the_out_of_credit_message_says_which_language_the_help_speaks():
 
     message = MESSAGES["credit_exhausted"]
     assert "in German" in message["en"]
-    assert "जर्मन" in message["hi"]
+    # "German", not "जर्मन": the Hindi is Hinglish now, and #77's screens
+    # label the language "German" too, so a child meets one spelling.
+    assert "German" in message["hi"]
     # The German child is already reading German; a clause there would be
     # noise, which is why this is a per-language rule and not a blanket one.
     assert "auf Deutsch" not in message["de"]
