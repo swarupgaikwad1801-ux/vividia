@@ -87,6 +87,9 @@ export const STRINGS = {
     de: "Du kannst jetzt eine dieser Nummern anrufen. Tipp darauf.",
     hi: "Tum abhi inme se kisi ko call kar sakte ho. Number dabao.",
   },
+  // Under 110 and 112, by position (helplines.json's names are German only).
+  "danger.police": { en: "Police", de: "Polizei", hi: "Police" },
+  "danger.ambulance": { en: "Ambulance and fire brigade", de: "Rettungsdienst und Feuerwehr", hi: "Ambulance aur fire brigade" },
   "danger.orWrite": { en: "Or write to someone", de: "Oder schreib jemandem", hi: "Ya kisi ko likho" },
   "danger.continue": { en: "Continue", de: "Weiter", hi: "Aage chalo" },
   // Shown in the pop-up when /api/emergency cannot be reached.

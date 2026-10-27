@@ -73,6 +73,44 @@ test("it renders the numbers from the response as buttons that dial", () => {
   assert.ok(markup.includes("Speaks German and Ukrainian only"));
 });
 
+test("helplines.json lists police then emergency, the order the labels assume", () => {
+  // The labels under the numbers go by position. A reordered file must fail
+  // here rather than put "Police" under the ambulance number.
+  const data = JSON.parse(readFileSync(join(SRC, "../../content/helplines.json"), "utf8"));
+  assert.deepEqual(data.emergency.map((entry: { id: string }) => entry.id), ["police", "emergency"]);
+});
+
+test("the pop-up is in the child's language, labels under the numbers included", () => {
+  const { emergency, chat } = served();
+  for (const lang of ["en", "de", "hi"] as const) {
+    const markup = renderToStaticMarkup(
+      createElement(DangerDialogView, { lang, contacts: emergency, failed: false, chat, onContinue: () => {} }),
+    );
+    const at = (key: keyof typeof STRINGS) => markup.indexOf(`>${STRINGS[key][lang]}<`);
+    assert.ok(at("danger.police") > -1, `${lang} police`);
+    assert.ok(at("danger.ambulance") > at("danger.police"), `${lang} ambulance after police`);
+    for (const key of ["danger.title", "danger.hint", "danger.orWrite", "danger.continue"] as const) {
+      assert.ok(at(key) > -1, `${lang} ${key}`);
+    }
+    // The German-only names from the file are not shown.
+    for (const contact of emergency) assert.ok(!markup.includes(contact.name), `${lang}: ${contact.name}`);
+  }
+  const hi = renderToStaticMarkup(
+    createElement(DangerDialogView, { lang: "hi", contacts: null, failed: true, chat, onContinue: () => {} }),
+  );
+  assert.ok(hi.includes(STRINGS["help.dangerLineNoNumber"].hi));
+  assert.ok(!hi.includes("Speaks"), "krisenchat's language note is in Hinglish too");
+});
+
+test("an unexpected extra contact keeps its own name", () => {
+  const { emergency } = served();
+  const extra = { ...emergency[0], name: "Extra service" };
+  const markup = renderToStaticMarkup(
+    createElement(DangerDialogView, { lang: "en", contacts: [...emergency, extra], failed: false, chat: null, onContinue: () => {} }),
+  );
+  assert.ok(markup.includes(">Extra service<"));
+});
+
 test("if /api/emergency fails, it says where help is instead of the numbers", () => {
   const markup = renderToStaticMarkup(
     createElement(DangerDialogView, { lang: "de", contacts: null, failed: true, chat: null, onContinue: () => {} }),

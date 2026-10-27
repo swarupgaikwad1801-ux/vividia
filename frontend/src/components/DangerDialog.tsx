@@ -31,7 +31,7 @@ import { createPortal } from "react-dom";
 import type { Resource } from "../types/api.ts";
 import { emergency, resources } from "../lib/api.ts";
 import { languageNote } from "../lib/help.ts";
-import { t } from "../lib/strings.ts";
+import { t, type StringKey } from "../lib/strings.ts";
 import { DANGER } from "../lib/pictures.ts";
 
 // --- when it opens ------------------------------------------------------------
@@ -74,6 +74,20 @@ export function opensForTiles(before: readonly string[], after: readonly string[
 
 const TEL = (contact: string) => `tel:${contact.replace(/[^+\d]/g, "")}`;
 
+/**
+ * The label under each emergency number, by position: `/api/emergency`
+ * serves helplines.json's `emergency` list in file order, police then
+ * emergency (a test pins that order), and its names are German only. Keyed
+ * on position, never on the number, which is not typed anywhere here. An
+ * unexpected extra contact keeps its own name.
+ */
+const EMERGENCY_LABELS: readonly StringKey[] = ["danger.police", "danger.ambulance"];
+
+export function emergencyLabel(contact: Resource, index: number, lang: string): string {
+  const key = EMERGENCY_LABELS[index];
+  return key ? t(key, lang) : contact.name;
+}
+
 export interface DangerDialogViewProps {
   lang: string;
   /** 110 and 112, in file order. `null` while loading. */
@@ -104,7 +118,7 @@ export function DangerDialogView({ lang, contacts, failed, chat, onContinue }: D
 
       {!failed && contacts && contacts.length > 0 && (
         <ul className="flex flex-col gap-3">
-          {contacts.map((contact) => (
+          {contacts.map((contact, index) => (
             <li key={`${contact.name}-${contact.contact}`}>
               <a
                 href={TEL(contact.contact)}
@@ -112,7 +126,7 @@ export function DangerDialogView({ lang, contacts, failed, chat, onContinue }: D
                 className="flex min-h-tap flex-col items-center rounded-card border-[3px] border-help bg-help px-4 py-3 text-page"
               >
                 <span className="text-3xl font-bold">{contact.contact}</span>
-                <span className="text-base font-medium">{contact.name}</span>
+                <span className="text-base font-medium">{emergencyLabel(contact, index, lang)}</span>
               </a>
             </li>
           ))}
