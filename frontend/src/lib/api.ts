@@ -19,6 +19,8 @@ import type {
   ErrorCode,
   ErrorResponse,
   HealthResponse,
+  ListenRequest,
+  ListenResponse,
   ReportRequest,
   ReportResponse,
   ResourcesResponse,
@@ -118,6 +120,15 @@ function post<T>(path: string, body: unknown, lang: string, timeoutMs: number): 
 
 export function translate(req: TranslateRequest): Promise<TranslateResponse> {
   return post("/api/translate", req, req.source_lang, SLOW_MS);
+}
+
+/**
+ * One message on the listening screen: what kind of thing the child said, and
+ * the safety check. Two small model calls in live mode, no translation - the
+ * German is only made when the child asks for a card.
+ */
+export function listen(req: ListenRequest): Promise<ListenResponse> {
+  return post("/api/listen", req, req.lang, QUICK_MS * 2);
 }
 
 export function clarify(req: ClarifyRequest): Promise<ClarifyResponse> {
