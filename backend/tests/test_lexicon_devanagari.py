@@ -33,7 +33,7 @@ THREAT = "उसने कहा कल छुट्टी के बाद द�
 
 
 def phrases(text, lang):
-    return [item["phrase"] for item in lexicon_ambiguities(text, lang)]
+    return [item["word"] for item in lexicon_ambiguities(text, lang)]
 
 
 def test_the_shredding_that_caused_it_is_real():

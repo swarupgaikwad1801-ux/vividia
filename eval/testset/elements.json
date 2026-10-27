@@ -1,0 +1,969 @@
+{
+  "_comment": "Per-element answer key for eval/run_eval.py, added 27 Oct 2026 BEFORE any rerun (Neel, #3). `check` in each set asks one question per sentence: is the gist there? It cannot say WHICH part of a disclosure a translation lost. These keys split a sentence into the four parts that change what an adult does: actor (who did it), negation (a not/nobody that carries the meaning), threat (what was threatened, and on what condition), timing (when, how often, since when). An element is listed only where the sentence carries it; 'they' as an actor is not listed, because German 'sie' cannot be checked by string. Terms are matched as whole words after the same folding as `check` (lower-case, umlauts spelled out); a term ending in * matches any word starting with it. Every reference_de must pass its own elements (--dry-run). DRAFT, written with Claude: the HI keys fall under the same review gate as hi_core.json.",
+  "elements": [
+    "actor",
+    "negation",
+    "threat",
+    "timing"
+  ],
+  "en_core.json": {
+    "laughed-at": {
+      "actor": {
+        "all_of": [
+          [
+            "alle",
+            "jeder",
+            "die ganze*"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "wieder",
+            "erneut"
+          ]
+        ]
+      }
+    },
+    "left-out": {
+      "negation": {
+        "all_of": [
+          [
+            "niemand*",
+            "keiner",
+            "keinen",
+            "nie jemand"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "immer",
+            "staendig",
+            "jedes mal"
+          ]
+        ]
+      }
+    },
+    "pushed-stairs": {
+      "actor": {
+        "all_of": [
+          [
+            "er",
+            "der junge",
+            "ein junge"
+          ]
+        ]
+      }
+    },
+    "worse-after-telling": {
+      "timing": {
+        "all_of": [
+          [
+            "letztes mal",
+            "letzten mal",
+            "das letzte mal",
+            "letztens",
+            "damals"
+          ]
+        ]
+      }
+    },
+    "made-me-give": {
+      "negation": {
+        "all_of": [
+          [
+            "nicht",
+            "niemand*",
+            "keinem"
+          ]
+        ]
+      }
+    },
+    "teacher-annoyed": {
+      "actor": {
+        "all_of": [
+          [
+            "lehrkraft",
+            "lehrer*",
+            "lehrerin"
+          ]
+        ]
+      },
+      "negation": {
+        "all_of": [
+          [
+            "nicht"
+          ]
+        ]
+      }
+    },
+    "friend-hits": {
+      "actor": {
+        "all_of": [
+          [
+            "freund*"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "manchmal",
+            "ab und zu",
+            "gelegentlich"
+          ]
+        ]
+      }
+    },
+    "get-me-after-school": {
+      "actor": {
+        "all_of": [
+          [
+            "er",
+            "der junge",
+            "ein junge"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "nach der schule",
+            "nach schulschluss",
+            "nach dem unterricht"
+          ]
+        ]
+      }
+    },
+    "picking-on": {
+      "actor": {
+        "all_of": [
+          [
+            "zwei"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "staendig",
+            "immer",
+            "dauernd",
+            "andauernd"
+          ]
+        ]
+      }
+    },
+    "kicked-out-game": {
+      "timing": {
+        "all_of": [
+          [
+            "pause"
+          ]
+        ]
+      }
+    },
+    "got-jumped": {
+      "actor": {
+        "all_of": [
+          [
+            "drei"
+          ]
+        ]
+      }
+    },
+    "ghosted": {
+      "actor": {
+        "all_of": [
+          [
+            "beste* freund*"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "nachdem",
+            "seit*"
+          ]
+        ]
+      }
+    },
+    "accent-copy": {
+      "timing": {
+        "all_of": [
+          [
+            "wenn",
+            "jedes mal",
+            "sobald",
+            "immer"
+          ]
+        ]
+      }
+    },
+    "fake-account": {
+      "actor": {
+        "all_of": [
+          [
+            "jemand"
+          ]
+        ]
+      }
+    },
+    "locked-toilet": {
+      "actor": {
+        "all_of": [
+          [
+            "junge*"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "letzten monat",
+            "letzte monat",
+            "vergangenen monat",
+            "vorigen monat"
+          ]
+        ]
+      }
+    },
+    "teacher-blamed": {
+      "actor": {
+        "all_of": [
+          [
+            "lehrkraft",
+            "lehrer*",
+            "lehrerin"
+          ]
+        ]
+      }
+    },
+    "not-my-fault": {
+      "negation": {
+        "all_of": [
+          [
+            "nichts"
+          ]
+        ]
+      }
+    },
+    "dont-tell-mum": {
+      "negation": {
+        "all_of": [
+          [
+            "nicht"
+          ]
+        ]
+      }
+    },
+    "dad-hits": {
+      "actor": {
+        "all_of": [
+          [
+            "papa",
+            "vater"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "wenn",
+            "jedes mal",
+            "sobald"
+          ]
+        ]
+      }
+    },
+    "mum-kill-me": {
+      "actor": {
+        "all_of": [
+          [
+            "mama",
+            "mutter",
+            "mutti"
+          ]
+        ]
+      }
+    },
+    "knife-tomorrow": {
+      "actor": {
+        "all_of": [
+          [
+            "er",
+            "der junge",
+            "ein junge"
+          ]
+        ]
+      },
+      "threat": {
+        "all_of": [
+          [
+            "messer"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "morgen"
+          ],
+          [
+            "nach der schule",
+            "nach schulschluss",
+            "nach dem unterricht"
+          ]
+        ]
+      }
+    },
+    "outside-now": {
+      "timing": {
+        "all_of": [
+          [
+            "gerade",
+            "jetzt",
+            "im moment"
+          ]
+        ]
+      },
+      "negation": {
+        "all_of": [
+          [
+            "nicht"
+          ]
+        ]
+      }
+    },
+    "following-me": {
+      "actor": {
+        "all_of": [
+          [
+            "jemand"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "jeden tag",
+            "taeglich"
+          ],
+          [
+            "diese woche",
+            "dieser woche"
+          ]
+        ]
+      }
+    },
+    "dont-want-live": {
+      "negation": {
+        "all_of": [
+          [
+            "nicht mehr"
+          ]
+        ]
+      }
+    },
+    "hurt-myself": {
+      "timing": {
+        "all_of": [
+          [
+            "manchmal"
+          ]
+        ]
+      }
+    },
+    "disappear": {
+      "negation": {
+        "all_of": [
+          [
+            "niemand*",
+            "keiner",
+            "keinen",
+            "nie jemand"
+          ]
+        ]
+      }
+    },
+    "tired-of-it": {
+      "timing": {
+        "all_of": [
+          [
+            "heute"
+          ],
+          [
+            "wieder",
+            "erneut",
+            "dasselbe",
+            "das gleiche"
+          ]
+        ]
+      }
+    },
+    "hit-last-week": {
+      "actor": {
+        "all_of": [
+          [
+            "er",
+            "der junge",
+            "ein junge"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "letzte woche",
+            "letzten woche",
+            "vergangene woche",
+            "vorige woche"
+          ],
+          [
+            "jetzt"
+          ]
+        ]
+      }
+    },
+    "dared-me": {
+      "threat": {
+        "all_of": [
+          [
+            "sonst",
+            "oder",
+            "wenn nicht",
+            "andernfalls"
+          ],
+          [
+            "geheimnis"
+          ]
+        ]
+      }
+    },
+    "in-trouble-teacher": {
+      "actor": {
+        "all_of": [
+          [
+            "lehrkraft",
+            "lehrer*",
+            "lehrerin"
+          ]
+        ]
+      },
+      "negation": {
+        "all_of": [
+          [
+            "nicht"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "immer",
+            "staendig"
+          ]
+        ]
+      }
+    },
+    "spat": {
+      "actor": {
+        "all_of": [
+          [
+            "maedchen"
+          ]
+        ]
+      }
+    },
+    "no-one-pairs": {
+      "negation": {
+        "all_of": [
+          [
+            "niemand*",
+            "keiner",
+            "keinen",
+            "nie jemand",
+            "nie"
+          ]
+        ]
+      }
+    },
+    "skip-school": {
+      "negation": {
+        "all_of": [
+          [
+            "nicht"
+          ]
+        ]
+      }
+    },
+    "translator-kid": {
+      "actor": {
+        "all_of": [
+          [
+            "junge*"
+          ]
+        ]
+      }
+    },
+    "not-allowed-play": {
+      "negation": {
+        "all_of": [
+          [
+            "nicht"
+          ]
+        ]
+      }
+    },
+    "it-stopped": {
+      "timing": {
+        "all_of": [
+          [
+            "woche"
+          ],
+          [
+            "wieder",
+            "erneut"
+          ]
+        ]
+      }
+    },
+    "phone-snatched": {
+      "actor": {
+        "all_of": [
+          [
+            "maedchen"
+          ]
+        ]
+      },
+      "negation": {
+        "all_of": [
+          [
+            "nicht"
+          ]
+        ]
+      }
+    },
+    "threat-tell": {
+      "threat": {
+        "all_of": [
+          [
+            "bereu*",
+            "leid tun",
+            "leidtun"
+          ],
+          [
+            "wenn",
+            "falls"
+          ]
+        ]
+      }
+    },
+    "only-one-friend": {
+      "timing": {
+        "all_of": [
+          [
+            "jeden tag",
+            "taeglich"
+          ],
+          [
+            "jetzt",
+            "nun",
+            "seitdem"
+          ]
+        ]
+      }
+    },
+    "good-day": {
+      "negation": {
+        "all_of": [
+          [
+            "niemand*",
+            "keiner",
+            "keinen",
+            "nie jemand"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "heute"
+          ]
+        ]
+      }
+    }
+  },
+  "hi_core.json": {
+    "tiffin-pause": {
+      "timing": {
+        "all_of": [
+          [
+            "pause"
+          ]
+        ]
+      }
+    },
+    "curry-name": {
+      "actor": {
+        "all_of": [
+          [
+            "alle",
+            "jeder"
+          ]
+        ]
+      }
+    },
+    "nakal": {
+      "timing": {
+        "all_of": [
+          [
+            "wenn",
+            "jedes mal",
+            "sobald",
+            "immer"
+          ]
+        ]
+      }
+    },
+    "sidi-dhakka": {
+      "actor": {
+        "all_of": [
+          [
+            "junge*"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "jeden tag",
+            "taeglich",
+            "immer"
+          ]
+        ]
+      },
+      "negation": {
+        "all_of": [
+          [
+            "nicht",
+            "nichts"
+          ]
+        ]
+      }
+    },
+    "last-team": {
+      "negation": {
+        "all_of": [
+          [
+            "niemand*",
+            "keiner",
+            "keinen",
+            "nie jemand",
+            "nicht"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "immer"
+          ]
+        ]
+      }
+    },
+    "copy-geeli": {
+      "actor": {
+        "all_of": [
+          [
+            "jemand"
+          ]
+        ]
+      }
+    },
+    "paise-marte": {
+      "timing": {
+        "all_of": [
+          [
+            "jeden tag",
+            "taeglich",
+            "immer"
+          ]
+        ]
+      },
+      "threat": {
+        "all_of": [
+          [
+            "wenn",
+            "falls",
+            "sonst"
+          ],
+          [
+            "schlag*",
+            "schlaeg*",
+            "geschlagen",
+            "hau*"
+          ]
+        ]
+      }
+    },
+    "maa-maar-daalegi": {
+      "actor": {
+        "all_of": [
+          [
+            "mama",
+            "mutter",
+            "maa",
+            "mutti"
+          ]
+        ]
+      }
+    },
+    "dimaag-kharab": {
+      "actor": {
+        "all_of": [
+          [
+            "papa",
+            "vater"
+          ]
+        ]
+      }
+    },
+    "chaaku-kal": {
+      "actor": {
+        "all_of": [
+          [
+            "er",
+            "der junge",
+            "ein junge"
+          ]
+        ]
+      },
+      "threat": {
+        "all_of": [
+          [
+            "messer"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "morgen"
+          ],
+          [
+            "nach der schule",
+            "nach schulschluss",
+            "nach dem unterricht"
+          ]
+        ]
+      }
+    },
+    "gate-pe-khade": {
+      "timing": {
+        "all_of": [
+          [
+            "gerade",
+            "jetzt",
+            "im moment"
+          ]
+        ]
+      },
+      "negation": {
+        "all_of": [
+          [
+            "nicht"
+          ]
+        ]
+      }
+    },
+    "jeene-ka-mann": {
+      "negation": {
+        "all_of": [
+          [
+            "nicht mehr",
+            "keine lust mehr"
+          ]
+        ]
+      }
+    },
+    "sab-khatam": {
+      "timing": {
+        "all_of": [
+          [
+            "manchmal"
+          ]
+        ]
+      }
+    },
+    "gayab": {
+      "negation": {
+        "all_of": [
+          [
+            "niemand*",
+            "keiner",
+            "keinen",
+            "nie jemand"
+          ]
+        ]
+      }
+    },
+    "pichle-hafte-mara": {
+      "actor": {
+        "all_of": [
+          [
+            "er",
+            "der junge",
+            "ein junge"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "letzte woche",
+            "letzten woche",
+            "vergangene woche",
+            "vorige woche"
+          ],
+          [
+            "jetzt"
+          ]
+        ]
+      }
+    },
+    "teacher-blame": {
+      "actor": {
+        "all_of": [
+          [
+            "lehrkraft",
+            "lehrer*",
+            "lehrerin"
+          ]
+        ]
+      }
+    },
+    "kuch-nahi-bolta": {
+      "negation": {
+        "all_of": [
+          [
+            "nichts",
+            "schweige"
+          ]
+        ]
+      }
+    },
+    "accent-chhedti": {
+      "actor": {
+        "all_of": [
+          [
+            "maedchen"
+          ]
+        ]
+      }
+    },
+    "bathroom-band": {
+      "actor": {
+        "all_of": [
+          [
+            "junge*"
+          ]
+        ]
+      }
+    },
+    "german-nahi-aata": {
+      "negation": {
+        "all_of": [
+          [
+            "kein*",
+            "nicht"
+          ],
+          [
+            "niemand*",
+            "keiner",
+            "keinen",
+            "nie jemand",
+            "nicht"
+          ]
+        ]
+      }
+    },
+    "klasse-ignore": {
+      "actor": {
+        "all_of": [
+          [
+            "alle",
+            "jeder",
+            "klasse"
+          ]
+        ]
+      }
+    },
+    "dekh-lena": {
+      "threat": {
+        "all_of": [
+          [
+            "wirst schon sehen",
+            "wirst sehen",
+            "schon sehen",
+            "kriege dich",
+            "kriegst",
+            "bereu*"
+          ],
+          [
+            "wenn",
+            "falls"
+          ]
+        ]
+      }
+    },
+    "bhai-mat-batana": {
+      "negation": {
+        "all_of": [
+          [
+            "nicht",
+            "nichts"
+          ]
+        ]
+      }
+    },
+    "papa-marte": {
+      "actor": {
+        "all_of": [
+          [
+            "papa",
+            "vater"
+          ]
+        ]
+      },
+      "timing": {
+        "all_of": [
+          [
+            "wenn",
+            "jedes mal",
+            "sobald"
+          ]
+        ]
+      }
+    },
+    "thak-gaya": {
+      "timing": {
+        "all_of": [
+          [
+            "heute"
+          ],
+          [
+            "wieder",
+            "dasselbe",
+            "das gleiche",
+            "immer noch"
+          ]
+        ]
+      }
+    }
+  }
+}
