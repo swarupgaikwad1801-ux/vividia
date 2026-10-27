@@ -11,9 +11,10 @@
  * ## Rules this follows
  *
  * - **No number typed here or in strings.ts** (`lib/__tests__/lib.test.ts`).
- *   110 and 112 come from `/api/emergency`, krisenchat from `/api/resources`,
- *   both out of `content/helplines.json`, the one place a contact is defined.
- *   If `/api/emergency` fails, `help.dangerLineNoNumber` points at Need help.
+ *   110, 112 and krisenchat come out of `content/helplines.json`, the one
+ *   place a contact is defined: built into the app (lib/contacts.ts) so they
+ *   show at once, then refreshed from `/api/emergency` and `/api/resources`.
+ *   A network failure keeps the built-in numbers on screen.
  * - **krisenchat's languages are printed** (`languageNote`): it is German and
  *   Ukrainian, and a child must not find that out on the line.
  * - **Nothing moves.** No animation class, so reduced motion loses nothing.
@@ -30,6 +31,7 @@ import { createPortal } from "react-dom";
 
 import type { Resource } from "../types/api.ts";
 import { emergency, resources } from "../lib/api.ts";
+import { BUILT_IN_EMERGENCY, BUILT_IN_HELPLINES } from "../lib/contacts.ts";
 import { languageNote } from "../lib/help.ts";
 import { t, type StringKey } from "../lib/strings.ts";
 import { DANGER } from "../lib/pictures.ts";
@@ -177,35 +179,40 @@ export interface DangerDialogProps {
   onClose: () => void;
 }
 
+const krisenchat = (list: readonly Resource[]) => list.find((r) => /krisenchat/i.test(r.name)) ?? null;
+
 /** Mount it to open it; the screen unmounts it on `onClose`. */
 export default function DangerDialog({ lang, message, onClose }: DangerDialogProps) {
-  const [contacts, setContacts] = useState<readonly Resource[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [chat, setChat] = useState<Resource | null>(null);
+  // Built into the app first (lib/contacts.ts), so 110/112 show at once,
+  // offline and while the server wakes; the network only refreshes them.
+  const [contacts, setContacts] = useState<readonly Resource[]>(BUILT_IN_EMERGENCY);
+  const [chat, setChat] = useState<Resource | null>(() => krisenchat(BUILT_IN_HELPLINES));
   const box = useRef<HTMLDivElement>(null);
 
   // Fetched separately, as on the Help screen: 110/112 must not wait on, or
-  // fail with, the second list.
+  // fail with, the second list. A failure keeps the built-in numbers.
   useEffect(() => {
     let live = true;
     emergency(lang)
-      .then((res) => live && setContacts(res.contacts))
-      .catch(() => live && setFailed(true));
+      .then((res) => live && res.contacts.length > 0 && setContacts(res.contacts))
+      .catch(() => {});
     resources(lang)
-      .then((res) => live && setChat(res.resources.find((r) => /krisenchat/i.test(r.name)) ?? null))
+      .then((res) => live && setChat(krisenchat(res.resources) ?? krisenchat(BUILT_IN_HELPLINES)))
       .catch(() => {});
     return () => {
       live = false;
     };
   }, [lang]);
 
-  // Focus on the first call button once it exists, else on Continue.
+  // Focus on the first call button when the pop-up opens, else on Continue.
+  // Once only: the numbers are there from the start, and a refresh from the
+  // network must not pull focus away from where the child has tabbed to.
   useEffect(() => {
     const dialog = box.current;
     if (!dialog) return;
     const first = dialog.querySelector<HTMLElement>("[data-danger-call]") ?? dialog.querySelector<HTMLElement>("[data-danger-continue]");
     first?.focus();
-  }, [contacts, failed]);
+  }, []);
 
   // Esc closes; Tab cycles inside the dialog and Leave now.
   useEffect(() => {
@@ -232,7 +239,7 @@ export default function DangerDialog({ lang, message, onClose }: DangerDialogPro
   return createPortal(
     // z-30: under the sticky bar (z-40), so Leave now stays visible and tappable.
     <div ref={box} className="fixed inset-0 z-30 flex items-center justify-center bg-ink/60 px-4 pt-16 pb-4">
-      <DangerDialogView lang={lang} contacts={contacts} failed={failed} chat={chat} message={message} onContinue={onClose} />
+      <DangerDialogView lang={lang} contacts={contacts} failed={false} chat={chat} message={message} onContinue={onClose} />
     </div>,
     document.body,
   );

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { Resource } from "../types/api.ts";
 import { emergency as fetchEmergency, resources as fetchResources } from "../lib/api.ts";
+import { BUILT_IN_EMERGENCY, BUILT_IN_HELPLINES } from "../lib/contacts.ts";
 import { helpView, type ContactView } from "../lib/helpView.ts";
 import { t } from "../lib/strings.ts";
 
@@ -27,9 +28,10 @@ import { t } from "../lib/strings.ts";
  * ## Every number comes from one file, never typed here
  *
  * CLAUDE.md: `content/helplines.json` is the only place a contact may be
- * defined. `/api/emergency` serves 110 and 112 from it, `/api/resources`
- * serves 116 111 and krisenchat. Neither makes a model call or sits behind
- * the spending cap, so a spent allowance never takes this away.
+ * defined. The app is built with it (lib/contacts.ts), so the list shows at
+ * once, offline and while Render wakes up; then `/api/emergency` (110, 112)
+ * and `/api/resources` (116 111, krisenchat) refresh it from the same file.
+ * Neither makes a model call or sits behind the spending cap.
  *
  * The two are fetched INDEPENDENTLY, not with `Promise.all`: one rejection
  * would otherwise discard both, and 110/112 must survive a failure of the
@@ -47,30 +49,31 @@ export interface HelpScreenProps {
 }
 
 export default function HelpScreen({ lang }: HelpScreenProps) {
-  // Separate pieces of state on purpose: either list appears on its own if
-  // the other fails. 110 and 112 are the ones that must survive.
-  const [urgent, setUrgent] = useState<readonly Resource[]>([]);
-  const [helplines, setHelplines] = useState<readonly Resource[]>([]);
+  // Both lists start from the contacts built into the app (lib/contacts.ts),
+  // so the numbers are on screen at once, offline, and while the server is
+  // still waking up. The network only replaces them when it answers.
+  // Separate pieces of state on purpose: either list updates on its own.
+  const [urgent, setUrgent] = useState<readonly Resource[]>(BUILT_IN_EMERGENCY);
+  const [helplines, setHelplines] = useState<readonly Resource[]>(BUILT_IN_HELPLINES);
   const [source, setSource] = useState<"live" | "fallback">("fallback");
-  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let live = true;
 
+    // A failure is silent: the built-in numbers are already showing, and a
+    // child here must not be shown an error about our network.
     fetchEmergency(lang)
       .then((response) => {
-        if (live) setUrgent(response.contacts);
+        if (live && response.contacts.length > 0) setUrgent(response.contacts);
       })
-      .catch(() => live && setFailed(true));
+      .catch(() => {});
 
     fetchResources(lang)
       .then((response) => {
-        if (!live) return;
+        if (!live || response.resources.length === 0) return;
         setHelplines(response.resources);
         setSource(response.source);
       })
-      // Silent: 110/112 above are the part that matters, and a child here
-      // must not be shown an error about our network for the second list.
       .catch(() => {});
 
     return () => {
@@ -85,10 +88,6 @@ export default function HelpScreen({ lang }: HelpScreenProps) {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-col gap-4 px-4 py-6">
       <h1 className="text-3xl text-balance">{t("help.title", lang)}</h1>
-
-      {/* The one thing on the network that can fail here, and a child in a
-          crisis is owed a reason rather than an empty box. */}
-      {failed && urgent.length === 0 && <p className="text-base text-ink">{t("errors.network", lang)}</p>}
 
       <HelpList lang={lang} contacts={view.danger} urgent />
       <HelpList lang={lang} contacts={view.talk} />

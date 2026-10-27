@@ -54,6 +54,7 @@ import {
 } from "./lib/questions";
 import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
+import { BUILT_IN_EMERGENCY } from "./lib/contacts";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
 import { pinStatus } from "./lib/pin";
@@ -645,16 +646,16 @@ export default function App() {
  * one thing CLAUDE.md says this screen may not leave out.
  */
 function EmergencyHelp({ lang }: { lang: Lang }) {
-  const [contacts, setContacts] = useState<Resource[] | null>(null);
-  const [failed, setFailed] = useState(false);
+  // Built into the app (lib/contacts.ts): 110 and 112 show even offline or
+  // while the server wakes up. The fetch only refreshes them, and a failure
+  // keeps them on screen.
+  const [contacts, setContacts] = useState<readonly Resource[]>(BUILT_IN_EMERGENCY);
 
-  // Fetched when the panel mounts rather than when it opens: a child in a
-  // crisis should not wait on a request they have already asked for.
   useEffect(() => {
     let live = true;
     emergency(lang)
-      .then((res) => live && setContacts(res.contacts))
-      .catch(() => live && setFailed(true));
+      .then((res) => live && res.contacts.length > 0 && setContacts(res.contacts))
+      .catch(() => {});
     return () => {
       live = false;
     };
@@ -668,10 +669,6 @@ function EmergencyHelp({ lang }: { lang: Lang }) {
 
       <div className="flex flex-col gap-3 px-4 pb-4">
         <h2 className="text-sm font-medium text-ink-soft">{t("help.title", lang)}</h2>
-
-        {/* The network is the one thing that can fail here, and a child in a
-            crisis is owed a reason rather than an empty box. */}
-        {failed && <p className="text-base">{t("errors.network", lang)}</p>}
 
         {/* What "Leave now" does and does not do, said here once (it is no
             longer under the button on every screen). */}
