@@ -7,6 +7,7 @@ import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
 import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
+import MoodReply from "./screens/MoodReply";
 import LanguageButton from "./components/LanguageButton";
 import DisplayButton from "./components/DisplayButton";
 import Onboarding from "./screens/Onboarding";
@@ -25,15 +26,18 @@ import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
 import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
+import Listen from "./screens/Listen";
 import Write from "./screens/Write";
 
 import DemoButton from "./components/DemoButton";
 import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
+import ExampleModeBanner from "./components/ExampleModeBanner";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import type { DemoSession } from "./lib-demo/demoStory";
+import { useEngineMode } from "./lib/engineMode";
 
 import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
@@ -54,6 +58,7 @@ import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
+import type { Turn } from "./lib/listening";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
 import { applyDocumentLang } from "./lib-lang/languages";
@@ -131,6 +136,10 @@ export default function App() {
   // been made it hands back the device's language so the few words around the
   // picker are readable, while still reporting `needsChoice`. That is not the
   // app choosing for the child - the picker shows nothing as chosen.
+  // Asked once for the whole session. In mock mode every screen says so, and
+  // the result card drops its agreement score: see lib/engineMode.ts.
+  const engine = useEngineMode();
+
   const [setup] = useState(() => languageSetupState());
   const [lang, setLang] = useState<Lang>(setup.lang);
 
@@ -155,6 +164,14 @@ export default function App() {
   // The demo button also fills it, with Amara's sentence; nothing else may
   // put text in a child's mouth.
   const [draft, setDraft] = useState("");
+  // The listening conversation and its unsent message, kept here for the
+  // same reason as `draft`: Back, Help or a language change must not lose a
+  // word of it. Cleared only when it has become an entry, or the demo ends.
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [talkDraft, setTalkDraft] = useState("");
+  // "Make a card" on the listening screen: the writing screen checks the
+  // German straight away, because the child has already said everything.
+  const [autoCheck, setAutoCheck] = useState(false);
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
   // The child's two handoff answers, kept so Back from the big card returns
@@ -210,7 +227,9 @@ export default function App() {
   const afterCheckIn = useCallback(
     (mood: string | null) => {
       setCheckInMood(mood);
-      setStep("picWhat");
+      // An answer to the face first (screens/MoodReply.tsx), not "What
+      // happened?": after "Good" that question assumed something had.
+      setStep("checkInReply");
     },
     [setStep],
   );
@@ -244,8 +263,10 @@ export default function App() {
       const own = questionsFor(picks).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
       setPicks(NO_PICKS);
       if (own) {
-        setDraft(own);
-        setTrail([HOME, "write"]);
+        // Their own words start the conversation, in the box, not yet sent:
+        // the child presses "Write it down" themselves.
+        setTalkDraft(own);
+        setTrail([HOME, "listen"]);
       } else {
         setTrail([HOME, "picMore"]);
       }
@@ -286,6 +307,10 @@ export default function App() {
       );
       // Saved, so it is no longer a draft: the next visit to Write is empty.
       setDraft("");
+      // The conversation those words came from is filed with them.
+      setTurns([]);
+      setTalkDraft("");
+      setAutoCheck(false);
       refreshEntries();
       // Those words are an entry now. Leaving them in `draft` would refill the
       // writing screen with a sentence the child has already filed the next
@@ -320,8 +345,11 @@ export default function App() {
         setLang(storyLang);
       }
       refreshEntries();
-      setDraft(session.draft.text);
-      setStep("write");
+      // Into the listening screen's box, not the writing screen's: the judge
+      // presses "Write it down" and sees the app answer before any card.
+      setTurns([]);
+      setTalkDraft(session.draft.text);
+      setStep("listen");
     },
     [refreshEntries, setStep],
   );
@@ -334,6 +362,8 @@ export default function App() {
   const endDemo = useCallback(() => {
     refreshEntries();
     setDraft("");
+    setTurns([]);
+    setTalkDraft("");
     setStep("checkIn");
   }, [refreshEntries, setStep]);
 
@@ -417,6 +447,18 @@ export default function App() {
         />
       </div>
 
+      {/* Above every screen from the language picker onwards, and above the
+          map: a judge who opens a mock deploy must read this before they
+          type.
+
+          NOT above the lock, which #82 made an early `return` higher up so
+          that no `setStep` can get past it. That is deliberate, not the
+          oversight it looked like in review: this banner's job is to stop
+          someone believing an OUTPUT, and a child at the PIN screen has not
+          typed anything for the app to have answered. Putting it there would
+          add a second place for `engine` to go stale while guarding nothing. */}
+      <ExampleModeBanner lang={lang} engine={engine} />
+
       {onMap !== null && (
         <GameMap
           places={onMap.places}
@@ -475,6 +517,16 @@ export default function App() {
         </>
       )}
 
+      {step === "checkInReply" && (
+        <MoodReply
+          lang={lang}
+          mood={checkInMood}
+          onPictures={() => setStep("picWhat")}
+          onWrite={() => setStep("listen")}
+          onHome={() => setTrail([HOME])}
+        />
+      )}
+
       {/* The picture questions: one per screen, each skippable. Which comes
           next depends on the answers so far (lib/questions.ts). */}
       {step === "picWhat" && (
@@ -522,15 +574,40 @@ export default function App() {
         />
       )}
       {step === "picMore" && (
-        <MoreQuestion lang={lang} onWrite={() => setStep("write")} onNoThanks={() => setStep("handoff")} />
+        <MoreQuestion
+          lang={lang}
+          onWrite={() => setStep("listen")}
+          onMakeCard={() => setStep("handoff")}
+          // The answers are saved by now; "No thanks" means nothing more today.
+          onNoThanks={() => setTrail([HOME])}
+        />
+      )}
+
+      {step === "listen" && (
+        <Listen
+          lang={lang}
+          turns={turns}
+          onTurnsChange={setTurns}
+          draft={talkDraft}
+          onDraftChange={setTalkDraft}
+          onMakeCard={(words) => {
+            setDraft(words);
+            setAutoCheck(true);
+            setStep("write");
+          }}
+          onHome={() => setTrail([HOME])}
+          onNeedHelp={needHelp}
+        />
       )}
 
       {step === "write" && (
         <Write
           lang={lang}
+          autoCheck={autoCheck}
           initialText={draft}
           onTextChange={setDraft}
           onApproved={keepWords}
+          engine={engine}
         />
       )}
 

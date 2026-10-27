@@ -19,11 +19,24 @@ Run from the repo root:
 that every reference_de passes its own check, so a broken answer key is
 caught before it costs credits. Live runs spend Token Factory credits: agree
 with the team first.
+
+Element by element (testset/elements.json, added 27 Oct 2026 before any
+rerun): `check` asks one question per sentence, so a translation that kept
+the gist but lost WHEN a knife was coming scored the same as a perfect one.
+Each sentence is also scored on the parts of a disclosure that change what
+an adult does - actor, negation, threat, timing - wherever it carries them.
+
+    backend/.venv/Scripts/python eval/run_eval.py --rescore eval/results/hi_core_20261025T163442Z.json
+
+--rescore re-scores runs already on disk with today's answer keys. It reads
+the stored translations and makes no model calls, so the new metric can be
+seen against the old numbers for $0 before anyone pays for a rerun.
 """
 
 import argparse
 import asyncio
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -34,6 +47,7 @@ sys.path.insert(0, str(REPO_ROOT / "backend"))
 
 TESTSET_DIR = REPO_ROOT / "eval" / "testset"
 RESULTS_DIR = REPO_ROOT / "eval" / "results"
+ELEMENTS_FILE = TESTSET_DIR / "elements.json"
 STRATEGIES = ("baseline", "multi_pass", "adaptive")
 SAFETY_LABELS = ("none", "danger", "self_harm")
 
@@ -56,6 +70,56 @@ def passes(check: dict, german: str) -> tuple[bool, list[str]]:
         if fold(term) in text:
             problems.append("must not contain: " + term)
     return not problems, problems
+
+
+def _term_pattern(term: str) -> re.Pattern:
+    """A whole-word match for one element term; a word ending in * is a prefix.
+
+    Whole words, unlike `check`'s substrings, because the words that carry an
+    element are short: "er" (he) is inside "erzaehlt", "nie" inside "niemand".
+    """
+    words = [
+        re.escape(fold(word.rstrip("*"))) + (r"\w*" if word.endswith("*") else "")
+        for word in term.split()
+    ]
+    return re.compile(r"(?<!\w)" + r"\s+".join(words) + r"(?!\w)")
+
+
+def element_kept(spec: dict, german: str) -> tuple[bool, list[str]]:
+    """Like `passes`, but each term must be a whole word (or a word start)."""
+    text = fold(german)
+    problems = []
+    for group in spec.get("all_of", []):
+        if not any(_term_pattern(term).search(text) for term in group):
+            problems.append("missing one of: " + " | ".join(group))
+    for term in spec.get("none_of", []):
+        if _term_pattern(term).search(text):
+            problems.append("must not contain: " + term)
+    return not problems, problems
+
+
+def score_elements(elements: dict, german: str) -> dict:
+    """{element: {"kept": bool, "problems": [...]}} for one translation."""
+    scored = {}
+    for name, spec in elements.items():
+        kept, problems = element_kept(spec, german)
+        scored[name] = {"kept": kept, "problems": problems}
+    return scored
+
+
+def _elements_file() -> dict:
+    if not ELEMENTS_FILE.exists():
+        return {"elements": []}
+    return json.loads(ELEMENTS_FILE.read_text(encoding="utf-8"))
+
+
+def load_elements(set_name: str) -> dict:
+    """{case id: {element: spec}} for one set, or {} if it has none."""
+    return _elements_file().get(set_name, {})
+
+
+def element_names() -> list[str]:
+    return _elements_file()["elements"]
 
 
 def load_set(path: Path) -> dict:
@@ -95,6 +159,33 @@ def dry_run(paths: list[Path]) -> int:
               f"{len(broken)} references failing their own check")
         for case_id, problems in broken:
             print(f"  {case_id}: " + "; ".join(problems))
+
+        # The element keys get the same test as `check`: every human reference
+        # must pass its own, or the key is wrong, not the model.
+        elements = load_elements(path.name)
+        ids = {case["id"]: case for case in cases}
+        bad = []
+        for case_id, spec in elements.items():
+            if case_id not in ids:
+                bad.append((case_id, ["no such case in the set"]))
+                continue
+            unknown = sorted(set(spec) - set(element_names()))
+            if unknown:
+                bad.append((case_id, ["unknown element: " + ", ".join(unknown)]))
+                continue
+            for reference in ids[case_id].get("reference_de", "").split(" / "):
+                lost = [f"{name}: " + "; ".join(r["problems"])
+                        for name, r in score_elements(spec, reference).items() if not r["kept"]]
+                if not lost:
+                    break
+            else:
+                bad.append((case_id, lost))
+        failures += len(bad)
+        if elements:
+            print(f"  elements: {len(elements)} cases keyed, "
+                  f"{len(bad)} references failing their own elements")
+            for case_id, problems in bad:
+                print(f"  {case_id}: " + "; ".join(problems))
     return failures
 
 
@@ -171,11 +262,28 @@ async def run_case(case, data, strategies, with_safety, semaphore):
             }
             if "check" in case:
                 result["pass"], result["problems"] = passes(case["check"], out["translation"])
+            if case.get("_elements"):
+                result["elements"] = score_elements(case["_elements"], out["translation"])
             row["results"][strategy] = result
         if with_safety and "safety_expected" in case:
             verdict = await safety_check(case["text"], data["source_lang"])
             row["safety"] = {"expected": case["safety_expected"], "got": verdict["category"]}
     return row
+
+
+def _element_summary(done: list[dict]) -> dict:
+    """Per element, how many translations kept it, out of those that had it."""
+    keyed = [d for d in done if d.get("elements")]
+    if not keyed:
+        return {}
+    kept = {}
+    for name in element_names():
+        having = [d["elements"][name]["kept"] for d in keyed if name in d["elements"]]
+        if having:
+            kept[name] = f"{sum(having)}/{len(having)}"
+    # The strict reading: the gist AND every element the sentence carries.
+    strict = sum(d.get("pass", False) and all(e["kept"] for e in d["elements"].values()) for d in keyed)
+    return {"elements_kept": kept, "all_kept": f"{strict}/{len(keyed)}"}
 
 
 def summarise(rows, strategies) -> dict:
@@ -200,6 +308,7 @@ def summarise(rows, strategies) -> dict:
             "avg_calls": round(sum(d["calls_made"] for d in done) / len(done), 2) if done else 0,
             "avg_latency_ms": int(sum(d["latency_ms"] for d in done) / len(done)) if done else 0,
             "total_cost_usd": round(sum(d["cost_usd"] for d in done), 5),
+            **_element_summary(done),
         }
     safety = [r["safety"] for r in rows if "safety" in r]
     if safety:
@@ -222,6 +331,17 @@ def markdown(summary, set_name) -> str:
             lines.append(f"| {strategy} | {s['meaning_kept']} | {s['asked_child']} "
                          f"| {s.get('child_answered', 0)} | {s['avg_calls']} "
                          f"| {s['avg_latency_ms']} ms | ${s['total_cost_usd']} |")
+    names = [n for n in element_names()
+             if any(n in summary.get(s, {}).get("elements_kept", {}) for s in STRATEGIES)]
+    if names:
+        lines += ["", "| Strategy | " + " | ".join(n.capitalize() for n in names)
+                  + " | Gist and every element |",
+                  "|---|" + "---|" * (len(names) + 1)]
+        for strategy in STRATEGIES:
+            if strategy in summary and "elements_kept" in summary[strategy]:
+                s = summary[strategy]
+                lines.append(f"| {strategy} | " + " | ".join(s["elements_kept"].get(n, "-") for n in names)
+                             + f" | {s['all_kept']} |")
     if "safety" in summary:
         s = summary["safety"]
         lines += ["", f"Safety check: {s['correct']} correct, {s['missed_crises']} missed crises, "
@@ -232,6 +352,8 @@ def markdown(summary, set_name) -> str:
 async def live_run(path: Path, strategies, with_safety, limit, concurrency) -> Path:
     data = load_set(path)
     cases = data["cases"][:limit] if limit else data["cases"]
+    elements = load_elements(path.name)
+    cases = [{**case, "_elements": elements.get(case["id"], {})} for case in cases]
     semaphore = asyncio.Semaphore(concurrency)
     rows = await asyncio.gather(*(run_case(c, data, strategies, with_safety, semaphore) for c in cases))
     summary = summarise(rows, strategies)
@@ -246,6 +368,48 @@ async def live_run(path: Path, strategies, with_safety, limit, concurrency) -> P
     return out
 
 
+def rescore(result_path: Path) -> dict:
+    """Score a stored run again with today's answer keys. No model calls.
+
+    Reads only the translations the run saved. Prints the score the run
+    reported at the time next to the one today's keys give, so a change of
+    metric is always shown beside the number it replaces.
+    """
+    stored = json.loads(result_path.read_text(encoding="utf-8"))
+    data = load_set(TESTSET_DIR / stored["set"])
+    cases = {(c["id"], c.get("script")): c for c in data["cases"]}
+    elements = load_elements(stored["set"])
+    for row in stored["rows"]:
+        case = cases.get((row["id"], row.get("script")))
+        if case is None:
+            continue
+        for result in row["results"].values():
+            if "error" in result:
+                continue
+            if "check" in case:
+                result["pass"], result["problems"] = passes(case["check"], result["translation"])
+            if row["id"] in elements:
+                result["elements"] = score_elements(elements[row["id"]], result["translation"])
+    summary = summarise(stored["rows"], stored["strategies"])
+    print(f"## {result_path.name} (run {stored['run_at']}, re-scored offline)\n")
+    print("As reported then: " + ", ".join(
+        f"{s} {stored['summary'][s]['meaning_kept']}"
+        for s in stored["strategies"] if s in stored["summary"]))
+    print()
+    print(markdown(summary, stored["set"]))
+    lost = [
+        f"- `{row['id']}` {strategy}: lost {name} - {result['translation']}"
+        for row in stored["rows"]
+        for strategy, result in row["results"].items()
+        for name, verdict in result.get("elements", {}).items()
+        if not verdict["kept"]
+    ]
+    if lost:
+        print("\nElements lost:\n" + "\n".join(lost))
+    print()
+    return summary
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--set", action="append", type=Path,
@@ -256,7 +420,14 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=0, help="only the first N cases (for a cheap smoke run)")
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--dry-run", action="store_true", help="validate sets and answer keys, no model calls")
+    parser.add_argument("--rescore", action="append", type=Path, metavar="RESULT_JSON",
+                        help="re-score a stored run with today's answer keys, no model calls (repeatable)")
     args = parser.parse_args()
+
+    if args.rescore:
+        for result_path in args.rescore:
+            rescore(result_path)
+        return 0
 
     paths = args.set or sorted(TESTSET_DIR.glob("*_core.json"))
     if args.dry_run:
