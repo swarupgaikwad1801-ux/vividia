@@ -18,7 +18,8 @@
  * writing screen where German appears (issue #3).
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal, flushSync } from "react-dom";
 
 import AdultGuide from "./AdultGuide.tsx";
 import CardLanguageSwitch from "./CardLanguageSwitch.tsx";
@@ -46,11 +47,59 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
   // False until the adult first switches language: the card pops in once,
   // then turns over like a real card each time the language changes.
   const [turned, setTurned] = useState(false);
-  const german = showing === "de";
 
   // The same rule as HandoffCard, so the big card names the person the small
   // one did.
   const recipient = suggestedAdults(where).find((option) => option.id === chosen) ?? primarySuggestion(where);
+
+  // What the card says in one language. The screen shows one side at a
+  // time; the printout shows both, one after the other.
+  const body = (side: string) => {
+    const inGerman = side === "de";
+    return (
+      <>
+        {recipient && (
+          <p className="text-base font-medium text-ink-soft">{t(recipient.labelKey, side)}</p>
+        )}
+
+        {entries.length > 0 ? (
+          <ol className="flex flex-col gap-4">
+            {entries.map((entry, index) => (
+              <li key={`${entry.date}-${index}`} className="flex flex-col items-start gap-1">
+                <span className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+                  {formatDay(entry.date, side)}
+                  <SourceMark source={entry.source} lang={side} />
+                </span>
+                <p className="whitespace-pre-wrap text-xl leading-relaxed text-ink">
+                  {inGerman ? entry.text_de : entry.text_child}
+                </p>
+              </li>
+            ))}
+          </ol>
+        ) : report ? (
+          <p className="whitespace-pre-wrap text-xl leading-relaxed text-ink">
+            {inGerman ? report.german_version : report.child_version}
+          </p>
+        ) : null}
+      </>
+    );
+  };
+  // The child's language first, then German; one side for a German speaker.
+  const printSides = lang === "de" ? ["de"] : [lang, "de"];
+  // The printout exists only while printing, so German is never in the page
+  // (or read by a screen reader) before the adult picks it (issue #3).
+  // Ctrl+P works too: beforeprint fires either way.
+  const [printing, setPrinting] = useState(false);
+  useEffect(() => {
+    const start = () => setPrinting(true);
+    const end = () => setPrinting(false);
+    window.addEventListener("beforeprint", start);
+    window.addEventListener("afterprint", end);
+    return () => {
+      window.removeEventListener("beforeprint", start);
+      window.removeEventListener("afterprint", end);
+    };
+  }, []);
 
   return (
     <main className="relative mx-auto flex w-full max-w-sm flex-col gap-5 px-4 py-6">
@@ -74,29 +123,7 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
         lang={showing}
         className={`${turned ? "animate-card-flip" : "animate-pop-in"} flex flex-col gap-4 rounded-card border-[3px] border-ink bg-surface p-5 shadow-[6px_6px_0_0_#1B1B2F]`}
       >
-        {recipient && (
-          <p className="text-base font-medium text-ink-soft">{t(recipient.labelKey, showing)}</p>
-        )}
-
-        {entries.length > 0 ? (
-          <ol className="flex flex-col gap-4">
-            {entries.map((entry, index) => (
-              <li key={`${entry.date}-${index}`} className="flex flex-col items-start gap-1">
-                <span className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
-                  {formatDay(entry.date, showing)}
-                  <SourceMark source={entry.source} lang={showing} />
-                </span>
-                <p className="whitespace-pre-wrap text-xl leading-relaxed text-ink">
-                  {german ? entry.text_de : entry.text_child}
-                </p>
-              </li>
-            ))}
-          </ol>
-        ) : report ? (
-          <p className="whitespace-pre-wrap text-xl leading-relaxed text-ink">
-            {german ? report.german_version : report.child_version}
-          </p>
-        ) : null}
+        {body(showing)}
       </article>
 
       {/* Under the child's words, not above them: the card is what the child
@@ -104,6 +131,39 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
           `showing`, so switching the card to German switches the guide with
           it - one language on screen at a time (issue #3). */}
       <AdultGuide showing={showing} lang={lang} />
+
+      {/* Paper is still a card the child holds up: printing sends nothing to
+          anyone. "Save as PDF" is the same browser dialog. Both languages go
+          on the page, so a teacher who reads German and a parent who reads
+          the child's language can each read one. Day One and most journals
+          offer the same: your words, on paper, when you want them. */}
+      <div className="flex flex-col items-start gap-1">
+        <button
+          type="button"
+          onClick={() => {
+            flushSync(() => setPrinting(true));
+            window.print();
+          }}
+          className="sticker min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
+        >
+          <span aria-hidden="true">🖨️ </span>
+          {t("card.print", lang)}
+        </button>
+        {printSides.length > 1 && <p className="text-sm text-ink-soft">{t("card.printBoth", lang)}</p>}
+      </div>
+
+      {/* Only on paper (index.css, @media print), outside the app so nothing
+          else, hidden or not, takes up the page. */}
+      {printing && createPortal(
+      <div className="print-only" aria-hidden="true">
+        {printSides.map((side) => (
+          <section key={side} lang={side} className="print-side">
+            {body(side)}
+          </section>
+        ))}
+      </div>,
+        document.body,
+      )}
 
       <button
         type="button"

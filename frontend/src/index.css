@@ -190,6 +190,20 @@
   animation: help-pulse 1.6s ease-in-out infinite;
 }
 
+/* Printing the handoff card (components/HandoffShow.tsx): only the
+   print-only block reaches paper, both languages, black on white, no scene,
+   no buttons. */
+.print-only { display: none; }
+@media print {
+  @page { margin: 16mm; }
+  #root { display: none !important; }
+  body { background: #fff !important; }
+  .print-only { display: block; color: #000; background: #fff; }
+  .print-only * { color: #000 !important; }
+  .print-side { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+  .print-side + .print-side { border-top: 2px solid #000; padding-top: 20px; }
+}
+
 /* Bigger text and easier reading (lib/display.ts sets these on <html>).
    Outside @layer so they win over the base styles. Every size is in rem, so
    raising the root size grows text, buttons and gaps together. */
