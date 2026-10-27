@@ -158,7 +158,7 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
       )}
 
       {entries.length === 0 ? (
-        <p className="rounded-card border border-line bg-surface p-4 text-base text-ink-soft">
+        <p className="rounded-card border-[2.5px] border-ink bg-surface p-4 text-base text-ink-soft">
           {t("timeline.empty", lang)}
         </p>
       ) : (
@@ -182,7 +182,7 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
                    light teal and white on it is roughly 1.8:1. --color-page
                    flips with the theme, so this reads at ~5.8:1 in light and
                    ~7.7:1 in dark. */
-                className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
+                className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
               >
                 {t("timeline.buildReport", lang)}
               </button>
@@ -202,7 +202,7 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
         <button
           type="button"
           onClick={onSetPin}
-          className="min-h-tap self-start rounded-card border border-line px-4 text-base font-medium text-ink"
+          className="sticker min-h-tap self-start rounded-full bg-surface px-4 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
         >
           {t(pinStatus() === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
         </button>

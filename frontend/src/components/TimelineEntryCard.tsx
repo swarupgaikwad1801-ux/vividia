@@ -56,7 +56,7 @@ export default function TimelineEntryCard({ entry, lang, onDelete }: Props) {
   const emoji = moodEmoji(entry.mood);
 
   return (
-    <li className="rounded-card border border-line bg-surface p-4">
+    <li className="rounded-card border-[2.5px] border-ink bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-ink-soft">{day}</p>
@@ -75,7 +75,7 @@ export default function TimelineEntryCard({ entry, lang, onDelete }: Props) {
           type="button"
           onClick={() => onDelete(entry.id)}
           aria-label={`${t("timeline.delete", lang)} — ${day}`}
-          className="min-h-tap shrink-0 rounded-card border border-line px-3 text-sm font-medium text-help transition-colors hover:border-help"
+          className="min-h-tap shrink-0 rounded-full border-2 border-help bg-surface px-3 text-sm font-bold text-help"
         >
           {t("timeline.delete", lang)}
         </button>
