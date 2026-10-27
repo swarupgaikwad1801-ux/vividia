@@ -32,7 +32,7 @@ import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
-import { fill, t } from "./lib/strings";
+import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
 import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } from "./lib/nav";
 import { MOOD_CODES } from "./lib/moods";
@@ -49,6 +49,7 @@ import {
 } from "./lib/questions";
 import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
+import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
@@ -78,8 +79,14 @@ import type { ReportResponse, Resource } from "./types/api";
  *
  * 3. **Help is reachable from everywhere**, including from inside the lock.
  *    `lib/pin.ts` says it plainly: a child who has forgotten their PIN still
- *    needs 110. Until #47's HelpScreen lands, `needHelp` is the single place
- *    to repoint.
+ *    needs 110. `HelpButton` therefore sits outside the switch beside the
+ *    quick exit, and help is a step on the Back trail (`lib/nav.ts`), so
+ *    "back" returns them to the screen they left rather than to the start.
+ *
+ *    Behind the lock it is `EmergencyHelp` instead, which opens in place and
+ *    never moves `step` - see the note on that function. The full screen is
+ *    for a child who is already past the PIN; the lock gets the numbers
+ *    without a destination that could leak the words.
  *
  * 4. **The PIN guards the screens, not the data** (SAFETY.md row 2). It is
  *    checked once, here, before anything else renders. It is deliberately
@@ -551,9 +558,17 @@ export default function App() {
  *    we can offer are German-only, and "the crisis screen must print each
  *    service's languages; hiding this is worse than the gap itself."
  *
- * A stand-in for #47's fuller Help screen, which also covers the non-crisis
- * routes. When it lands, this becomes one line calling it - but the lock must
- * keep a version that does not navigate.
+ * Not replaced by #47's `HelpScreen`, and not a duplicate of it either. That
+ * screen is a destination with a "back" button, and behind the lock there is
+ * nothing to go back to that a child without the PIN may see. This stays as
+ * the version that opens in place: 110 and 112, no navigation, no way out of
+ * the lock. The full list - helplines, hours, sources, the local lookup - is
+ * one screen away for a child who is already past the PIN.
+ *
+ * It does share `languageNote()` with that screen, which is the part that
+ * must not be re-implemented twice: it had been printing the raw language
+ * codes the API sends ("Speaks de") and never the word "only", which is the
+ * one thing CLAUDE.md says this screen may not leave out.
  */
 function EmergencyHelp({ lang }: { lang: Lang }) {
   const [contacts, setContacts] = useState<Resource[] | null>(null);
@@ -599,9 +614,10 @@ function EmergencyHelp({ lang }: { lang: Lang }) {
               {contact.contact}
             </a>
             <p className="text-sm text-ink-soft">{contact.hours}</p>
-            <p className="text-sm text-ink-soft">
-              {fill("help.speaks", lang, { list: contact.languages.join(", ") })}
-            </p>
+            {/* "Speaks German only", in the child's language - not the API's
+                language codes. Both helplines we can offer are German-only
+                and the child has to be told so before they dial. */}
+            <p className="text-sm text-ink-soft">{languageNote(contact, lang)}</p>
           </section>
         ))}
       </div>

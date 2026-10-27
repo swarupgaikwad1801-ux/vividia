@@ -99,6 +99,36 @@ export const STRINGS = {
     hi: "Abhi khatra hai? Upar “Need help” dabao.",
   },
   "help.source": { en: "Checked on", de: "Geprüft am", hi: "Check kiya" },
+  // From #85's Help screen, kept at the merge. hi is draft Hinglish.
+  "help.dangerTitle": {
+    en: "If you are in danger right now",
+    de: "Wenn du gerade in Gefahr bist",
+    hi: "Agar tum abhi khatre mein ho",
+  },
+  "help.talkTitle": {
+    en: "Talk to someone",
+    de: "Mit jemandem sprechen",
+    hi: "Kisi se baat karo",
+  },
+  "help.sourceLink": { en: "source", de: "Quelle", hi: "source" },
+  "help.live": {
+    en: "Your area's school counselling was looked up today on an official site.",
+    de: "Die Schulberatung für deine Gegend wurde heute auf einer offiziellen Seite gesucht.",
+    hi: "Tumhare area ki school counselling aaj ek official site par dekhi gayi.",
+  },
+  "help.fallback": {
+    en: "These come from our own checked list.",
+    de: "Diese stammen aus unserer eigenen geprüften Liste.",
+    hi: "Yeh hamari apni check ki hui list se hain.",
+  },
+  "help.loading": { en: "Loading…", de: "Wird geladen…", hi: "Load ho raha hai…" },
+  "help.retry": { en: "Try again", de: "Nochmal versuchen", hi: "Phir try karo" },
+  "help.back": { en: "Back", de: "Zurück", hi: "Wapas" },
+  "help.notCounselling": {
+    en: "This app is not a counselling service. The people above are.",
+    de: "Diese App ist keine Beratungsstelle. Die Menschen oben sind es.",
+    hi: "Yeh app counselling service nahi hai. Upar wale log hain.",
+  },
 
   "quickExit.button": { en: "Leave now", de: "Schnell raus", hi: "Abhi niklo" },
   "quickExit.note": {

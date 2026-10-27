@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { Resource } from "../types/api.ts";
 import { emergency as fetchEmergency, resources as fetchResources } from "../lib/api.ts";
-import { languageNote, sortForChild } from "../lib/help.ts";
+import { helpView, type ContactView } from "../lib/helpView.ts";
 import { t } from "../lib/strings.ts";
 
 /**
@@ -13,6 +13,11 @@ import { t } from "../lib/strings.ts";
  * top right". So the full list lives here, one tap away from every screen,
  * and a dangerous answer now opens a pop-up with 110/112 (DangerDialog) and
  * makes the button glow.
+ *
+ * The one Help screen. #85 landed a second one on main; merging it in, this
+ * screen kept its look and took #85's tested logic: `helpView()` puts 110/112
+ * first in file order, drops a service listed twice, links only https sources,
+ * and each card says when it was checked and where.
  *
  * ## Calm and still
  *
@@ -46,14 +51,12 @@ export default function HelpScreen({ lang }: HelpScreenProps) {
   // the other fails. 110 and 112 are the ones that must survive.
   const [urgent, setUrgent] = useState<readonly Resource[]>([]);
   const [helplines, setHelplines] = useState<readonly Resource[]>([]);
+  const [source, setSource] = useState<"live" | "fallback">("fallback");
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let live = true;
 
-    // In file order, never sorted: 110 before 112 is how the page should
-    // read, and "speaks the child's language" is not a useful ranking when
-    // both are German-only national numbers.
     fetchEmergency(lang)
       .then((response) => {
         if (live) setUrgent(response.contacts);
@@ -62,7 +65,9 @@ export default function HelpScreen({ lang }: HelpScreenProps) {
 
     fetchResources(lang)
       .then((response) => {
-        if (live) setHelplines(sortForChild(response.resources, lang));
+        if (!live) return;
+        setHelplines(response.resources);
+        setSource(response.source);
       })
       // Silent: 110/112 above are the part that matters, and a child here
       // must not be shown an error about our network for the second list.
@@ -73,6 +78,10 @@ export default function HelpScreen({ lang }: HelpScreenProps) {
     };
   }, [lang]);
 
+  // In file order for 110/112, never sorted; the rest with the services
+  // that speak the child's language first (`sortForChild`, inside helpView).
+  const view = helpView(urgent, helplines, source, lang);
+
   return (
     <main className="mx-auto flex w-full max-w-sm flex-col gap-4 px-4 py-6">
       <h1 className="text-3xl text-balance">{t("help.title", lang)}</h1>
@@ -81,17 +90,18 @@ export default function HelpScreen({ lang }: HelpScreenProps) {
           crisis is owed a reason rather than an empty box. */}
       {failed && urgent.length === 0 && <p className="text-base text-ink">{t("errors.network", lang)}</p>}
 
-      <HelpList lang={lang} contacts={urgent} urgent />
-      <HelpList lang={lang} contacts={helplines} />
+      <HelpList lang={lang} contacts={view.danger} urgent />
+      <HelpList lang={lang} contacts={view.talk} />
     </main>
   );
 }
 
 /**
- * One list of contacts, each with its hours and the languages it speaks.
- * Separate from the fetching so a test can render it with known contacts.
+ * One list of contacts, each with its hours, the languages it speaks, and
+ * when and where it was checked. Separate from the fetching so a test can
+ * render it with known contacts.
  */
-export function HelpList({ lang, contacts, urgent = false }: { lang: string; contacts: readonly Resource[]; urgent?: boolean }) {
+export function HelpList({ lang, contacts, urgent = false }: { lang: string; contacts: readonly ContactView[]; urgent?: boolean }) {
   if (contacts.length === 0) return null;
   return (
     <ul className="flex flex-col gap-3">
@@ -100,19 +110,33 @@ export function HelpList({ lang, contacts, urgent = false }: { lang: string; con
           key={`${contact.name}-${contact.contact}`}
           className={`flex flex-col gap-0.5 rounded-card border-[3px] bg-surface p-4 ${urgent ? "border-help" : "border-ink"}`}
         >
-          {/* A real tel: link where it is a number, so one tap dials. */}
-          {/^\+?[\d\s]+$/.test(contact.contact) ? (
-            <a href={`tel:${contact.contact.replace(/[^+\d]/g, "")}`} className="min-h-tap text-2xl font-bold text-help underline">
+          {/* A real tel: or web link where there is one, so one tap reaches
+              it. The contact itself is always printed, because inside some
+              app views a tel: link does nothing. */}
+          {contact.href ? (
+            <a
+              href={contact.href}
+              className={`min-h-tap font-bold text-help underline ${contact.kind === "phone" ? "text-2xl" : "text-lg break-all"}`}
+            >
               {contact.contact}
             </a>
           ) : (
-            <a href={contact.contact} className="min-h-tap text-lg font-bold text-help underline break-all">
-              {contact.contact}
-            </a>
+            <span className="text-lg font-bold text-ink select-all break-all">{contact.contact}</span>
           )}
           <span className="text-base font-medium text-ink">{contact.name}</span>
           <span className="text-sm text-ink-soft">{contact.hours}</span>
-          <span className="text-sm text-ink-soft">{languageNote(contact, lang)}</span>
+          <span className="text-sm text-ink-soft">{contact.languages}</span>
+          {(contact.checked || contact.sourceUrl) && (
+            <span className="text-xs text-ink-soft">
+              {contact.checked}
+              {contact.checked && contact.sourceUrl && " · "}
+              {contact.sourceUrl && (
+                <a href={contact.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                  {t("help.sourceLink", lang)}
+                </a>
+              )}
+            </span>
+          )}
         </li>
       ))}
     </ul>
