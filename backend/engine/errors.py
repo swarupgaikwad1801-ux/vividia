@@ -42,17 +42,17 @@ FALLBACK_LANG = "en"
 MESSAGES: dict[str, dict[str, str]] = {
     "upstream_timeout": {
         "en": "That is taking longer than it should. Your words are still here. Do you want to try again?",
-        "hi": "इसमें ज़्यादा समय लग रहा है। तुम्हारे शब्द यहीं हैं। फिर कोशिश करनी है?",
+        "hi": "Isme thoda zyada time lag raha hai. Tumhari baat yahin hai. Phir koshish karni hai?",
         "de": "Das dauert länger als es sollte. Deine Worte sind noch da. Willst du es nochmal versuchen?",
     },
     "upstream_unavailable": {
         "en": "Something on our side is not working right now. Your words are still here. Try again in a moment.",
-        "hi": "हमारी तरफ़ कुछ काम नहीं कर रहा है। तुम्हारे शब्द यहीं हैं। थोड़ी देर में फिर कोशिश करो।",
+        "hi": "Hamari taraf kuch kaam nahi kar raha. Tumhari baat yahin hai. Thodi der baad phir koshish karo.",
         "de": "Bei uns funktioniert gerade etwas nicht. Deine Worte sind noch da. Versuch es gleich nochmal.",
     },
     "rate_limited": {
         "en": "A lot of people are using this right now. Wait a moment, then try again. Your words are still here.",
-        "hi": "अभी बहुत लोग इसका इस्तेमाल कर रहे हैं। थोड़ा रुककर फिर कोशिश करो। तुम्हारे शब्द यहीं हैं।",
+        "hi": "Abhi bahut log ise use kar rahe hain. Thoda ruko, phir koshish karo. Tumhari baat yahin hai.",
         "de": "Gerade benutzen viele Leute die App. Warte einen Moment und versuch es nochmal. Deine Worte sind noch da.",
     },
     # Not retryable: the translation is down until a person tops up the account.
@@ -68,17 +68,17 @@ MESSAGES: dict[str, dict[str, str]] = {
     # line that cannot talk to them. The German version needs no clause.
     "credit_exhausted": {
         "en": "The translation is not working today. Your words are still here. You can write to a person any time at krisenchat.de, or call 116 111. Both of them answer in German.",
-        "hi": "आज अनुवाद काम नहीं कर रहा है। तुम्हारे शब्द यहीं हैं। तुम krisenchat.de पर किसी से लिखकर बात कर सकते हो, या 116 111 पर कॉल कर सकते हो। ये दोनों जर्मन में बात करते हैं।",
+        "hi": "Aaj translation kaam nahi kar raha. Tumhari baat yahin hai. Tum krisenchat.de par kisi se likhkar baat kar sakte ho, ya 116 111 par call kar sakte ho. Ye dono German mein baat karte hain.",
         "de": "Die Übersetzung funktioniert heute nicht. Deine Worte sind noch da. Du kannst jederzeit auf krisenchat.de mit jemandem schreiben oder 116 111 anrufen.",
     },
     "invalid_input": {
         "en": "That did not go through. Can you try writing it again?",
-        "hi": "यह भेजा नहीं जा सका। क्या तुम इसे फिर से लिख सकते हो?",
+        "hi": "Yeh bheja nahi ja saka. Kya tum ise phir se likh sakte ho?",
         "de": "Das hat nicht geklappt. Kannst du es nochmal schreiben?",
     },
     "internal": {
         "en": "Something went wrong on our side. Your words are still here, and nothing was shared with anyone.",
-        "hi": "हमारी तरफ़ कुछ गड़बड़ हो गई। तुम्हारे शब्द यहीं हैं, और किसी को कुछ नहीं भेजा गया।",
+        "hi": "Hamari taraf kuch gadbad ho gayi. Tumhari baat yahin hai, aur kisi ko kuch nahi bheja gaya.",
         "de": "Bei uns ist etwas schiefgelaufen. Deine Worte sind noch da, und es wurde nichts an jemanden weitergegeben.",
     },
 }
