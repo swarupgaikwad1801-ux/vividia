@@ -35,11 +35,11 @@
  * through `isPersistent()`, which is the warning above.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
 import type { StoredEntry } from "../lib/timeline";
-import { isPersistent, listEntries, removeEntry } from "../lib/timeline";
+import { isPersistent, listEntries, removeEntry, restoreEntry } from "../lib/timeline";
 import { forgetEverything } from "../lib/forgetEverything";
 import PinRemovedNotice from "../components/PinRemovedNotice";
 import TimelineDeleteAll from "../components/TimelineDeleteAll";
@@ -79,14 +79,32 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
     setPersistent(isPersistent());
   }, []);
 
+  // The entry just deleted, for Undo. Deleted at once (so Leave now right
+  // after leaves nothing behind); Undo puts it back as it was. An undo bar
+  // rather than "Are you sure?": people click through confirmations
+  // without reading them (GNOME HIG, "always provide an undo").
+  const [undoable, setUndoable] = useState<StoredEntry | null>(null);
+  useEffect(() => {
+    if (!undoable) return;
+    const id = setTimeout(() => setUndoable(null), 10_000);
+    return () => clearTimeout(id);
+  }, [undoable]);
+
   const deleteOne = useCallback(
     (id: string) => {
+      setUndoable(entries.find((entry) => entry.id === id) ?? null);
       removeEntry(id);
       setStatus(""); // the list visibly shrinks; a second announcement is noise
       refresh();
     },
-    [refresh],
+    [entries, refresh],
   );
+
+  const undo = useCallback(() => {
+    if (undoable) restoreEntry(undoable);
+    setUndoable(null);
+    refresh();
+  }, [undoable, refresh]);
 
   const deleteEverything = useCallback(() => {
     // Not clearAll(): that empties the timeline and leaves the check-in
@@ -95,6 +113,7 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
     // still remembered that they had taken a report to a teacher.
     // forgetEverything() is the one place that knows the full list.
     forgetEverything();
+    setUndoable(null);
     setStatus(t("timeline.deletedAll", lang));
     refresh();
   }, [lang, refresh]);
@@ -123,6 +142,19 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
       <p role="status" aria-live="polite" className="sr-only">
         {status}
       </p>
+
+      {undoable && (
+        <div role="status" className="animate-pop-in flex items-center justify-between gap-3 rounded-full border-[2.5px] border-ink bg-ink py-1 pr-1 pl-4 text-page">
+          <span className="text-base font-bold">{t("timeline.deletedOne", lang)}</span>
+          <button
+            type="button"
+            onClick={undo}
+            className="min-h-tap rounded-full bg-page px-4 text-base font-bold text-ink"
+          >
+            {t("timeline.undo", lang)}
+          </button>
+        </div>
+      )}
 
       {entries.length === 0 ? (
         <p className="rounded-card border border-line bg-surface p-4 text-base text-ink-soft">

@@ -117,6 +117,17 @@ export function removeEntry(id: string): void {
   write(read().filter((entry) => entry.id !== id));
 }
 
+/**
+ * Put back an entry the child has just deleted (the Undo on the timeline),
+ * exactly as it was: same id, same date, same source. A second restore of
+ * the same entry does nothing.
+ */
+export function restoreEntry(entry: StoredEntry): void {
+  const now = read();
+  if (now.some((e) => e.id === entry.id)) return;
+  write([...now, entry]);
+}
+
 /** Delete everything the child saved. */
 export function clearAll(): void {
   memory = [];
