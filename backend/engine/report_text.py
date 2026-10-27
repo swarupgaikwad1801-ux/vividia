@@ -42,8 +42,8 @@ HEADER = {
         "they picked or wrote themselves. The child decided to show it to you."
     ),
     "hi": (
-        "यह रिपोर्ट एक बच्चे ने ऐप की मदद से बनाई है, उन वाक्यों से जिन्हें बच्चे ने "
-        "खुद चुना या लिखा। बच्चे ने खुद तय किया कि आपको यह दिखाना है।"
+        "Yeh report ek bachche ne app ki madad se banayi hai, un vaakyon se jo bachche ne "
+        "khud chune ya likhe. Bachche ne khud tay kiya ki aapko yeh dikhana hai."
     ),
     "de": (
         "Diesen Bericht hat ein Kind mit einer App zusammengestellt, aus Sätzen, "
@@ -68,10 +68,10 @@ FOOTER = {
         "German sentences are the ones the child read and approved."
     ),
     "hi": (
-        "यह क्या है: बच्चे ने जो बताया कि हुआ, उसका रिकॉर्ड, उन वाक्यों में जिन्हें "
-        "बच्चे ने चुना या लिखा और फिर मंज़ूर किया। यह क्या नहीं है: इसका सबूत कि ऐसा "
-        "हुआ, कोई मेडिकल या मनोवैज्ञानिक आकलन, या सलाह। जर्मन वाक्य वही हैं जिन्हें "
-        "बच्चे ने पढ़ा और मंज़ूर किया।"
+        "Yeh kya hai: bachche ne jo bataya ki hua, uska record, un vaakyon mein jo "
+        "bachche ne chune ya likhe aur phir manzoor kiye. Yeh kya nahi hai: iska saboot ki aisa "
+        "hua, koi medical ya psychological assessment, ya salaah. German vaakya wahi hain jo "
+        "bachche ne padhe aur manzoor kiye."
     ),
     "de": (
         "Was das ist: eine Aufzeichnung dessen, was das Kind geschildert hat, in "
@@ -96,11 +96,11 @@ LABELS = {
         "who": "Who",
     },
     "hi": {
-        "period": "अवधि",
-        "entry": "प्रविष्टि",
-        "entries": "प्रविष्टियाँ",
-        "where": "कहाँ",
-        "who": "कौन",
+        "period": "Samay",
+        "entry": "entry",
+        "entries": "entries",
+        "where": "Kahan",
+        "who": "Kaun",
     },
     "de": {
         "period": "Zeitraum",
@@ -121,16 +121,16 @@ LABELS = {
 # version of "the corridor by the gym". Guessing one and putting it in front of
 # a teacher would be exactly the unapproved paraphrase this module avoids.
 PLACES = {
-    "classroom": {"en": "classroom", "hi": "कक्षा", "de": "Klassenzimmer"},
-    "canteen": {"en": "canteen", "hi": "कैंटीन", "de": "Mensa"},
-    "corridor": {"en": "corridor", "hi": "कॉरिडोर", "de": "Flur"},
-    "schoolyard": {"en": "schoolyard", "hi": "स्कूल का मैदान", "de": "Schulhof"},
-    "online": {"en": "online", "hi": "ऑनलाइन", "de": "online"},
-    "toilets": {"en": "toilets", "hi": "शौचालय", "de": "Toiletten"},
-    "changing_room": {"en": "changing room", "hi": "चेंजिंग रूम", "de": "Umkleide"},
-    "gym": {"en": "gym", "hi": "जिम", "de": "Sporthalle"},
-    "bus": {"en": "bus", "hi": "बस", "de": "Bus"},
-    "way_to_school": {"en": "on the way to school", "hi": "स्कूल जाते समय", "de": "auf dem Schulweg"},
+    "classroom": {"en": "classroom", "hi": "class", "de": "Klassenzimmer"},
+    "canteen": {"en": "canteen", "hi": "canteen", "de": "Mensa"},
+    "corridor": {"en": "corridor", "hi": "corridor", "de": "Flur"},
+    "schoolyard": {"en": "schoolyard", "hi": "school ka ground", "de": "Schulhof"},
+    "online": {"en": "online", "hi": "online", "de": "online"},
+    "toilets": {"en": "toilets", "hi": "toilet", "de": "Toiletten"},
+    "changing_room": {"en": "changing room", "hi": "changing room", "de": "Umkleide"},
+    "gym": {"en": "gym", "hi": "gym", "de": "Sporthalle"},
+    "bus": {"en": "bus", "hi": "bus", "de": "Bus"},
+    "way_to_school": {"en": "on the way to school", "hi": "school jaate waqt", "de": "auf dem Schulweg"},
 }
 
 
@@ -207,7 +207,7 @@ def format_date(iso_date: str, lang: str) -> str:
 
 OVERVIEW_LABELS = {
     "en": {"places": "Places", "people": "People named"},
-    "hi": {"places": "स्थान", "people": "नामित लोग"},
+    "hi": {"places": "Jagah", "people": "Jinke naam liye"},
     "de": {"places": "Orte", "people": "Genannte Personen"},
 }
 
