@@ -27,6 +27,7 @@ from engine.resources import resources_with_source as _resources_with_source
 # simply does not have it, which is the truth - the mock spends no credits.
 from engine.resources import tavily_status  # noqa: F401
 from engine.listen import listen as _listen
+from engine.listen import reply as _reply
 from engine.safety import safety_check as _safety_check
 from engine.translate import translate as _translate
 
@@ -58,6 +59,10 @@ async def report(entries: list, child_lang: str) -> Report:
 
 async def listen(text: str, lang: str) -> dict:
     return await _listen(text, lang)
+
+
+async def reply(text: str, lang: str) -> dict:
+    return await _reply(text, lang)
 
 
 async def safety_check(text: str, lang: str) -> SafetyResult:

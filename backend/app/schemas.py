@@ -133,6 +133,14 @@ class ListenRequest(BaseModel):
 class ListenResponse(BaseModel):
     kind: ListenKind
     safety: Safety
+    reply: str | None = Field(
+        default=None,
+        description=(
+            "Only for kind 'other' and only when safety is not urgent: a short "
+            "answer written by the model that passed both checks in "
+            "engine/listen.py. null means show the reviewed sentence."
+        ),
+    )
     usage: Usage
 
 

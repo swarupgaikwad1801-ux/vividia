@@ -93,6 +93,11 @@ export interface ListenRequest {
 export interface ListenResponse {
   kind: ListenKind;
   safety: Safety;
+  /**
+   * Only for kind "other" and never when safety is urgent: a short answer the
+   * model wrote that passed both checks. null means show the reviewed sentence.
+   */
+  reply: string | null;
   usage: Usage;
 }
 

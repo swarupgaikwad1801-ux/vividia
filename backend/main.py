@@ -266,11 +266,34 @@ async def listen(request: ListenRequest, http: Request) -> ListenResponse:
     except Exception as error:  # noqa: BLE001 - the child must never see a traceback
         raise ChildSafeError(error, request.lang) from error
 
-    # The length and the kind, never the text.
-    log.info("listen lang=%s chars=%d kind=%s", request.lang, len(request.text), heard["kind"])
+    # A written reply only where no reviewed sentence fits, and never for a
+    # message the safety check flagged: a child in crisis gets fixed, sourced
+    # words only. Sequential on purpose - it needs both answers above.
+    written = None
+    if heard["kind"] == "other" and not safety["urgent"]:
+        try:
+            answer = await ENGINE.reply(request.text, request.lang)
+        except Exception:  # noqa: BLE001 - the reviewed sentence is always there
+            answer = {"reply": None}
+        written = answer.get("reply")
+        heard = {**heard, "usage": _add_usage(heard.get("usage"), answer.get("usage"))}
+
+    # The length, the kind and whether a reply was written, never the text.
+    log.info("listen lang=%s chars=%d kind=%s written=%s",
+             request.lang, len(request.text), heard["kind"], written is not None)
     usage = _usage_of(heard, started)
     GUARD.record_spend(usage["estimated_cost_usd"])
-    return ListenResponse(kind=heard["kind"], safety=safety, usage=usage)
+    return ListenResponse(kind=heard["kind"], safety=safety, reply=written, usage=usage)
+
+
+def _add_usage(first: dict | None, second: dict | None) -> dict | None:
+    """Two engine usages as one, so the cap counts the reply's calls too."""
+    if not first or not second:
+        return first or second
+    return {
+        key: first.get(key, 0) + second.get(key, 0) if key != "latency_ms" else max(first.get(key, 0), second.get(key, 0))
+        for key in ("calls_made", "input_tokens", "output_tokens", "latency_ms", "estimated_cost_usd")
+    }
 
 
 @app.post("/api/clarify", response_model=TranslateResponse)

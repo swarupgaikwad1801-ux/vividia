@@ -69,14 +69,13 @@ test("the card limit matches what the server accepts", () => {
   assert.match(translate, new RegExp(`max_length=${MAX_CARD_CHARS}\\b`));
 });
 
-test("the listening screen shows no text from the server but the safety message", () => {
-  // The model's answer is one word. If this screen ever rendered a field of
-  // the response other than kind and the fixed crisis line, the model would
-  // be talking to the child.
+test("the listening screen shows no text from the server but the checked reply and the safety message", () => {
+  // Any new field of the response rendered here would be a new way for the
+  // model to talk to a child without going through engine/listen.py's checks.
   const screen = readFileSync(new URL("../screens/Listen.tsx", import.meta.url), "utf8");
   // The response variable, not the "heard.*" string keys inside quotes.
   const used = [...screen.matchAll(/(?<!["'])\bheard\.(\w+)/g)].map((m) => m[1]);
-  assert.deepEqual([...new Set(used)].sort(), ["kind", "safety"]);
+  assert.deepEqual([...new Set(used)].sort(), ["kind", "reply", "safety"]);
 });
 
 test("a message the safety check flagged is answered with help, and nothing is asked", () => {
@@ -91,4 +90,27 @@ test("being hurt or threatened puts Need help inside the answer, nothing else do
   const screen = readFileSync(new URL("../screens/Listen.tsx", import.meta.url), "utf8");
   assert.match(screen, /HELP_NUDGE\.has\(turn\.kind\)/);
   assert.match(screen, /onClick=\{onNeedHelp\}/);
+});
+
+test("a checked written reply answers an 'other' message in place of the general line", () => {
+  const turns: Turn[] = [{ text: "x", kind: "other", written: "We can hear how much this weighs on you." }];
+  assert.deepEqual(replyFor(0, turns), {
+    lines: ["heard.thanks.first"],
+    written: "We can hear how much this weighs on you.",
+    ask: "heard.ask.more",
+  });
+});
+
+test("without a written reply, 'other' still gets the reviewed line", () => {
+  assert.deepEqual(replyFor(0, [{ text: "x", kind: "other", written: null }]).lines, [
+    "heard.thanks.first",
+    "heard.kind.other",
+  ]);
+});
+
+test("a written reply is never used for a kind that has a reviewed line, or for urgent", () => {
+  const hurt: Turn = { text: "x", kind: "hurt", written: "anything" };
+  assert.equal(replyFor(0, [hurt]).written, undefined);
+  const urgent: Turn = { text: "x", kind: "other", urgent: true, written: "anything" };
+  assert.equal(replyFor(0, [urgent]).written, undefined);
 });

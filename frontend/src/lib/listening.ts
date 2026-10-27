@@ -1,10 +1,13 @@
 /**
- * What the listening screen says back, decided in code from fixed sentences.
+ * What the listening screen says back.
  *
- * The model's whole part is one word per message, the `kind`
- * (engine/listen.py). Everything the child reads comes from `heard.*` in
- * strings.ts and is picked here, so this file is the complete list of what
- * the app can ever answer - which is the point. CLAUDE.md: no AI friend.
+ * Mostly fixed sentences: the model names the `kind` of message
+ * (engine/listen.py) and this file picks a reviewed line from `heard.*` in
+ * strings.ts. The one exception is a message no kind fits ("other"): there
+ * the server may send a short `reply` the model wrote, and only after it
+ * passed a code check and a second model's check (Swarup, 27 Oct). Without
+ * one, the reviewed line for "other" is shown, so the child always hears
+ * something. CLAUDE.md: no AI friend - "we", never "I", and no promises.
  */
 
 import type { ListenKind } from "../types/api";
@@ -24,11 +27,15 @@ export interface Turn {
   kind: ListenKind | null;
   /** The safety check found danger or self-harm in this message. */
   urgent?: boolean;
+  /** A checked, model-written answer for an "other" message, or null. */
+  written?: string | null;
 }
 
 export interface Reply {
   /** Shown together, in one bubble. */
   lines: StringKey[];
+  /** A checked written answer, shown after `lines`, in place of the kind's line. */
+  written?: string;
   /** The gentle question after it, in its own bubble; null when we must not ask. */
   ask: StringKey | null;
 }
@@ -78,10 +85,15 @@ export function replyFor(index: number, turns: readonly Turn[]): Reply {
   // help and stop, not carry on asking.
   if (turns[index]?.urgent) return { lines: [thanks, "heard.urgent"], ask: null };
   const kind = turns[index]?.kind ?? "other";
+  const ask = ASKS[Math.min(index, ASKS.length - 1)];
+  // Written for this message, so it is said even when an earlier message was
+  // "other" too: it answers what they just wrote, not the kind.
+  const written = kind === "other" ? turns[index]?.written?.trim() : "";
+  if (written) return { lines: [thanks], written, ask };
   const before = new Set(turns.slice(0, index).map((turn) => turn.kind));
   const lines: StringKey[] = [thanks];
   if (!before.has(kind)) lines.push(KIND_LINE[kind]);
-  return { lines, ask: ASKS[Math.min(index, ASKS.length - 1)] };
+  return { lines, ask };
 }
 
 /**

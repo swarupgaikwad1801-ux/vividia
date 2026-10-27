@@ -340,3 +340,12 @@ async def listen(text: str, lang: str) -> dict:
         if any(pattern.search(text) for pattern in patterns):
             return {"kind": kind, "calls_made": 0}
     return {"kind": "other", "calls_made": 0}
+
+
+async def reply(text: str, lang: str) -> dict:
+    """Always None: a mock cannot write to a child, so it does not pretend to.
+
+    The screen then shows the reviewed sentence for "other", which is exactly
+    what live mode shows whenever a written reply fails its checks.
+    """
+    return {"reply": None, "calls_made": 0}

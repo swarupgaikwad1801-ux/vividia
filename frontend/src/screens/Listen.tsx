@@ -16,11 +16,14 @@ import { t } from "../lib/strings.ts";
  * "Make a card". Then everything they wrote goes to the writing screen, where
  * the German is checked and they approve it, exactly as before.
  *
- * What we say back is not written by a model. `POST /api/listen` returns one
- * word, the kind of thing the child said, and `lib/listening.ts` picks a fixed
- * sentence for it. The model never speaks to the child. That, the "we" voice
- * and the notebook instead of a face are how this stays on the right side of
- * CLAUDE.md's "no AI friend": we listen so that a person can.
+ * What we say back is mostly fixed. `POST /api/listen` returns the kind of
+ * thing the child said, and `lib/listening.ts` picks a reviewed sentence for
+ * it. Only for a message no kind fits may the server add a short reply the
+ * model wrote, and only once a code check and a second model have both
+ * passed it (engine/listen.py); otherwise the reviewed line is shown. The
+ * "we" voice, no promises, and the notebook instead of a face are how this
+ * stays on the right side of CLAUDE.md's "no AI friend": we listen so that a
+ * person can.
  *
  * The safety check runs on every message, not only on the card: a child who
  * writes "I want to die" halfway through a conversation is shown help then.
@@ -98,7 +101,11 @@ export default function Listen({
       const heard = await listen({ text: all[index].text, lang });
       if (id !== runRef.current) return;
       onTurnsChange(
-        all.map((turn, i) => (i === index ? { ...turn, kind: heard.kind, urgent: heard.safety.urgent } : turn)),
+        all.map((turn, i) =>
+          i === index
+            ? { ...turn, kind: heard.kind, urgent: heard.safety.urgent, written: heard.reply }
+            : turn,
+        ),
       );
       if (heard.safety.urgent) {
         setUrgentSeen(true);
@@ -209,6 +216,11 @@ export default function Listen({
                     {reply.lines.map((key) => (
                       <p key={key} className="text-base text-ink">{t(key, lang)}</p>
                     ))}
+                    {/* Written by the model for this message, after both
+                        checks (engine/listen.py). In the child's language. */}
+                    {reply.written && (
+                      <p lang={lang} className="text-base text-ink">{reply.written}</p>
+                    )}
                     {/* Help one tap from the sentence that needed it, for a
                         child who was hurt or threatened (lib/listening.ts). */}
                     {turn.kind !== null && HELP_NUDGE.has(turn.kind) && !turn.urgent && (
