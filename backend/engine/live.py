@@ -23,6 +23,9 @@ from engine.contract import Report, Resource, SafetyResult, TranslationResult
 from engine.report import report as _report
 from engine.resources import resources as _resources
 from engine.resources import resources_with_source as _resources_with_source
+# Re-exported, not wrapped: /api/health reads it through ENGINE so the mock
+# simply does not have it, which is the truth - the mock spends no credits.
+from engine.resources import tavily_status  # noqa: F401
 from engine.safety import safety_check as _safety_check
 from engine.translate import translate as _translate
 
