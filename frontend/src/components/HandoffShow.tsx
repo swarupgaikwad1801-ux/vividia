@@ -18,11 +18,14 @@
  * writing screen where German appears (issue #3).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 
 import AdultGuide from "./AdultGuide.tsx";
 import { useScreenAwake } from "./useScreenAwake.ts";
+import { quickExit } from "../lib/quickExit.ts";
+import ExampleModeBanner from "./ExampleModeBanner.tsx";
+import type { EngineMode } from "../lib/engineMode.ts";
 import CardLanguageSwitch from "./CardLanguageSwitch.tsx";
 import SourceMark from "./SourceMark.tsx";
 import type { EntrySource } from "../lib/timeline.ts";
@@ -41,9 +44,11 @@ export interface HandoffShowProps {
   /** Who the child picked; null means the card's own suggestion stands. */
   chosen: AdultId | null;
   onDone: () => void;
+  /** For full screen, which hides the app's own Example mode strip. */
+  engine?: EngineMode;
 }
 
-export default function HandoffShow({ lang, entries, report, where, chosen, onDone }: HandoffShowProps) {
+export default function HandoffShow({ lang, entries, report, where, chosen, onDone, engine }: HandoffShowProps) {
   const [showing, setShowing] = useState(lang);
   // False until the adult first switches language: the card pops in once,
   // then turns over like a real card each time the language changes.
@@ -92,6 +97,22 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
   // Ctrl+P works too: beforeprint fires either way.
   const [printing, setPrinting] = useState(false);
   const awake = useScreenAwake();
+
+  // Full screen: just the language switch and the card, big, for an adult
+  // reading over a desk. Offered only where the browser can do it (not
+  // iPhone Safari). Leave now comes with it: the top bar is hidden in full
+  // screen, and the way out must be on every screen.
+  const stage = useRef<HTMLDivElement>(null);
+  const [canFull] = useState(() => typeof document !== "undefined" && document.fullscreenEnabled === true);
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    const sync = () => setFull(document.fullscreenElement === stage.current && stage.current !== null);
+    document.addEventListener("fullscreenchange", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    };
+  }, []);
   useEffect(() => {
     const start = () => setPrinting(true);
     const end = () => setPrinting(false);
@@ -110,6 +131,32 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
 
       <h1 className="text-3xl text-balance">{t("handoff.showThem", lang)}</h1>
 
+      <div ref={stage} className="card-stage flex flex-col gap-5">
+      {full && (
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => void document.exitFullscreen().catch(() => {})}
+            className="sticker min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink"
+          >
+            {t("card.exitFullscreen", lang)}
+          </button>
+          <button
+            type="button"
+            onClick={() => quickExit()}
+            className="sticker min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink"
+          >
+            {t("quickExit.button", lang)}
+          </button>
+        </div>
+      )}
+      {/* Full screen hides the strip at the top of the app; in example mode
+          the German on this card is not the child's words, so it comes too. */}
+      {full && engine && (
+        <div className="-mx-4">
+          <ExampleModeBanner lang={lang} engine={engine} />
+        </div>
+      )}
       <CardLanguageSwitch
         lang={lang}
         showing={showing}
@@ -127,6 +174,18 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
       >
         {body(showing)}
       </article>
+      </div>
+
+      {canFull && (
+        <button
+          type="button"
+          onClick={() => void stage.current?.requestFullscreen().catch(() => {})}
+          className="sticker min-h-tap self-start rounded-full bg-surface px-4 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
+        >
+          <span aria-hidden="true">⛶ </span>
+          {t("card.fullscreen", lang)}
+        </button>
+      )}
 
       {awake && <p className="-mt-2 text-sm text-ink-soft">{t("card.awake", lang)}</p>}
 

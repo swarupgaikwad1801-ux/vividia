@@ -190,6 +190,17 @@
   animation: help-pulse 1.6s ease-in-out infinite;
 }
 
+/* The handoff card in full screen (HandoffShow.tsx): the stage fills the
+   screen with the scene's paper colour, the card text grows, and it
+   scrolls if the words run long. */
+.card-stage:fullscreen {
+  overflow: auto;
+  padding: 20px;
+  background: var(--color-surface);
+}
+.card-stage:fullscreen article { box-shadow: none; }
+.card-stage:fullscreen article p { font-size: 1.625rem; }
+
 /* Printing the handoff card (components/HandoffShow.tsx): only the
    print-only block reaches paper, both languages, black on white, no scene,
    no buttons. */
