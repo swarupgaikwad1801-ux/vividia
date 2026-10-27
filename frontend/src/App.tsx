@@ -4,8 +4,23 @@ import CheckIn from "./screens/CheckIn";
 import Escalation from "./screens/Escalation";
 import FollowUp from "./screens/FollowUp";
 import Handoff from "./screens/Handoff";
-import { HelpScreen } from "./screens/HelpScreen";
+import HandoffDone from "./screens/HandoffDone";
+import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
+import LanguageButton from "./components/LanguageButton";
+import DisplayButton from "./components/DisplayButton";
+import Onboarding from "./screens/Onboarding";
+import {
+  FeelQuestion,
+  FollowUpQuestion,
+  MoreQuestion,
+  OwnWordsQuestion,
+  OftenQuestion,
+  PictureReview,
+  WhatQuestion,
+  WhereQuestion,
+  WhoQuestion,
+} from "./screens/PictureQuestions";
 import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
 import Report from "./screens/Report";
@@ -13,18 +28,35 @@ import Timeline from "./screens/Timeline";
 import Write from "./screens/Write";
 
 import DemoButton from "./components/DemoButton";
-import { HelpButton } from "./components/HelpButton";
+import GameMap from "./components/GameMap";
+import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
+import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import type { DemoSession } from "./lib-demo/demoStory";
 
 import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
+import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } from "./lib/nav";
+import { MOOD_CODES } from "./lib/moods";
+import { NO_PICKS, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
+import { SCENE, mapFor } from "./lib/scenes";
+import {
+  ANSWER_OF,
+  adultRoute,
+  answersFor,
+  nextQuestion,
+  questionsFor,
+  wroteOwnWords,
+  type QuestionStep,
+} from "./lib/questions";
+import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
+import { applyDocumentLang } from "./lib-lang/languages";
 import type { ReportResponse, Resource } from "./types/api";
 
 /**
@@ -50,9 +82,9 @@ import type { ReportResponse, Resource } from "./types/api";
  *
  * 3. **Help is reachable from everywhere**, including from inside the lock.
  *    `lib/pin.ts` says it plainly: a child who has forgotten their PIN still
- *    needs 110. `HelpButton` therefore sits outside the switch beside the
- *    quick exit, and `openHelp` remembers which screen the child left so
- *    "back" returns them to it rather than to the start.
+ *    needs 110. The red Need help pill therefore sits outside the switch,
+ *    beside Leave now in the quick exit's bar, and help is a step on the Back trail (`lib/nav.ts`), so
+ *    "back" returns them to the screen they left rather than to the start.
  *
  *    Behind the lock it is `EmergencyHelp` instead, which opens in place and
  *    never moves `step` - see the note on that function. The full screen is
@@ -73,50 +105,24 @@ import type { ReportResponse, Resource } from "./types/api";
  * Quick exit depends on that last point: `lib/quickExit.ts` leaves with
  * nothing to go back to, and that only works because nothing here ever
  * called `history.pushState`.
+ *
+ * So the app's own Back button (issue #3) walks a trail kept in memory
+ * (`lib/nav.ts`), not the browser history. The browser's back button still
+ * leaves the app, exactly as before.
+ *
+ * WHERE THE CHILD IS
+ *
+ * `Step` lives in `lib/nav.ts`. `locked` is deliberately NOT a member. Being
+ * locked is a condition, not a place, and while it was a step every
+ * navigation in this file was a possible way around the lock. One of them
+ * was: the help button on the lock screen set `step` to "timeline", and the
+ * child's own words rendered with no PIN ever entered. Reproduced in a
+ * browser before that change - both `text_child` and `text_de` were readable.
+ *
+ * `unlocked` is separate state that no navigation touches, and the lock
+ * returns early, so there is no step - and no trail, so no Back - that can
+ * reveal anything.
  */
-
-/**
- * Where the child is. A line, with two branches off the timeline.
- *
- * `locked` is deliberately NOT a member any more. Being locked is a
- * condition, not a place, and while it was a step every `setStep` call in
- * this file was a possible way around the lock. One of them was: the help
- * button on the lock screen set `step` to "timeline", and the child's own
- * words rendered with no PIN ever entered. Reproduced in a browser before
- * this change - both `text_child` and `text_de` were readable.
- *
- * `unlocked` is now separate state that no navigation touches, and the lock
- * returns early, so there is no `step` value that can reveal anything.
- */
-type Step =
-  | "language" // first run only
-  | "checkIn" // the emoji check-in: the step that needs no language
-  | "write" // the centrepiece: find the words
-  | "timeline" // everything they have written
-  | "report" // the bilingual report, approved word by word
-  | "handoff" // choose who hears it
-  | "escalation" // the next door, if the first one did not open
-  | "pinSet" // set or change the PIN
-  | "help"; // 110/112 and the helplines, from any screen above
-
-/*
- * Every member of `Step` must appear in at least one `setStep` call, or its
- * screen is mounted and unreachable. Three were: `pinSet` and `followUp` had
- * no entry point at all, and `escalation` was reachable only from `followUp`,
- * so the escalation ladder was dead as well. A child could not set a PIN,
- * which in turn meant the lock never engaged.
- *
- * `followUp` is no longer a step. It gates itself - `FollowUp` returns `null`
- * unless `shouldAsk()` says the question is due, and records the answer
- * itself - so it is rendered in place beside the check-in rather than
- * navigated to. Making it a destination is what left it unreachable: a
- * destination needs a caller who knows when to send the child there, and the
- * thing that knows is the component.
- *
- * `App.reachable.test.ts` asserts this against this file's own source,
- * because TypeScript cannot: a member nothing assigns is still a valid member.
- */
-
 export default function App() {
   // Both read before the first render, so the app never flashes the wrong
   // screen: a child on a shared phone must not glimpse the timeline for a
@@ -136,39 +142,131 @@ export default function App() {
   // because of a browser setting, so only a PIN we can actually read locks.
   const [unlocked, setUnlocked] = useState(() => pinStatus() !== "set");
 
-  const [step, setStep] = useState<Step>(() =>
-    setup.needsChoice ? "language" : "checkIn",
-  );
+  const [trail, setTrail] = useState(() => start(setup.needsChoice ? "language" : "checkIn"));
+  const step = current(trail);
+  const setStep = useCallback((next: Step) => setTrail((now) => go(now, next)), []);
+  const goBack = useCallback(() => setTrail((now) => back(now)), []);
 
   // Carried between screens. `draft` is what the child typed and has not yet
-  // approved; it survives a trip to help and back, because losing a sentence
+  // approved; it survives Back and a trip to help, because losing a sentence
   // a frightened child has just managed to write is the one thing this app
-  // must never do.
-  // Written by exactly two things: the demo button, which prefills Amara's
-  // sentence, and `keepWords`, which empties it once those words are an entry.
-  // Nothing else may put text in a child's mouth.
+  // must never do. `Write` reports every keystroke up here and reads it back
+  // when it mounts again.
+  // The demo button also fills it, with Amara's sentence; nothing else may
+  // put text in a child's mouth.
   const [draft, setDraft] = useState("");
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
+  // The child's two handoff answers, kept so Back from the big card returns
+  // to the same choice, and so the big card names the same person.
+  const [where, setWhere] = useState<WhereItHappens | null>(null);
+  const [adult, setAdult] = useState<AdultId | null>(null);
+  // The child's traveller on the map: a picture, stored only on this phone.
+  const [avatar, setAvatar] = useState(() => loadAvatar());
+  // The picture answers, question by question, kept here so Back returns to
+  // each question as the child left it. Nothing is stored until the child
+  // says the lines are right.
+  const [picks, setPicks] = useState<Picks>(NO_PICKS);
+  const [checkInMood, setCheckInMood] = useState<string | null>(null);
+  const pick = useCallback(
+    (question: keyof Picks) => (next: string[]) => setPicks((now) => ({ ...now, [question]: next })),
+    [],
+  );
 
   const refreshEntries = useCallback(() => setEntries(listEntries()), []);
 
   useEffect(() => {
-    document.documentElement.lang = lang;
+    // hi-Latn for Hinglish, so a screen reader reads Roman Hindi as Hindi.
+    applyDocumentLang(lang);
   }, [lang]);
 
-  const chooseLang = useCallback((next: Lang) => {
-    setLang(next);
-    saveLang(next);
-    setStep("checkIn");
-  }, []);
+  // The timeline screen deletes entries in storage directly, so read them
+  // again on every move: the card must never show a sentence the child deleted.
+  // Same for the traveller, which "delete everything" also clears.
+  useEffect(() => {
+    refreshEntries();
+    setAvatar(loadAvatar());
+  }, [step, refreshEntries]);
+
+  const chooseLang = useCallback(
+    (next: Lang) => {
+      setLang(next);
+      saveLang(next);
+      // First run: straight to the check-in (Neel, 26 Oct): the cards are not
+      // shown by default. "What this app does" at the bottom opens them.
+      // From the 🌐 button: back to where the child was. Only the language
+      // changes; the timeline, the draft and the picture answers are kept.
+      setTrail(afterLanguage);
+    },
+    [],
+  );
 
   /**
-   * The check-in is a mood, not a diagnosis. It opens the writing screen and
-   * is never stored as a judgement about the child: `CLAUDE.md` is explicit
-   * that the app works nothing out about them and gives no risk score.
+   * The check-in is a mood, not a diagnosis. It opens the picture questions
+   * (Neel, 26 Oct: ask, don't make the child write) and is never stored as a
+   * judgement about the child: `CLAUDE.md` is explicit that the app works
+   * nothing out about them and gives no risk score.
    */
-  const afterCheckIn = useCallback(() => setStep("write"), []);
+  const afterCheckIn = useCallback(
+    (mood: string | null) => {
+      setCheckInMood(mood);
+      setStep("picWhat");
+    },
+    [setStep],
+  );
+
+  /**
+   * The picture answers become one entry, saved because the child pressed
+   * "Yes, save it" on the lines it will carry. Marked as chosen from
+   * pictures, so the card never shows a tapped tile as a quote. Then the
+   * offer to write; Back from there goes home rather than to a screen that
+   * could save the same answers twice.
+   */
+  /**
+   * The end of the questions, with or without saving. The child's own words
+   * (from "Something else") go to the writing screen, prefilled, where the
+   * German is checked and they approve it; otherwise the offer to write.
+   * Back from there goes home rather than to a screen that could save the
+   * same answers twice.
+   */
+  const finishPictures = useCallback(
+    (save: boolean) => {
+      const choices = answersFor(picks);
+      if (save) {
+        const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
+        addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
+        refreshEntries();
+      }
+      // An adult from home means the handoff must not suggest family: that
+      // answer wins over anything remembered.
+      const start = handoffWhereFor(choices.where, choices.adultWhere, Boolean(choices.whereOnline));
+      setWhere((now) => (start === "home" ? "home" : now ?? start));
+      const own = questionsFor(picks).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
+      setPicks(NO_PICKS);
+      if (own) {
+        setDraft(own);
+        setTrail([HOME, "write"]);
+      } else {
+        setTrail([HOME, "picMore"]);
+      }
+    },
+    [picks, checkInMood, lang, refreshEntries],
+  );
+  const keepPictures = useCallback(() => finishPictures(true), [finishPictures]);
+
+  /**
+   * Go on from a question. Skip has just cleared the answer, but that state
+   * update lands after this call, so the next question is worked out from
+   * the cleared answers here rather than from the stale ones.
+   */
+  const advance = useCallback(
+    (from: QuestionStep) => (skipped?: boolean) => {
+      const key = ANSWER_OF[from];
+      const now = skipped ? { ...picks, [key]: [], ...(from === "picWho" ? { kind: [] } : {}) } : picks;
+      setStep(nextQuestion(from, now));
+    },
+    [picks, setStep],
+  );
 
   /**
    * The ONLY path by which an entry is written, and it runs because the child
@@ -177,12 +275,17 @@ export default function App() {
    */
   const keepWords = useCallback(
     (approved: { text_child: string; text_de: string }) => {
-      addEntry({
-        date: new Date().toISOString().slice(0, 10),
-        mood: "",
-        text_child: approved.text_child,
-        text_de: approved.text_de,
-      });
+      addEntry(
+        {
+          date: new Date().toISOString().slice(0, 10),
+          mood: "",
+          text_child: approved.text_child,
+          text_de: approved.text_de,
+        },
+        "words",
+      );
+      // Saved, so it is no longer a draft: the next visit to Write is empty.
+      setDraft("");
       refreshEntries();
       // Those words are an entry now. Leaving them in `draft` would refill the
       // writing screen with a sentence the child has already filed the next
@@ -190,7 +293,7 @@ export default function App() {
       setDraft("");
       setStep("timeline");
     },
-    [refreshEntries],
+    [refreshEntries, setStep],
   );
 
   /**
@@ -220,7 +323,7 @@ export default function App() {
       setDraft(session.draft.text);
       setStep("write");
     },
-    [refreshEntries],
+    [refreshEntries, setStep],
   );
 
   /**
@@ -232,31 +335,14 @@ export default function App() {
     refreshEntries();
     setDraft("");
     setStep("checkIn");
-  }, [refreshEntries]);
+  }, [refreshEntries, setStep]);
 
-  /**
-   * Open the help screen, and remember where to put the child back.
-   *
-   * "Back" has to mean the screen they were on. A child who presses "Need
-   * help now?" halfway through writing has not asked to leave what they were
-   * writing - and the placeholder this replaces sent every help request to
-   * the timeline, so pressing help from the writing screen looked like the
-   * app had thrown their sentence away.
-   *
-   * `draft` is why that is survivable at all: the text they typed is held
-   * here, not in `Write`, so a trip to help and back does not cost it.
-   *
-   * NOT used by the lock. While locked, help is `EmergencyHelp` below, which
-   * never moves `step` - a help button that navigated is what the leak was.
-   */
-  const [helpFrom, setHelpFrom] = useState<Step>("checkIn");
-  const openHelp = useCallback(() => {
-    // Guarded rather than assumed: the button is hidden on the help screen
-    // itself, but "back" leading back to help would be a trap, not a bug
-    // anyone would notice in a test.
-    if (step !== "help") setHelpFrom(step);
-    setStep("help");
-  }, [step]);
+  // The red Need help button, from every screen: the calm list of people who
+  // can help (screens/HelpScreen.tsx). Back returns to where the child was.
+  //
+  // NOT used by the lock. While locked, help is `EmergencyHelp` below, which
+  // never moves `step` - a lock with a button that navigates was the leak.
+  const needHelp = useCallback(() => setStep("help"), [setStep]);
 
   // The lock, before anything else and with its own return. An early return
   // is the point: while a PIN is outstanding there is no code path below this
@@ -264,69 +350,188 @@ export default function App() {
   // words. The previous version made this a `step`, and the one control on
   // the locked screen navigated straight past it.
   if (!unlocked) {
+    // The lock is a quiet scene: plain colour, no map, no motion.
     return (
-      <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
-        <div className="flex justify-end px-4 pt-3">
-          <QuickExitButton lang={lang} />
+      <div data-scene="quiet" className="min-h-dvh bg-scene">
+        <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
+          <div className="flex justify-end px-4 pt-3">
+            <QuickExitButton lang={lang} />
+          </div>
+          <PinUnlock
+            lang={lang}
+            // Help INSIDE the lock, which is why PinUnlock asks for it as a
+            // node rather than a callback: a child who cannot get past their
+            // own PIN still needs a way to reach 110. It opens in place rather
+            // than navigating, so the lock never leaves the screen.
+            help={<EmergencyHelp lang={lang} />}
+            onUnlocked={() => setUnlocked(true)}
+          />
         </div>
-        <PinUnlock
-          lang={lang}
-          // Help INSIDE the lock, which is why PinUnlock asks for it as a
-          // node rather than a callback: a child who cannot get past their
-          // own PIN still needs a way to reach 110. It opens in place rather
-          // than navigating, so the lock never leaves the screen.
-          help={<EmergencyHelp lang={lang} />}
-          onUnlocked={() => setUnlocked(true)}
-        />
       </div>
     );
   }
 
+  const scene = SCENE[step];
+  const onMap = mapFor(step, picks);
+
   return (
+    // One flat colour per place (lib/scenes.ts), filling the whole screen.
+    <div data-scene={scene} className="min-h-dvh bg-scene transition-colors duration-300">
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
-      {/* Outside the switch on purpose: the way out and the way to 110 are on
-          every screen, including the first one, where the child has not even
-          chosen a language yet. Help is hidden only on the help screen, where
-          it would point at itself. */}
-      <div className="flex items-start justify-between gap-3 px-4 pt-3">
-        {/* `shrink-0`: at 360px the quick exit's explanatory line takes the
-            rest of the row, and without this "Need help now?" wrapped onto
-            three lines. Measured in Chrome at the width the quality bar
-            names, not guessed. */}
-        {step === "help" ? (
-          <span />
+      {/* Outside the switch on purpose: the way out is on every screen,
+          including the lock. Back sits in the opposite corner and looks
+          quieter, so a child reaching for Leave now does not hit it. Need
+          help (red) sits left of Leave now (dark outline), a gap apart. */}
+      <div className="top-bar flex items-center justify-between gap-2 px-4 pt-1">
+
+        {canGoBack(trail) ? (
+          <button
+            type="button"
+            onClick={goBack}
+            // nowrap + shrink-0: next to Leave now, the arrow otherwise wraps
+            // onto its own line at 360px. `headline`: the titles' face (Neel,
+            // 26 Oct), but small, in the softer ink and with no outline, so
+            // it stays quieter than Leave now.
+            className="headline min-h-tap shrink-0 whitespace-nowrap rounded-card text-base text-ink-soft hover:text-ink"
+          >
+            <span aria-hidden="true">← </span>
+            {t("nav.back", lang)}
+          </button>
         ) : (
-          <div className="shrink-0">
-            <HelpButton lang={lang} onOpen={openHelp} />
-          </div>
+          <span />
         )}
-        <QuickExitButton lang={lang} />
+        <QuickExitButton
+          lang={lang}
+          beside={
+            step === "help" ? null : (
+              <button
+                type="button"
+                onClick={needHelp}
+                // need-help: pulses while a danger line is on screen (index.css).
+                className="need-help min-h-tap shrink-0 whitespace-nowrap rounded-full border-[3px] border-help bg-help px-2.5 text-sm font-bold text-page"
+              >
+                {t("help.short", lang)}
+              </button>
+            )
+          }
+        />
       </div>
 
+      {onMap !== null && (
+        <GameMap
+          places={onMap.places}
+          at={onMap.at}
+          avatar={avatar}
+          lang={lang}
+          onAvatar={(next) => {
+            setAvatar(next);
+            saveAvatar(next);
+          }}
+        />
+      )}
+
+      {/* Keyed by step, so each new place slides in. Quiet scenes do not
+          move. Reduced motion stops it anyway (index.css). */}
+      <div key={step} className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}>
       {step === "language" && (
-        <LanguageSetup lang={lang} suggested={setup.suggested} onChoose={chooseLang} />
+        <LanguageSetup
+          lang={lang}
+          suggested={setup.suggested}
+          onChoose={chooseLang}
+          changing={canGoBack(trail)}
+        />
+      )}
+
+      {step === "onboarding" && (
+        <Onboarding lang={lang} onDone={() => setStep("checkIn")} />
       )}
 
       {step === "checkIn" && (
-        <main className="flex flex-col gap-6 px-4 py-6">
-          {/* Above the check-in, and self-gating: `FollowUp` renders nothing
-              unless a check-in is actually due, so this is not a screen the
-              child has to get past. It is here because this is the screen the
-              app opens on - "don't get dropped" means asking when they come
-              back, not waiting for them to go looking for the question. */}
+        <>
+          {/* Renders nothing unless the follow-up question is due (step 8).
+              This is what makes "the app will ask how things are" on the
+              handoff ending true. */}
           <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
           <CheckIn lang={lang} onChoose={afterCheckIn} />
+          {/* The three cards, on request only: small, at the bottom, for the
+              child who wants to know and for anyone they show the app to. */}
+          <div className="mx-4 mt-2 mb-6 flex flex-wrap justify-center gap-3">
+            <LanguageButton lang={lang} onOpen={() => setStep("language")} />
+            <DisplayButton lang={lang} />
+            <button
+              type="button"
+              onClick={() => setStep("onboarding")}
+              className="squish min-h-tap rounded-full border-2 border-ink bg-surface px-4 text-sm font-bold text-ink"
+            >
+              {t("onboarding.again", lang)}
+            </button>
+          </div>
 
           {/* Below the check-in, not above it: a child who opens the app gets
               their own question first, and the example is for the visitor.
               It is on this screen because this is where both of them land, and
               a judge should not have to find it. */}
           <DemoButton lang={lang} onLoaded={startDemo} onCleared={endDemo} />
-        </main>
+        </>
+      )}
+
+      {/* The picture questions: one per screen, each skippable. Which comes
+          next depends on the answers so far (lib/questions.ts). */}
+      {step === "picWhat" && (
+        <WhatQuestion lang={lang} value={picks.what} onChange={pick("what")} onNext={advance("picWhat")} />
+      )}
+      {(step === "picBody" || step === "picTaken" || step === "picWhereOnline" || step === "picWhen" || step === "picAdultWhere") && (
+        <FollowUpQuestion
+          key={step}
+          step={step}
+          lang={lang}
+          value={picks[ANSWER_OF[step]]}
+          onChange={pick(ANSWER_OF[step])}
+          onNext={advance(step)}
+        />
+      )}
+      {step === "picOwn" && (
+        <OwnWordsQuestion lang={lang} value={picks.own} onChange={pick("own")} onNext={advance("picOwn")} />
+      )}
+      {step === "picWhere" && (
+        <WhereQuestion lang={lang} value={picks.where} onChange={pick("where")} onNext={advance("picWhere")} />
+      )}
+      {step === "picWho" && (
+        <WhoQuestion
+          lang={lang}
+          howMany={picks.howMany}
+          kind={picks.kind}
+          onChange={(next) => setPicks((now) => ({ ...now, ...next }))}
+          onNext={(skipped) => advance("picWho")(skipped)}
+        />
+      )}
+      {step === "picOften" && (
+        <OftenQuestion lang={lang} value={picks.often} onChange={pick("often")} onNext={advance("picOften")} />
+      )}
+      {step === "picFeel" && (
+        <FeelQuestion lang={lang} value={picks.feel} onChange={pick("feel")} onNext={advance("picFeel")} />
+      )}
+      {step === "picReview" && (
+        <PictureReview
+          lang={lang}
+          choices={answersFor(picks)}
+          onSave={keepPictures}
+          onChange={() => setStep("picWhat")}
+          onNext={() => finishPictures(false)}
+          prominentHelp={adultRoute(picks)}
+        />
+      )}
+      {step === "picMore" && (
+        <MoreQuestion lang={lang} onWrite={() => setStep("write")} onNoThanks={() => setStep("handoff")} />
       )}
 
       {step === "write" && (
-        <Write lang={lang} initialText={draft} onApproved={keepWords} onNeedHelp={openHelp} />
+        <Write
+          lang={lang}
+          initialText={draft}
+          onTextChange={setDraft}
+          onApproved={keepWords}
+        />
       )}
 
       {step === "timeline" && (
@@ -348,7 +553,34 @@ export default function App() {
         />
       )}
 
-      {step === "handoff" && <Handoff lang={lang} report={report} />}
+      {step === "handoff" && (
+        <Handoff
+          lang={lang}
+          entries={entries}
+          report={report}
+          initialWhere={where}
+          initialAdult={adult}
+          onWhereChosen={(next) => {
+            setWhere(next);
+            setAdult(null);
+          }}
+          onAdultChosen={setAdult}
+          onNext={() => setStep("handoffShow")}
+        />
+      )}
+
+      {step === "handoffShow" && where && (
+        <HandoffShow
+          lang={lang}
+          entries={entries}
+          report={report}
+          where={where}
+          chosen={adult}
+          onDone={() => setStep("handoffDone")}
+        />
+      )}
+
+      {step === "handoffDone" && <HandoffDone lang={lang} onHome={() => setStep("checkIn")} />}
 
       {step === "escalation" && (
         <Escalation lang={lang} entries={entries} onOpen={() => setStep("handoff")} />
@@ -356,9 +588,9 @@ export default function App() {
 
       {step === "pinSet" && <PinSet lang={lang} onDone={() => setStep("timeline")} />}
 
-      {/* Back to the screen they left, not to the start. `helpFrom` is set by
-          `openHelp`, which is the only way in. */}
-      {step === "help" && <HelpScreen lang={lang} onBack={() => setStep(helpFrom)} />}
+      {step === "help" && <HelpScreen lang={lang} />}
+      </div>
+    </div>
     </div>
   );
 }
@@ -370,8 +602,8 @@ export default function App() {
  *
  * 1. **It must not navigate.** The bug this replaces was a help button that
  *    moved `step`. A `<details>` opens in place, so the lock stays on screen
- *    and there is no destination to get wrong. It also needs no "back"
- *    wording, which `strings.ts` does not have in any language.
+ *    and there is no destination to get wrong. It also needs no Back: the
+ *    lock has no trail (`lib/nav.ts`), so there is nothing to go back to.
  * 2. **The numbers must not be written here.** `content/helplines.json` is
  *    the only place a contact may be defined (CLAUDE.md), `GET /api/emergency`
  *    serves 110 and 112 out of it, and `noSend.test.ts` fails any screen file
@@ -421,6 +653,10 @@ function EmergencyHelp({ lang }: { lang: Lang }) {
         {/* The network is the one thing that can fail here, and a child in a
             crisis is owed a reason rather than an empty box. */}
         {failed && <p className="text-base">{t("errors.network", lang)}</p>}
+
+        {/* What "Leave now" does and does not do, said here once (it is no
+            longer under the button on every screen). */}
+        <p className="text-sm text-ink-soft">{t("quickExit.note", lang)}</p>
 
         {contacts?.map((contact) => (
           <section key={contact.name} className="flex flex-col gap-0.5">

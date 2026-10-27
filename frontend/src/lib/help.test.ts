@@ -77,7 +77,7 @@ test("a Hindi-speaking child is told, in Hindi, that the service is not", () => 
   const note = languageNote(helpline!, "hi");
 
   assert.ok(note.length > 0, "the note a screen must print is empty");
-  assert.ok(note.includes("सिर्फ़"), "the note does not convey 'only'");
+  assert.ok(note.includes("Sirf"), "the note does not convey 'only'");
   assert.notEqual(note, languageNote(helpline!, "en"), "it is not in the child's language");
 });
 
@@ -95,7 +95,7 @@ test("says 'only' when the child's language is not among them", () => {
   const german = resource({ languages: ["de"] });
 
   assert.equal(languageNote(german, "en"), "Speaks German only");
-  assert.equal(languageNote(german, "hi"), "सिर्फ़ जर्मन बोलते हैं");
+  assert.equal(languageNote(german, "hi"), "Sirf German bolte hain");
   assert.equal(languageNote(german, "de"), "Spricht Deutsch");
 });
 
@@ -120,7 +120,7 @@ test("lists three or more with commas and a final conjunction", () => {
   const many = resource({ languages: ["de", "uk", "en"] });
 
   // Hindi is not among them, so the note still has to say so.
-  assert.equal(languageNote(many, "hi"), "सिर्फ़ जर्मन, यूक्रेनी और अंग्रेज़ी बोलते हैं");
+  assert.equal(languageNote(many, "hi"), "Sirf German, Ukrainian aur English bolte hain");
   // ...and for an English child it drops, because English is in the list.
   assert.equal(languageNote(many, "en"), "Speaks German, Ukrainian and English");
 });
@@ -220,7 +220,7 @@ test("today, yesterday, and a number of days", () => {
 
 test("in the child's language", () => {
   assert.equal(freshness("2026-10-24", "de", NOW), "heute geprüft");
-  assert.equal(freshness("2026-10-23", "hi", NOW), "कल जाँचा गया");
+  assert.equal(freshness("2026-10-23", "hi", NOW), "kal check kiya");
   assert.equal(freshness("2026-10-21", "de", NOW), "vor 3 Tagen geprüft");
 });
 
