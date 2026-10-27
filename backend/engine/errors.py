@@ -42,34 +42,43 @@ FALLBACK_LANG = "en"
 MESSAGES: dict[str, dict[str, str]] = {
     "upstream_timeout": {
         "en": "That is taking longer than it should. Your words are still here. Do you want to try again?",
-        "hi": "इसमें ज़्यादा समय लग रहा है। आपके शब्द यहीं हैं। फिर कोशिश करनी है?",
+        "hi": "इसमें ज़्यादा समय लग रहा है। तुम्हारे शब्द यहीं हैं। फिर कोशिश करनी है?",
         "de": "Das dauert länger als es sollte. Deine Worte sind noch da. Willst du es nochmal versuchen?",
     },
     "upstream_unavailable": {
         "en": "Something on our side is not working right now. Your words are still here. Try again in a moment.",
-        "hi": "हमारी तरफ़ कुछ काम नहीं कर रहा है। आपके शब्द यहीं हैं। थोड़ी देर में फिर कोशिश करें।",
+        "hi": "हमारी तरफ़ कुछ काम नहीं कर रहा है। तुम्हारे शब्द यहीं हैं। थोड़ी देर में फिर कोशिश करो।",
         "de": "Bei uns funktioniert gerade etwas nicht. Deine Worte sind noch da. Versuch es gleich nochmal.",
     },
     "rate_limited": {
         "en": "A lot of people are using this right now. Wait a moment, then try again. Your words are still here.",
-        "hi": "अभी बहुत लोग इसका इस्तेमाल कर रहे हैं। थोड़ा रुककर फिर कोशिश करें। आपके शब्द यहीं हैं।",
+        "hi": "अभी बहुत लोग इसका इस्तेमाल कर रहे हैं। थोड़ा रुककर फिर कोशिश करो। तुम्हारे शब्द यहीं हैं।",
         "de": "Gerade benutzen viele Leute die App. Warte einen Moment und versuch es nochmal. Deine Worte sind noch da.",
     },
     # Not retryable: the translation is down until a person tops up the account.
     # So this one names the people a child can still reach.
+    # This is the sentence a child reads at the one moment the app cannot
+    # translate for them, so it is also the one place that bypasses
+    # languageNote() and ContactCard - the copy is baked in here rather than
+    # rendered from helplines.json. CLAUDE.md: "the crisis screen must print
+    # each service's languages; hiding this is worse than the gap itself".
+    # 116 111 is ["de"] and krisenchat is ["de", "uk"], so neither answers in
+    # Hindi, and neither answers in English either. Saying so costs one clause
+    # and stops a child spending their one attempt at asking for help on a
+    # line that cannot talk to them. The German version needs no clause.
     "credit_exhausted": {
-        "en": "The translation is not working today. Your words are still here. You can write to a person any time at krisenchat.de, or call 116 111.",
-        "hi": "आज अनुवाद काम नहीं कर रहा है। आपके शब्द यहीं हैं। आप किसी से krisenchat.de पर लिख सकते हैं, या 116 111 पर कॉल कर सकते हैं।",
+        "en": "The translation is not working today. Your words are still here. You can write to a person any time at krisenchat.de, or call 116 111. Both of them answer in German.",
+        "hi": "आज अनुवाद काम नहीं कर रहा है। तुम्हारे शब्द यहीं हैं। तुम krisenchat.de पर किसी से लिखकर बात कर सकते हो, या 116 111 पर कॉल कर सकते हो। ये दोनों जर्मन में बात करते हैं।",
         "de": "Die Übersetzung funktioniert heute nicht. Deine Worte sind noch da. Du kannst jederzeit auf krisenchat.de mit jemandem schreiben oder 116 111 anrufen.",
     },
     "invalid_input": {
         "en": "That did not go through. Can you try writing it again?",
-        "hi": "यह भेजा नहीं जा सका। क्या आप इसे फिर से लिख सकते हैं?",
+        "hi": "यह भेजा नहीं जा सका। क्या तुम इसे फिर से लिख सकते हो?",
         "de": "Das hat nicht geklappt. Kannst du es nochmal schreiben?",
     },
     "internal": {
         "en": "Something went wrong on our side. Your words are still here, and nothing was shared with anyone.",
-        "hi": "हमारी तरफ़ कुछ गड़बड़ हो गई। आपके शब्द यहीं हैं, और किसी के साथ कुछ साझा नहीं किया गया।",
+        "hi": "हमारी तरफ़ कुछ गड़बड़ हो गई। तुम्हारे शब्द यहीं हैं, और किसी को कुछ नहीं भेजा गया।",
         "de": "Bei uns ist etwas schiefgelaufen. Deine Worte sind noch da, und es wurde nichts an jemanden weitergegeben.",
     },
 }

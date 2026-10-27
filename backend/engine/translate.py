@@ -628,13 +628,30 @@ async def _ask_the_child(text, disputes, source_ambiguities, source_lang, usage)
     for dispute in disputes:
         if dispute.get("kind") != "source_ambiguous":
             continue
-        # The same rule the ambiguity finder has always applied, which this
-        # path never did. Questions reach the child from two places and only
-        # one of them checked that the phrase was the child's. A judge that
-        # quotes a phrase from nowhere produced the screen this fix is named
-        # after: a child writes "I dont feel good" and the app asks what they
-        # meant by "laughed at me".
+        # Two filters, and the order is the argument.
+        #
+        # First: did the child write it? A phrase from nowhere is wrong
+        # whatever severity the judge attached to it, so it never gets as far
+        # as being weighed. Questions reach the child from two paths and only
+        # the ambiguity finder ever checked this one; a judge quoting a phrase
+        # out of nowhere produced the screen that fix is named after - a child
+        # writes "I dont feel good" and the app asks what they meant by
+        # "laughed at me".
         if not _said_by_the_child(dispute.get("phrase", ""), text):
+            continue
+
+        # Then: is it worth a question at all? "minor" is the judge's own word
+        # for a disagreement that changes nothing about who did what to whom.
+        # Asking anyway spends one of two questions on a child in the middle
+        # of describing being bullied, and buys an adult nothing: Neel's live
+        # run asked whether टिफ़िन meant the box or the lunch inside it, which
+        # changes no decision anyone makes.
+        #
+        # Only an explicit "minor" is dropped. A dispute arriving without a
+        # severity is still asked, because the lexicon sets "critical"
+        # deliberately and anything unlabelled is more likely a shape we did
+        # not anticipate than a question not worth asking.
+        if dispute.get("severity") == "minor":
             continue
         if dispute["phrase"].lower() not in seen:
             ask_about.append(dispute)
