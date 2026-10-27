@@ -96,6 +96,46 @@ class TranslateResponse(BaseModel):
     usage: Usage
 
 
+# --- POST /api/listen --------------------------------------------------------
+
+
+class ListenKind(str, Enum):
+    """What kind of thing the child just told us (engine/listen.py KINDS).
+
+    Picks one of the fixed, reviewed sentences the listening screen answers
+    with (`heard.*` in strings.ts). Never shown, never stored.
+    """
+
+    HURT = "hurt"
+    NAMES = "names"
+    LEFT_OUT = "left_out"
+    TAKEN = "taken"
+    ONLINE = "online"
+    THREAT = "threat"
+    FEELING = "feeling"
+    GOOD = "good"
+    ASKING = "asking"
+    OTHER = "other"
+
+
+class ListenRequest(BaseModel):
+    """One message from the child, before any card exists.
+
+    Only the newest message is sent, not the conversation so far: the kind
+    sentence answers what they just said, and the less of a child's words
+    leave the phone, the better.
+    """
+
+    text: str = Field(min_length=1, max_length=2000)
+    lang: str = Field(description="ISO 639-1, the child's language")
+
+
+class ListenResponse(BaseModel):
+    kind: ListenKind
+    safety: Safety
+    usage: Usage
+
+
 # --- POST /api/clarify -------------------------------------------------------
 
 

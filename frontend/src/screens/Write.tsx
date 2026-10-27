@@ -70,6 +70,14 @@ export interface WriteProps {
    */
   initialText?: string;
   /**
+   * Check `initialText` as soon as the screen opens. Set when the child
+   * pressed "Make a card" on the listening screen: they have already said
+   * everything and asked for the card, so making them press a second button
+   * to start it would be a step that asks nothing. Still child-initiated -
+   * that press is the click this screen's promise is about.
+   */
+  autoCheck?: boolean;
+  /**
    * Every change to the text, so the app can hand it back as `initialText`
    * after Back or a trip to help. Nothing leaves the device here.
    */
@@ -97,6 +105,7 @@ type Run =
 
 export default function Write({
   lang,
+  autoCheck = false,
   initialText,
   onTextChange,
   onApproved,
@@ -201,6 +210,17 @@ export default function Write({
 
   const draft = text.trim();
   const ambiguities = result?.ambiguities ?? [];
+
+  // Once per mount, even under React's development double-mount: a second
+  // run would be a second paid translation of the same words.
+  const autoChecked = useRef(false);
+  useEffect(() => {
+    if (!autoCheck || autoChecked.current || !draft || !online) return;
+    autoChecked.current = true;
+    void run({ kind: "translate", text: draft });
+    // Mount only: a later edit must never start a check by itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function send() {
     if (!draft || !online) return;

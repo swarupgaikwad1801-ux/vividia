@@ -68,6 +68,35 @@ export interface TranslateResponse {
 }
 
 /**
+ * What kind of thing the child just told us. Picks one of the fixed,
+ * reviewed sentences the listening screen answers with (`heard.*`).
+ */
+export type ListenKind =
+  | "hurt"
+  | "names"
+  | "left_out"
+  | "taken"
+  | "online"
+  | "threat"
+  | "feeling"
+  | "good"
+  | "asking"
+  | "other";
+
+/** POST /api/listen — one message, before any card exists. */
+export interface ListenRequest {
+  text: string;
+  /** ISO 639-1, the child's language */
+  lang: string;
+}
+
+export interface ListenResponse {
+  kind: ListenKind;
+  safety: Safety;
+  usage: Usage;
+}
+
+/**
  * POST /api/clarify — re-translate with the child's answers applied.
  * The child decides the meaning; the model never resolves an ambiguity alone.
  */

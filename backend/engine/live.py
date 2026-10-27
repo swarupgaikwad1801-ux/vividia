@@ -26,6 +26,7 @@ from engine.resources import resources_with_source as _resources_with_source
 # Re-exported, not wrapped: /api/health reads it through ENGINE so the mock
 # simply does not have it, which is the truth - the mock spends no credits.
 from engine.resources import tavily_status  # noqa: F401
+from engine.listen import listen as _listen
 from engine.safety import safety_check as _safety_check
 from engine.translate import translate as _translate
 
@@ -34,6 +35,7 @@ STATUS = {
     "report": "live",
     "safety_check": "live",
     "resources": "live",
+    "listen": "live",
 }
 
 
@@ -52,6 +54,10 @@ async def translate(
 
 async def report(entries: list, child_lang: str) -> Report:
     return await _report(entries, child_lang)
+
+
+async def listen(text: str, lang: str) -> dict:
+    return await _listen(text, lang)
 
 
 async def safety_check(text: str, lang: str) -> SafetyResult:

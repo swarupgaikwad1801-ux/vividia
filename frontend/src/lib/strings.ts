@@ -51,9 +51,9 @@ export const STRINGS = {
     hi: "Kahani khul rahi hai…",
   },
   "demo.loaded": {
-    en: "{name}'s story is ready. Her words are already written. Press “Check my words”.",
-    de: "{name}s Geschichte ist da. Ihre Worte sind schon geschrieben. Drück auf „Meine Worte prüfen“.",
-    hi: "{name} ki kahani ready hai. Uski baat pehle se likhi hai. Ab “Meri baat check karo” dabao.",
+    en: "{name}'s story is ready. Her words are already written. Press “Write it down”.",
+    de: "{name}s Geschichte ist da. Ihre Worte sind schon geschrieben. Drück auf „Aufschreiben“.",
+    hi: "{name} ki kahani ready hai. Uski baat pehle se likhi hai. Ab “Likh do” dabao.",
   },
   "demo.clear": { en: "Remove the example", de: "Beispiel löschen", hi: "Example hatao" },
   "demo.cleared": {
@@ -158,6 +158,140 @@ export const STRINGS = {
 
   "checkin.title": { en: "How are you today?", de: "Wie geht es dir heute?", hi: "Aaj kaisa lag raha hai?" },
   "checkin.skip": { en: "Skip", de: "Überspringen", hi: "Chhodo" },
+
+  // The listening screen (screens/Listen.tsx). Swarup, 27 Oct: "listen to
+  // the child first and talk to them, then offer the card".
+  //
+  // Every sentence here is chosen by code, never written by a model: the
+  // model only says which KIND of thing the child told us (engine/listen.py),
+  // and the kind picks a line from this list. So these are the whole of what
+  // the app can say back, and they follow CLAUDE.md's "no AI friend": the
+  // app speaks as "we", never "I", promises nothing it cannot do, and gives
+  // no advice except, for a threat, that an adult should know.
+  //
+  // DRAFT for Neel's review (his rule: words a child reads need his yes).
+  "heard.title": { en: "Tell us what happened", de: "Erzähl uns, was passiert ist", hi: "Humein batao kya hua" },
+  "heard.hint": {
+    en: "Write as much or as little as you like. In your own language.",
+    de: "Schreib so viel oder so wenig, wie du willst. In deiner Sprache.",
+    hi: "Jitna chaho utna likho. Apni language mein.",
+  },
+  // "Write it down", not "Send": the words go into the notebook on this
+  // phone. "Send" would tell a child their words are going to a person.
+  "heard.send": { en: "Write it down", de: "Aufschreiben", hi: "Likh do" },
+  "heard.reading": {
+    en: "Reading what you wrote…",
+    de: "Wir lesen, was du geschrieben hast…",
+    hi: "Tumhari baat padh rahe hain…",
+  },
+  "heard.you": { en: "You wrote", de: "Du hast geschrieben", hi: "Tumne likha" },
+  "heard.us": { en: "Vividia", de: "Vividia", hi: "Vividia" },
+  "heard.thanks.first": {
+    en: "Thank you for telling us.",
+    de: "Danke, dass du uns das erzählst.",
+    hi: "Humein batane ke liye thank you.",
+  },
+  "heard.thanks.again": {
+    en: "Thank you. We are still listening.",
+    de: "Danke. Wir hören dir weiter zu.",
+    hi: "Thank you. Hum abhi bhi sun rahe hain.",
+  },
+  "heard.kind.hurt": {
+    en: "Nobody is allowed to hurt you. That is not okay.",
+    de: "Niemand darf dir wehtun. Das ist nicht okay.",
+    hi: "Kisi ko tumhe chot pahunchane ka haq nahi hai. Ye theek nahi hai.",
+  },
+  "heard.kind.names": {
+    en: "Words like that can really hurt. It is not your fault.",
+    de: "Solche Worte können sehr wehtun. Es ist nicht deine Schuld.",
+    hi: "Aisi baatein bahut dukh deti hain. Ye tumhari galti nahi hai.",
+  },
+  "heard.kind.left_out": {
+    en: "Being left out hurts. You deserve to belong.",
+    de: "Ausgeschlossen werden tut weh. Du gehörst dazu.",
+    hi: "Akela chhod diya jaana dukh deta hai. Tum bhi saath rehne layak ho.",
+  },
+  "heard.kind.taken": {
+    en: "Your things are yours. Nobody should take them.",
+    de: "Deine Sachen gehören dir. Niemand darf sie dir wegnehmen.",
+    hi: "Tumhari cheezein tumhari hain. Kisi ko unhe nahi lena chahiye.",
+  },
+  "heard.kind.online": {
+    en: "What happens on a phone is real too. It can hurt just as much.",
+    de: "Was am Handy passiert, ist auch echt. Es kann genauso wehtun.",
+    hi: "Phone pe jo hota hai, woh bhi sach hai. Woh bhi utna hi dukh deta hai.",
+  },
+  // The one kind that says what to do, because a threat has a clock on it.
+  // Still no promise: "should know", not "we will tell".
+  "heard.kind.threat": {
+    en: "That sounds frightening. An adult you trust should know about this soon.",
+    de: "Das klingt beängstigend. Ein Erwachsener, dem du vertraust, sollte das bald wissen.",
+    hi: "Ye sun ke darr lagta hai. Jis bade pe tumhe bharosa hai, use ye jaldi pata hona chahiye.",
+  },
+  "heard.kind.feeling": {
+    en: "How you feel matters.",
+    de: "Wie du dich fühlst, ist wichtig.",
+    hi: "Tumhari feelings important hain.",
+  },
+  // Good news gets good news back, not "it takes courage".
+  "heard.kind.good": {
+    en: "That's really good to hear.",
+    de: "Das ist schön zu hören.",
+    hi: "Ye sun ke bahut achha laga.",
+  },
+  // A child asking what to do is pointed to a person, never advised by us.
+  "heard.kind.asking": {
+    en: "An adult you trust can help you with this. A card can help you tell them.",
+    de: "Ein Erwachsener, dem du vertraust, kann dir dabei helfen. Eine Karte kann dir helfen, es zu erzählen.",
+    hi: "Jis bade pe tumhe bharosa hai, woh isme madad kar sakta hai. Card se unhe batana aasaan hoga.",
+  },
+  "heard.kind.other": {
+    en: "It takes courage to write this.",
+    de: "Das aufzuschreiben ist mutig.",
+    hi: "Ye likhne ke liye himmat chahiye.",
+  },
+  // After a message the safety check flagged. The danger pop-up has the
+  // numbers; this is what stays in the conversation once it is closed. The
+  // button is "Need help" in Hinglish too (ENGLISH_IN_HINGLISH below), so the
+  // Hindi names it in English rather than as "Madad chahiye".
+  "heard.urgent": {
+    en: "What you wrote matters a lot. You don't have to be alone with this. Tap Need help at the top, any time.",
+    de: "Was du geschrieben hast, ist sehr wichtig. Du musst damit nicht allein sein. Tipp oben auf Hilfe, jederzeit.",
+    hi: "Tumne jo likha, woh bahut important hai. Iske saath akele rehna zaroori nahi. Upar Need help dabao, kabhi bhi.",
+  },
+  // The gentle questions, one after each answer, in this order. Every one is
+  // optional: the child can answer, write something else, or make the card.
+  "heard.ask.more": { en: "Do you want to tell us more?", de: "Möchtest du uns mehr erzählen?", hi: "Aur kuch batana hai?" },
+  "heard.ask.where": { en: "Where did it happen?", de: "Wo ist es passiert?", hi: "Ye kahan hua?" },
+  "heard.ask.when": { en: "When did it happen?", de: "Wann ist es passiert?", hi: "Ye kab hua?" },
+  "heard.ask.who": { en: "Who was there?", de: "Wer war dabei?", hi: "Wahan kaun tha?" },
+  "heard.ask.feel": { en: "How did it make you feel?", de: "Wie hast du dich dabei gefühlt?", hi: "Tumhe kaisa laga?" },
+  "heard.ask.else": { en: "Is there anything else?", de: "Gibt es noch etwas?", hi: "Aur kuch?" },
+  "heard.ask.done": {
+    en: "We are here whenever you want to write more.",
+    de: "Wir sind da, wenn du mehr schreiben willst.",
+    hi: "Jab bhi aur likhna ho, hum yahan hain.",
+  },
+  "heard.cardOffer": {
+    en: "When you are ready, your words can become a card to show someone you trust.",
+    de: "Wenn du so weit bist, werden deine Worte zu einer Karte für jemanden, dem du vertraust.",
+    hi: "Jab ready ho, tumhari baat ek card ban sakti hai. Use kisi bharose wale ko dikhao.",
+  },
+  "heard.makeCard": { en: "Make a card", de: "Karte machen", hi: "Card banao" },
+  "heard.notNow": { en: "Not now", de: "Jetzt nicht", hi: "Abhi nahi" },
+  "heard.notNowDone": {
+    en: "That's okay. You don't have to show anyone. You can come back any time.",
+    de: "Das ist okay. Du musst es niemandem zeigen. Du kannst jederzeit wiederkommen.",
+    hi: "Koi baat nahi. Kisi ko dikhana zaroori nahi. Jab chaho wapas aao.",
+  },
+  "heard.keepWriting": { en: "Keep writing", de: "Weiterschreiben", hi: "Aur likho" },
+  "heard.home": { en: "Back to the start", de: "Zum Anfang", hi: "Shuru pe wapas" },
+  "heard.full": {
+    en: "This page is full. You can make a card now, or come back later.",
+    de: "Diese Seite ist voll. Du kannst jetzt eine Karte machen oder später wiederkommen.",
+    hi: "Ye page bhar gaya. Ab card banao, ya baad mein wapas aao.",
+  },
+  "heard.retry": { en: "Try again", de: "Nochmal versuchen", hi: "Phir se try karo" },
 
   "write.title": { en: "What happened?", de: "Was ist passiert?", hi: "Kya hua?" },
   "write.hint": {

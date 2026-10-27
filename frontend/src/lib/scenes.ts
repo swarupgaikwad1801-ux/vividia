@@ -36,6 +36,10 @@ export const SCENE: Record<Step, Scene> = {
   picFeel: "sun",
   picReview: "sky",
   picMore: "sky",
+  // Lilac, not sky: the listening screen is a conversation, and a softer
+  // colour than the question screens around it tells the child this one is
+  // theirs to take as slowly as they like. No map stop: see mapFor.
+  listen: "lilac",
   write: "sky",
   timeline: "grass",
   report: "grass",

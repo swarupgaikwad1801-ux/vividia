@@ -37,6 +37,7 @@ export type Step =
   | "picFeel"
   | "picReview" // the child checks the lines before they are saved
   | "picMore" // "Want to say more in your own words?": optional writing
+  | "listen" // the child talks and we answer every message, a card only when they ask
   | "write" // the centrepiece: find the words
   | "timeline" // everything they have written
   | "report" // the bilingual card, approved word by word

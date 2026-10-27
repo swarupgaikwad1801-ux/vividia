@@ -40,6 +40,8 @@ from app.schemas import (
     Strategy,
     TranslateRequest,
     TranslateResponse,
+    ListenRequest,
+    ListenResponse,
 )
 # ENGINE_MODE=live uses real Nemotron calls; anything else (the default)
 # uses the mock, so the app runs with no API key and costs nothing.
@@ -244,6 +246,31 @@ async def translate(request: TranslateRequest, http: Request) -> TranslateRespon
         strategy_used=result.get("strategy_used", request.strategy),
         usage=usage,
     )
+
+
+@app.post("/api/listen", response_model=ListenResponse)
+async def listen(request: ListenRequest, http: Request) -> ListenResponse:
+    """Answer the child before offering anything: what kind of thing they said.
+
+    The safety check runs here too, on every message, for the same reason it
+    is folded into translate: a child who writes "I want to die" while
+    talking must be shown help at once, not after they ask for a card.
+    """
+    started = time.perf_counter()
+    _metered(http, request.lang)
+    try:
+        heard, safety = await asyncio.gather(
+            ENGINE.listen(request.text, request.lang),
+            ENGINE.safety_check(request.text, request.lang),
+        )
+    except Exception as error:  # noqa: BLE001 - the child must never see a traceback
+        raise ChildSafeError(error, request.lang) from error
+
+    # The length and the kind, never the text.
+    log.info("listen lang=%s chars=%d kind=%s", request.lang, len(request.text), heard["kind"])
+    usage = _usage_of(heard, started)
+    GUARD.record_spend(usage["estimated_cost_usd"])
+    return ListenResponse(kind=heard["kind"], safety=safety, usage=usage)
 
 
 @app.post("/api/clarify", response_model=TranslateResponse)

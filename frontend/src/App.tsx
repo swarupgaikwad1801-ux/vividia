@@ -25,6 +25,7 @@ import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
 import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
+import Listen from "./screens/Listen";
 import Write from "./screens/Write";
 
 import DemoButton from "./components/DemoButton";
@@ -56,6 +57,7 @@ import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
+import type { Turn } from "./lib/listening";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
 import { applyDocumentLang } from "./lib-lang/languages";
@@ -161,6 +163,14 @@ export default function App() {
   // The demo button also fills it, with Amara's sentence; nothing else may
   // put text in a child's mouth.
   const [draft, setDraft] = useState("");
+  // The listening conversation and its unsent message, kept here for the
+  // same reason as `draft`: Back, Help or a language change must not lose a
+  // word of it. Cleared only when it has become an entry, or the demo ends.
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [talkDraft, setTalkDraft] = useState("");
+  // "Make a card" on the listening screen: the writing screen checks the
+  // German straight away, because the child has already said everything.
+  const [autoCheck, setAutoCheck] = useState(false);
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
   // The child's two handoff answers, kept so Back from the big card returns
@@ -250,8 +260,10 @@ export default function App() {
       const own = questionsFor(picks).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
       setPicks(NO_PICKS);
       if (own) {
-        setDraft(own);
-        setTrail([HOME, "write"]);
+        // Their own words start the conversation, in the box, not yet sent:
+        // the child presses "Write it down" themselves.
+        setTalkDraft(own);
+        setTrail([HOME, "listen"]);
       } else {
         setTrail([HOME, "picMore"]);
       }
@@ -292,6 +304,10 @@ export default function App() {
       );
       // Saved, so it is no longer a draft: the next visit to Write is empty.
       setDraft("");
+      // The conversation those words came from is filed with them.
+      setTurns([]);
+      setTalkDraft("");
+      setAutoCheck(false);
       refreshEntries();
       // Those words are an entry now. Leaving them in `draft` would refill the
       // writing screen with a sentence the child has already filed the next
@@ -326,8 +342,11 @@ export default function App() {
         setLang(storyLang);
       }
       refreshEntries();
-      setDraft(session.draft.text);
-      setStep("write");
+      // Into the listening screen's box, not the writing screen's: the judge
+      // presses "Write it down" and sees the app answer before any card.
+      setTurns([]);
+      setTalkDraft(session.draft.text);
+      setStep("listen");
     },
     [refreshEntries, setStep],
   );
@@ -340,6 +359,8 @@ export default function App() {
   const endDemo = useCallback(() => {
     refreshEntries();
     setDraft("");
+    setTurns([]);
+    setTalkDraft("");
     setStep("checkIn");
   }, [refreshEntries, setStep]);
 
@@ -540,12 +561,30 @@ export default function App() {
         />
       )}
       {step === "picMore" && (
-        <MoreQuestion lang={lang} onWrite={() => setStep("write")} onNoThanks={() => setStep("handoff")} />
+        <MoreQuestion lang={lang} onWrite={() => setStep("listen")} onNoThanks={() => setStep("handoff")} />
+      )}
+
+      {step === "listen" && (
+        <Listen
+          lang={lang}
+          turns={turns}
+          onTurnsChange={setTurns}
+          draft={talkDraft}
+          onDraftChange={setTalkDraft}
+          onMakeCard={(words) => {
+            setDraft(words);
+            setAutoCheck(true);
+            setStep("write");
+          }}
+          onHome={() => setTrail([HOME])}
+          onNeedHelp={needHelp}
+        />
       )}
 
       {step === "write" && (
         <Write
           lang={lang}
+          autoCheck={autoCheck}
           initialText={draft}
           onTextChange={setDraft}
           onApproved={keepWords}
