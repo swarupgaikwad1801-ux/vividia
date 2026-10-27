@@ -379,7 +379,9 @@ export default function App() {
   }
 
   const scene = SCENE[step];
-  const onMap = mapFor(step, picks, checkInMood);
+  // Not on the card the child holds up (27 Oct): an adult is reading that
+  // screen, and a game map above it pushed their words below the fold.
+  const onMap = step === "handoffShow" ? null : mapFor(step, picks, checkInMood);
   // The screen right after "What happened?", where the warm line answers it.
   const afterWhat = nextQuestion("picWhat", picks, checkInMood);
 
