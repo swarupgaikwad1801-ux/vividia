@@ -196,7 +196,7 @@ asking them; that is how we avoid merge conflicts.
 | Who | Owns | Files |
 |-----|------|-------|
 | **Swarup Gaikwad** | AI engine and model orchestration: strategies A/B/C, prompts, judge, cost and latency instrumentation, engine tests | `backend/engine/` (except `resources.py`), `eval/bakeoff.py`, `eval/probe_thinking.py` |
-| **Vernika Sharma** | Full-stack and product: all screens (React + Vite + TypeScript + Tailwind), i18n + Arabic RTL, browser storage and deletion, PIN, quick exit, the FastAPI app, deployment | `frontend/`, `backend/main.py` |
+| **Vernika Sharma** | Full-stack and product: all screens (React + Vite + TypeScript + Tailwind), i18n (English, German, Hindi), browser storage and deletion, PIN, quick exit, the FastAPI app, deployment | `frontend/`, `backend/main.py` |
 | **Neel Shah** | Evaluation, QA, Tavily and submission: the dataset, the eval runner and charts, Tavily resource discovery, end-to-end QA, diagrams, video, Devpost | `backend/engine/resources.py`, `content/`, `eval/testset/`, `eval/run_eval.py`, `SAFETY.md`, `FEEDBACK.md` |
 
 Neel is an engineering contributor, not a presentation role: the eval runner
@@ -739,7 +739,7 @@ child is our difference; **a real benchmark is required, not optional**.
 ## Quality bar ("perfect")
 
 - Every button works; no placeholders, nothing labelled "simulated".
-- Works on a cheap Android phone in Chrome at 360px; Arabic RTL correct.
+- Works on a cheap Android phone in Chrome at 360px.
 - Verification shows progress and finishes in about 10 s or less.
 - Friendly error in the child's language for timeouts and no network.
 - **One failure never hides the part that matters.** Ask of every screen and
