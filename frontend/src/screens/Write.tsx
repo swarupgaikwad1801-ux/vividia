@@ -68,12 +68,6 @@ export interface WriteProps {
    */
   onTextChange?: (text: string) => void;
   /**
-   * The language the text is written in, when it is not the screen's: Amara's
-   * story is English, and a judge may open it on a German or Hinglish screen.
-   * Sent as `source_lang`; defaults to `lang`.
-   */
-  sourceLang?: string;
-  /**
    * Called when the child approves the German. Until it is wired, the approve
    * button is not rendered at all — CLAUDE.md's quality bar says every button
    * works, and a button that silently does nothing is worse than its absence.
@@ -94,8 +88,7 @@ type Run =
   | { kind: "translate"; text: string }
   | { kind: "clarify"; text: string; choices: Record<string, string> };
 
-export default function Write({ lang, initialText, onTextChange, sourceLang, onApproved }: WriteProps) {
-  const writtenIn = sourceLang ?? lang;
+export default function Write({ lang, initialText, onTextChange, onApproved }: WriteProps) {
   const [text, setText] = useState(initialText ?? "");
   const [phase, setPhase] = useState<Phase>("writing");
   const [result, setResult] = useState<TranslateResponse | null>(null);
@@ -160,8 +153,8 @@ export default function Write({ lang, initialText, onTextChange, sourceLang, onA
       try {
         const response =
           next.kind === "clarify"
-            ? await clarify({ text: next.text, source_lang: writtenIn, choices: next.choices })
-            : await translate({ text: next.text, source_lang: writtenIn });
+            ? await clarify({ text: next.text, source_lang: lang, choices: next.choices })
+            : await translate({ text: next.text, source_lang: lang });
         if (id !== runRef.current) return;
         setResult(response);
         setCheckedText(next.text);
@@ -179,7 +172,7 @@ export default function Write({ lang, initialText, onTextChange, sourceLang, onA
         setPhase("error");
       }
     },
-    [lang, writtenIn],
+    [lang],
   );
 
   const draft = text.trim();
