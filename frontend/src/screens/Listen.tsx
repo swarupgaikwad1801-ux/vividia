@@ -65,6 +65,9 @@ export default function Listen({
   const [danger, setDanger] = useState<string | null>(null);
   const [urgentSeen, setUrgentSeen] = useState(false);
   const [resting, setResting] = useState(false);
+  // "Clear this chat" asks once more before anything goes (clearChat below).
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [cleared, setCleared] = useState(false);
   const [online, setOnline] = useState(() => navigator?.onLine !== false);
   const endRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
@@ -127,7 +130,30 @@ export default function Listen({
     const next = [...turns, { text, kind: null }];
     onTurnsChange(next);
     onDraftChange("");
+    setCleared(false);
     void read(next.length - 1, next);
+    requestAnimationFrame(() => editorRef.current?.focus());
+  }
+
+  /**
+   * "Clear this chat", after the child has said yes a second time (Neel,
+   * 27 Oct). Everything on this screen goes: every message, every answer and
+   * the unsent box. Bumping `runRef` drops an answer still on its way, so a
+   * reply cannot land in the empty chat a moment later. The Need help glow
+   * stays if danger was seen: clearing the words does not clear the reason
+   * help is one tap away. Entries already saved as a card are not touched;
+   * the conversation lives only in memory, so there is nothing stored to
+   * delete.
+   */
+  function clearChat() {
+    runRef.current += 1;
+    setReading(null);
+    setFailed(null);
+    setDanger(null);
+    setConfirmClear(false);
+    onTurnsChange([]);
+    onDraftChange("");
+    setCleared(true);
     requestAnimationFrame(() => editorRef.current?.focus());
   }
 
@@ -308,6 +334,41 @@ export default function Listen({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Clear this chat: quiet, at the very bottom, and never in one tap. */}
+      {(turns.length > 0 || draft.trim() !== "") &&
+        (confirmClear ? (
+          <div role="group" aria-labelledby="listen-clear-ask" className="flex flex-col gap-2 rounded-card border-[3px] border-ink bg-surface p-4">
+            <p id="listen-clear-ask" className="text-base text-ink">{t("heard.clearAsk", lang)}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={clearChat}
+                className="squish min-h-tap flex-1 rounded-full border-[3px] border-ink bg-surface px-4 text-base font-bold text-ink"
+              >
+                {t("heard.clearYes", lang)}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmClear(false)}
+                className="squish min-h-tap flex-1 rounded-full bg-calm px-4 text-base font-bold text-page"
+              >
+                {t("heard.clearNo", lang)}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmClear(true)}
+            className="squish min-h-tap self-center rounded-full px-4 text-sm font-bold text-ink-soft underline"
+          >
+            {t("heard.clear", lang)}
+          </button>
+        ))}
+      {cleared && turns.length === 0 && (
+        <p role="status" className="text-center text-base text-ink-soft">{t("heard.cleared", lang)}</p>
       )}
     </section>
   );
