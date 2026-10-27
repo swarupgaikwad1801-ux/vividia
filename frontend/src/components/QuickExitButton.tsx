@@ -69,18 +69,20 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: Qui
     // like a white box pasted on top.
     // No side padding of its own: the app's top row already has it, and at
     // 360px Back, Need help and Leave now need every pixel to stay on one line.
-    <div className="sticky top-0 z-40 bg-scene py-2">
+    <div className="sticky top-0 z-40 bg-scene pt-2 pb-2.5">
       <div className="mx-auto flex max-w-sm flex-col gap-1">
-        {/* gap-3: room between the red Need help and Leave now, so a thumb
-            reaching for one does not land on the other. */}
-        <div className="flex items-center justify-end gap-3">
+        {/* gap-2: room between the red Need help and Leave now, so a thumb
+            reaching for one does not land on the other. Not more: with Back
+            beside them, Leave now must still end inside the 16px gutter at
+            360px (measured, en/de/hi). */}
+        <div className="flex items-center justify-end gap-2">
           {beside}
           <button
             type="button"
             onClick={() => quickExit(url)}
             // DangerDialog keeps this in its Tab cycle, so it stays reachable.
             data-quick-exit
-            className="min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-[3px] border-ink bg-surface px-3 text-base font-bold text-ink"
+            className="sticker min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-2.5 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
           >
             {/* An arrow out of a door, for a child who reads the shape faster
                 than the word, or reads no German or English at all. */}

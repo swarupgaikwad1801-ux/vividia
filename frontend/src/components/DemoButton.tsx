@@ -80,13 +80,17 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
   return (
     <section
       aria-label={t("demo.button", lang)}
-      className={`flex flex-col gap-3 rounded-card border border-line bg-surface p-4 ${className}`}
+      // No panel of its own: it sits in the "For grown-ups" footer on the
+      // check-in (App.tsx), which is what sets it apart from the child's
+      // choices. White stickers, not the black primary pill, so it never
+      // competes with the faces above it.
+      className={`flex flex-col gap-2 ${className}`}
     >
       {loaded ? (
         <button
           type="button"
           onClick={clear}
-          className="min-h-tap rounded-card border border-line bg-surface px-4 text-base font-medium text-ink transition-colors hover:border-calm"
+          className="sticker min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
         >
           {t("demo.clear", lang)}
         </button>
@@ -96,9 +100,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
           onClick={press}
           disabled={loading}
           aria-busy={loading}
-          // text-page, not text-white: --color-calm is a light teal in dark
-          // mode, where white measures about 2.3:1 against the 4.5:1 floor.
-          className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong disabled:opacity-60"
+          className="sticker min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink disabled:opacity-60 motion-safe:active:translate-y-1 active:shadow-none"
         >
           {loading ? t("demo.loading", lang) : t("demo.button", lang)}
         </button>

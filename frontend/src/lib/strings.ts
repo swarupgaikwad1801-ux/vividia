@@ -1062,6 +1062,16 @@ export const STRINGS = {
   // a quote. Shown in the card's current language (the adult may read German).
   "card.fromPictures": { en: "Chosen from pictures", de: "Aus Bildern gewählt", hi: "Pictures se chuna" },
   "card.ownWords": { en: "In my own words", de: "In meinen eigenen Worten", hi: "Meri apni baat" },
+
+  // Visual polish (27 Oct). New lines only; nothing above changed meaning.
+  // The first screen: each language card greets in its own language, and the
+  // big greeting is in the device's language (LanguageSetup.tsx).
+  "langSetup.hello": { en: "Hello!", de: "Hallo!", hi: "Namaste!" },
+  // The check-in screen: the example story sits under this heading, apart
+  // from the child's own choices, because it is for the adult showing the app.
+  "home.grownUps": { en: "For grown-ups", de: "Für Erwachsene", hi: "Bado ke liye" },
+  // Under the map: where you are, in words, as well as on the path.
+  "map.step": { en: "Step {n} of {total}", de: "Schritt {n} von {total}", hi: "{total} mein se step {n}" },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;

@@ -36,7 +36,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
         <button
           type="button"
           onClick={onHome}
-          className="squish min-h-tap w-full rounded-full bg-calm px-4 text-base font-bold text-page"
+          className="sticker min-h-tap w-full rounded-full bg-calm px-4 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
         >
           {t("heard.home", lang)}
         </button>
@@ -47,7 +47,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
   return (
     <section aria-labelledby="mood-reply" className="flex flex-col items-center gap-5 px-4 py-6 text-center">
       {face && (
-        <span className="animate-bob block">
+        <span className="block">
           <Face code={face} className="animate-pop-in size-24" />
         </span>
       )}
@@ -58,7 +58,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
         <button
           type="button"
           onClick={onPictures}
-          className="squish flex min-h-24 flex-col items-center justify-center gap-1 rounded-card border-[3px] border-ink bg-surface p-3 text-base font-bold text-ink shadow-[4px_4px_0_0_#1B1B2F]"
+          className="sticker flex min-h-24 flex-col items-center justify-center gap-1 rounded-card bg-surface p-3 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
         >
           <span aria-hidden="true" className="text-3xl leading-none">🖼️</span>
           {t("moodReply.pictures", lang)}
@@ -66,7 +66,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
         <button
           type="button"
           onClick={onWrite}
-          className="squish flex min-h-24 flex-col items-center justify-center gap-1 rounded-card border-[3px] border-ink bg-surface p-3 text-base font-bold text-ink shadow-[4px_4px_0_0_#1B1B2F]"
+          className="sticker flex min-h-24 flex-col items-center justify-center gap-1 rounded-card bg-surface p-3 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
         >
           <span aria-hidden="true" className="text-3xl leading-none">✏️</span>
           {t("moodReply.write", lang)}
@@ -76,7 +76,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
       <button
         type="button"
         onClick={() => setStopped(true)}
-        className="squish min-h-tap rounded-full bg-surface px-6 text-base font-bold text-ink"
+        className="sticker min-h-tap rounded-full bg-surface px-6 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
       >
         {t(reply.stop, lang)}
       </button>

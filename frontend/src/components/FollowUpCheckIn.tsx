@@ -54,7 +54,7 @@ export default function FollowUpCheckIn({
   return (
     <section
       aria-labelledby="followup-title"
-      className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
+      className="flex flex-col gap-3 rounded-card border-[2.5px] border-ink bg-surface p-4"
     >
       <h2 id="followup-title" className="text-lg font-medium" {...says("followup.title", lang)} />
       <p className="text-base text-ink-soft" {...says("followup.gap", lang)} />
@@ -68,7 +68,7 @@ export default function FollowUpCheckIn({
             key={answer}
             type="button"
             onClick={() => onAnswer(answer)}
-            className="min-h-tap rounded-card border border-line bg-surface px-4 text-base font-medium text-ink transition-colors hover:border-calm"
+            className="sticker min-h-tap rounded-card bg-surface px-4 text-base font-semibold text-ink motion-safe:active:translate-y-1 active:shadow-none"
             {...says(key, lang)}
           />
         ))}

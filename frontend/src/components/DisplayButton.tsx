@@ -20,7 +20,7 @@ export default function DisplayButton({ lang }: { lang: Lang }) {
     applyDisplay(next);
   }
 
-  const pill = "squish min-h-tap inline-flex items-center gap-2 rounded-full border-2 border-ink px-4 text-sm font-bold";
+  const pill = "sticker min-h-tap inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-sm font-bold motion-safe:active:translate-y-1 active:shadow-none";
 
   return (
     <>
@@ -31,11 +31,14 @@ export default function DisplayButton({ lang }: { lang: Lang }) {
         aria-controls="display-options"
         className={`${pill} bg-surface text-ink`}
       >
-        <span aria-hidden="true" className="text-base">Aa</span>
+        <span aria-hidden="true" className="text-sm">Aa</span>
         {t("display.open", lang)}
       </button>
       {open && (
-        <div id="display-options" role="group" aria-label={t("display.open", lang)} className="flex w-full flex-wrap justify-center gap-3">
+        // order-last: on the check-in this sits in one row of chips, and the
+        // options take a line of their own under the whole row rather than
+        // splitting it. Tab order still runs Text, then its options.
+        <div id="display-options" role="group" aria-label={t("display.open", lang)} className="order-last flex w-full flex-wrap justify-center gap-2">
           <button
             type="button"
             aria-pressed={display.large}

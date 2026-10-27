@@ -164,16 +164,21 @@ test("the bar stays under the danger pop-up and the top bar with Need help and L
   assert.ok(bar < z(source("../components/QuickExitButton.tsx"), /sticky top-0 z-(\d+)/));
 });
 
-test("a picked tile has the outline, the fill and a check mark; an unpicked one is a thin line", () => {
+// 27 Oct visual polish: every tile is a sticker (ink outline, solid shadow);
+// picked is the screen-colour fill, pressed in, plus the check. The rule this
+// guards is unchanged: picked is never shown by colour alone.
+test("a picked tile has the fill, the pressed-in look and a check mark; an unpicked one has neither", () => {
   const markup = render(WhereQuestion, { lang: "en", value: [WHERE[0].code], onChange: noop, onNext: noop });
   const labels = [...markup.matchAll(/<label[^>]*class="([^"]*)"[^>]*>([\s\S]*?)<\/label>/g)];
   const picked = labels.filter((m) => /checked=""/.test(m[2]));
   const unpicked = labels.filter((m) => !/checked=""/.test(m[2]));
   assert.equal(picked.length, 1);
-  assert.match(picked[0][1], /border-calm bg-calm-soft/);
+  assert.match(picked[0][1], /(^| )sticker-on( |$)/);
   assert.match(picked[0][2], /✓/);
   for (const m of unpicked) {
-    assert.match(m[1], /border-2 border-b-4 border-line bg-surface/);
+    // A sticker tile, or the dashed "I don't want to say" under the grid.
+    assert.match(m[1], /(^| )sticker .*bg-surface|border-dashed/);
+    assert.doesNotMatch(m[1], /sticker-on/);
     assert.doesNotMatch(m[2], /✓/);
   }
 });
@@ -182,7 +187,8 @@ test("tiles and mood faces press down only when motion is allowed", () => {
   const tiles = render(WhereQuestion, { lang: "en", value: [], onChange: noop, onNext: noop });
   const faces = render(CheckIn, { lang: "en", onChoose: noop });
   for (const markup of [tiles, faces]) {
-    assert.match(markup, /motion-safe:active:translate-y-0\.5/);
+    // The sticker press (index.css): 4px down onto the shadow, 27 Oct.
+    assert.match(markup, /motion-safe:active:translate-y-1/);
     assert.doesNotMatch(markup, /(?<!motion-safe:)active:translate/);
   }
 });

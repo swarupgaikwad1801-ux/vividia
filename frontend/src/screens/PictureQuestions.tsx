@@ -36,10 +36,11 @@
  * it: the answers live in App.tsx, not here.
  */
 
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import Face from "../art/Face";
+import { NoteMark, ZipIcon } from "../art/Helper";
 import QuestionPicture, { type QuestionKind } from "../art/Questions";
 import DangerDialog, { HelpPulse, opensForTiles } from "../components/DangerDialog";
 import { MOODS } from "../lib/moods";
@@ -76,10 +77,16 @@ interface Tile {
 /**
  * One big picture tile. A real checkbox or radio underneath, visually hidden.
  *
- * Unpicked is quiet: a thin line, white. Picked is unmistakable: the primary
- * outline, the soft fill and a check mark, so the state never rests on colour
- * alone. A tap presses the tile down onto its thicker bottom edge; reduced
- * motion turns that off (motion-safe).
+ * Every tile is a sticker (index.css): ink outline, solid shadow, and a tap
+ * pushes it down onto the shadow; reduced motion keeps the shadow change and
+ * drops the movement (motion-safe). Picked is unmistakable: filled with a
+ * tint of the screen's colour, pressed in, a check badge, and the picture
+ * bounces once. The check is what says "picked", so the state never rests
+ * on colour alone.
+ *
+ * Every tile is the same height: the picture sits in a fixed box and the
+ * label has room for two lines whether it uses them or not, so a row with
+ * a long German word does not stand taller than the next.
  */
 function TileButton({
   tile,
@@ -98,13 +105,11 @@ function TileButton({
 }) {
   return (
     <label
-      // Tiles pop in one after another; the stagger is the only animation
-      // that runs on its own here, and reduced motion stops it.
-      style={{ animationDelay: `${index * 45}ms` } as CSSProperties}
-      className={`animate-pop-in relative flex cursor-pointer flex-col items-center gap-1 rounded-card p-2 text-center text-base font-bold text-ink transition-[translate] duration-100 motion-safe:active:translate-y-0.5 has-[:focus-visible]:outline has-[:focus-visible]:outline-3 ${
-        checked
-          ? "border-[3px] border-b-[5px] border-calm bg-calm-soft motion-safe:active:border-b-[3px]"
-          : "border-2 border-b-4 border-line bg-surface motion-safe:active:border-b-2"
+      // No entrance of their own: the screen slides in as one piece, which
+      // reads calmer than tiles popping in one by one.
+      data-index={index}
+      className={`sticker relative flex cursor-pointer flex-col items-center gap-1 rounded-card px-2 pt-2.5 pb-2 text-center text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-4 ${
+        checked ? "sticker-on" : "bg-surface"
       }`}
     >
       <input
@@ -116,12 +121,64 @@ function TileButton({
         className="sr-only"
       />
       {checked && (
-        <span aria-hidden="true" className="animate-pop-in absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-ink text-sm text-page">
+        <span
+          aria-hidden="true"
+          className="animate-pop-in absolute -top-2.5 -right-2.5 flex size-7 items-center justify-center rounded-full border-2 border-page bg-ink text-sm text-page"
+        >
           ✓
         </span>
       )}
-      <span className={`block w-full ${checked ? "animate-bob" : ""}`}>{tile.picture}</span>
+      {/* One bounce when picked (pop-in), not a loop: the check badge is
+          the lasting signal. */}
+      <span className={`flex h-16 w-full items-center justify-center ${checked ? "animate-pop-in" : ""}`}>{tile.picture}</span>
+      <span className="flex min-h-[2lh] w-full items-center justify-center leading-tight">
+        <span className="leading-tight">{tile.label}</span>
+      </span>
+    </label>
+  );
+}
+
+/**
+ * "I don't want to say", under the grid rather than in it: full width,
+ * a dashed outline and a closed zip, quieter than the tiles. It is the same
+ * real input as a tile (same name, same handler), so it behaves exactly as
+ * the tile did; it just no longer competes with the answers for attention,
+ * and it is always in the same place.
+ */
+function NoSayButton({
+  tile,
+  checked,
+  multi,
+  name,
+  onTap,
+}: {
+  tile: Tile;
+  checked: boolean;
+  multi: boolean;
+  name: string;
+  onTap: () => void;
+}) {
+  return (
+    <label
+      className={`relative flex min-h-tap cursor-pointer items-center justify-center gap-2.5 rounded-full border-[2.5px] border-dashed border-ink px-4 py-2 text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-4 ${
+        checked ? "border-solid bg-surface" : "bg-surface/55"
+      }`}
+    >
+      <input
+        type={multi ? "checkbox" : "radio"}
+        name={name}
+        value={tile.code}
+        checked={checked}
+        onChange={onTap}
+        className="sr-only"
+      />
+      <ZipIcon className="size-7 shrink-0" />
       <span className="leading-tight">{tile.label}</span>
+      {checked && (
+        <span aria-hidden="true" className="animate-pop-in flex size-6 shrink-0 items-center justify-center rounded-full bg-ink text-sm text-page">
+          ✓
+        </span>
+      )}
     </label>
   );
 }
@@ -143,23 +200,34 @@ function TileGrid({
   onChange: (next: string[]) => void;
   cols?: 2 | 3;
 }) {
+  const answers = tiles.filter((tile) => tile.code !== NO_SAY);
+  const noSay = tiles.find((tile) => tile.code === NO_SAY);
   return (
-    <div
-      role={multi ? "group" : "radiogroup"}
-      aria-labelledby={labelledBy}
-      className={`tile-grid grid gap-2.5 ${cols === 2 ? "grid-cols-2" : "grid-cols-3"}`}
-    >
-      {tiles.map((tile, i) => (
-        <TileButton
-          key={tile.code}
-          tile={tile}
-          index={i}
+    <div role={multi ? "group" : "radiogroup"} aria-labelledby={labelledBy} className="flex flex-col gap-4">
+      {answers.length > 0 && (
+        <div className={`tile-grid grid gap-3 ${cols === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+          {answers.map((tile, i) => (
+            <TileButton
+              key={tile.code}
+              tile={tile}
+              index={i}
+              name={name}
+              multi={multi}
+              checked={value.includes(tile.code)}
+              onTap={() => onChange(toggle(value, tile.code, multi))}
+            />
+          ))}
+        </div>
+      )}
+      {noSay && (
+        <NoSayButton
+          tile={noSay}
           name={name}
           multi={multi}
-          checked={value.includes(tile.code)}
-          onTap={() => onChange(toggle(value, tile.code, multi))}
+          checked={value.includes(NO_SAY)}
+          onTap={() => onChange(toggle(value, NO_SAY, multi))}
         />
-      ))}
+      )}
     </div>
   );
 }
@@ -173,6 +241,12 @@ function TileGrid({
  * outline) and disabled until something is picked, then the one bold button
  * on the screen. While it is disabled it is described by the screen's hint
  * ("Pick one"), so a screen reader says why, not just "dimmed".
+ *
+ * On a phone the bar is the full width of the screen. On a wide screen it is
+ * the width of the content column, a card standing on the bottom edge, so
+ * Skip and Next stay under the tiles they belong to instead of drifting to
+ * the far corners. Only the inner card catches taps; the clear strip either
+ * side lets the page underneath be clicked.
  *
  * Portalled to <body>: the screen wrapper in App.tsx keeps a transform from
  * its slide-in, and `fixed` inside a transform sticks to that box, not the
@@ -194,11 +268,8 @@ function Footer({
   onSkip: () => void;
 }) {
   const bar = (
-    <div
-      data-action-bar
-      className="fixed inset-x-0 bottom-0 z-20 border-t-2 border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-    >
-      <div className="mx-auto flex max-w-sm items-center gap-3">
+    <div data-action-bar className="fixed inset-x-0 bottom-0 z-20 pointer-events-none">
+      <div className="pointer-events-auto mx-auto flex w-full items-center gap-3 border-t-[2.5px] border-ink bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-t-card sm:border-x-[2.5px]">
         <button type="button" onClick={onSkip} className="squish min-h-tap shrink-0 rounded-full px-4 text-base font-bold text-ink">
           {t("q.skip", lang)}
         </button>
@@ -209,7 +280,7 @@ function Footer({
           aria-describedby={ready ? undefined : hintId}
           className={`min-h-tap flex-1 rounded-full px-4 text-lg font-bold ${
             ready
-              ? "squish border-[3px] border-calm bg-calm text-page hover:bg-calm-strong"
+              ? "sticker bg-calm text-page hover:bg-calm-strong motion-safe:active:translate-y-1 active:shadow-none"
               : "border-2 border-line bg-surface text-ink-soft/60"
           }`}
         >
@@ -240,14 +311,20 @@ function Screen({
 }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-4 px-4 py-5">
-      <header className="flex flex-col gap-1">
+      <header className="flex flex-col gap-2.5">
         <h1 id={id} className="text-3xl text-balance">
           {title}
         </h1>
+        {/* The screen's one fixed line of help, as a note with a pen mark.
+            Static copy from strings.ts, never generated, so it carries no
+            AI label. */}
         {hint && (
-          <p id={`${id}-hint`} className="text-base font-medium text-ink">
-            {hint}
-          </p>
+          <div className="flex items-center gap-2 self-start rounded-full border-[2.5px] border-ink bg-surface py-1 pr-3.5 pl-1">
+            <NoteMark className="size-7 shrink-0" />
+            <p id={`${id}-hint`} className="text-base font-semibold text-ink">
+              {hint}
+            </p>
+          </div>
         )}
       </header>
       {children}
@@ -503,7 +580,7 @@ export function PictureReview({ lang, choices, onSave, onChange, onNext, promine
           <button
             type="button"
             onClick={onSave}
-            className="squish min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
+            className="sticker min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong motion-safe:active:translate-y-1 active:shadow-none"
           >
             {t("approve.yes", lang)}
           </button>
@@ -517,7 +594,7 @@ export function PictureReview({ lang, choices, onSave, onChange, onNext, promine
           <button
             type="button"
             onClick={onNext}
-            className="squish min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
+            className="sticker min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong motion-safe:active:translate-y-1 active:shadow-none"
           >
             {t("nav.next", lang)}
           </button>
@@ -548,7 +625,7 @@ export function MoreQuestion({ lang, onWrite, onNoThanks, onMakeCard }: MoreQues
       <button
         type="button"
         onClick={onWrite}
-        className="squish min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
+        className="sticker min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong motion-safe:active:translate-y-1 active:shadow-none"
       >
         <span aria-hidden="true">✏️ </span>
         {t("q.more.yes", lang)}
@@ -557,12 +634,12 @@ export function MoreQuestion({ lang, onWrite, onNoThanks, onMakeCard }: MoreQues
         <button
           type="button"
           onClick={onMakeCard}
-          className="squish min-h-tap rounded-full border-[3px] border-ink bg-sun px-4 text-lg font-bold text-ink"
+          className="sticker min-h-tap rounded-full bg-sun px-4 text-lg font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
         >
           {t("heard.makeCard", lang)}
         </button>
       )}
-      <button type="button" onClick={onNoThanks} className="squish min-h-tap rounded-full border-[3px] border-ink bg-surface px-4 text-lg font-bold text-ink">
+      <button type="button" onClick={onNoThanks} className="sticker min-h-tap rounded-full bg-surface px-4 text-lg font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none">
         {t("q.more.no", lang)}
       </button>
     </Screen>

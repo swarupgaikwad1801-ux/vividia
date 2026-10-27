@@ -21,9 +21,9 @@ export default function LanguageButton({ lang, onOpen }: { lang: Lang; onOpen: (
       type="button"
       onClick={onOpen}
       aria-label={`${t("lang.change", lang)}: ${name}`}
-      className="squish min-h-tap inline-flex items-center gap-2 rounded-full border-2 border-ink bg-surface px-4 text-sm font-bold text-ink"
+      className="sticker min-h-tap inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-2.5 text-sm font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
     >
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="9" />
         <ellipse cx="12" cy="12" rx="4" ry="9" />
         <path d="M3 12h18M5 7h14M5 17h14" />
