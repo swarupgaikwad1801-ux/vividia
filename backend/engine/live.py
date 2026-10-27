@@ -6,14 +6,28 @@ which, so `/api/health` can report the truth instead of a guess.
 
 As Swarup and Neel finish a module, replace the mock line here and update
 STATUS in the same commit.
+
+Every function here is a one-line delegation to a name imported above, which
+makes a missing import invisible until the route is called: Python resolves a
+global at call time, not at import time, so the module loads cleanly and
+`/api/health` still answers "live". `report` lost its import in the #19 merge
+and failed every card in live mode for a week, while the whole test suite
+stayed green because the tests run against the mock. test_live_delegates.py
+now checks, for each function below, that the names it reaches for actually
+exist.
 """
 
 from typing import Literal
 
-from engine import mock
 from engine.contract import Report, Resource, SafetyResult, TranslationResult
+from engine.report import report as _report
 from engine.resources import resources as _resources
 from engine.resources import resources_with_source as _resources_with_source
+# Re-exported, not wrapped: /api/health reads it through ENGINE so the mock
+# simply does not have it, which is the truth - the mock spends no credits.
+from engine.resources import tavily_status  # noqa: F401
+from engine.listen import listen as _listen
+from engine.listen import reply as _reply
 from engine.safety import safety_check as _safety_check
 from engine.translate import translate as _translate
 
@@ -22,6 +36,7 @@ STATUS = {
     "report": "live",
     "safety_check": "live",
     "resources": "live",
+    "listen": "live",
 }
 
 
@@ -40,6 +55,14 @@ async def translate(
 
 async def report(entries: list, child_lang: str) -> Report:
     return await _report(entries, child_lang)
+
+
+async def listen(text: str, lang: str) -> dict:
+    return await _listen(text, lang)
+
+
+async def reply(text: str, lang: str) -> dict:
+    return await _reply(text, lang)
 
 
 async def safety_check(text: str, lang: str) -> SafetyResult:
