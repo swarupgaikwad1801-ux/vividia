@@ -43,11 +43,6 @@ export const STRINGS = {
   },
 
   "demo.button": { en: "Try Amara's story", de: "Amaras Geschichte ausprobieren", hi: "Amara ki kahani dekho" },
-  "demo.notice": {
-    en: "Amara is made up. She is not a real child.",
-    de: "Amara ist ausgedacht. Sie ist kein echtes Kind.",
-    hi: "Amara ek banayi hui kahani hai. Woh koi asli bachchi nahi hai.",
-  },
   // The demo button (moved from lib-demo/pendingStrings.ts, same key names).
   // {name} is the persona name from the story, filled with fill(), never typed in.
   "demo.loading": {
