@@ -426,6 +426,13 @@ Honesty rule that follows: we say the system is **built and measured for
 Hindi and English**, and that the architecture is language-independent. We do
 not claim it works in Arabic, Ukrainian or Turkish, and we do not demo them.
 
+**Screens for `hi` are Hinglish** (Hindi in Latin letters, informal "tum").
+Feature names and buttons ("Leave now", "Need help") stay
+English on those screens (`ENGLISH_IN_HINGLISH` in `strings.ts`); questions,
+answers and anything said to the child are Hinglish. Hindi copy is unreviewed
+(`HINDI_REVIEWED = false`). The language code stays `hi`. Engine questions, errors and safety
+messages for `hi` are Hinglish too (#93).
+
 The demo child is Hindi-speaking. Pick the name with the team; "Amira" no
 longer fits.
 
