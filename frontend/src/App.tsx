@@ -169,6 +169,14 @@ export default function App() {
   // word of it. Cleared only when it has become an entry.
   const [turns, setTurns] = useState<Turn[]>([]);
   const [talkDraft, setTalkDraft] = useState("");
+  // "Saved. It is kept on this phone only.", once, on the screen a save
+  // leads to (GOV.UK confirmation pattern: say it is done, and where it
+  // is). Gone at the next screen change.
+  const [savedOn, setSavedOn] = useState<Step | null>(null);
+  useEffect(() => {
+    if (savedOn !== null && step !== savedOn) setSavedOn(null);
+  }, [step, savedOn]);
+
   // "Make a card" on the listening screen: the writing screen checks the
   // German straight away, because the child has already said everything.
   const [autoCheck, setAutoCheck] = useState(false);
@@ -285,6 +293,7 @@ export default function App() {
       } else {
         setTrail([HOME, "picMore"]);
       }
+      if (save) setSavedOn(own ? "listen" : "picMore");
     },
     [picks, checkInMood, lang, refreshEntries],
   );
@@ -339,6 +348,7 @@ export default function App() {
       // about something else - the inference `lib/moods.ts` and CLAUDE.md say
       // we never make.
       setCheckInMood(null);
+      setSavedOn("timeline");
       setStep("timeline");
     },
     [checkInMood, refreshEntries, setStep],
@@ -454,6 +464,13 @@ export default function App() {
             saveAvatar(next);
           }}
         />
+      )}
+
+      {savedOn === step && (
+        <p role="status" className="animate-pop-in mx-4 mt-3 flex items-center gap-2 rounded-card border-[2.5px] border-ink bg-surface px-4 py-2.5 text-base font-bold text-ink">
+          <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink text-sm text-page">✓</span>
+          {t("saved.note", lang)}
+        </p>
       )}
 
       {/* Keyed by step, so each new place slides in. Quiet scenes do not
