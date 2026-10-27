@@ -1,25 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../lib/api";
-import { t } from "../lib/strings";
+import { fill, t } from "../lib/strings";
 import { activeDemo, clearDemo, loadDemo } from "../lib-demo/demoStory";
 import type { DemoSession } from "../lib-demo/demoStory";
-import { tp } from "../lib-demo/pendingStrings";
 
 /**
  * "Try Amara's story": the one button a judge presses.
  *
  * This is the first thing a judge touches, so it is the whole product in
- * miniature and it obeys the same two rules as every other screen.
+ * miniature.
  *
- * - **The notice is never conditional.** `demo.notice` ("Amara is a made-up
- *   example") renders beside the button before anything is loaded, while it
- *   loads and after. CLAUDE.md's honesty rules say a persona is fictional and
- *   says so; a label that only appears once the story is open would be a label
- *   a judge can miss.
- * - **Nothing is sent.** Pressing this seeds a timeline and writes a draft
- *   sentence. It makes no translate call, builds no report and chooses no
- *   adult. The judge presses send themselves, which is exactly the moment the
- *   demo exists to show.
+ * **Nothing is sent.** Pressing this seeds a timeline and writes a draft
+ * sentence. It makes no translate call, builds no report and chooses no
+ * adult. The judge presses send themselves, which is exactly the moment the
+ * demo exists to show.
+ *
+ * There is no "Amara is made up" line under the button: removed on Neel's
+ * call (27 Oct). The README, the video and Devpost say the persona is
+ * fictional.
  *
  * It is also reversible from here: once loaded, the same card offers clearing,
  * so nobody is stranded in demo state and the team can test on a clean app.
@@ -48,7 +46,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
   useEffect(() => {
     // The persona's name belongs to the story, never to a string in the UI.
     const session = activeDemo();
-    if (session) setMessage(tp("demo.loaded", lang).replace("{name}", session.persona.name));
+    if (session) setMessage(fill("demo.loaded", lang, { name: session.persona.name }));
   }, [lang]);
 
   const press = useCallback(async () => {
@@ -59,7 +57,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
     try {
       const { session } = await loadDemo(lang);
       setStatus("loaded");
-      setMessage(tp("demo.loaded", lang).replace("{name}", session.persona.name));
+      setMessage(fill("demo.loaded", lang, { name: session.persona.name }));
       onLoaded(session);
     } catch (error) {
       setStatus("error");
@@ -72,7 +70,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
   const clear = useCallback(() => {
     clearDemo();
     setStatus("cleared");
-    setMessage(tp("demo.cleared", lang));
+    setMessage(t("demo.cleared", lang));
     onCleared?.();
   }, [lang, onCleared]);
 
@@ -90,7 +88,7 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
           onClick={clear}
           className="min-h-tap rounded-card border border-line bg-surface px-4 text-base font-medium text-ink transition-colors hover:border-calm"
         >
-          {tp("demo.clear", lang)}
+          {t("demo.clear", lang)}
         </button>
       ) : (
         <button
@@ -102,15 +100,9 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
           // mode, where white measures about 2.3:1 against the 4.5:1 floor.
           className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong disabled:opacity-60"
         >
-          {loading ? tp("demo.loading", lang) : t("demo.button", lang)}
+          {loading ? t("demo.loading", lang) : t("demo.button", lang)}
         </button>
       )}
-
-      {/*
-        Always visible, in every state. This is the "fictional and says so"
-        rule, and it is why the notice sits outside the branches above.
-      */}
-      <p className="text-sm text-ink-soft">{t("demo.notice", lang)}</p>
 
       {/*
         One live region for every outcome, so a screen reader hears the result

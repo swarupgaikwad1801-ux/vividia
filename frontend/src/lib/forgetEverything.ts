@@ -22,6 +22,7 @@ import { clearHandoffs } from "../lib-followups-ui/handoffStore";
 import { forgetCheckIns } from "../lib-followups-ui/checkInState";
 import { forgetPinRemoved } from "./pin";
 import { clearAll } from "./timeline";
+import { forgetAvatar } from "./avatar";
 
 /**
  * Every store the app writes to, cleared.
@@ -35,7 +36,7 @@ import { clearAll } from "./timeline";
  * hides the part that matters.
  */
 export function forgetEverything(): void {
-  for (const forget of [clearAll, forgetCheckIns, clearHandoffs, forgetPinRemoved]) {
+  for (const forget of [clearAll, forgetCheckIns, clearHandoffs, forgetPinRemoved, forgetAvatar]) {
     try {
       forget();
     } catch {

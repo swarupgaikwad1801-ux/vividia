@@ -227,9 +227,14 @@ def _ambiguous_words() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))["languages"]
 
 
-# A word edge for matching another language's list: not a letter, digit or
-# underscore, and not Devanagari, whose vowel signs are not \w in Python's re.
-_WORD_EDGE = r"[\wऀ-ॿ]"
+# A word edge: not a letter, digit or underscore, and not Devanagari, whose
+# vowel signs are not \w in Python's re.
+#
+# The danda । (U+0964) and double danda ॥ (U+0965) sit inside the Devanagari
+# block but are punctuation - the Hindi full stop. Including them made every
+# word at the end of a Hindi sentence unmatchable: "वो देख लेगा।" found
+# nothing while "वो देख लेगा" found the threat.
+_WORD_EDGE = r"[\wऀ-ॣ०-ॿ]"
 
 
 def _whole_word(form: str, text: str) -> bool:
@@ -244,31 +249,64 @@ def _whole_word(form: str, text: str) -> bool:
     return re.search(pattern, flat) is not None
 
 
-_DEVANAGARI_RANGE = re.compile(r"[ऀ-ॿ]")
+_DEVANAGARI = re.compile(r"[ऀ-ॿ]")
+
+
+def _form_in(form: str, text: str) -> bool:
+    r"""Does `form` appear in `text`, for a form in the screen's own language?
+
+    Latin forms keep the matching they have always had: `_normalise` on both
+    sides, so punctuation and spacing do not matter and "chhed" still finds
+    "chhedkar".
+
+    Devanagari forms go through `_whole_word` on the raw text instead,
+    because `_normalise` destroys them. It replaces everything that is not `\w` with a space, and
+    Devanagari vowel signs are not `\w` in Python's `re`, so a form collapses
+    to its bare consonants:
+
+        देख लूँगा  ->  'द ख ल ग'
+        दीदी      ->  'द द'
+
+    A two-letter needle matches almost anything. In
+    "कल छुट्टी के बाद देख लेगा" the letters of "बाद देख" normalise to
+    "ब द द ख", which contains "द द" - so that sentence reported *didi*, and
+    the spurious match pushed the real threat past `ask_about[:2]`.
+
+    Whole-word matching costs the accidental tolerance for inflections that
+    shredding gave - छुट्टी no longer finds छुट्टियों - which is what the
+    `forms` list is for. A missing inflection is one line in that file and
+    shows up as a question not asked; a needle of two consonants cannot be
+    made safe at all.
+    """
+    if _DEVANAGARI.search(form):
+        return _whole_word(form, text)
+    return _normalise(form) in _normalise(text)
+
+
+def _rank(entry: dict) -> int:
+    """0 if this entry should be asked before the others, 1 otherwise."""
+    return 0 if entry.get("ask_first") else 1
 
 
 def _said_by_the_child(phrase: str, text: str) -> bool:
     """Did the child actually write this phrase?
 
-    Everything we quote back to a child has to pass through here. A model can
-    return a phrase that appears nowhere in the sentence - it has done, which
-    is why `_find_ambiguity` has filtered its own output since it was written
-    - and a quoted phrase the child never used is the single most alarming
-    thing this app can put on screen. They wrote one sentence about their own
-    life and the app answers with somebody else's words in quotation marks.
+    Everything quoted back to a child passes through here. A model can return
+    a phrase that appears nowhere in the sentence - it has done - and a quoted
+    phrase the child never used is the single most alarming thing this app can
+    put on screen. They wrote one sentence about their own life and the app
+    answers with somebody else's words in quotation marks.
 
-    Devanagari is matched as whole words on the raw text, because `_normalise`
-    strips vowel signs and leaves bare consonants that match almost anything;
-    a two-consonant needle would wave through exactly the invented phrase this
-    is here to catch. Everything else keeps the `_normalise` substring rule
-    the ambiguity filter already used, so a phrase still matches across
-    punctuation and spacing.
+    The matching itself is `_form_in`, not a second copy of it. Both questions
+    are the same question - "is this string in what the child wrote?" - and a
+    rule with two implementations is a rule that eventually disagrees with
+    itself. `_form_in` is where the Devanagari reasoning lives; this adds only
+    the empty-phrase guard, because a model returning "" must not be read as
+    "the child wrote everything".
     """
     if not phrase:
         return False
-    if _DEVANAGARI_RANGE.search(phrase):
-        return _whole_word(phrase, text)
-    return _normalise(phrase) in _normalise(text)
+    return _form_in(phrase, text)
 
 
 def _lexicon_item(entry: dict) -> dict:
@@ -295,9 +333,10 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
     Reading only the English list, that sentence never asked about kal or
     chhutti, the knife-threat case this list exists for.
     """
-    haystack = _normalise(text)
     words = _ambiguous_words()
-    found = []
+    # (rank, item): 0 for an entry marked `ask_first`, 1 otherwise. Sorted at
+    # the end, stably, so everything else keeps the order the file gives it.
+    found: list[tuple[int, dict]] = []
     for entry in words.get(source_lang, []):
         # Some words are only ambiguous without their context. Hindi "kal" is
         # both tomorrow and yesterday, but a future or past verb settles it,
@@ -305,8 +344,8 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
         skip = entry.get("skip_when", {}).get("patterns", [])
         if any(re.search(pattern, text, re.IGNORECASE | re.UNICODE) for pattern in skip):
             continue
-        if any(_normalise(form) in haystack for form in entry["forms"]):
-            found.append(_lexicon_item(entry))
+        if any(_form_in(form, text) for form in entry["forms"]):
+            found.append((_rank(entry), _lexicon_item(entry)))
 
     for lang, entries in words.items():
         if lang == source_lang or lang.startswith("_"):
@@ -322,8 +361,16 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
             # silently choose between yesterday and tomorrow. Asking once too
             # often costs a tap; choosing wrongly loses a threat's timing.
             if any(_whole_word(form, text) for form in entry["forms"]):
-                found.append(_lexicon_item(entry))
-    return found
+                found.append((_rank(entry), _lexicon_item(entry)))
+
+    # Only two questions ever reach the child (`ask_about[:2]`), so when more
+    # than two words match, which two is a safety decision and not an
+    # accident of file order. A word that decides WHETHER this is a threat
+    # goes before one that decides WHEN: if "देख लेगा" is read as "take a
+    # look at it", the sentence is harmless and the timing of it does not
+    # matter. Getting that the wrong way round is what lost Neel's sentence.
+    found.sort(key=lambda pair: pair[0])
+    return [item for _, item in found]
 
 
 async def _find_ambiguity(text, source_lang, target_lang, usage):

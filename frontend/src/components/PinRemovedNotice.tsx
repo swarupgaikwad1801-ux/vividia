@@ -1,5 +1,5 @@
 import { type PinStore, pinRemovedAt } from "../lib/pin";
-import { pinText } from "./pinText";
+import { fill } from "../lib/strings";
 
 /**
  * One quiet line on the timeline: when the PIN was last removed.
@@ -32,7 +32,7 @@ export default function PinRemovedNotice({ lang, store }: PinRemovedNoticeProps)
 
   return (
     <p className="rounded-card border border-line bg-surface p-3 text-sm text-ink-soft">
-      {pinText("pin.removed.notice", lang, { when })}
+      {fill("pin.removed.notice", lang, { when })}
     </p>
   );
 }

@@ -27,7 +27,6 @@ import { ApiError, demo as fetchStory } from "../lib/api";
 import type { DemoStory } from "../lib/api";
 import { addEntry, listEntries, removeEntry } from "../lib/timeline";
 import { t } from "../lib/strings";
-import { tp } from "./pendingStrings";
 import type { Entry } from "../types/api";
 
 /** Our own key. The timeline keeps its own, and we never write to it. */
@@ -171,7 +170,7 @@ function brokenStory(lang: string): ApiError {
  * decide to clear their own timeline first.
  */
 function notOnTopOfRealEntries(lang: string): ApiError {
-  return new ApiError("invalid_input", tp("demo.notLoadedOwnNotes", lang), false);
+  return new ApiError("invalid_input", t("demo.notLoadedOwnNotes", lang), false);
 }
 
 /**
