@@ -43,6 +43,8 @@ import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } f
 import { MOOD_CODES } from "./lib/moods";
 import { NO_PICKS, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
 import { SCENE, mapFor } from "./lib/scenes";
+import { ADULT_LINE, moodLine, whatLine } from "./lib/warm";
+import WarmLine from "./components/WarmLine";
 import {
   ANSWER_OF,
   adultRoute,
@@ -237,7 +239,7 @@ export default function App() {
    */
   const finishPictures = useCallback(
     (save: boolean) => {
-      const choices = answersFor(picks);
+      const choices = answersFor(picks, checkInMood);
       if (save) {
         const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
         addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
@@ -247,7 +249,7 @@ export default function App() {
       // answer wins over anything remembered.
       const start = handoffWhereFor(choices.where, choices.adultWhere, Boolean(choices.whereOnline));
       setWhere((now) => (start === "home" ? "home" : now ?? start));
-      const own = questionsFor(picks).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
+      const own = questionsFor(picks, checkInMood).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
       setPicks(NO_PICKS);
       if (own) {
         setDraft(own);
@@ -269,9 +271,9 @@ export default function App() {
     (from: QuestionStep) => (skipped?: boolean) => {
       const key = ANSWER_OF[from];
       const now = skipped ? { ...picks, [key]: [], ...(from === "picWho" ? { kind: [] } : {}) } : picks;
-      setStep(nextQuestion(from, now));
+      setStep(nextQuestion(from, now, checkInMood));
     },
-    [picks, setStep],
+    [picks, checkInMood, setStep],
   );
 
   /**
@@ -378,7 +380,9 @@ export default function App() {
   }
 
   const scene = SCENE[step];
-  const onMap = mapFor(step, picks);
+  const onMap = mapFor(step, picks, checkInMood);
+  // The screen right after "What happened?", where the warm line answers it.
+  const afterWhat = nextQuestion("picWhat", picks, checkInMood);
 
   return (
     // One flat colour per place (lib/scenes.ts), filling the whole screen.
@@ -495,6 +499,11 @@ export default function App() {
 
       {/* The picture questions: one per screen, each skippable. Which comes
           next depends on the answers so far (lib/questions.ts). */}
+      {/* One kind line, written in advance and chosen by a rule (lib/warm.ts):
+          to the face the child tapped, to what happened, and to an adult. */}
+      {step === "picWhat" && <WarmLine line={moodLine(checkInMood)} lang={lang} />}
+      {step !== "picWhat" && step === afterWhat && <WarmLine line={whatLine(picks.what)} lang={lang} />}
+      {step === "picAdultWhere" && <WarmLine line={ADULT_LINE} lang={lang} />}
       {step === "picWhat" && (
         <WhatQuestion lang={lang} value={picks.what} onChange={pick("what")} onNext={advance("picWhat")} />
       )}
@@ -532,7 +541,7 @@ export default function App() {
       {step === "picReview" && (
         <PictureReview
           lang={lang}
-          choices={answersFor(picks)}
+          choices={answersFor(picks, checkInMood)}
           onSave={keepPictures}
           onChange={() => setStep("picWhat")}
           onNext={() => finishPictures(false)}

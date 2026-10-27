@@ -87,8 +87,12 @@ const ON_CARD: readonly Step[] = ["picReview", "picMore", "write", "timeline", "
  * The stops for these answers, and where the traveller stands for this step,
  * or null for a step with no map (language, onboarding, the quiet screens).
  */
-export function mapFor(step: Step, picks: Picks): { places: MapPlace[]; at: number } | null {
-  const questions = questionsFor(picks);
+export function mapFor(
+  step: Step,
+  picks: Picks,
+  mood: string | null = null,
+): { places: MapPlace[]; at: number } | null {
+  const questions = questionsFor(picks, mood);
   const places = [CHECK_IN, ...questions.map((q) => QUESTION_PLACE[q]), ...ENDING];
   const card = 1 + questions.length;
   let at: number;
