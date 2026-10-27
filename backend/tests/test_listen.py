@@ -50,6 +50,9 @@ def heard(text: str, lang: str = "en") -> dict:
         # news, not being left out.
         ("Today was a good day, nobody bothered me.", "en", "good"),
         ("What should I do?", "en", "asking"),
+        # Neel's 27 Oct screenshot: wanting to talk is not asking what to do.
+        ("Merse baat karo please", "hi", "talk"),
+        ("Can you talk to me?", "en", "talk"),
     ],
 )
 def test_the_mock_names_the_kind(text, lang, kind):
@@ -97,8 +100,34 @@ def test_the_model_only_classifies():
     # the schema must not leave room for any free text to reach the child.
     assert "You do not\nreply to the child" in live_listen.LISTEN_SYSTEM
     schema = live_listen.LISTEN_SCHEMA["json_schema"]["schema"]
-    assert list(schema["properties"]) == ["kind"]
+    assert list(schema["properties"]) == ["kind", "told"]
     assert schema["properties"]["kind"]["enum"] == list(live_listen.KINDS)
+    # `told` is a list of closed codes, not text: nothing in it can be shown.
+    assert schema["properties"]["told"]["items"]["enum"] == list(live_listen.DETAILS)
+
+
+def test_the_details_are_the_same_closed_list_everywhere():
+    from app.schemas import ListenDetail
+
+    assert {detail.value for detail in ListenDetail} == set(live_listen.DETAILS)
+
+
+def test_the_mock_claims_no_details():
+    # A keyword list cannot tell "after school" (a time) from "school" (a
+    # place), so it claims nothing and the screen asks for every detail.
+    assert heard("He pushed me at school today.")["told"] == []
+
+
+def test_the_model_answer_is_kept_to_the_closed_lists(monkeypatch):
+    import asyncio
+
+    async def answer(*args, **kwargs):
+        return '{"kind": "hurt", "told": ["when", "nonsense", "where", "when"]}'
+
+    monkeypatch.setattr(live_listen, "call", answer)
+    result = asyncio.run(live_listen.listen("He pushed me at school today", "en"))
+    assert result["kind"] == "hurt"
+    assert result["told"] == ["where", "when"], "unknown codes dropped, each once, in DETAILS order"
 
 
 def test_a_failed_model_call_falls_back_to_other(monkeypatch):
@@ -110,6 +139,7 @@ def test_a_failed_model_call_falls_back_to_other(monkeypatch):
 
     result = asyncio.run(live_listen.listen("anything", "en"))
     assert result["kind"] == "other"
+    assert result["told"] == [], "nothing known, so every detail is asked"
 
 
 def test_live_and_mock_have_the_same_signature():

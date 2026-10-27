@@ -115,7 +115,21 @@ class ListenKind(str, Enum):
     FEELING = "feeling"
     GOOD = "good"
     ASKING = "asking"
+    TALK = "talk"
     OTHER = "other"
+
+
+class ListenDetail(str, Enum):
+    """A detail the child's message already gives (engine/listen.py DETAILS).
+
+    The listening screen asks only for the details still missing, so a child
+    who wrote "at school today" is not then asked where and when. Never shown.
+    """
+
+    WHERE = "where"
+    WHEN = "when"
+    WHO = "who"
+    FEELING = "feeling"
 
 
 class ListenRequest(BaseModel):
@@ -132,6 +146,10 @@ class ListenRequest(BaseModel):
 
 class ListenResponse(BaseModel):
     kind: ListenKind
+    told: list[ListenDetail] = Field(
+        default_factory=list,
+        description="Details this message already gives; the screen does not ask for them.",
+    )
     safety: Safety
     reply: str | None = Field(
         default=None,

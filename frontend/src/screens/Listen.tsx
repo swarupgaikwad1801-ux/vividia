@@ -106,7 +106,14 @@ export default function Listen({
       onTurnsChange(
         all.map((turn, i) =>
           i === index
-            ? { ...turn, kind: heard.kind, urgent: heard.safety.urgent, written: heard.reply }
+            ? {
+                ...turn,
+                kind: heard.kind,
+                // Which details it gave, so the next question asks for one it did not.
+                told: heard.told ?? [],
+                urgent: heard.safety.urgent,
+                written: heard.reply,
+              }
             : turn,
         ),
       );

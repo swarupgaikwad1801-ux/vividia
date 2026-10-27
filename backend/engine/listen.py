@@ -26,12 +26,19 @@ from engine.client import Usage, call
 from engine.prompts import language_name
 
 # Mirrored in app/schemas.py (ListenKind) and frontend/src/types/api.ts.
-KINDS = ("hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "other")
+KINDS = (
+    "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "talk", "other",
+)
+
+# Which details the message already gives (Neel, 27 Oct: the questions must
+# follow what the child wrote, not a fixed order). The screen asks only for
+# what is still missing. Mirrored in app/schemas.py (ListenDetail).
+DETAILS = ("where", "when", "who", "feeling")
 
 LISTEN_SYSTEM = """You read one message a child wrote about their day, often
 about being bullied, and say which kind of thing they told us. You do not
-reply to the child. Your one word only chooses which kind sentence, written
-by a person, the child is shown next.
+reply to the child. Your answer only chooses which sentence, written by a
+person, the child is shown next, and which question comes after it.
 
 Kinds:
 "hurt" - someone hit, pushed, kicked, spat on or physically hurt them.
@@ -50,11 +57,22 @@ Kinds:
 "good" - something went well: a good day, nobody bothered them, it stopped.
 "asking" - they ask what to do, or ask us a question ("what should I do?",
   "is this normal?", "will it stop?").
+"talk" - they want someone to talk to or to listen, or check whether anyone
+  is there ("talk to me please", "baat karo", "is anyone there?", "hello"),
+  with nothing about what happened.
 "other" - anything else, or you are not sure.
 
 Pick the kind that matters most for this child's safety: a threat is
 "threat" even if it was sent online. Read what the child means, not the
-words: children exaggerate, mix languages and misspell. If unsure, "other"."""
+words: children exaggerate, mix languages and misspell. If unsure, "other".
+
+Then list which of these details the message already gives, so the app does
+not ask for them again. Only what the child actually wrote; never guess:
+"where" - a place (school, bus, toilets, home, a game, a group chat).
+"when" - a time (today, yesterday, tomorrow, after school, every day).
+"who" - who did it (a name, "my friend", "a teacher", "three boys").
+"feeling" - how they feel (sad, scared, angry, alone).
+An empty list is a fine answer."""
 
 LISTEN_SCHEMA = {
     "type": "json_schema",
@@ -64,16 +82,24 @@ LISTEN_SCHEMA = {
         "schema": {
             "type": "object",
             "additionalProperties": False,
-            "properties": {"kind": {"type": "string", "enum": list(KINDS)}},
-            "required": ["kind"],
+            "properties": {
+                "kind": {"type": "string", "enum": list(KINDS)},
+                "told": {"type": "array", "items": {"type": "string", "enum": list(DETAILS)}},
+            },
+            "required": ["kind", "told"],
         },
     },
 }
 
 
 async def listen(text: str, lang: str) -> dict:
-    """{"kind": one of KINDS, "calls_made": int, "usage": {...}}. Never raises."""
+    """{"kind": one of KINDS, "told": [DETAILS...], "calls_made": int, "usage": {...}}.
+
+    Never raises. A failure gives "other" and nothing told, so the screen
+    falls back to its general line and asks for every detail.
+    """
     usage = Usage()
+    told: list[str] = []
     try:
         raw = await call(
             "fanout",
@@ -81,16 +107,25 @@ async def listen(text: str, lang: str) -> dict:
             f"Language: {language_name(lang)}\nMessage: {text}",
             usage,
             temperature=0.0,
-            max_tokens=40,
+            max_tokens=60,
             response_format=LISTEN_SCHEMA,
             step="listen",
         )
-        kind = json.loads(raw).get("kind", "other")
+        answer = json.loads(raw)
+        kind = answer.get("kind", "other")
+        told = _details(answer.get("told"))
     except Exception:  # noqa: BLE001 - a kind sentence must not depend on the model
         kind = "other"
     if kind not in KINDS:
         kind = "other"
-    return {"kind": kind, "calls_made": usage.calls_made, "usage": usage.as_dict()}
+    return {"kind": kind, "told": told, "calls_made": usage.calls_made, "usage": usage.as_dict()}
+
+
+def _details(value) -> list[str]:
+    """The closed list only, each once, in DETAILS order. Anything else is dropped."""
+    if not isinstance(value, list):
+        return []
+    return [detail for detail in DETAILS if detail in value]
 
 
 # --- A written reply, for the message no kind fits ---------------------------

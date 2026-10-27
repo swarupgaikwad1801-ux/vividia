@@ -81,7 +81,14 @@ export type ListenKind =
   | "feeling"
   | "good"
   | "asking"
+  | "talk"
   | "other";
+
+/**
+ * A detail the child's message already gives. The listening screen asks only
+ * for the details still missing. Never shown.
+ */
+export type ListenDetail = "where" | "when" | "who" | "feeling";
 
 /** POST /api/listen — one message, before any card exists. */
 export interface ListenRequest {
@@ -92,6 +99,8 @@ export interface ListenRequest {
 
 export interface ListenResponse {
   kind: ListenKind;
+  /** Details this message already gives; the screen does not ask for them. */
+  told: ListenDetail[];
   safety: Safety;
   /**
    * Only for kind "other" and never when safety is urgent: a short answer the
