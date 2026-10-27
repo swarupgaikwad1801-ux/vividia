@@ -108,16 +108,9 @@ export default function HandoffCard({
                 onChange={() => onChoose(option.id)}
                 className="size-5 shrink-0 accent-calm"
               />
-              <span className="flex flex-col">
-                <span>{t(option.labelKey, lang)}</span>
-                {lang !== "de" && (
-                  // The German the child can point at, so a role they cannot
-                  // pronounce is still askable for.
-                  <span lang="de" className="text-sm text-ink-soft">
-                    {t(option.labelKey, "de")}
-                  </span>
-                )}
-              </span>
+              {/* Only the child's language here (issue #3): the German
+                  name of the role is on the card below, for the adult. */}
+              <span>{t(option.labelKey, lang)}</span>
             </label>
           );
         })}
