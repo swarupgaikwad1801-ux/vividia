@@ -1,4 +1,4 @@
-import { useEffect, useId } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { NEUTRAL_URL, bindQuickExit, quickExit } from "../lib/quickExit";
 import { t } from "../lib/strings";
@@ -21,12 +21,14 @@ import { t } from "../lib/strings";
  * prevent. (`window.confirm` is also banned outright by the team rules,
  * because it freezes the automation QA runs.)
  *
- * **The note is not optional.** `quickExit.note` says this closes the app and
- * does *not* delete browser history, which is the single hardest-won sentence
- * in the privacy rules: the exit cannot erase history and a child must never
- * read it as though it could. So there is no prop to hide it. `lib/help.ts`
- * makes the same argument about its language note — a true sentence that a
- * screen is allowed to drop is a sentence that gets dropped.
+ * **The history note lives elsewhere, once.** `quickExit.note` says this
+ * closes the app and does *not* delete browser history: the exit cannot erase
+ * history and a child must never read it as though it could. Neel removed it
+ * from under the button (26 Oct): repeated on every screen it was noise. The
+ * fact is kept where it is read once and on purpose: the "Leave now"
+ * onboarding card, and the help on the PIN lock screen. The
+ * label "Leave now" alone implies nothing about history, so it is honest by
+ * itself (CLAUDE.md forbids implying erasure, not omitting the note).
  *
  * **Sticky, not fixed.** Sticky keeps the bar in the document flow, so it
  * cannot sit on top of a screen's own content or hide the last line of a text
@@ -46,27 +48,39 @@ export interface QuickExitButtonProps {
   /** The child's language, for `lib/strings.ts`. */
   lang: string;
   /**
+   * Shown to the left of Leave now in the same sticky bar: the red Need help
+   * button. Leave now stays rightmost, where a thumb finds it.
+   */
+  beside?: ReactNode;
+  /**
    * Where the browser lands. Defaults to the dull, plausible page
    * `lib/quickExit.ts` picked; a screen should almost never override it.
    */
   url?: string;
 }
 
-export default function QuickExitButton({ lang, url = NEUTRAL_URL }: QuickExitButtonProps) {
-  const noteId = useId();
-
+export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: QuickExitButtonProps) {
   // Returns the unbind function, so the listener goes when the shell does.
   useEffect(() => bindQuickExit(document, url), [url]);
 
   return (
-    <div className="sticky top-0 z-40 border-b border-line bg-page px-4 py-2">
+    // bg-scene: the bar takes the colour of the place it sits in (index.css),
+    // so it stays readable when the page scrolls under it without looking
+    // like a white box pasted on top.
+    // No side padding of its own: the app's top row already has it, and at
+    // 360px Back, Need help and Leave now need every pixel to stay on one line.
+    <div className="sticky top-0 z-40 bg-scene py-2">
       <div className="mx-auto flex max-w-sm flex-col gap-1">
-        <div className="flex justify-end">
+        {/* gap-3: room between the red Need help and Leave now, so a thumb
+            reaching for one does not land on the other. */}
+        <div className="flex items-center justify-end gap-3">
+          {beside}
           <button
             type="button"
             onClick={() => quickExit(url)}
-            aria-describedby={noteId}
-            className="min-h-tap inline-flex items-center gap-2 rounded-card border-2 border-calm bg-surface px-4 text-base font-semibold text-calm-strong"
+            // DangerDialog keeps this in its Tab cycle, so it stays reachable.
+            data-quick-exit
+            className="min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-[3px] border-ink bg-surface px-3 text-base font-bold text-ink"
           >
             {/* An arrow out of a door, for a child who reads the shape faster
                 than the word, or reads no German or English at all. */}
@@ -87,11 +101,6 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL }: QuickExitBu
             {t("quickExit.button", lang)}
           </button>
         </div>
-
-        {/* Says what is true and refuses the promise it cannot keep. */}
-        <p id={noteId} className="text-xs leading-snug text-ink-soft">
-          {t("quickExit.note", lang)}
-        </p>
       </div>
     </div>
   );

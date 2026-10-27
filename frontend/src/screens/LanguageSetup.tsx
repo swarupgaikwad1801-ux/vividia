@@ -18,7 +18,7 @@ import type { Lang } from "../lib/strings";
  * `langSetup.title` for him to add.
  *
  * But the honest version of this is that the heading was never carrying its
- * weight. A screen showing "English / Deutsch / हिन्दी" and nothing else asks
+ * weight. A screen showing "English / Hinglish / Deutsch" and nothing else asks
  * its question in all three languages at once, which a sentence in one of them
  * cannot do. Two children in three would have been reading an instruction they
  * could not read, to find out something the buttons already told them. So the
@@ -60,16 +60,27 @@ export interface LanguageSetupProps {
    * picker, so the shell only has to re-render and move on.
    */
   onChoose: (lang: Lang) => void;
+  /**
+   * Opened later from the 🌐 button on the check-in: the language in use is
+   * marked as chosen, and the heading says what the screen is for. First run
+   * leaves this unset, so the screen stays exactly as described above.
+   */
+  changing?: boolean;
 }
 
-export default function LanguageSetup({ lang, suggested = null, onChoose }: LanguageSetupProps) {
+export default function LanguageSetup({ lang, suggested = null, onChoose, changing = false }: LanguageSetupProps) {
   return (
     <section className="flex flex-col gap-8" aria-labelledby="language-setup-title">
-      <h1 id="language-setup-title" className="text-2xl font-semibold tracking-tight">
-        {t("app.name", lang)}
+      <h1 id="language-setup-title" className="text-2xl">
+        {t(changing ? "lang.change" : "app.name", lang)}
       </h1>
 
-      <LanguagePicker layout="stack" value={null} suggested={suggested} onChange={onChoose} />
+      <LanguagePicker
+        layout="stack"
+        value={changing ? lang : null}
+        suggested={changing ? null : suggested}
+        onChange={onChoose}
+      />
     </section>
   );
 }

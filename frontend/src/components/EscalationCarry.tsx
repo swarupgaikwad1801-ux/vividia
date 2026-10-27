@@ -66,12 +66,9 @@ export default function EscalationCarry({ lang, entries, onOpen }: EscalationCar
                   {formatDay(entry.date, lang)}
                   <span className="sr-only"> {moodLabel(entry.mood, lang)}</span>
                 </p>
+                {/* Child's language only (issue #3). The German is on the
+                    card itself, behind its language switch. */}
                 <p className="text-base">{entry.text_child}</p>
-                {entry.text_de !== entry.text_child && (
-                  <p className="text-sm text-ink-soft" lang="de">
-                    {entry.text_de}
-                  </p>
-                )}
               </li>
             ))}
           </ul>

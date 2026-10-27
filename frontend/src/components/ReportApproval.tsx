@@ -9,11 +9,9 @@
  *
  * And approval is not the same as sending. Nothing leaves this phone towards
  * an adult here: approving marks the words as the child's own, so that a later
- * screen can offer to show them. `handoff.youDecide` says that on screen in
- * the child's language, because a child who thinks pressing "yes" tells a
- * teacher will press nothing at all. #81 also put `approve.nothingGoes` above
- * the button; Neel dropped it (26 Oct) along with the other repeated
- * "nothing gets sent" lines, so the promise is said once, not on every screen.
+ * screen can offer to show them. Neel removed the "nothing gets sent" lines
+ * (26 Oct), so neither `handoff.youDecide` nor #81's `approve.nothingGoes`
+ * is shown here.
  *
  * ## "Change it" stays available after approval
  *
@@ -42,8 +40,6 @@ export default function ReportApproval({ lang, approved, onApprove, onChange }: 
         <p role="status" className="text-base font-medium">
           {t("report.approved", lang)}
         </p>
-        {/* The promise, restated at the moment it is easiest to doubt. */}
-        <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
         <button
           type="button"
           onClick={onChange}

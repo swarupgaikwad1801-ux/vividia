@@ -278,7 +278,9 @@ async def test_one_entry_is_enough():
     result = await report(TIMELINE[:1], CHILD_LANG)
 
     assert TIMELINE[0]["text_de"] in result["german_version"]
-    assert LABELS["de"]["entries"] in result["german_version"]
+    # Singular. This line used to assert the plural, which is how "1 Einträge"
+    # survived a green suite until Neel read a real card (issue #5).
+    assert f"1 {LABELS['de']['entry']}" in result["german_version"]
 
 
 async def test_an_empty_timeline_is_refused_rather_than_handed_over():

@@ -27,28 +27,28 @@ test("every shipped language has an option, in the order strings.ts lists them",
   );
 });
 
-test("each language is written in its own script", () => {
+test("each language is labelled the way its readers name it", () => {
   const by = (code: string) => optionFor(code)!;
   assert.equal(by("en").endonym, "English");
   assert.equal(by("de").endonym, "Deutsch");
-  assert.equal(by("hi").endonym, "हिन्दी");
+  assert.equal(by("hi").endonym, "Hinglish");
 });
 
-test("the Hindi label is really Devanagari, not a transliteration", () => {
-  // The point of the endonym is that a child who cannot read Latin script can
-  // still find their language. "Hindi" in Latin letters would not do that.
-  assert.match(optionFor("hi")!.endonym, /[ऀ-ॿ]/);
-  assert.doesNotMatch(optionFor("hi")!.endonym, /[A-Za-z]/);
+test("the code hi is shown as Hinglish in Roman letters (Neel, 26 Oct)", () => {
+  // Children read Hindi in Roman letters more easily than Devanagari; the
+  // code stays hi, so storage and the backend contract do not change.
+  assert.doesNotMatch(optionFor("hi")!.endonym, /[ऀ-ॿ]/);
+  assert.equal(optionFor("hi")!.htmlLang, "hi-Latn");
 });
 
-test("English carries no second English name; German and Hindi do", () => {
+test("only German carries a second English name", () => {
   assert.equal(optionFor("en")!.englishName, null);
   assert.equal(optionFor("de")!.englishName, "German");
-  assert.equal(optionFor("hi")!.englishName, "Hindi");
+  assert.equal(optionFor("hi")!.englishName, null);
 });
 
-test("every option has an html lang matching its code", () => {
-  for (const option of LANGUAGE_OPTIONS) assert.equal(option.htmlLang, option.code);
+test("every option's html lang starts with its code", () => {
+  for (const option of LANGUAGE_OPTIONS) assert.equal(option.htmlLang.split("-")[0], option.code);
 });
 
 test("nothing we ship is right-to-left", () => {

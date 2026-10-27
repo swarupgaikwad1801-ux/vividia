@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Neutral on purpose: a sprout, nothing that says what the app is for. Full-bleed, so it also works as a maskable icon. -->
+  <rect width="512" height="512" fill="#ffd23f"/>
+  <path d="M256 400V236" stroke="#1b1b2f" stroke-width="28" stroke-linecap="round" fill="none"/>
+  <path d="M256 268c-8-62-58-104-124-100 4 64 54 108 124 100z" fill="#3fbf7f" stroke="#1b1b2f" stroke-width="20" stroke-linejoin="round"/>
+  <path d="M256 236c10-70 66-116 140-110-6 72-62 120-140 110z" fill="#3fbf7f" stroke="#1b1b2f" stroke-width="20" stroke-linejoin="round"/>
+</svg>

@@ -3,19 +3,18 @@
  *
  * The card is a thing the child holds up to a person. The app does not deliver
  * it, email it, notify anyone or offer to: there is no send button here and
- * there must never be one. CLAUDE.md, "no alert behind the child's back", and
- * `handoff.youDecide` says so on screen, directly under the title, where the
- * child reads it before they pick anyone.
+ * there must never be one. CLAUDE.md, "no alert behind the child's back".
+ * The screen no longer says "nothing gets sent" (Neel, 26 Oct: a child does
+ * not understand it); the onboarding card says the app tells nobody.
  *
  * Who may be suggested is not decided here. It comes from
  * `suggestedAdults(where)`, which is the only place the child's answer to
  * "where does this happen?" turns into people. Do not add a conditional to
  * this markup - that is exactly the mistake that file exists to prevent.
  *
- * The role is also printed in German whenever the child is not reading German,
- * because the adult on the other side of the card reads German. That is the
- * argument of the whole product in one line: German support for children is
- * German-only, so the card has to carry German words the child can point at.
+ * This screen speaks only the child's language (issue #3). The German is one
+ * tap away on the big card that comes next (`HandoffShow`), where the adult
+ * chooses the language they read.
  */
 
 import {
@@ -26,9 +25,14 @@ import {
   type WhereItHappens,
 } from "./HandoffSuggestions.ts";
 import { t } from "../lib/strings.ts";
-import type { ReportResponse } from "../types/api.ts";
+import { AdultPicture } from "../art/People.tsx";
+import type { Entry, ReportResponse } from "../types/api.ts";
+import type { EntrySource } from "../lib/timeline.ts";
+import SourceMark from "./SourceMark.tsx";
 
 export interface HandoffCardProps {
+  /** The child's saved entries: what the card shows, in their language. */
+  entries?: readonly (Entry & { source?: EntrySource })[];
   lang: string;
   /** The child's answer. Everything on this card is derived from it. */
   where: WhereItHappens;
@@ -45,6 +49,7 @@ export interface HandoffCardProps {
 }
 
 export default function HandoffCard({
+  entries = [],
   lang,
   where,
   chosen,
@@ -64,17 +69,13 @@ export default function HandoffCard({
 
   return (
     <section aria-labelledby="handoff-title" className="flex flex-col gap-4">
-      <h2 id="handoff-title" className="text-xl font-semibold tracking-tight">
+      <h2 id="handoff-title" className="headline text-3xl text-balance">
         {t("handoff.title", lang)}
       </h2>
 
       {/* The promise, before any choice is made. Never collapse or move this
           below the fold: it is the one sentence that tells the child the app
           has not already told someone. */}
-      <p className="flex items-start gap-2 rounded-card bg-calm-soft px-4 py-3 text-base text-ink">
-        <span aria-hidden="true">🔒</span>
-        <span>{t("handoff.youDecide", lang)}</span>
-      </p>
 
       {/*
         Why family is missing, in words for a child. Rendered from
@@ -88,16 +89,18 @@ export default function HandoffCard({
         </p>
       )}
 
-      <div role="radiogroup" aria-labelledby="handoff-title" className="flex flex-col gap-3">
+      {/* Picture tiles, two by two: chunky people drawn for this app
+          (art/People.tsx). The picture is decoration; the label is the
+          answer. Only the child's language here (issue #3): the German name
+          of the role is on the big card, behind its language switch. */}
+      <div role="radiogroup" aria-labelledby="handoff-title" className="grid grid-cols-2 gap-3">
         {options.map((option) => {
           const checked = recipient?.id === option.id;
           return (
             <label
               key={option.id}
-              className={`min-h-tap flex cursor-pointer items-center gap-3 rounded-card border px-4 py-3 text-base transition-colors ${
-                checked
-                  ? "border-calm bg-calm-soft font-medium text-ink"
-                  : "border-line bg-surface text-ink hover:border-calm"
+              className={`squish relative flex cursor-pointer flex-col items-center gap-1 rounded-card border-[3px] border-ink p-2 text-center text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 ${
+                checked ? "bg-calm-soft" : "bg-surface"
               }`}
             >
               <input
@@ -106,47 +109,40 @@ export default function HandoffCard({
                 value={option.id}
                 checked={checked}
                 onChange={() => onChoose(option.id)}
-                className="size-5 shrink-0 accent-calm"
+                className="sr-only"
               />
-              <span className="flex flex-col">
-                <span>{t(option.labelKey, lang)}</span>
-                {lang !== "de" && (
-                  // The German the child can point at, so a role they cannot
-                  // pronounce is still askable for.
-                  <span lang="de" className="text-sm text-ink-soft">
-                    {t(option.labelKey, "de")}
-                  </span>
-                )}
-              </span>
+              {checked && (
+                <span aria-hidden="true" className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-ink text-sm text-page">
+                  ✓
+                </span>
+              )}
+              <AdultPicture id={option.id} className="h-24 w-full" />
+              <span>{t(option.labelKey, lang)}</span>
             </label>
           );
         })}
       </div>
 
       {/* The card the child holds up. */}
-      <article className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
+      <article className="flex flex-col gap-3 rounded-card border-[3px] border-ink bg-surface p-4">
         {recipient && (
           <header className="flex flex-col gap-0.5 border-b border-line pb-3">
             <span className="text-sm text-ink-soft">{t("handoff.showTo", lang)}</span>
             <span className="text-lg font-semibold">{t(recipient.labelKey, lang)}</span>
-            {lang !== "de" && (
-              <span lang="de" className="text-sm text-ink-soft">
-                {t(recipient.labelKey, "de")}
-              </span>
-            )}
           </header>
         )}
 
         {/*
-          GAP, not a placeholder: the adult also gets a short sourced guide on
-          how to respond in the next five minutes. The content exists, reviewed
-          and sourced, in `content/adult_guide.json` - but there is no
-          `GET /api/guide` in `backend/main.py`, no `GuideResponse` in
-          `src/types/api.ts` and no client function in `src/lib/api.ts`. Both
-          of those files are frozen contracts I must not change, and inventing
-          an endpoint would mean shipping a card that 404s in front of a judge.
-          So nothing about the guide is rendered yet. Wire it here once the
-          endpoint is agreed; the PR description has the shape it needs.
+          The adult's 5-minute guide is NOT here, and that is the decision
+          rather than the gap it used to be. All three missing pieces this
+          comment once listed now exist: `GET /api/guide`, `GuideResponse` and
+          `lib/api.ts guide()`. What was still missing was a component, and it
+          is `components/AdultGuide.tsx`, hanging off `HandoffShow`.
+
+          It is there and not here because of this file's own rule, at the top:
+          this screen speaks only the child's language. The guide is written
+          for an adult, in de or en, and putting it on this screen would put
+          German in front of a child who did not ask for it.
         */}
 
         {loading && (
@@ -170,26 +166,26 @@ export default function HandoffCard({
           </div>
         )}
 
-        {!loading && !error && !report && (
-          // Nothing approved yet. The wording is Neel's existing timeline copy,
-          // which already says what happens to anything the child does save.
+        {!loading && !error && entries.length === 0 && !report && (
+          // Nothing approved yet.
           <p className="text-base text-ink-soft">{t("timeline.empty", lang)}</p>
         )}
 
-        {!loading && !error && report && (
-          <div className="flex flex-col gap-4">
-            {/* German first: it is the half of the card the adult reads. */}
-            <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-medium text-ink-soft">{t("write.german", lang)}</h3>
-              <p lang="de" className="whitespace-pre-wrap text-base text-ink">
-                {report.german_version}
-              </p>
-            </div>
-            <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-medium text-ink-soft">{t("handoff.yourWords", lang)}</h3>
-              <p className="whitespace-pre-wrap text-base text-ink">{report.child_version}</p>
-            </div>
-          </div>
+        {/* The child's own approved words, in their language only. The
+            model-written report is the fallback when there are no entries. */}
+        {!loading && !error && entries.length > 0 && (
+          <ol className="flex flex-col gap-2">
+            {entries.map((entry, index) => (
+              <li key={`${entry.date}-${index}`} className="flex flex-col items-start gap-1">
+                <SourceMark source={entry.source} lang={lang} />
+                <span className="whitespace-pre-wrap text-base text-ink">{entry.text_child}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+
+        {!loading && !error && entries.length === 0 && report && (
+          <p className="whitespace-pre-wrap text-base text-ink">{report.child_version}</p>
         )}
       </article>
     </section>

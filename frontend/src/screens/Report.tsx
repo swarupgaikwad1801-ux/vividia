@@ -3,17 +3,20 @@
  *
  * `POST /api/report` turns the entries the child already approved into two
  * versions: `child_version`, which the child reads, and `german_version`,
- * which is what a trusted adult would read. Both are shown. A child who is
- * about to hand German sentences to a teacher has every right to see them
- * first, and `engine/report.py` refuses to let a model describe the child's
- * entries for exactly that reason.
+ * which is what a trusted adult would read. One is shown at a time (issue
+ * #3: one language per screen): the child's language first, the German one
+ * tap away on `CardLanguageSwitch`. A child who is about to hand German
+ * sentences to a teacher has every right to see them first, and
+ * `engine/report.py` refuses to let a model describe the child's entries for
+ * exactly that reason.
  *
  * ## Nothing happens on its own, twice over
  *
  * 1. **The report is not written on mount.** Writing it sends the child's
- *    words off the phone, so it waits for `report.build` to be pressed. A
- *    screen that fetched on mount would have sent them before the child had
- *    read the sentence explaining that it does.
+ *    words off the phone, so it waits for `report.build` to be pressed.
+ *    (`report.cloudNote` used to say so here; Neel removed it, issue #3. The
+ *    words first leave the phone on the writing screen, and `write.whatWeDo`
+ *    says so there, while they are being checked.)
  * 2. **A written report is not an approved report.** It lands in `review`,
  *    and only `ReportApproval` can move it to `approved`. Nothing is timed,
  *    assumed or inferred.
@@ -46,6 +49,7 @@ import { t } from "../lib/strings";
 import { listEntries, toEntries } from "../lib/timeline";
 import ReportApproval from "../components/ReportApproval";
 import ReportVersion from "../components/ReportVersion";
+import CardLanguageSwitch from "../components/CardLanguageSwitch";
 
 type Phase = "idle" | "loading" | "review" | "approved" | "error";
 
@@ -69,6 +73,7 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
   const [entries] = useState(() => listEntries());
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<ReportResponse | null>(null);
+  const [showing, setShowing] = useState<string>(lang);
   const [errorMessage, setErrorMessage] = useState("");
   const [online, setOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine !== false,
@@ -129,7 +134,7 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
   if (entries.length === 0) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("report.title", lang)}</h1>
+        <h1 className="text-2xl">{t("report.title", lang)}</h1>
         <p className="rounded-card border border-line bg-surface p-4 text-base text-ink-soft">
           {t("report.needEntries", lang)}
         </p>
@@ -140,18 +145,11 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col gap-5 px-4 py-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("report.title", lang)}</h1>
-        <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
+        <h1 className="text-2xl">{t("report.title", lang)}</h1>
       </header>
 
       {phase === "idle" ? (
         <section className="flex flex-col gap-3">
-          {/* On screen BEFORE the button, not after: this is the sentence that
-              says the child's words leave the phone, and it is only honest if
-              they read it while they can still decide not to. */}
-          <p className="rounded-card border border-line bg-surface p-4 text-sm text-ink-soft">
-            {t("report.cloudNote", lang)}
-          </p>
           {online ? null : (
             <p className="rounded-card border border-help bg-help-soft p-3 text-sm font-medium text-help">
               {t("report.offline", lang)}
@@ -203,19 +201,23 @@ export default function Report({ lang, onApproved, onChange }: ReportProps) {
 
       {result && (phase === "review" || phase === "approved") ? (
         <>
-          {/* The child's own language first: they read their account before
-              they read the version someone else will. */}
-          <ReportVersion
-            label={t("report.childLabel", lang)}
-            text={result.child_version}
-            textLang={lang}
-          />
-          <ReportVersion
-            label={t("write.german", lang)}
-            note={t("report.germanNote", lang)}
-            text={result.german_version}
-            textLang="de"
-          />
+          {/* One language at a time: the child's own first, the German one
+              tap away. */}
+          <CardLanguageSwitch lang={lang} showing={showing} onChange={setShowing} />
+          {showing === "de" ? (
+            <ReportVersion
+              label={t("write.german", lang)}
+              note={t("report.germanNote", lang)}
+              text={result.german_version}
+              textLang="de"
+            />
+          ) : (
+            <ReportVersion
+              label={t("report.childLabel", lang)}
+              text={result.child_version}
+              textLang={lang}
+            />
+          )}
           <ReportApproval
             lang={lang}
             approved={phase === "approved"}

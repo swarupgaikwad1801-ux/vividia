@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 import main
 from app.schemas import ErrorCode, ErrorResponse
 from engine.client import EngineError
+from engine.config import REPO_ROOT
 from engine.errors import (
     LANGS,
     MESSAGES,
@@ -345,3 +346,37 @@ def test_a_successful_request_logs_no_text_either(caplog):
     # The shape of a request is fine to log, and useful: it is what tells us a
     # sentence escalated without recording the sentence.
     assert "chars=" in logged
+
+
+def test_the_out_of_credit_message_says_which_language_the_help_speaks():
+    """Vernika's second point on #80.
+
+    This one sentence bypasses every mechanism we built for exactly this: the
+    screens render contacts from helplines.json through languageNote() and
+    ContactCard, which print each service's languages, but this copy is baked
+    into an error. 116 111 is ["de"] and krisenchat is ["de", "uk"], so a
+    Hindi-speaking child - and an English-speaking one - is being pointed at
+    help that cannot answer them, at the one moment the app cannot translate
+    for them either.
+
+    CLAUDE.md: "the crisis screen must print each service's languages; hiding
+    this is worse than the gap itself."
+    """
+    services = json.loads(
+        (REPO_ROOT / "content" / "helplines.json").read_text(encoding="utf-8")
+    )
+    spoken = {
+        service["contact"]: service["languages"]
+        for service in services["helplines"]
+    }
+    assert spoken["116 111"] == ["de"], "if this changes, so does the sentence below"
+    assert "hi" not in spoken["https://krisenchat.de/"]
+
+    message = MESSAGES["credit_exhausted"]
+    assert "in German" in message["en"]
+    # "German", not "जर्मन": the Hindi is Hinglish now, and #77's screens
+    # label the language "German" too, so a child meets one spelling.
+    assert "German" in message["hi"]
+    # The German child is already reading German; a clause there would be
+    # noise, which is why this is a per-language rule and not a blanket one.
+    assert "auf Deutsch" not in message["de"]
