@@ -33,6 +33,7 @@ import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
 import ExampleModeBanner from "./components/ExampleModeBanner";
+import OfflineStrip from "./components/OfflineStrip";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import { activeDemo, clearDemo } from "./lib-demo/demoStory";
@@ -459,6 +460,7 @@ export default function App() {
           typed anything for the app to have answered. Putting it there would
           add a second place for `engine` to go stale while guarding nothing. */}
       <ExampleModeBanner lang={lang} engine={engine} />
+      {step !== "write" && step !== "listen" && <OfflineStrip lang={lang} />}
 
       {onMap !== null && (
         <GameMap
