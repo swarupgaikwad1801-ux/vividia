@@ -79,8 +79,8 @@ import type { ReportResponse, Resource } from "./types/api";
  *
  * 3. **Help is reachable from everywhere**, including from inside the lock.
  *    `lib/pin.ts` says it plainly: a child who has forgotten their PIN still
- *    needs 110. `HelpButton` therefore sits outside the switch beside the
- *    quick exit, and help is a step on the Back trail (`lib/nav.ts`), so
+ *    needs 110. The red Need help pill therefore sits outside the switch,
+ *    beside Leave now in the quick exit's bar, and help is a step on the Back trail (`lib/nav.ts`), so
  *    "back" returns them to the screen they left rather than to the start.
  *
  *    Behind the lock it is `EmergencyHelp` instead, which opens in place and
