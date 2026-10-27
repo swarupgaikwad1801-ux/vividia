@@ -22,6 +22,10 @@
  *   red 110 line on their own (lib/pictures.ts needsHelpRoute).
  * - **"I don't want to say" ends that topic**: no follow-up about it, and
  *   it is never asked again.
+ * - **A face tapped at the check-in** -> "How do you feel about it?" is not
+ *   asked again: the child has just told us, and asking twice is the
+ *   interview Neel asked us not to build. A skipped check-in still gets it.
+ *   The face becomes the entry's feeling (App.tsx `finishPictures`).
  * - **Who = an adult** -> one gentle question, "Where is this adult from?",
  *   then straight to the card with Need help kept prominent. Nothing more
  *   about the adult, and not how often or how it feels: an adult hurting a
@@ -93,11 +97,17 @@ export function adultRoute(picks: Picks): boolean {
   return picks.kind.includes("adult") && !picks.howMany.includes(NO_SAY);
 }
 
+/** True when the check-in face already says how the child feels. */
+export function feltAlready(mood: string | null): boolean {
+  return Boolean(mood);
+}
+
 /**
  * Every question to ask, in order, for the answers so far. Recomputed on
- * every tap, so an earlier answer changes what comes after it.
+ * every tap, so an earlier answer changes what comes after it. `mood` is the
+ * face from the check-in, or null when it was skipped.
  */
-export function questionsFor(picks: Picks): QuestionStep[] {
+export function questionsFor(picks: Picks, mood: string | null = null): QuestionStep[] {
   const follow = followUpsFor(picks.what);
   const out: QuestionStep[] = ["picWhat", ...follow];
 
@@ -110,13 +120,18 @@ export function questionsFor(picks: Picks): QuestionStep[] {
     out.push("picAdultWhere");
     return out; // straight to the card: nothing more about an adult
   }
-  out.push("picOften", "picFeel");
+  out.push("picOften");
+  if (!feltAlready(mood)) out.push("picFeel");
   return out;
 }
 
 /** The question after this one, or "picReview" when there are no more. */
-export function nextQuestion(current: QuestionStep, picks: Picks): QuestionStep | "picReview" {
-  const list = questionsFor(picks);
+export function nextQuestion(
+  current: QuestionStep,
+  picks: Picks,
+  mood: string | null = null,
+): QuestionStep | "picReview" {
+  const list = questionsFor(picks, mood);
   const at = list.indexOf(current);
   return at === -1 || at === list.length - 1 ? "picReview" : list[at + 1];
 }
@@ -129,8 +144,8 @@ export function isQuestion(step: Step): step is QuestionStep {
  * The answers to put on the card: only those whose question is still asked.
  * "Who?" fills two lists, how many and who they were.
  */
-export function answersFor(picks: Picks): Choices {
-  const asked = new Set<keyof Picks>(questionsFor(picks).map((q) => ANSWER_OF[q]));
+export function answersFor(picks: Picks, mood: string | null = null): Choices {
+  const asked = new Set<keyof Picks>(questionsFor(picks, mood).map((q) => ANSWER_OF[q]));
   if (asked.has("howMany")) asked.add("kind");
   return choicesFrom(picks, asked);
 }

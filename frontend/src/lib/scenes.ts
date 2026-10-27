@@ -23,6 +23,7 @@ export const SCENE: Record<Step, Scene> = {
   language: "sky",
   onboarding: "lilac",
   checkIn: "sun",
+  checkInReply: "sun",
   picWhat: "sky",
   picBody: "sun",
   picTaken: "lilac",
@@ -36,6 +37,10 @@ export const SCENE: Record<Step, Scene> = {
   picFeel: "sun",
   picReview: "sky",
   picMore: "sky",
+  // Lilac, not sky: the listening screen is a conversation, and a softer
+  // colour than the question screens around it tells the child this one is
+  // theirs to take as slowly as they like. No map stop: see mapFor.
+  listen: "lilac",
   write: "sky",
   timeline: "grass",
   report: "grass",
@@ -87,12 +92,16 @@ const ON_CARD: readonly Step[] = ["picReview", "picMore", "write", "timeline", "
  * The stops for these answers, and where the traveller stands for this step,
  * or null for a step with no map (language, onboarding, the quiet screens).
  */
-export function mapFor(step: Step, picks: Picks): { places: MapPlace[]; at: number } | null {
-  const questions = questionsFor(picks);
+export function mapFor(
+  step: Step,
+  picks: Picks,
+  mood: string | null = null,
+): { places: MapPlace[]; at: number } | null {
+  const questions = questionsFor(picks, mood);
   const places = [CHECK_IN, ...questions.map((q) => QUESTION_PLACE[q]), ...ENDING];
   const card = 1 + questions.length;
   let at: number;
-  if (step === "checkIn") at = 0;
+  if (step === "checkIn" || step === "checkInReply") at = 0;
   else if (isQuestion(step)) {
     const i = questions.indexOf(step);
     // A question the answers no longer lead to (seen after Back): stand on

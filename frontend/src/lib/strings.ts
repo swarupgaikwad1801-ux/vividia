@@ -42,25 +42,6 @@ export const STRINGS = {
     hi: "NVIDIA Nemotron se bana",
   },
 
-  "demo.button": { en: "Try Amara's story", de: "Amaras Geschichte ausprobieren", hi: "Amara ki kahani dekho" },
-  // The demo button (moved from lib-demo/pendingStrings.ts, same key names).
-  // {name} is the persona name from the story, filled with fill(), never typed in.
-  "demo.loading": {
-    en: "Opening the story…",
-    de: "Die Geschichte wird geöffnet…",
-    hi: "Kahani khul rahi hai…",
-  },
-  "demo.loaded": {
-    en: "{name}'s story is ready. Her words are already written. Press “Check my words”.",
-    de: "{name}s Geschichte ist da. Ihre Worte sind schon geschrieben. Drück auf „Meine Worte prüfen“.",
-    hi: "{name} ki kahani ready hai. Uski baat pehle se likhi hai. Ab “Meri baat check karo” dabao.",
-  },
-  "demo.clear": { en: "Remove the example", de: "Beispiel löschen", hi: "Example hatao" },
-  "demo.cleared": {
-    en: "The example is gone. The app is empty again.",
-    de: "Das Beispiel ist weg. Die App ist wieder leer.",
-    hi: "Example hat gaya. App phir se khaali hai.",
-  },
   // The refusal: the person has notes of their own, so the example was not
   // loaded at all. Says what happened, and does not offer to load it anyway:
   // the child's own words are what is being protected.
@@ -68,6 +49,30 @@ export const STRINGS = {
     en: "You have your own notes here, so the example did not open. Your notes are just as they were.",
     de: "Hier sind schon deine eigenen Notizen. Darum wurde das Beispiel nicht geöffnet. Deine Notizen sind wie vorher.",
     hi: "Yahan tumhare apne notes hain, isliye example nahi khula. Tumhare notes waise hi hain.",
+  },
+
+  // Shown on every screen when the backend reports engine: "mock", and once
+  // more in place of the agreement score. ENGINE_MODE defaults to mock, so a
+  // deploy that forgets it serves a fixed German sentence about a bag being
+  // taken, whatever the child wrote, under an invented 82%. See
+  // lib/engineMode.ts.
+  //
+  // Hinglish, like every other child-facing Hindi string since #77 and #93:
+  // this branch predates both and carried Devanagari.
+  "example.title": {
+    en: "Example mode",
+    de: "Beispiel-Modus",
+    hi: "Example mode",
+  },
+  "example.body": {
+    en: "The app is not checking your words right now. The German it shows is a fixed example, not a translation of what you wrote.",
+    de: "Die App prüft deine Worte gerade nicht. Das Deutsche, das sie zeigt, ist ein festes Beispiel und keine Übersetzung von dem, was du geschrieben hast.",
+    hi: "App abhi tumhari baat check nahi kar raha. Jo German dikh raha hai woh ek fixed example hai, tumne jo likha uska translation nahi.",
+  },
+  "example.resultNote": {
+    en: "Example numbers. Nothing was checked, and the German above is not your words.",
+    de: "Beispielzahlen. Es wurde nichts geprüft, und das Deutsche oben sind nicht deine Worte.",
+    hi: "Example numbers. Kuch bhi check nahi hua, aur upar ka German tumhari baat nahi hai.",
   },
 
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "Abhi madad chahiye?" },
@@ -134,6 +139,219 @@ export const STRINGS = {
 
   "checkin.title": { en: "How are you today?", de: "Wie geht es dir heute?", hi: "Aaj kaisa lag raha hai?" },
   "checkin.skip": { en: "Skip", de: "Überspringen", hi: "Chhodo" },
+
+  // Right after the check-in (screens/MoodReply.tsx, lib/moodReply.ts): an
+  // answer to the face, then the child's choice. Swarup, 27 Oct: "Good" used
+  // to be followed by "What happened?". DRAFT for Neel's review.
+  "moodReply.good": { en: "That's great to hear!", de: "Das ist schön zu hören!", hi: "Ye sun ke achha laga!" },
+  "moodReply.ok": { en: "Thanks for telling us.", de: "Danke, dass du es uns sagst.", hi: "Batane ke liye thank you." },
+  "moodReply.sad": {
+    en: "We're sorry you feel sad.",
+    de: "Es tut uns leid, dass du traurig bist.",
+    hi: "Ye sun ke bura laga ki tum dukhi ho.",
+  },
+  "moodReply.scared": { en: "Feeling scared is hard.", de: "Angst zu haben ist schwer.", hi: "Darr lagna mushkil hota hai." },
+  "moodReply.angry": { en: "It's okay to feel angry.", de: "Es ist okay, wütend zu sein.", hi: "Gussa aana theek hai." },
+  "moodReply.alone": {
+    en: "Feeling lonely is hard.",
+    de: "Sich einsam zu fühlen ist schwer.",
+    hi: "Akela mehsoos karna mushkil hota hai.",
+  },
+  "moodReply.skipped": {
+    en: "Do you want to tell us something?",
+    de: "Möchtest du uns etwas erzählen?",
+    hi: "Kuch batana hai?",
+  },
+  "moodReply.anything": {
+    en: "If something still happened, you can tell us. You don't have to.",
+    de: "Wenn trotzdem etwas passiert ist, kannst du es uns erzählen. Du musst nicht.",
+    hi: "Agar phir bhi kuch hua, toh humein batao. Zaroori nahi hai.",
+  },
+  "moodReply.tellUs": {
+    en: "Do you want to tell us what happened?",
+    de: "Möchtest du uns erzählen, was passiert ist?",
+    hi: "Kya hua, batana hai?",
+  },
+  "moodReply.pictures": { en: "Tap pictures", de: "Bilder antippen", hi: "Pictures dabao" },
+  "moodReply.write": { en: "Write it my way", de: "Selbst schreiben", hi: "Apne tareeke se likho" },
+  "moodReply.done": { en: "That's all for today", de: "Das war's für heute", hi: "Aaj ke liye bas" },
+  "moodReply.bye": { en: "Okay! Come back any time.", de: "Okay! Komm jederzeit wieder.", hi: "Okay! Jab chaho wapas aao." },
+
+  // The listening screen (screens/Listen.tsx). Swarup, 27 Oct: "listen to
+  // the child first and talk to them, then offer the card".
+  //
+  // Every sentence here is chosen by code, never written by a model: the
+  // model only says which KIND of thing the child told us (engine/listen.py),
+  // and the kind picks a line from this list. So these are the whole of what
+  // the app can say back, and they follow CLAUDE.md's "no AI friend": the
+  // app speaks as "we", never "I", promises nothing it cannot do, and gives
+  // no advice except, for a threat, that an adult should know.
+  //
+  // DRAFT for Neel's review (his rule: words a child reads need his yes).
+  "heard.title": { en: "Tell us what happened", de: "Erzähl uns, was passiert ist", hi: "Humein batao kya hua" },
+  "heard.hint": {
+    en: "Write as much or as little as you like. In your own language.",
+    de: "Schreib so viel oder so wenig, wie du willst. In deiner Sprache.",
+    hi: "Jitna chaho utna likho. Apni language mein.",
+  },
+  // "Write it down", not "Send": the words go into the notebook on this
+  // phone. "Send" would tell a child their words are going to a person.
+  "heard.send": { en: "Write it down", de: "Aufschreiben", hi: "Likh do" },
+  "heard.reading": {
+    en: "Reading what you wrote…",
+    de: "Wir lesen, was du geschrieben hast…",
+    hi: "Tumhari baat padh rahe hain…",
+  },
+  "heard.you": { en: "You wrote", de: "Du hast geschrieben", hi: "Tumne likha" },
+  "heard.us": { en: "Vividia", de: "Vividia", hi: "Vividia" },
+  "heard.thanks.first": {
+    en: "Thank you for telling us.",
+    de: "Danke, dass du uns das erzählst.",
+    hi: "Humein batane ke liye thank you.",
+  },
+  // Said when the line for what the child just wrote was already said, in
+  // turn, so two answers in a row never open the same way (Neel, 27 Oct: the
+  // same "Thank you. We are still listening." opened every answer).
+  "heard.ack.more": {
+    en: "Thank you for telling us more.",
+    de: "Danke, dass du uns mehr erzählst.",
+    hi: "Aur batane ke liye thank you.",
+  },
+  "heard.ack.read": { en: "Okay. We read that.", de: "Okay. Wir haben das gelesen.", hi: "Okay. Humne padh liya." },
+  "heard.ack.here": {
+    en: "We're still here, reading every word.",
+    de: "Wir sind noch da und lesen jedes Wort.",
+    hi: "Hum abhi bhi yahan hain, har word padh rahe hain.",
+  },
+  "heard.kind.hurt": {
+    en: "Nobody is allowed to hurt you. That is not okay.",
+    de: "Niemand darf dir wehtun. Das ist nicht okay.",
+    hi: "Kisi ko tumhe chot pahunchane ka haq nahi hai. Ye theek nahi hai.",
+  },
+  "heard.kind.names": {
+    en: "Words like that can really hurt. It is not your fault.",
+    de: "Solche Worte können sehr wehtun. Es ist nicht deine Schuld.",
+    hi: "Aisi baatein bahut dukh deti hain. Ye tumhari galti nahi hai.",
+  },
+  "heard.kind.left_out": {
+    en: "Being left out hurts. You deserve to belong.",
+    de: "Ausgeschlossen werden tut weh. Du gehörst dazu.",
+    hi: "Akela chhod diya jaana dukh deta hai. Tum bhi saath rehne layak ho.",
+  },
+  "heard.kind.taken": {
+    en: "Your things are yours. Nobody should take them.",
+    de: "Deine Sachen gehören dir. Niemand darf sie dir wegnehmen.",
+    hi: "Tumhari cheezein tumhari hain. Kisi ko unhe nahi lena chahiye.",
+  },
+  "heard.kind.online": {
+    en: "What happens on a phone is real too. It can hurt just as much.",
+    de: "Was am Handy passiert, ist auch echt. Es kann genauso wehtun.",
+    hi: "Phone pe jo hota hai, woh bhi sach hai. Woh bhi utna hi dukh deta hai.",
+  },
+  // The one kind that says what to do, because a threat has a clock on it.
+  // Still no promise: "should know", not "we will tell".
+  "heard.kind.threat": {
+    en: "That sounds frightening. An adult you trust should know about this soon.",
+    de: "Das klingt beängstigend. Ein Erwachsener, dem du vertraust, sollte das bald wissen.",
+    hi: "Ye sun ke darr lagta hai. Jis bade pe tumhe bharosa hai, use ye jaldi pata hona chahiye.",
+  },
+  "heard.kind.feeling": {
+    en: "How you feel matters.",
+    de: "Wie du dich fühlst, ist wichtig.",
+    hi: "Tumhari feelings important hain.",
+  },
+  // Good news gets good news back, not "it takes courage".
+  "heard.kind.good": {
+    en: "That's really good to hear.",
+    de: "Das ist schön zu hören.",
+    hi: "Ye sun ke bahut achha laga.",
+  },
+  // A child asking what to do is pointed to a person, never advised by us.
+  "heard.kind.asking": {
+    en: "An adult you trust can help you with this. A card can help you tell them.",
+    de: "Ein Erwachsener, dem du vertraust, kann dir dabei helfen. Eine Karte kann dir helfen, es zu erzählen.",
+    hi: "Jis bade pe tumhe bharosa hai, woh isme madad kar sakta hai. Card se unhe batana aasaan hoga.",
+  },
+  "heard.kind.other": {
+    en: "It takes courage to write this.",
+    de: "Das aufzuschreiben ist mutig.",
+    hi: "Ye likhne ke liye himmat chahiye.",
+  },
+  // "Talk to me, please" (Neel's 27 Oct screenshot: "Merse baat karo please"
+  // got "An adult you trust can help" and "When did it happen?"). An open
+  // door, said as "we", with no promise of a person and no question about
+  // something the child has not mentioned. Hinglish avoids "likhoge/likhogi".
+  "heard.kind.talk": {
+    en: "We're here, and we read everything you write. You can tell us anything, in your own words.",
+    de: "Wir sind da und lesen alles, was du schreibst. Du kannst uns alles erzählen, mit deinen eigenen Worten.",
+    hi: "Hum yahan hain, aur tumhara likha sab padhte hain. Apne shabdon mein kuch bhi batao.",
+  },
+  // After a message the safety check flagged. The danger pop-up has the
+  // numbers; this is what stays in the conversation once it is closed. The
+  // button is "Need help" in Hinglish too (ENGLISH_IN_HINGLISH below), so the
+  // Hindi names it in English rather than as "Madad chahiye".
+  "heard.urgent": {
+    en: "What you wrote matters a lot. You don't have to be alone with this. Tap Need help at the top, any time.",
+    de: "Was du geschrieben hast, ist sehr wichtig. Du musst damit nicht allein sein. Tipp oben auf Hilfe, jederzeit.",
+    hi: "Tumne jo likha, woh bahut important hai. Iske saath akele rehna zaroori nahi. Upar Need help dabao, kabhi bhi.",
+  },
+  // The gentle questions, one after each answer, chosen by lib/listening.ts
+  // from what the child has not said yet. Every one is optional: the child
+  // can answer, write something else, or make the card.
+  "heard.ask.more": { en: "Do you want to tell us more?", de: "Möchtest du uns mehr erzählen?", hi: "Aur kuch batana hai?" },
+  "heard.ask.open": { en: "What would you like to tell us?", de: "Was möchtest du uns erzählen?", hi: "Kya batana hai?" },
+  "heard.ask.what": {
+    en: "Do you want to tell us what happened?",
+    de: "Möchtest du uns erzählen, was passiert ist?",
+    hi: "Kya hua, batana hai?",
+  },
+  "heard.ask.where": { en: "Where did it happen?", de: "Wo ist es passiert?", hi: "Ye kahan hua?" },
+  "heard.ask.when": { en: "When did it happen?", de: "Wann ist es passiert?", hi: "Ye kab hua?" },
+  "heard.ask.who": { en: "Who was there?", de: "Wer war dabei?", hi: "Wahan kaun tha?" },
+  "heard.ask.feel": { en: "How did it make you feel?", de: "Wie hast du dich dabei gefühlt?", hi: "Tumhe kaisa laga?" },
+  "heard.ask.else": { en: "Is there anything else?", de: "Gibt es noch etwas?", hi: "Aur kuch?" },
+  "heard.ask.done": {
+    en: "We are here whenever you want to write more.",
+    de: "Wir sind da, wenn du mehr schreiben willst.",
+    hi: "Jab bhi aur likhna ho, hum yahan hain.",
+  },
+  "heard.cardOffer": {
+    en: "When you are ready, your words can become a card to show someone you trust.",
+    de: "Wenn du so weit bist, werden deine Worte zu einer Karte für jemanden, dem du vertraust.",
+    hi: "Jab ready ho, tumhari baat ek card ban sakti hai. Use kisi bharose wale ko dikhao.",
+  },
+  "heard.makeCard": { en: "Make a card", de: "Karte machen", hi: "Card banao" },
+  "heard.notNow": { en: "Not now", de: "Jetzt nicht", hi: "Abhi nahi" },
+  "heard.notNowDone": {
+    en: "That's okay. You don't have to show anyone. You can come back any time.",
+    de: "Das ist okay. Du musst es niemandem zeigen. Du kannst jederzeit wiederkommen.",
+    hi: "Koi baat nahi. Kisi ko dikhana zaroori nahi. Jab chaho wapas aao.",
+  },
+  "heard.keepWriting": { en: "Keep writing", de: "Weiterschreiben", hi: "Aur likho" },
+  "heard.home": { en: "Back to the start", de: "Zum Anfang", hi: "Shuru pe wapas" },
+  "heard.full": {
+    en: "This page is full. You can make a card now, or come back later.",
+    de: "Diese Seite ist voll. Du kannst jetzt eine Karte machen oder später wiederkommen.",
+    hi: "Ye page bhar gaya. Ab card banao, ya baad mein wapas aao.",
+  },
+  "heard.retry": { en: "Try again", de: "Nochmal versuchen", hi: "Phir se try karo" },
+  // Clearing the chat (Neel, 27 Oct). Asked once more before anything goes,
+  // because losing words a child managed to write is the one thing this app
+  // must never do by accident. Says only what is true: the words leave this
+  // screen and cannot be brought back. Cards already saved are not touched.
+  "heard.clear": { en: "Clear this chat", de: "Diesen Chat löschen", hi: "Ye chat clear karo" },
+  "heard.clearAsk": {
+    en: "Clear everything you wrote here? It can't be brought back. Cards you already saved stay.",
+    de: "Alles löschen, was du hier geschrieben hast? Das kann man nicht zurückholen. Gespeicherte Karten bleiben.",
+    hi: "Yahan jo likha, sab clear karna hai? Wapas nahi aayega. Jo cards save hain, woh rahenge.",
+  },
+  "heard.clearYes": { en: "Yes, clear it", de: "Ja, löschen", hi: "Haan, clear karo" },
+  "heard.clearNo": { en: "No, keep it", de: "Nein, behalten", hi: "Nahi, rehne do" },
+  "heard.cleared": {
+    en: "The chat is cleared. You can start again any time.",
+    de: "Der Chat ist gelöscht. Du kannst jederzeit neu anfangen.",
+    hi: "Chat clear ho gaya. Jab chaho, phir se shuru karo.",
+  },
 
   "write.title": { en: "What happened?", de: "Was ist passiert?", hi: "Kya hua?" },
   "write.hint": {
@@ -716,6 +934,55 @@ export const STRINGS = {
   // On every question, always the last two tiles, in this order.
   "q.other": { en: "Something else", de: "Etwas anderes", hi: "Kuch aur" },
   "q.noSay": { en: "I don't want to say", de: "Möchte ich nicht sagen", hi: "Nahi batana" },
+
+  // The warm line the app says back (lib/warm.ts chooses which). Written in
+  // advance, never generated. Thanks and comfort only: never whether it is
+  // true, never "you are safe", never advice, never "I".
+  "warm.what.threatened": {
+    en: "Thank you for telling us. A threat is serious, and telling someone is the right thing.",
+    de: "Danke, dass du es uns sagst. Eine Drohung ist ernst, und es jemandem zu sagen ist richtig.",
+    hi: "Batane ke liye shukriya. Dhamki serious baat hai, aur kisi ko batana sahi hai.",
+  },
+  "warm.what.hurt": {
+    en: "Thank you for telling us. Nobody is allowed to hurt you.",
+    de: "Danke, dass du es uns sagst. Niemand darf dir wehtun.",
+    hi: "Batane ke liye shukriya. Kisi ko bhi tumhe chot pahunchane ka haq nahi hai.",
+  },
+  "warm.what.taken": {
+    en: "Your things belong to you. Thank you for telling us.",
+    de: "Deine Sachen gehören dir. Danke, dass du es uns sagst.",
+    hi: "Tumhari cheezein tumhari hain. Batane ke liye shukriya.",
+  },
+  "warm.what.online": {
+    en: "What happens online is real too. Thank you for telling us.",
+    de: "Was online passiert, ist auch echt. Danke, dass du es uns sagst.",
+    hi: "Online jo hota hai, woh bhi sach mein hota hai. Batane ke liye shukriya.",
+  },
+  "warm.what.names": {
+    en: "Mean words can hurt a lot. They don't decide who you are.",
+    de: "Gemeine Worte können sehr wehtun. Sie bestimmen nicht, wer du bist.",
+    hi: "Buri baatein bahut chubhti hain. Woh tay nahi karti ki tum kaun ho.",
+  },
+  "warm.what.left_out": {
+    en: "Being left out hurts. It is not your fault.",
+    de: "Ausgeschlossen zu werden tut weh. Es ist nicht deine Schuld.",
+    hi: "Alag chhod diya jaana dukh deta hai. Yeh tumhari galti nahi hai.",
+  },
+  "warm.what.other": {
+    en: "Thank you for telling us. You can say it in your own words.",
+    de: "Danke, dass du es uns sagst. Du kannst es mit deinen eigenen Worten sagen.",
+    hi: "Batane ke liye shukriya. Apne shabdon mein batao.",
+  },
+  "warm.what.noSay": {
+    en: "That's OK. Tell us only what you want to.",
+    de: "Das ist okay. Sag uns nur, was du sagen möchtest.",
+    hi: "Koi baat nahi. Sirf utna batao jitna tum chaho.",
+  },
+  "warm.adult": {
+    en: "Thank you for telling us. An adult must never treat a child like this. Stopping it is a job for other adults, not for you.",
+    de: "Danke, dass du es uns sagst. So darf ein Erwachsener ein Kind nie behandeln. Das zu stoppen ist die Aufgabe von anderen Erwachsenen, nicht deine.",
+    hi: "Batane ke liye shukriya. Kisi bade ko kabhi kisi bachche ke saath aisa nahi karna chahiye. Ise rokna doosre badon ka kaam hai, tumhara nahi.",
+  },
   "q.review.hint": { en: "This is what the card will say.", de: "Das steht dann auf der Karte.", hi: "Card par yahi likha hoga." },
   "q.review.nothing": {
     en: "You did not pick anything. That is okay.",
@@ -882,8 +1149,6 @@ export type StringKey = keyof typeof STRINGS;
  */
 export const ENGLISH_IN_HINGLISH: ReadonlySet<StringKey> = new Set<StringKey>([
   "app.poweredBy",
-  "demo.button",
-  "demo.clear",
   "help.button",
   "help.title",
   "help.short",

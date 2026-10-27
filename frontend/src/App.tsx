@@ -7,6 +7,7 @@ import Handoff from "./screens/Handoff";
 import HandoffDone from "./screens/HandoffDone";
 import HelpScreen from "./screens/HelpScreen";
 import LanguageSetup from "./screens/LanguageSetup";
+import MoodReply from "./screens/MoodReply";
 import LanguageButton from "./components/LanguageButton";
 import DisplayButton from "./components/DisplayButton";
 import Onboarding from "./screens/Onboarding";
@@ -25,15 +26,17 @@ import PinSet from "./screens/PinSet";
 import PinUnlock from "./screens/PinUnlock";
 import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
+import Listen from "./screens/Listen";
 import Write from "./screens/Write";
 
-import DemoButton from "./components/DemoButton";
 import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
+import ExampleModeBanner from "./components/ExampleModeBanner";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
-import type { DemoSession } from "./lib-demo/demoStory";
+import { activeDemo, clearDemo } from "./lib-demo/demoStory";
+import { useEngineMode } from "./lib/engineMode";
 
 import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
@@ -41,6 +44,8 @@ import { HOME, afterLanguage, back, canGoBack, current, go, start, type Step } f
 import { MOOD_CODES } from "./lib/moods";
 import { NO_PICKS, entryFor, handoffWhereFor, type Picks } from "./lib/pictures";
 import { SCENE, mapFor } from "./lib/scenes";
+import { ADULT_LINE, whatLine } from "./lib/warm";
+import WarmLine from "./components/WarmLine";
 import {
   ANSWER_OF,
   adultRoute,
@@ -52,8 +57,10 @@ import {
 } from "./lib/questions";
 import { loadAvatar, saveAvatar } from "./lib/avatar";
 import { emergency } from "./lib/api";
+import { BUILT_IN_EMERGENCY } from "./lib/contacts";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
+import type { Turn } from "./lib/listening";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
 import { applyDocumentLang } from "./lib-lang/languages";
@@ -131,6 +138,10 @@ export default function App() {
   // been made it hands back the device's language so the few words around the
   // picker are readable, while still reporting `needsChoice`. That is not the
   // app choosing for the child - the picker shows nothing as chosen.
+  // Asked once for the whole session. In mock mode every screen says so, and
+  // the result card drops its agreement score: see lib/engineMode.ts.
+  const engine = useEngineMode();
+
   const [setup] = useState(() => languageSetupState());
   const [lang, setLang] = useState<Lang>(setup.lang);
 
@@ -151,10 +162,16 @@ export default function App() {
   // approved; it survives Back and a trip to help, because losing a sentence
   // a frightened child has just managed to write is the one thing this app
   // must never do. `Write` reports every keystroke up here and reads it back
-  // when it mounts again.
-  // The demo button also fills it, with Amara's sentence; nothing else may
-  // put text in a child's mouth.
+  // when it mounts again. Nothing else may put text in a child's mouth.
   const [draft, setDraft] = useState("");
+  // The listening conversation and its unsent message, kept here for the
+  // same reason as `draft`: Back, Help or a language change must not lose a
+  // word of it. Cleared only when it has become an entry.
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [talkDraft, setTalkDraft] = useState("");
+  // "Make a card" on the listening screen: the writing screen checks the
+  // German straight away, because the child has already said everything.
+  const [autoCheck, setAutoCheck] = useState(false);
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [entries, setEntries] = useState(() => listEntries());
   // The child's two handoff answers, kept so Back from the big card returns
@@ -174,6 +191,17 @@ export default function App() {
   );
 
   const refreshEntries = useCallback(() => setEntries(listEntries()), []);
+
+  // Amara's story is gone from the app (Neel, 27 Oct). A browser that loaded
+  // it before keeps her five example entries, and with the button went the
+  // only way to remove them, so they are taken out once here. clearDemo()
+  // removes only the ids the example seeded; the child's own entries stay.
+  useEffect(() => {
+    if (activeDemo()) {
+      clearDemo();
+      refreshEntries();
+    }
+  }, [refreshEntries]);
 
   useEffect(() => {
     // hi-Latn for Hinglish, so a screen reader reads Roman Hindi as Hindi.
@@ -210,7 +238,9 @@ export default function App() {
   const afterCheckIn = useCallback(
     (mood: string | null) => {
       setCheckInMood(mood);
-      setStep("picWhat");
+      // An answer to the face first (screens/MoodReply.tsx), not "What
+      // happened?": after "Good" that question assumed something had.
+      setStep("checkInReply");
     },
     [setStep],
   );
@@ -231,7 +261,7 @@ export default function App() {
    */
   const finishPictures = useCallback(
     (save: boolean) => {
-      const choices = answersFor(picks);
+      const choices = answersFor(picks, checkInMood);
       if (save) {
         const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
         addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
@@ -245,11 +275,13 @@ export default function App() {
       // answer wins over anything remembered.
       const start = handoffWhereFor(choices.where, choices.adultWhere, Boolean(choices.whereOnline));
       setWhere((now) => (start === "home" ? "home" : now ?? start));
-      const own = questionsFor(picks).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
+      const own = questionsFor(picks, checkInMood).includes("picOwn") && wroteOwnWords(picks) ? picks.own[0] : "";
       setPicks(NO_PICKS);
       if (own) {
-        setDraft(own);
-        setTrail([HOME, "write"]);
+        // Their own words start the conversation, in the box, not yet sent:
+        // the child presses "Write it down" themselves.
+        setTalkDraft(own);
+        setTrail([HOME, "listen"]);
       } else {
         setTrail([HOME, "picMore"]);
       }
@@ -267,9 +299,9 @@ export default function App() {
     (from: QuestionStep) => (skipped?: boolean) => {
       const key = ANSWER_OF[from];
       const now = skipped ? { ...picks, [key]: [], ...(from === "picWho" ? { kind: [] } : {}) } : picks;
-      setStep(nextQuestion(from, now));
+      setStep(nextQuestion(from, now, checkInMood));
     },
-    [picks, setStep],
+    [picks, checkInMood, setStep],
   );
 
   /**
@@ -293,6 +325,10 @@ export default function App() {
         },
         "words",
       );
+      // The conversation those words came from is filed with them.
+      setTurns([]);
+      setTalkDraft("");
+      setAutoCheck(false);
       refreshEntries();
       // Those words are an entry now. Leaving them in `draft` would refill the
       // writing screen with a sentence the child has already filed the next
@@ -307,47 +343,6 @@ export default function App() {
     },
     [checkInMood, refreshEntries, setStep],
   );
-
-  /**
-   * "Try Amara's story": the judge's way in, and the first button pressed on
-   * the demo URL.
-   *
-   * `DemoButton` has already fetched the story and seeded the timeline by the
-   * time this runs, so all that is left is the part only the shell can do:
-   * show the five entries it added, put the live sentence in the writing
-   * screen, and go there. Nothing is translated and nothing is sent - the
-   * judge presses send themselves, which is the moment the demo exists for.
-   *
-   * The language follows the story rather than the other way round. Amara
-   * writes English, so `Write` would otherwise be told to translate an English
-   * sentence *from* whatever the UI happened to be set to, and a Hindi or
-   * German source language on English text is a wrong answer we asked for.
-   * `saveLang` is deliberately not called: this is the example's language for
-   * as long as the example is loaded, not a choice the child made.
-   */
-  const startDemo = useCallback(
-    (session: DemoSession) => {
-      const storyLang = session.draft.lang;
-      if (storyLang === "en" || storyLang === "de" || storyLang === "hi") {
-        setLang(storyLang);
-      }
-      refreshEntries();
-      setDraft(session.draft.text);
-      setStep("write");
-    },
-    [refreshEntries, setStep],
-  );
-
-  /**
-   * The example has been taken back out, so the app has to look like it never
-   * ran: the seeded entries are gone from storage and the prefilled sentence
-   * must go with them, or the writing screen still holds Amara's words.
-   */
-  const endDemo = useCallback(() => {
-    refreshEntries();
-    setDraft("");
-    setStep("checkIn");
-  }, [refreshEntries, setStep]);
 
   // The red Need help button, from every screen: the calm list of people who
   // can help (screens/HelpScreen.tsx). Back returns to where the child was.
@@ -384,7 +379,9 @@ export default function App() {
   }
 
   const scene = SCENE[step];
-  const onMap = mapFor(step, picks);
+  const onMap = mapFor(step, picks, checkInMood);
+  // The screen right after "What happened?", where the warm line answers it.
+  const afterWhat = nextQuestion("picWhat", picks, checkInMood);
 
   return (
     // One flat colour per place (lib/scenes.ts), filling the whole screen.
@@ -428,6 +425,18 @@ export default function App() {
           }
         />
       </div>
+
+      {/* Above every screen from the language picker onwards, and above the
+          map: a judge who opens a mock deploy must read this before they
+          type.
+
+          NOT above the lock, which #82 made an early `return` higher up so
+          that no `setStep` can get past it. That is deliberate, not the
+          oversight it looked like in review: this banner's job is to stop
+          someone believing an OUTPUT, and a child at the PIN screen has not
+          typed anything for the app to have answered. Putting it there would
+          add a second place for `engine` to go stale while guarding nothing. */}
+      <ExampleModeBanner lang={lang} engine={engine} />
 
       {onMap !== null && (
         <GameMap
@@ -478,17 +487,26 @@ export default function App() {
               {t("onboarding.again", lang)}
             </button>
           </div>
-
-          {/* Below the check-in, not above it: a child who opens the app gets
-              their own question first, and the example is for the visitor.
-              It is on this screen because this is where both of them land, and
-              a judge should not have to find it. */}
-          <DemoButton lang={lang} onLoaded={startDemo} onCleared={endDemo} />
         </>
+      )}
+
+      {step === "checkInReply" && (
+        <MoodReply
+          lang={lang}
+          mood={checkInMood}
+          onPictures={() => setStep("picWhat")}
+          onWrite={() => setStep("listen")}
+          onHome={() => setTrail([HOME])}
+        />
       )}
 
       {/* The picture questions: one per screen, each skippable. Which comes
           next depends on the answers so far (lib/questions.ts). */}
+      {/* One kind line, written in advance and chosen by a rule (lib/warm.ts):
+          to what happened, and to an adult. The face the child tapped is
+          answered before this, by MoodReply. */}
+      {step !== "picWhat" && step === afterWhat && <WarmLine line={whatLine(picks.what)} lang={lang} />}
+      {step === "picAdultWhere" && <WarmLine line={ADULT_LINE} lang={lang} />}
       {step === "picWhat" && (
         <WhatQuestion lang={lang} value={picks.what} onChange={pick("what")} onNext={advance("picWhat")} />
       )}
@@ -526,7 +544,7 @@ export default function App() {
       {step === "picReview" && (
         <PictureReview
           lang={lang}
-          choices={answersFor(picks)}
+          choices={answersFor(picks, checkInMood)}
           onSave={keepPictures}
           onChange={() => setStep("picWhat")}
           onNext={() => finishPictures(false)}
@@ -534,15 +552,40 @@ export default function App() {
         />
       )}
       {step === "picMore" && (
-        <MoreQuestion lang={lang} onWrite={() => setStep("write")} onNoThanks={() => setStep("handoff")} />
+        <MoreQuestion
+          lang={lang}
+          onWrite={() => setStep("listen")}
+          onMakeCard={() => setStep("handoff")}
+          // The answers are saved by now; "No thanks" means nothing more today.
+          onNoThanks={() => setTrail([HOME])}
+        />
+      )}
+
+      {step === "listen" && (
+        <Listen
+          lang={lang}
+          turns={turns}
+          onTurnsChange={setTurns}
+          draft={talkDraft}
+          onDraftChange={setTalkDraft}
+          onMakeCard={(words) => {
+            setDraft(words);
+            setAutoCheck(true);
+            setStep("write");
+          }}
+          onHome={() => setTrail([HOME])}
+          onNeedHelp={needHelp}
+        />
       )}
 
       {step === "write" && (
         <Write
           lang={lang}
+          autoCheck={autoCheck}
           initialText={draft}
           onTextChange={setDraft}
           onApproved={keepWords}
+          engine={engine}
         />
       )}
 
@@ -638,16 +681,16 @@ export default function App() {
  * one thing CLAUDE.md says this screen may not leave out.
  */
 function EmergencyHelp({ lang }: { lang: Lang }) {
-  const [contacts, setContacts] = useState<Resource[] | null>(null);
-  const [failed, setFailed] = useState(false);
+  // Built into the app (lib/contacts.ts): 110 and 112 show even offline or
+  // while the server wakes up. The fetch only refreshes them, and a failure
+  // keeps them on screen.
+  const [contacts, setContacts] = useState<readonly Resource[]>(BUILT_IN_EMERGENCY);
 
-  // Fetched when the panel mounts rather than when it opens: a child in a
-  // crisis should not wait on a request they have already asked for.
   useEffect(() => {
     let live = true;
     emergency(lang)
-      .then((res) => live && setContacts(res.contacts))
-      .catch(() => live && setFailed(true));
+      .then((res) => live && res.contacts.length > 0 && setContacts(res.contacts))
+      .catch(() => {});
     return () => {
       live = false;
     };
@@ -661,10 +704,6 @@ function EmergencyHelp({ lang }: { lang: Lang }) {
 
       <div className="flex flex-col gap-3 px-4 pb-4">
         <h2 className="text-sm font-medium text-ink-soft">{t("help.title", lang)}</h2>
-
-        {/* The network is the one thing that can fail here, and a child in a
-            crisis is owed a reason rather than an empty box. */}
-        {failed && <p className="text-base">{t("errors.network", lang)}</p>}
 
         {/* What "Leave now" does and does not do, said here once (it is no
             longer under the button on every screen). */}

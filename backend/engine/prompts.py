@@ -19,6 +19,11 @@ Rules:
 - Keep negation exactly: "nobody helped" must not become "somebody helped".
 - If the child's text is unclear, translate it as the unclear sentence it is.
   Do not guess what they probably meant.
+- An everyday thing from the child's own life that {target_name} has no word
+  for: write the ordinary {target_name} word for what it IS, not the original
+  word spelled out. A Hindi टिफ़िन is a lunchbox, so in German it is a
+  Brotdose - a teacher who reads "Tiffin" learns nothing. Names of people and
+  places stay as the child wrote them.
 
 Reply with the translation only. No notes, no quotation marks, no alternatives."""
 
@@ -109,8 +114,21 @@ Do three things.
    treated, and only the child knows which was meant, so ask.
 
 Severity is "critical" when the disagreement changes who did something to
-whom, whether something was forced, whether something is a threat, a
-negation, or how severe the child says it was. Otherwise it is "minor".
+whom, WHEN it happened or will happen, whether something was forced, whether
+something is a threat, a negation, or how severe the child says it was.
+Otherwise it is "minor".
+
+WHICH THING IT WAS is not critical. If the only open question is which object,
+food, place or piece of clothing the child means - whether टिफ़िन is the box or
+the lunch inside it, whether a "jumper" is a sweater or a dress - that is
+"minor", even when {target_name} has no exact word for it. What an adult does
+next turns on what was done to this child and when, not on which object it
+was done to.
+
+Apply the same test before reporting a phrase as "source_ambiguous" at all:
+if both readings leave "what was done to this child", AND WHEN, the same,
+do not report it. The child is describing being bullied, and every phrase
+you report costs them a question in the middle of that.
 
 Report a disagreement only when the translations really differ in meaning.
 Different wording with the same meaning is not a disagreement, and you must
@@ -199,6 +217,14 @@ Write the question in {source_name}, for a child aged about 10 to 16.
 - One sentence, under 15 words.
 - Everyday words. No grammar terms, no "ambiguous", no "translation".
 - Neutral: do not hint that either answer is better or more serious.
+- Speak to the child the way a friendly adult they know would, not the way a
+  form does. In Hindi use तुम, never आप. In German use du, never Sie. The
+  app's own screens do, and a question that switches register reads as though
+  something official has taken over.
+- Write Hindi in the LATIN alphabet, the way the child's screens do:
+  "Tumhara matlab kya tha?", never "तुम्हारा मतलब क्या था?". The app is
+  Hinglish throughout, and a question that arrives in Devanagari is the one
+  sentence on screen the child may not be able to read.
 - Never ask the child to describe what happened again. Ask only which meaning
   they intended.
 - Never suggest the child made a mistake, and never mention that a computer was
