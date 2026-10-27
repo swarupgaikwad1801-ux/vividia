@@ -75,6 +75,47 @@ export const STRINGS = {
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "अभी मदद चाहिए?" },
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "ये लोग मदद कर सकते हैं" },
   "help.source": { en: "Checked on", de: "Geprüft am", hi: "जाँचा गया" },
+  "help.dangerTitle": {
+    en: "If you are in danger right now",
+    de: "Wenn du gerade in Gefahr bist",
+    hi: "अगर आप अभी ख़तरे में हैं",
+  },
+  "help.talkTitle": {
+    en: "Talk to someone",
+    de: "Mit jemandem sprechen",
+    hi: "किसी से बात करें",
+  },
+  "help.call": { en: "Call", de: "Anrufen", hi: "कॉल करें" },
+  "help.open": { en: "Open", de: "Öffnen", hi: "खोलें" },
+  "help.sourceLink": { en: "source", de: "Quelle", hi: "स्रोत" },
+  "help.live": {
+    en: "Your area's school counselling was looked up today on an official site.",
+    de: "Die Schulberatung für deine Gegend wurde heute auf einer offiziellen Seite gesucht.",
+    hi: "आपके इलाके की स्कूल काउंसलिंग आज एक सरकारी वेबसाइट पर देखी गई।",
+  },
+  "help.fallback": {
+    en: "These come from our own checked list.",
+    de: "Diese stammen aus unserer eigenen geprüften Liste.",
+    hi: "ये हमारी अपनी जाँची हुई सूची से हैं।",
+  },
+  "help.loading": { en: "Loading…", de: "Wird geladen…", hi: "लोड हो रहा है…" },
+  "help.retry": { en: "Try again", de: "Nochmal versuchen", hi: "फिर कोशिश करें" },
+  "help.back": { en: "Back", de: "Zurück", hi: "वापस" },
+  "help.notCounselling": {
+    en: "This app is not a counselling service. The people above are.",
+    de: "Diese App ist keine Beratungsstelle. Die Menschen oben sind es.",
+    hi: "यह ऐप कोई काउंसलिंग सेवा नहीं है। ऊपर दिए गए लोग हैं।",
+  },
+  "safety.nothingSent": {
+    en: "Nothing has been sent to anyone.",
+    de: "Es wurde nichts an irgendjemanden geschickt.",
+    hi: "किसी को कुछ भी नहीं भेजा गया है।",
+  },
+  "safety.back": {
+    en: "Back to my words",
+    de: "Zurück zu meinen Worten",
+    hi: "अपने शब्दों पर वापस जाएँ",
+  },
 
   "quickExit.button": { en: "Leave now", de: "Schnell raus", hi: "तुरंत निकलो" },
   "quickExit.note": {

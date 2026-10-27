@@ -28,7 +28,8 @@ export type Step =
   | "handoffShow" // the card, big, to hold up to that person
   | "handoffDone" // "in a few days, the app will ask how things are"
   | "escalation" // the next door, if the first one did not open
-  | "pinSet"; // set or change the PIN
+  | "pinSet" // set or change the PIN
+  | "help"; // the people who can help, behind the Need help button
 
 /*
  * Every member must have a door: some navigation in App.tsx that reaches it
