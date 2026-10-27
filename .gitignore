@@ -35,3 +35,6 @@ scratch/
 *.sqlite3
 __pycache__/
 .pytest_cache/
+
+# Tavily cache + daily credit count (local runtime state, never shared)
+.tavily_state.json

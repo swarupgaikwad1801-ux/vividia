@@ -112,8 +112,11 @@ test("Kim stays gender-neutral", () => {
     assert.doesNotMatch(text.en, /\b(he|she|him|her|his|hers)\b/i, `${key} en`);
     // Not bare "sein": it is also the verb "to be" ("wie bei Kim sein").
     assert.doesNotMatch(text.de, /\b(er|sie|ihn|ihm|seine[mnrs]?|ihre[mnrs]?)\b/, `${key} de`);
-    // Hindi verbs and adjectives that would give Kim a gender.
-    assert.doesNotMatch(text.hi, /(नया|नई|गया|गई|अकेला|अकेली|लड़का|लड़की|चाहता|चाहती)/, `${key} hi`);
+    // Hindi verbs and adjectives that would give Kim a gender, in the Latin
+    // script the screens use. Matching only Devanagari would pass Hinglish
+    // without checking it.
+    assert.doesNotMatch(text.hi, /[ऀ-ॿ]/, `${key} hi is Hinglish`);
+    assert.doesNotMatch(text.hi, /\b(naya|nayi|nai|gaya|gayi|akela|akeli|ladka|ladki|chahta|chahti)\b/i, `${key} hi`);
   }
 });
 

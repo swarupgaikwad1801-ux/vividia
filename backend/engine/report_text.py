@@ -27,47 +27,88 @@ FALLBACK_LANG = "en"
 
 # "Who made this and what it is." Shown at the top, before anything the child
 # wrote, so an adult cannot mistake the document for a professional assessment.
+#
+# "picked or wrote", not "wrote": since the app asks the picture questions
+# first (#3), some lines are sentences the child TAPPED, fixed in advance by
+# us, and only the rest are sentences they typed. The frontend marks the
+# tapped ones "Aus Bildern gewählt", but the backend cannot tell which is
+# which - that flag stays on the phone and never reaches a report. So the one
+# sentence here has to be true of both kinds, or the document opens by telling
+# the adult something false about where its own words came from. Found by Neel
+# testing the live app, issue #5.
 HEADER = {
     "en": (
-        "This report was put together by a child using an app, from notes they "
-        "wrote themselves. The child chose to show it to you."
+        "This report was put together by a child using an app, from sentences "
+        "they picked or wrote themselves. The child decided to show it to you."
     ),
     "hi": (
-        "यह रिपोर्ट एक बच्चे ने ऐप की मदद से अपने लिखे नोट्स से बनाई है। "
-        "बच्चे ने खुद तय किया कि आपको यह दिखाना है।"
+        "Yeh report ek bachche ne app ki madad se banayi hai, un vaakyon se jo bachche ne "
+        "khud chune ya likhe. Bachche ne khud tay kiya ki aapko yeh dikhana hai."
     ),
     "de": (
-        "Diesen Bericht hat ein Kind mit einer App aus eigenen Notizen "
-        "zusammengestellt. Das Kind hat selbst entschieden, ihn Ihnen zu zeigen."
+        "Diesen Bericht hat ein Kind mit einer App zusammengestellt, aus Sätzen, "
+        "die es selbst ausgewählt oder geschrieben hat. Das Kind hat selbst "
+        "entschieden, ihn Ihnen zu zeigen."
     ),
 }
 
 # Said once, plainly, because it is the difference between a record and an
 # accusation, and an adult deciding what to do next needs to know which it is.
+#
+# "in sentences they picked or wrote" replaces "in their own words", for the
+# reason above the header. The claim that survives both kinds of line is not
+# authorship, it is approval: whether the child tapped a picture or typed, they
+# read the sentence and confirmed it before it entered the timeline. That is
+# the sentence an adult can actually rely on, so it is the one we make.
 FOOTER = {
     "en": (
-        "What this is: a record of what the child said happened, in their own "
-        "words. What it is not: a finding that it happened, a medical or "
-        "psychological assessment, or advice. The German sentences are the ones "
-        "the child read and approved."
+        "What this is: a record of what the child said happened, in sentences "
+        "they picked or wrote and then approved. What it is not: a finding that "
+        "it happened, a medical or psychological assessment, or advice. The "
+        "German sentences are the ones the child read and approved."
     ),
     "hi": (
-        "यह क्या है: बच्चे ने जो बताया कि हुआ, उसका रिकॉर्ड, उनके ही शब्दों में। "
-        "यह क्या नहीं है: इसका सबूत कि ऐसा हुआ, कोई मेडिकल या मनोवैज्ञानिक आकलन, "
-        "या सलाह। जर्मन वाक्य वही हैं जिन्हें बच्चे ने पढ़ा और मंज़ूर किया।"
+        "Yeh kya hai: bachche ne jo bataya ki hua, uska record, un vaakyon mein jo "
+        "bachche ne chune ya likhe aur phir manzoor kiye. Yeh kya nahi hai: iska saboot ki aisa "
+        "hua, koi medical ya psychological assessment, ya salaah. German vaakya wahi hain jo "
+        "bachche ne padhe aur manzoor kiye."
     ),
     "de": (
         "Was das ist: eine Aufzeichnung dessen, was das Kind geschildert hat, in "
-        "seinen eigenen Worten. Was es nicht ist: ein Nachweis, dass es so war, "
-        "eine medizinische oder psychologische Beurteilung oder eine Empfehlung. "
-        "Die deutschen Sätze sind die, die das Kind gelesen und bestätigt hat."
+        "Sätzen, die es ausgewählt oder geschrieben und dann bestätigt hat. Was "
+        "es nicht ist: ein Nachweis, dass es so war, eine medizinische oder "
+        "psychologische Beurteilung oder eine Empfehlung. Die deutschen Sätze "
+        "sind die, die das Kind gelesen und bestätigt hat."
     ),
 }
 
+# `entry` is the singular of `entries`. A timeline of one is the common case,
+# not an edge case: the first thing a child does is write one thing down, and
+# the first card they can hand over has one entry in it. "1 entries" on that
+# card reads like software nobody finished, on the one document that has to
+# look like it was meant for the reader. Found by Neel, issue #5.
 LABELS = {
-    "en": {"period": "Period", "entries": "entries", "where": "Where", "who": "Who"},
-    "hi": {"period": "अवधि", "entries": "प्रविष्टियाँ", "where": "कहाँ", "who": "कौन"},
-    "de": {"period": "Zeitraum", "entries": "Einträge", "where": "Wo", "who": "Wer"},
+    "en": {
+        "period": "Period",
+        "entry": "entry",
+        "entries": "entries",
+        "where": "Where",
+        "who": "Who",
+    },
+    "hi": {
+        "period": "Samay",
+        "entry": "entry",
+        "entries": "entries",
+        "where": "Kahan",
+        "who": "Kaun",
+    },
+    "de": {
+        "period": "Zeitraum",
+        "entry": "Eintrag",
+        "entries": "Einträge",
+        "where": "Wo",
+        "who": "Wer",
+    },
 }
 
 # `Entry.place` is a short code where the UI offered one, and free text where
@@ -80,16 +121,16 @@ LABELS = {
 # version of "the corridor by the gym". Guessing one and putting it in front of
 # a teacher would be exactly the unapproved paraphrase this module avoids.
 PLACES = {
-    "classroom": {"en": "classroom", "hi": "कक्षा", "de": "Klassenzimmer"},
-    "canteen": {"en": "canteen", "hi": "कैंटीन", "de": "Mensa"},
-    "corridor": {"en": "corridor", "hi": "कॉरिडोर", "de": "Flur"},
-    "schoolyard": {"en": "schoolyard", "hi": "स्कूल का मैदान", "de": "Schulhof"},
-    "online": {"en": "online", "hi": "ऑनलाइन", "de": "online"},
-    "toilets": {"en": "toilets", "hi": "शौचालय", "de": "Toiletten"},
-    "changing_room": {"en": "changing room", "hi": "चेंजिंग रूम", "de": "Umkleide"},
-    "gym": {"en": "gym", "hi": "जिम", "de": "Sporthalle"},
-    "bus": {"en": "bus", "hi": "बस", "de": "Bus"},
-    "way_to_school": {"en": "on the way to school", "hi": "स्कूल जाते समय", "de": "auf dem Schulweg"},
+    "classroom": {"en": "classroom", "hi": "class", "de": "Klassenzimmer"},
+    "canteen": {"en": "canteen", "hi": "canteen", "de": "Mensa"},
+    "corridor": {"en": "corridor", "hi": "corridor", "de": "Flur"},
+    "schoolyard": {"en": "schoolyard", "hi": "school ka ground", "de": "Schulhof"},
+    "online": {"en": "online", "hi": "online", "de": "online"},
+    "toilets": {"en": "toilets", "hi": "toilet", "de": "Toiletten"},
+    "changing_room": {"en": "changing room", "hi": "changing room", "de": "Umkleide"},
+    "gym": {"en": "gym", "hi": "gym", "de": "Sporthalle"},
+    "bus": {"en": "bus", "hi": "bus", "de": "Bus"},
+    "way_to_school": {"en": "on the way to school", "hi": "school jaate waqt", "de": "auf dem Schulweg"},
 }
 
 
@@ -111,6 +152,20 @@ def footer_for(lang: str) -> str:
 
 def labels_for(lang: str) -> dict[str, str]:
     return LABELS.get(lang) or LABELS[FALLBACK_LANG]
+
+
+def count_label_for(count: int, lang: str) -> str:
+    """"1 entry" / "3 entries", in the reader's language.
+
+    The choice lives here and not in report.py because which number counts as
+    singular is a fact about the language, not about the report. English and
+    German both take the singular only at exactly one; Hindi does too with a
+    numeral in front. A language that splits differently - two, few, many -
+    changes this function and nothing else.
+    """
+    labels = labels_for(lang)
+    word = labels["entry"] if count == 1 else labels["entries"]
+    return f"{count} {word}"
 
 
 def format_date(iso_date: str, lang: str) -> str:
@@ -152,7 +207,7 @@ def format_date(iso_date: str, lang: str) -> str:
 
 OVERVIEW_LABELS = {
     "en": {"places": "Places", "people": "People named"},
-    "hi": {"places": "स्थान", "people": "नामित लोग"},
+    "hi": {"places": "Jagah", "people": "Jinke naam liye"},
     "de": {"places": "Orte", "people": "Genannte Personen"},
 }
 

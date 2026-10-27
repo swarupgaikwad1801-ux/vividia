@@ -96,6 +96,72 @@ class TranslateResponse(BaseModel):
     usage: Usage
 
 
+# --- POST /api/listen --------------------------------------------------------
+
+
+class ListenKind(str, Enum):
+    """What kind of thing the child just told us (engine/listen.py KINDS).
+
+    Picks one of the fixed, reviewed sentences the listening screen answers
+    with (`heard.*` in strings.ts). Never shown, never stored.
+    """
+
+    HURT = "hurt"
+    NAMES = "names"
+    LEFT_OUT = "left_out"
+    TAKEN = "taken"
+    ONLINE = "online"
+    THREAT = "threat"
+    FEELING = "feeling"
+    GOOD = "good"
+    ASKING = "asking"
+    TALK = "talk"
+    OTHER = "other"
+
+
+class ListenDetail(str, Enum):
+    """A detail the child's message already gives (engine/listen.py DETAILS).
+
+    The listening screen asks only for the details still missing, so a child
+    who wrote "at school today" is not then asked where and when. Never shown.
+    """
+
+    WHERE = "where"
+    WHEN = "when"
+    WHO = "who"
+    FEELING = "feeling"
+
+
+class ListenRequest(BaseModel):
+    """One message from the child, before any card exists.
+
+    Only the newest message is sent, not the conversation so far: the kind
+    sentence answers what they just said, and the less of a child's words
+    leave the phone, the better.
+    """
+
+    text: str = Field(min_length=1, max_length=2000)
+    lang: str = Field(description="ISO 639-1, the child's language")
+
+
+class ListenResponse(BaseModel):
+    kind: ListenKind
+    told: list[ListenDetail] = Field(
+        default_factory=list,
+        description="Details this message already gives; the screen does not ask for them.",
+    )
+    safety: Safety
+    reply: str | None = Field(
+        default=None,
+        description=(
+            "Only for kind 'other' and only when safety is not urgent: a short "
+            "answer written by the model that passed both checks in "
+            "engine/listen.py. null means show the reviewed sentence."
+        ),
+    )
+    usage: Usage
+
+
 # --- POST /api/clarify -------------------------------------------------------
 
 
@@ -160,13 +226,106 @@ class ResourcesResponse(BaseModel):
     )
 
 
+# --- GET /api/emergency ------------------------------------------------------
+
+
+class EmergencyResponse(BaseModel):
+    contacts: list[Resource] = Field(
+        min_length=1,
+        description="110 and 112 from content/helplines.json, in file order; never Tavily, never a model"
+    )
+
+
 # --- GET /api/health ---------------------------------------------------------
+
+
+# --- GET /api/guide ----------------------------------------------------------
+
+
+class GuideStep(BaseModel):
+    """One step of the 5-minute guide, with the page it came from."""
+
+    text: str = Field(description="The step, in the language that was served")
+    source_url: str | None = Field(
+        default=None,
+        description=(
+            "The page this step is drawn from, resolved from the file's own "
+            "`sources` map. None when the step cites nothing - a claim about "
+            "how to treat a child who has just disclosed should carry its "
+            "source, and a missing one should be visible rather than implied."
+        ),
+    )
+
+
+class LadderRung(BaseModel):
+    """One rung of the escalation ladder, shown to the CHILD, not the adult.
+
+    It travels with the adult's guide because it lives in the same file and
+    #33 served it from here. Different audience, same route - worth splitting
+    one day, not worth splitting in freeze week.
+    """
+
+    id: str = Field(description="Stable id; lib/followups.ts matches on these")
+    text: str = Field(description="In the language that was served")
+
+
+class GuideResponse(BaseModel):
+    """The 5-minute guide for the adult the child chose to tell.
+
+    One language, not both. The adult reads one; sending two and letting the
+    screen pick would put the choice in the component that knows least about
+    it, and would double the size of a payload shown on a phone.
+
+    The wording changes without a schema change - that is why `/api/guide`
+    served the file as-is until now - but the SHAPE does not: a title, steps
+    with sources, a footer, a date. Pinning the shape is what lets Vernika
+    build against it; leaving the wording loose is what lets Neel edit it.
+    """
+
+    lang: str = Field(
+        description=(
+            "The language actually served, which is not always the one asked "
+            "for: the guide exists in de and en only. The screen must read "
+            "this rather than assume, so it can set `lang` on the element and "
+            "a screen reader pronounces it correctly."
+        )
+    )
+    title: str
+    steps: list[GuideStep] = Field(min_length=1)
+    footer: str
+    checked_on: str = Field(
+        description="When a person last checked this guide against its sources"
+    )
+    ladder: list[LadderRung] = Field(
+        default_factory=list,
+        description=(
+            "The escalation ladder, in order, lowest rung first. Order is the "
+            "content, so it is never re-sorted. `emergency` is deliberately "
+            "absent: 110 is not a step up a ladder."
+        ),
+    )
+    home_rule: str = Field(
+        default="",
+        description=(
+            "The rule that outranks the ladder: if the child said it happens "
+            "at home, family is never suggested at any rung."
+        ),
+    )
 
 
 class HealthResponse(BaseModel):
     status: Literal["ok", "degraded"]
     engine: Literal["mock", "live"]
     models: dict[str, str] = Field(description="role -> model id, e.g. {'fanout': '...', 'judge': '...'}")
+    budget: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Spend to watch while the demo is public, values as strings: "
+            "tavily_spent_today, tavily_daily_cap, tavily_cached_states. "
+            "Empty in mock mode, which spends nothing. Optional, so an older "
+            "client is unaffected."
+        ),
+    )
 
 
 # --- errors ------------------------------------------------------------------

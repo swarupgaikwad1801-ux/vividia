@@ -21,13 +21,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from engine.client import ROLES
-from engine.config import REPO_ROOT
+from engine.config import REPO_ROOT, base_url_problem
 from engine.errors import message_for, safe_traceback, status_for, to_error_response
+from engine.resources import emergency_numbers
 from app.limits import Guard, client_key
 from app.schemas import (
     ClarifyRequest,
+    EmergencyResponse,
     Entry,
     ErrorResponse,
+    GuideResponse,
+    GuideStep,
+    LadderRung,
     HealthResponse,
     ReportRequest,
     ReportResponse,
@@ -35,6 +40,8 @@ from app.schemas import (
     Strategy,
     TranslateRequest,
     TranslateResponse,
+    ListenRequest,
+    ListenResponse,
 )
 # ENGINE_MODE=live uses real Nemotron calls; anything else (the default)
 # uses the mock, so the app runs with no API key and costs nothing.
@@ -79,10 +86,27 @@ app.add_middleware(
 # even on a day when the demo has spent its allowance.
 GUARD = Guard()
 
-# Neel owns this file; this route only reads it.
+# Neel owns these files; the routes below only read them.
 DEMO_STORY = REPO_ROOT / "content" / "demo_story.json"
+ADULT_GUIDE = REPO_ROOT / "content" / "adult_guide.json"
+ONBOARDING = REPO_ROOT / "content" / "onboarding.json"
 log.info("demo limits: %s, %d requests per %ds per client",
          GUARD.status(), GUARD.per_ip_requests, int(GUARD.per_ip_window_s))
+
+
+def _base_url_problem() -> str | None:
+    """Only live mode calls Nebius, so only live mode can be broken by this."""
+    if not ENGINE.__name__.endswith("live"):
+        return None
+    return base_url_problem(os.getenv("NEBIUS_BASE_URL", "").strip())
+
+
+# Said once at startup, in the deploy log people actually read. The service
+# still starts: the helplines and the guide do not need Nebius, and a crash
+# here would leave Render serving the previous container with nobody told.
+if _base_url_problem():
+    log.error("NEBIUS_BASE_URL %s - every translation will fail until it is fixed",
+              _base_url_problem())
 
 
 def _metered(request: Request, lang: str) -> None:
@@ -181,11 +205,19 @@ async def health() -> HealthResponse:
     live = ENGINE.__name__.endswith("live")
     models = {role: spec.model for role, spec in ROLES.items()} if live else {}
     # "degraded" is what the contract's status field is for: the app is up and
-    # help is reachable, but translation is not available right now.
+    # help is reachable, but translation is not available right now. A bad
+    # base URL is that too, and health used to report "ok" through it (#3).
+    url_problem = _base_url_problem()
+    if url_problem:
+        models["nebius_base_url"] = url_problem
     return HealthResponse(
-        status="ok" if GUARD.remaining_today() > 0 else "degraded",
+        status="ok" if GUARD.remaining_today() > 0 and not url_problem else "degraded",
         engine="live" if live else "mock",
         models={**models, **getattr(ENGINE, "STATUS", {})},
+        # Watchable while the demo is public: the Tavily allowance has to last
+        # until judging closes on 15 Dec, and a cap nobody can see is a cap
+        # nobody notices hitting.
+        budget=getattr(ENGINE, "tavily_status", dict)(),
     )
 
 
@@ -233,6 +265,56 @@ async def translate(request: TranslateRequest, http: Request) -> TranslateRespon
         strategy_used=result.get("strategy_used", request.strategy),
         usage=usage,
     )
+
+
+@app.post("/api/listen", response_model=ListenResponse)
+async def listen(request: ListenRequest, http: Request) -> ListenResponse:
+    """Answer the child before offering anything: what kind of thing they said.
+
+    The safety check runs here too, on every message, for the same reason it
+    is folded into translate: a child who writes "I want to die" while
+    talking must be shown help at once, not after they ask for a card.
+    """
+    started = time.perf_counter()
+    _metered(http, request.lang)
+    try:
+        heard, safety = await asyncio.gather(
+            ENGINE.listen(request.text, request.lang),
+            ENGINE.safety_check(request.text, request.lang),
+        )
+    except Exception as error:  # noqa: BLE001 - the child must never see a traceback
+        raise ChildSafeError(error, request.lang) from error
+
+    # A written reply only where no reviewed sentence fits, and never for a
+    # message the safety check flagged: a child in crisis gets fixed, sourced
+    # words only. Sequential on purpose - it needs both answers above.
+    written = None
+    if heard["kind"] == "other" and not safety["urgent"]:
+        try:
+            answer = await ENGINE.reply(request.text, request.lang)
+        except Exception:  # noqa: BLE001 - the reviewed sentence is always there
+            answer = {"reply": None}
+        written = answer.get("reply")
+        heard = {**heard, "usage": _add_usage(heard.get("usage"), answer.get("usage"))}
+
+    # The length, the kind and whether a reply was written, never the text.
+    log.info("listen lang=%s chars=%d kind=%s written=%s",
+             request.lang, len(request.text), heard["kind"], written is not None)
+    usage = _usage_of(heard, started)
+    GUARD.record_spend(usage["estimated_cost_usd"])
+    return ListenResponse(
+        kind=heard["kind"], told=heard.get("told", []), safety=safety, reply=written, usage=usage,
+    )
+
+
+def _add_usage(first: dict | None, second: dict | None) -> dict | None:
+    """Two engine usages as one, so the cap counts the reply's calls too."""
+    if not first or not second:
+        return first or second
+    return {
+        key: first.get(key, 0) + second.get(key, 0) if key != "latency_ms" else max(first.get(key, 0), second.get(key, 0))
+        for key in ("calls_made", "input_tokens", "output_tokens", "latency_ms", "estimated_cost_usd")
+    }
 
 
 @app.post("/api/clarify", response_model=TranslateResponse)
@@ -315,6 +397,141 @@ async def demo() -> dict:
         **{key: value for key, value in raw.items() if not key.startswith("_")},
         "timeline": [entry.model_dump() for entry in timeline],
     }
+
+
+
+@app.get("/api/emergency", response_model=EmergencyResponse)
+async def emergency() -> EmergencyResponse:
+    """110 and 112, so no screen ever types a phone number itself.
+
+    Read straight from content/helplines.json, the only place a contact may be
+    defined. Not routed through ENGINE: these numbers are the same in mock and
+    live mode, and must be. No Tavily and no model call, so it sits outside
+    the spending cap: the emergency numbers have to load on a day the demo has
+    spent its allowance, and with no API key at all.
+    """
+    try:
+        contacts = emergency_numbers()
+    except Exception as error:  # noqa: BLE001 - a broken content file is ours, not the child's
+        raise ChildSafeError(error, "en") from error
+    return EmergencyResponse(contacts=contacts)
+
+
+def _without_notes(value):
+    """Drop every key starting with "_", at any depth: notes to the team, not payload."""
+    if isinstance(value, dict):
+        return {key: _without_notes(item) for key, item in value.items() if not key.startswith("_")}
+    if isinstance(value, list):
+        return [_without_notes(item) for item in value]
+    return value
+
+
+def _content_file(path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as error:  # noqa: BLE001 - a broken content file is ours, not the child's
+        raise ChildSafeError(error, "en") from error
+
+
+# The guide exists in these two. The adult the child chooses is, in this
+# deployment, most often a teacher in a German school, so German is the
+# default rather than English.
+GUIDE_LANGS = ("de", "en")
+GUIDE_FALLBACK = "de"
+
+
+@app.get("/api/guide", response_model=GuideResponse)
+async def guide(lang: str = GUIDE_FALLBACK) -> GuideResponse:
+    """The 5-minute guide for the adult the child chose to tell.
+
+    One language, chosen here rather than on the screen: the adult reads one,
+    and sending both would put the choice in the component that knows least
+    about it. The response says which language it actually served, because
+    the guide exists in de and en only - a child who writes Hindi may well
+    hand the phone to someone who reads German, and the screen must be able
+    to set `lang` on the element rather than assume.
+
+    Each step's `source` key is resolved to the URL from the file's own
+    `sources` map, so the handoff card can link a step without carrying a
+    copy of that map. A step that cites nothing gets `null` rather than a
+    guess: a claim about how to treat a child who has just disclosed should
+    carry its source, and a missing one should be visible.
+
+    The wording changes without a schema change, which is why this served the
+    file as-is until now. The shape does not change, and the shape is what
+    the screen is built against.
+
+    No model call and no Tavily, so it stays outside the spending cap: the
+    adult has to be able to read this on a day the demo has spent its
+    allowance. `/api/onboarding` below still serves its file whole, because
+    nothing is built against it yet.
+    """
+    served = lang if lang in GUIDE_LANGS else GUIDE_FALLBACK
+    data = _without_notes(_content_file(ADULT_GUIDE))
+    guide_text = data.get("guide", {})
+    sources = data.get("sources", {})
+
+    steps = [
+        GuideStep(
+            text=step[served],
+            # .get, not [], and None rather than "": an absent source must
+            # read as "this step cites nothing" and not as a broken link.
+            source_url=sources.get(step.get("source")) if step.get("source") else None,
+        )
+        for step in guide_text.get("steps", [])
+        if isinstance(step, dict) and step.get(served)
+    ]
+    if not steps:
+        raise ChildSafeError(ValueError(f"no guide steps for {served!r}"), served)
+
+    # The ladder is the CHILD's, not the adult's, and rides along because it
+    # lives in the same file. In FILE ORDER, never sorted: the order is the
+    # content, and a child who has already been to the head of year should
+    # never be sent back to their form teacher.
+    #
+    # `emergency` is dropped. The file lists it as a sixth rung and
+    # lib/followups.ts deliberately leaves it out of LADDER, because an
+    # emergency is not an escalation: 110 is what you do INSTEAD of climbing,
+    # not the next thing to try after the school psychologist did not answer.
+    # Serving it would hand every screen a rung reading "call the police" and
+    # rely on each one remembering to filter it. The rule belongs in one
+    # place, and the safer place is here.
+    #
+    # The numbers are still one tap away on every screen, from
+    # /api/emergency, which is where they belong.
+    ladder = [
+        LadderRung(id=rung["id"], text=rung[served])
+        for rung in data.get("escalation_ladder", {}).get("steps", [])
+        if isinstance(rung, dict) and rung.get("id") and rung.get(served)
+        and rung["id"] != "emergency"
+    ]
+
+    return GuideResponse(
+        lang=served,
+        title=guide_text.get("title", {}).get(served, ""),
+        steps=steps,
+        footer=guide_text.get("footer", {}).get(served, ""),
+        checked_on=data.get("checked_on", ""),
+        ladder=ladder,
+        home_rule=data.get("escalation_ladder", {}).get("home_rule", ""),
+    )
+
+
+@app.get("/api/onboarding")
+async def onboarding() -> dict:
+    """First-run screens, in the child's language, served as the file has them.
+
+    The file's `_review` note says whether a native speaker has read the Hindi.
+    That one note is turned into `hindi_reviewed`, so the screen can carry the
+    same "not yet reviewed" caveat as the rest of the Hindi copy rather than
+    presenting a draft as final. No model call, outside the spending cap.
+    """
+    raw = _content_file(ONBOARDING)
+    return {
+        **_without_notes(raw),
+        "hindi_reviewed": bool((raw.get("_review") or {}).get("hi")),
+    }
+
 
 
 @app.get("/api/resources", response_model=ResourcesResponse)
