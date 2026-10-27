@@ -173,14 +173,14 @@ export default function Listen({
           <button
             type="button"
             onClick={() => setResting(false)}
-            className="squish min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page"
+            className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page"
           >
             {t("heard.keepWriting", lang)}
           </button>
           <button
             type="button"
             onClick={onHome}
-            className="squish min-h-tap rounded-full border-[3px] border-ink bg-surface px-4 text-base font-bold text-ink"
+            className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink"
           >
             {t("heard.home", lang)}
           </button>
@@ -235,7 +235,7 @@ export default function Listen({
                     type="button"
                     onClick={() => void read(index, [...turns])}
                     disabled={!online}
-                    className="squish min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:opacity-50"
+                    className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:opacity-50"
                   >
                     {t("heard.retry", lang)}
                   </button>
@@ -260,7 +260,7 @@ export default function Listen({
                       <button
                         type="button"
                         onClick={onNeedHelp}
-                        className="squish mt-2 min-h-tap rounded-full border-[3px] border-help bg-help px-4 text-base font-bold text-page"
+                        className="sticker motion-safe:active:translate-y-1 active:shadow-none mt-2 min-h-tap rounded-full bg-help px-4 text-base font-bold text-page"
                       >
                         {t("help.short", lang)}
                       </button>
@@ -311,7 +311,7 @@ export default function Listen({
             type="button"
             onClick={writeDown}
             disabled={!text || !online || reading !== null}
-            className="squish min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:opacity-50"
+            className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:opacity-50"
           >
             {t("heard.send", lang)}
           </button>
@@ -328,14 +328,14 @@ export default function Listen({
               type="button"
               onClick={() => onMakeCard(wordsForCard(turns))}
               disabled={reading !== null}
-              className="squish min-h-tap flex-1 rounded-full border-[3px] border-ink bg-sun px-4 text-base font-bold text-ink disabled:opacity-50"
+              className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap flex-1 rounded-full bg-sun px-4 text-base font-bold text-ink disabled:opacity-50"
             >
               {t("heard.makeCard", lang)}
             </button>
             <button
               type="button"
               onClick={() => setResting(true)}
-              className="squish min-h-tap rounded-full border-[3px] border-ink bg-surface px-4 text-base font-bold text-ink"
+              className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink"
             >
               {t("heard.notNow", lang)}
             </button>
@@ -352,14 +352,14 @@ export default function Listen({
               <button
                 type="button"
                 onClick={clearChat}
-                className="squish min-h-tap flex-1 rounded-full border-[3px] border-ink bg-surface px-4 text-base font-bold text-ink"
+                className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap flex-1 rounded-full bg-surface px-4 text-base font-bold text-ink"
               >
                 {t("heard.clearYes", lang)}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmClear(false)}
-                className="squish min-h-tap flex-1 rounded-full bg-calm px-4 text-base font-bold text-page"
+                className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap flex-1 rounded-full bg-calm px-4 text-base font-bold text-page"
               >
                 {t("heard.clearNo", lang)}
               </button>

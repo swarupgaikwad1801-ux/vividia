@@ -20,7 +20,7 @@ export interface HandoffDoneProps {
 export default function HandoffDone({ lang, onHome }: HandoffDoneProps) {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-col items-center gap-6 px-4 py-10 text-center">
-      <span className="animate-bob block">
+      <span className="block">
         <SproutPicture className="size-32" />
       </span>
       <p className="rounded-card border-[3px] border-ink bg-surface px-5 py-4 text-xl font-bold text-ink text-balance">
@@ -29,7 +29,7 @@ export default function HandoffDone({ lang, onHome }: HandoffDoneProps) {
       <button
         type="button"
         onClick={onHome}
-        className="squish min-h-tap w-full rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
+        className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap w-full rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
       >
         {t("handoff.done", lang)}
       </button>

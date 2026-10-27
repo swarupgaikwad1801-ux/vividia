@@ -63,7 +63,7 @@ export default function WriteProgress({ lang, elapsedMs, onStop }: WriteProgress
   return (
     <section
       aria-label={t("write.checking", lang)}
-      className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4"
+      className="flex flex-col gap-4 rounded-card border-[2.5px] border-ink bg-surface p-4"
     >
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-lg font-medium">{t("write.checking", lang)}</p>
@@ -76,7 +76,7 @@ export default function WriteProgress({ lang, elapsedMs, onStop }: WriteProgress
 
       <div
         aria-hidden="true"
-        className="h-2 overflow-hidden rounded-full bg-calm-soft"
+        className="h-3 overflow-hidden rounded-full border-2 border-ink bg-calm-soft"
       >
         <div
           className="h-full rounded-full bg-calm transition-[width] duration-1000 ease-linear"
@@ -102,7 +102,7 @@ export default function WriteProgress({ lang, elapsedMs, onStop }: WriteProgress
       <button
         type="button"
         onClick={onStop}
-        className="min-h-tap self-start rounded-card border border-line px-4 text-base font-medium text-ink-soft"
+        className="sticker min-h-tap self-start rounded-full bg-surface px-5 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
       >
         {t("write.stop", lang)}
       </button>

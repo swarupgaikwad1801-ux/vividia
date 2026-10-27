@@ -82,7 +82,7 @@ export default function Notebook({ lines, className }: { lines: number; classNam
           transform attribute on the same element: on one group the pencil
           lost its place and sat in the corner (seen in the 360px render). */}
       <g transform={`translate(${pen.x + 58} ${pen.y - 22}) rotate(35)`}>
-        <g className="animate-bob">
+        <g>
           <rect x="0" y="0" width="9" height="34" rx="2" fill="#FFD23F" stroke={INK} strokeWidth="2.5" />
           <rect x="0" y="0" width="9" height="7" rx="2" fill="#FF8FB8" stroke={INK} strokeWidth="2.5" />
           <path d="M0 34 l4.5 9 l4.5 -9 z" fill="#F9D7BE" stroke={INK} strokeWidth="2.5" strokeLinejoin="round" />

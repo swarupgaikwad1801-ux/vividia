@@ -57,7 +57,7 @@ export default function WriteResult({
   return (
     <section
       aria-label={t("write.german", lang)}
-      className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4"
+      className="flex flex-col gap-4 rounded-card border-[2.5px] border-ink bg-surface p-4"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
@@ -96,7 +96,7 @@ export default function WriteResult({
         {/* Decorative twin of the number above it, hence aria-hidden: the
             percentage is already read out, and a second reading of the same
             value as a meter adds nothing. */}
-        <div aria-hidden="true" className="h-1.5 overflow-hidden rounded-full bg-calm-soft">
+        <div aria-hidden="true" className="h-2.5 overflow-hidden rounded-full border-2 border-ink bg-calm-soft">
           <div className="h-full rounded-full bg-calm" style={{ width: `${agreement}%` }} />
         </div>
         <p className="text-xs text-ink-soft">{t("write.agreementNote", lang)}</p>

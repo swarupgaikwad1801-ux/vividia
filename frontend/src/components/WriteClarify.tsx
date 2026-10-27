@@ -79,7 +79,7 @@ export default function WriteClarify({
   return (
     <section
       aria-label={t("clarify.title", lang)}
-      className="flex flex-col gap-4 rounded-card border border-calm/30 bg-surface p-4"
+      className="flex flex-col gap-4 rounded-card border-[2.5px] border-ink bg-surface p-4"
     >
       <header className="flex flex-col gap-1">
         <h2 className="text-lg font-medium">{t("clarify.title", lang)}</h2>
@@ -139,7 +139,7 @@ export default function WriteClarify({
             onClick={onRewrite}
             // text-page, not text-white: white on dark-mode --color-calm is
             // ~2.3:1, under the 4.5:1 floor. text-page flips with the theme.
-            className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
+            className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
           >
             {t("clarify.rewrite", lang)}
           </button>
@@ -152,7 +152,7 @@ export default function WriteClarify({
           // is never compulsory: the German already on screen stands if they
           // would rather not.
           disabled={answered.length === 0}
-          className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50"
+          className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:opacity-50 disabled:shadow-none motion-safe:active:translate-y-1 active:shadow-none"
         >
           {t("clarify.send", lang)}
         </button>
