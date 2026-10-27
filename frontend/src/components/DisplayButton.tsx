@@ -5,8 +5,8 @@ import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
 
 /**
- * "Aa Text" on the check-in: opens two switches, bigger text and easier
- * reading (lib/display.ts). Each applies at once and is kept in this browser
+ * "Aa Text" on the check-in: opens three switches, bigger text, easier
+ * reading and darker colours (lib/display.ts). Each applies at once and is kept in this browser
  * only. Closed by default, so the check-in stays as plain as it was.
  */
 export default function DisplayButton({ lang }: { lang: Lang }) {
@@ -54,6 +54,14 @@ export default function DisplayButton({ lang }: { lang: Lang }) {
             className={`${pill} ${display.easyRead ? "bg-ink text-page" : "bg-surface text-ink"}`}
           >
             {t("display.easyRead", lang)}
+          </button>
+          <button
+            type="button"
+            aria-pressed={display.night}
+            onClick={() => set({ night: !display.night })}
+            className={`${pill} ${display.night ? "bg-ink text-page" : "bg-surface text-ink"}`}
+          >
+            {t("display.night", lang)}
           </button>
         </div>
       )}

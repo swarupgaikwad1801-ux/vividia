@@ -10,7 +10,12 @@
  *   no italics and no justified text. No special "dyslexia font": the evidence
  *   that one helps is weak, and spacing is what the guidance agrees on.
  *
- * Applied as attributes on <html> (`data-large`, `data-easy-read`) and read
+ * - **Darker colours** (27 Oct) switches to the night palette in index.css.
+ *   An option, not the default: in Garrido et al. 2024 most young people
+ *   (13-25) liked dark palettes, but some found dark gloomy.
+ *
+ * Applied as attributes on <html> (`data-large`, `data-easy-read`,
+ * `data-night`) and read
  * before the first paint (main.tsx), so the app never flashes small first.
  * Storage that refuses is not an error: the setting holds for this visit.
  */
@@ -20,9 +25,10 @@ export const DISPLAY_KEY = "vividia.display.v1";
 export interface Display {
   large: boolean;
   easyRead: boolean;
+  night: boolean;
 }
 
-export const PLAIN: Display = { large: false, easyRead: false };
+export const PLAIN: Display = { large: false, easyRead: false, night: false };
 
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -53,7 +59,7 @@ export function readDisplay(): Display {
     const raw = storage()?.getItem(DISPLAY_KEY);
     if (!raw) return memory;
     const v = JSON.parse(raw) as Partial<Display> | null;
-    return { large: v?.large === true, easyRead: v?.easyRead === true };
+    return { large: v?.large === true, easyRead: v?.easyRead === true, night: v?.night === true };
   } catch {
     return memory;
   }
@@ -75,6 +81,7 @@ export function applyDisplay(display: Display): void {
     if (!root) return;
     root.toggleAttribute("data-large", display.large);
     root.toggleAttribute("data-easy-read", display.easyRead);
+    root.toggleAttribute("data-night", display.night);
   } catch {
     // Nothing worth breaking a screen over.
   }

@@ -918,6 +918,7 @@ export const STRINGS = {
   "display.open": { en: "Text", de: "Schrift", hi: "Text" },
   "display.large": { en: "Bigger text", de: "Größere Schrift", hi: "Bade letters" },
   "display.easyRead": { en: "Easier reading", de: "Leichter lesen", hi: "Aasaan padhna" },
+  "display.night": { en: "Darker colours", de: "Dunklere Farben", hi: "Dark colours" },
 
   // Picture questions (screens/PictureQuestions.tsx). Open questions, never
   // yes/no, never leading, never "why" (see that file's header).

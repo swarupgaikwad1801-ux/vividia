@@ -34,8 +34,8 @@ test("nothing saved means plain text", () => {
 test("a choice is kept for the next visit", () => {
   const store = memoryStore();
   useStorage(store);
-  saveDisplay({ large: true, easyRead: false });
-  assert.deepEqual(readDisplay(), { large: true, easyRead: false });
+  saveDisplay({ large: true, easyRead: false, night: false });
+  assert.deepEqual(readDisplay(), { large: true, easyRead: false, night: false });
   useStorage(null);
 });
 
@@ -49,13 +49,31 @@ test("damaged data reads as plain, never a throw", () => {
 
 test("storage that refuses still keeps the choice for this visit", () => {
   useStorage(memoryStore(undefined, true));
-  saveDisplay({ large: false, easyRead: true });
-  assert.deepEqual(readDisplay(), { large: false, easyRead: true });
+  saveDisplay({ large: false, easyRead: true, night: false });
+  assert.deepEqual(readDisplay(), { large: false, easyRead: true, night: false });
   useStorage(null);
 });
 
 test("with no document, applying does nothing and does not throw", () => {
-  assert.doesNotThrow(() => applyDisplay({ large: true, easyRead: true }));
+  assert.doesNotThrow(() => applyDisplay({ large: true, easyRead: true, night: true }));
+});
+
+test("darker colours are kept, and a setting saved before they existed reads as off", () => {
+  useStorage(memoryStore());
+  saveDisplay({ large: false, easyRead: false, night: true });
+  assert.equal(readDisplay().night, true);
+  useStorage(memoryStore('{"large":true,"easyRead":false}'));
+  assert.deepEqual(readDisplay(), { large: true, easyRead: false, night: false });
+  useStorage(null);
+});
+
+test("the stylesheet has a night palette that redefines ink and the scenes", () => {
+  const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "index.css"), "utf-8");
+  const night = css.match(/:root\[data-night\]\s*\{([^}]*)\}/);
+  assert.ok(night, "no night rule");
+  for (const token of ["--color-ink", "--color-surface", "--color-calm", "--color-sun", "--color-help"]) {
+    assert.ok(night[1].includes(token + ":"), token);
+  }
 });
 
 test("the stylesheet responds to both switches, with the WCAG text-spacing values", () => {
