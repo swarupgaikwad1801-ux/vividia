@@ -406,6 +406,18 @@ export default function App() {
   return (
     // One flat colour per place (lib/scenes.ts), filling the whole screen.
     <div data-scene={scene} className="min-h-dvh bg-scene transition-colors duration-300">
+      {/* Skip to content (GOV.UK, WCAG 2.4.1): the first Tab stop, visible only
+          when focused, jumps past Back, Need help, Leave now, the banner and
+          the map to the screen itself. A button, not a #link: a hash would
+          add a history entry, and Back must never return to a screen the
+          child left with Leave now. */}
+      <button
+        type="button"
+        onClick={() => document.getElementById("content")?.focus()}
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-full focus:border-[2.5px] focus:border-ink focus:bg-surface focus:px-4 focus:py-2 focus:text-base focus:font-bold focus:text-ink"
+      >
+        {t("nav.skip", lang)}
+      </button>
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
@@ -484,7 +496,7 @@ export default function App() {
 
       {/* Keyed by step, so each new place slides in. Quiet scenes do not
           move. Reduced motion stops it anyway (index.css). */}
-      <div key={step} className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}>
+      <div key={step} id="content" tabIndex={-1} className={`flex flex-col outline-none ${scene === "quiet" ? "" : "animate-slide-in"}`}>
       {step === "language" && (
         <LanguageSetup
           lang={lang}
