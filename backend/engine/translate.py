@@ -288,6 +288,27 @@ def _rank(entry: dict) -> int:
     return 0 if entry.get("ask_first") else 1
 
 
+def _said_by_the_child(phrase: str, text: str) -> bool:
+    """Did the child actually write this phrase?
+
+    Everything quoted back to a child passes through here. A model can return
+    a phrase that appears nowhere in the sentence - it has done - and a quoted
+    phrase the child never used is the single most alarming thing this app can
+    put on screen. They wrote one sentence about their own life and the app
+    answers with somebody else's words in quotation marks.
+
+    The matching itself is `_form_in`, not a second copy of it. Both questions
+    are the same question - "is this string in what the child wrote?" - and a
+    rule with two implementations is a rule that eventually disagrees with
+    itself. `_form_in` is where the Devanagari reasoning lives; this adds only
+    the empty-phrase guard, because a model returning "" must not be read as
+    "the child wrote everything".
+    """
+    if not phrase:
+        return False
+    return _form_in(phrase, text)
+
+
 def _lexicon_item(entry: dict) -> dict:
     return {
         "phrase": entry["word"],
@@ -397,11 +418,7 @@ async def _find_ambiguity_inner(text, source_lang, target_lang, usage):
     # Only ask about words the child actually wrote. The model has offered
     # phrases that appear nowhere in the sentence, and asking a child what
     # they meant by words they never used is worse than asking nothing.
-    haystack = _normalise(text)
-    from_model = [
-        item for item in found
-        if item.get("phrase") and _normalise(item["phrase"]) in haystack
-    ]
+    from_model = [item for item in found if _said_by_the_child(item.get("phrase", ""), text)]
 
     # The list is a safety net for what the model misses, not a second voice.
     # Where both describe the same words - the list has "get me", the model
@@ -609,7 +626,17 @@ async def _ask_the_child(text, disputes, source_ambiguities, source_lang, usage)
     ask_about = list(found or [])
     seen = {a["phrase"].lower() for a in ask_about}
     for dispute in disputes:
-        if dispute.get("kind") == "source_ambiguous" and dispute["phrase"].lower() not in seen:
+        if dispute.get("kind") != "source_ambiguous":
+            continue
+        # The same rule the ambiguity finder has always applied, which this
+        # path never did. Questions reach the child from two places and only
+        # one of them checked that the phrase was the child's. A judge that
+        # quotes a phrase from nowhere produced the screen this fix is named
+        # after: a child writes "I dont feel good" and the app asks what they
+        # meant by "laughed at me".
+        if not _said_by_the_child(dispute.get("phrase", ""), text):
+            continue
+        if dispute["phrase"].lower() not in seen:
             ask_about.append(dispute)
             seen.add(dispute["phrase"].lower())
     ask_about = ask_about[:2]  # never interrupt a child with more than two questions
@@ -649,7 +676,13 @@ async def _verify(text, candidates, source_lang, target_lang, usage, source_ambi
     # amount of choosing between candidates fixes this, so repair it.
     losses = [
         loss for loss in verdict.get("meaning_lost", [])
+        # Same rule as the questions. These phrases are not shown to the
+        # child, but they are quoted into the repair prompt as 'where the
+        # child wrote "X"' - so an invented phrase becomes an instruction to
+        # put words into the German that the child never said. That is the
+        # one thing this module exists to prevent.
         if loss.get("severity") == "critical"
+        and _said_by_the_child(loss.get("phrase", ""), text)
     ]
     # Everything the questions need is known now: the child's own sentence and
     # the judge's disputes. Start them here so they overlap the repair, the
