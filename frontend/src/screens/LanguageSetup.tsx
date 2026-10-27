@@ -69,11 +69,17 @@ export interface LanguageSetupProps {
 }
 
 export default function LanguageSetup({ lang, suggested = null, onChoose, changing = false }: LanguageSetupProps) {
+  // The greeting is the one sentence here, and it says the same thing in all
+  // three languages; each card below repeats it in its own (27 Oct polish).
+  // The name stays as a small wordmark above it.
   return (
-    <section className="flex flex-col gap-8" aria-labelledby="language-setup-title">
-      <h1 id="language-setup-title" className="text-2xl">
-        {t(changing ? "lang.change" : "app.name", lang)}
-      </h1>
+    <section className="flex flex-col gap-7 px-4 pt-4 pb-8" aria-labelledby="language-setup-title">
+      <div className="flex flex-col gap-1 pt-6">
+        <p className="headline text-lg text-ink-soft">{t("app.name", lang)}</p>
+        <h1 id="language-setup-title" className="text-5xl leading-none text-balance">
+          {t(changing ? "lang.change" : "langSetup.hello", lang)}
+        </h1>
+      </div>
 
       <LanguagePicker
         layout="stack"

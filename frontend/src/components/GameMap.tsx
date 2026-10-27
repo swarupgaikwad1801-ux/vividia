@@ -23,9 +23,10 @@
  *    is answerable without walking there. The name of wherever you are
  *    looking is always written under the map - orientation in words, not
  *    only in position.
- * 4. A thin bar for how much is left, because "place 2 of 9" was only ever
- *    said to screen readers, and nine steps is a long way when you are
- *    frightened.
+ * 4. "Step 2 of 9" written under the map, because "place 2 of 9" was only
+ *    ever said to screen readers, and nine steps is a long way when you are
+ *    frightened. It replaced a thin progress bar (27 Oct polish): two
+ *    indicators for one fact is one too many, and words need no decoding.
  *
  * No new strings: every stop already has a translated label, so this reads
  * in all three languages without touching `strings.ts`, which the screen
@@ -35,7 +36,6 @@
 import { useState } from "react";
 
 import { AVATARS, AvatarGroup, AvatarHead } from "../art/People";
-import { Sparkle } from "../art/Things";
 import type { Glyph as GlyphKind, MapPlace } from "../lib/scenes";
 import { fill, t } from "../lib/strings";
 
@@ -66,13 +66,21 @@ const BOTTOM = 92;
  * On a low stop this puts its head level with the high stops on either
  * side, so the bands are far enough apart that the hair clears them.
  */
-const STAND = 30;
+const STAND = 33;
+
+/** How much bigger the stop you are on is than the rest. */
+const HERE = 1.4;
 
 function layout(n: number) {
-  const step = 296 / Math.max(1, n - 1);
-  const xs = Array.from({ length: n }, (_, i) => 22 + i * step);
+  // 28 in from each side (was 22), so the bigger stop you are on and its
+  // ring stay inside the frame at the first and last stop.
+  const step = 284 / Math.max(1, n - 1);
+  const xs = Array.from({ length: n }, (_, i) => 28 + i * step);
   const ys = Array.from({ length: n }, (_, i) => (i % 2 === 0 ? BOTTOM : TOP));
-  const r = Math.min(13, step * 0.42);
+  // Bigger stops (27 Oct): 16 at most, so the stop you are on (x1.4) and its
+  // ring (+4) still clear the bottom of the 120-high drawing and never touch
+  // a neighbour, with 9 stops or with 11.
+  const r = Math.min(16, step * 0.44);
   const path = xs.reduce((d, x, i) => {
     if (i === 0) return `M${x} ${ys[0]}`;
     const mid = (xs[i - 1] + x) / 2;
@@ -261,11 +269,11 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
         {places.map((p, i) => {
           const isHere = i === at;
           const passed = i < at;
-          const r = isHere ? R * 1.5 : R;
+          const r = isHere ? R * HERE : R;
           return (
             <g key={`${p.label}-${i}`}>
               {isHere && (
-                <circle cx={XS[i]} cy={YS[i]} r={r + 5} fill="none" stroke={INK} strokeWidth="2" opacity="0.35" />
+                <circle cx={XS[i]} cy={YS[i]} r={r + 4} fill="none" stroke={INK} strokeWidth="2.5" opacity="0.6" />
               )}
               <circle
                 cx={XS[i]}
@@ -273,7 +281,7 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
                 r={r}
                 fill={passed || isHere ? SCENE_FILL[p.scene] : "#FFFFFF"}
                 stroke={INK}
-                strokeWidth="3"
+                strokeWidth={isHere ? 3.5 : 3}
                 opacity={passed || isHere ? 1 : 0.5}
               />
               <g opacity={passed || isHere ? 1 : 0.45}>
@@ -282,14 +290,12 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
               {/* The stop the child is asking about, outlined where they can
                   see which one answered. */}
               {asked === i && !isHere && (
-                <circle cx={XS[i]} cy={YS[i]} r={r + 5} fill="none" stroke={INK} strokeWidth="2.5" />
+                <circle cx={XS[i]} cy={YS[i]} r={r + 4} fill="none" stroke={INK} strokeWidth="2.5" />
               )}
             </g>
           );
         })}
 
-        <Sparkle x={326} y={18} size={6} fill="#FFD23F" />
-        <Sparkle x={160} y={14} size={5} fill="#FF6FB5" />
 
         {/* The traveller: slides to the stop, then bobs gently. */}
         <g
@@ -298,23 +304,14 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
             transition: "transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1)",
           }}
         >
-          <g className="animate-bob">
+          <g>
             <AvatarGroup index={avatar} x={0} y={0} r={13} />
           </g>
         </g>
       </svg>
 
-      {/* How much is left, under the drawing rather than over it: at the top
-          it collided with the traveller's head and read as a stray black
-          mark rather than as progress. */}
-      <div className="mx-2 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
-        <div
-          className="h-full rounded-full bg-ink/70 transition-[width] duration-500"
-          style={{ width: `${((at + 1) / places.length) * 100}%` }}
-        />
-      </div>
-
-      {/* The answer to a tapped stop, and only that.
+      {/* Left: "Step 2 of 9", always. Right: the answer to a tapped stop,
+          and only that.
 
           It used to name wherever the child was looking, including the stop
           they were standing on - which printed "What happened" directly
@@ -322,12 +319,12 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
           line teaches people to stop reading both. So the map stays quiet
           while they walk, and speaks when asked. The height is held either
           way so nothing below it jumps. */}
-      <p
-        aria-hidden="true"
-        className="flex h-7 items-center justify-center gap-1.5 px-2 text-center text-sm font-medium"
-      >
+      <p aria-hidden="true" className="flex h-7 items-center justify-between gap-2 px-2.5 text-sm font-medium">
+        <span className="shrink-0 font-bold text-ink">
+          {fill("map.step", lang, { n: at + 1, total: places.length })}
+        </span>
         {asked !== null && (
-          <>
+          <span className="flex min-w-0 items-center gap-1.5">
             {done && (
               <svg viewBox="0 0 16 16" className="size-4 shrink-0">
                 <path
@@ -340,8 +337,8 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
                 />
               </svg>
             )}
-            <span className={here ? "text-ink" : "text-ink-soft"}>{t(places[looking].label, lang)}</span>
-          </>
+            <span className={`truncate ${here ? "text-ink" : "text-ink-soft"}`}>{t(places[looking].label, lang)}</span>
+          </span>
         )}
       </p>
     </div>

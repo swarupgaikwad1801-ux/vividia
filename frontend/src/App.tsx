@@ -390,7 +390,10 @@ export default function App() {
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
           quieter, so a child reaching for Leave now does not hit it. Need
-          help (red) sits left of Leave now (dark outline), a gap apart. */}
+          help (red) sits left of Leave now (dark outline), a gap apart.
+          All three are one row, the same height (44px) and the same type
+          (Inter, bold, base size); only their weight differs: Back is bare
+          text, Need help and Leave now are stickers. */}
       <div className="top-bar flex items-center justify-between gap-2 px-4 pt-1">
 
         {canGoBack(trail) ? (
@@ -398,10 +401,10 @@ export default function App() {
             type="button"
             onClick={goBack}
             // nowrap + shrink-0: next to Leave now, the arrow otherwise wraps
-            // onto its own line at 360px. `headline`: the titles' face (Neel,
-            // 26 Oct), but small, in the softer ink and with no outline, so
-            // it stays quieter than Leave now.
-            className="headline min-h-tap shrink-0 whitespace-nowrap rounded-card text-base text-ink-soft hover:text-ink"
+            // onto its own line at 360px. Same type as the two buttons beside
+            // it, but no outline, no fill and the softer ink, so it stays
+            // quieter than Leave now.
+            className="min-h-tap shrink-0 whitespace-nowrap rounded-full pr-1 text-base font-bold text-ink-soft hover:text-ink"
           >
             <span aria-hidden="true">← </span>
             {t("nav.back", lang)}
@@ -417,7 +420,7 @@ export default function App() {
                 type="button"
                 onClick={needHelp}
                 // need-help: pulses while a danger line is on screen (index.css).
-                className="need-help min-h-tap shrink-0 whitespace-nowrap rounded-full border-[3px] border-help bg-help px-2.5 text-sm font-bold text-page"
+                className="need-help sticker min-h-tap shrink-0 whitespace-nowrap rounded-full bg-help px-2.5 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
               >
                 {t("help.short", lang)}
               </button>
@@ -474,15 +477,17 @@ export default function App() {
               handoff ending true. */}
           <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
           <CheckIn lang={lang} onChoose={afterCheckIn} />
-          {/* The three cards, on request only: small, at the bottom, for the
-              child who wants to know and for anyone they show the app to. */}
-          <div className="mx-4 mt-2 mb-6 flex flex-wrap justify-center gap-3">
+          {/* The three cards, on request only: one quiet row of small chips,
+              for the child who wants to know and for anyone they show the
+              app to. The row wraps only for Text's options, which take a line
+              of their own below it. */}
+          <div className="mx-4 mt-1 flex flex-wrap justify-center gap-1.5">
             <LanguageButton lang={lang} onOpen={() => setStep("language")} />
             <DisplayButton lang={lang} />
             <button
               type="button"
               onClick={() => setStep("onboarding")}
-              className="squish min-h-tap rounded-full border-2 border-ink bg-surface px-4 text-sm font-bold text-ink"
+              className="sticker min-h-tap whitespace-nowrap rounded-full bg-surface px-2.5 text-sm font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
             >
               {t("onboarding.again", lang)}
             </button>

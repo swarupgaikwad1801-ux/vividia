@@ -40,23 +40,24 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
         and the one that fits a 360px phone without shrinking a tap target.
       */}
       <ul className="tile-grid grid grid-cols-3 gap-3">
-        {MOODS.map((mood, i) => (
+        {MOODS.map((mood) => (
           <li key={mood.code}>
             <button
               type="button"
               onClick={() => onChoose(mood.code)}
-              // Quiet like an unpicked picture tile, and pressed down the
-              // same way (PictureQuestions.tsx). A tap commits, so there is
-              // no picked state to show here.
-              className="flex w-full flex-col items-center justify-center gap-1 rounded-card border-2 border-b-4 border-line bg-surface px-1 pt-2 pb-2 transition-[translate] duration-100 hover:bg-calm-soft motion-safe:active:translate-y-0.5 motion-safe:active:border-b-2"
+              // A sticker like a picture tile, and pressed down the same way
+              // (PictureQuestions.tsx). A tap commits, so there is no picked
+              // state to show here.
+              className="sticker flex w-full flex-col items-center justify-center gap-1 rounded-card bg-surface px-1 pt-2 pb-2 hover:bg-calm-soft motion-safe:active:translate-y-1 active:shadow-none"
             >
               {/*
                 The face is decoration (aria-hidden, art/Face.tsx): the label
                 underneath is the real name of the choice, so a screen reader
-                announces "Scared", never a description of a drawing. Each
-                face bobs a little, out of step with its neighbours.
+                announces "Scared", never a description of a drawing. The
+                faces stay still: the app is for young people up to about
+                20, and the press is the only motion here.
               */}
-              <span className="animate-bob block" style={{ animationDelay: `${i * 180}ms` }}>
+              <span className="block">
                 {hasFace(mood.code) ? (
                   <Face code={mood.code} className="size-16" />
                 ) : (
@@ -81,7 +82,7 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
       <button
         type="button"
         onClick={() => onChoose(null)}
-        className="squish min-h-tap self-center rounded-full bg-surface px-6 text-base font-bold text-ink"
+        className="sticker min-h-tap self-center rounded-full bg-surface px-6 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
       >
         {t("checkin.skip", lang)}
       </button>

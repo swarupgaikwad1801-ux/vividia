@@ -1,6 +1,6 @@
 import { LANGUAGE_OPTIONS } from "../lib-lang/languages";
 import { saveLang } from "../lib-lang/langStore";
-import type { Lang } from "../lib/strings";
+import { t, type Lang } from "../lib/strings";
 
 /**
  * The language control, in two shapes (#4 item 5).
@@ -109,26 +109,43 @@ export default function LanguagePicker({
             aria-pressed={chosen}
             lang={option.htmlLang}
             dir={option.dir}
-            className={[
-              // border-2 on every state, so marking one never shifts the layout
-              // by a pixel under a thumb that is already moving.
-              "min-h-tap rounded-card border-2 transition-colors",
+            className={
               stack
-                ? "flex items-center justify-between gap-3 px-4 py-3 text-left"
-                : "flex-1 px-2 py-2 text-center",
-              chosen
-                ? "border-calm bg-calm-soft font-semibold text-ink"
-                : hinted
-                  ? "border-calm bg-surface text-ink"
-                  : "border-line bg-surface text-ink hover:border-calm",
-            ].join(" ")}
+                ? // A sticker card (index.css), pressed in when chosen.
+                  [
+                    "sticker relative flex min-h-tap items-center justify-between gap-3 rounded-card px-5 py-3.5 text-left text-ink motion-safe:active:translate-y-1 active:shadow-none",
+                    chosen ? "sticker-on" : "bg-surface",
+                  ].join(" ")
+                : [
+                    // border-2 on every state, so marking one never shifts the
+                    // layout by a pixel under a thumb that is already moving.
+                    "min-h-tap flex-1 rounded-card border-2 px-2 py-2 text-center transition-colors",
+                    chosen
+                      ? "border-calm bg-calm-soft font-semibold text-ink"
+                      : hinted
+                        ? "border-calm bg-surface text-ink"
+                        : "border-line bg-surface text-ink hover:border-calm",
+                  ].join(" ")
+            }
           >
             {/*
               The endonym carries the option's own `lang`, inherited from the
               button, so a screen reader reads "Deutsch" with a German voice
               and "Hinglish" (hi-Latn) as Hindi.
             */}
-            <span className={stack ? "text-xl" : "text-base font-medium"}>{option.endonym}</span>
+            {stack ? (
+              <span className="flex flex-col">
+                {/* "Hallo!" on the Deutsch card, "Namaste!" on Hinglish: each
+                    card greets in its own language. aria-hidden, so the
+                    button is still announced by its name alone. */}
+                <span aria-hidden="true" className="headline text-3xl leading-tight">
+                  {t("langSetup.hello", option.code)}
+                </span>
+                <span className="text-base font-semibold text-ink-soft">{option.endonym}</span>
+              </span>
+            ) : (
+              <span className="text-base font-medium">{option.endonym}</span>
+            )}
 
             <span className={stack ? "flex shrink-0 items-center gap-2" : "contents"}>
               {/*
@@ -147,8 +164,16 @@ export default function LanguagePicker({
                 it twice. It is here because colour must never be the only
                 signal (WCAG 2.2, 1.4.1), alongside the heavier weight.
               */}
+              {/* With every card outlined the same, the device's language is
+                  marked by a small sun dot rather than by its border. */}
+              {stack && hinted && (
+                <span aria-hidden="true" className="size-3.5 rounded-full border-2 border-ink bg-sun" />
+              )}
               {chosen && (
-                <span aria-hidden="true" className="text-base text-calm-strong">
+                <span
+                  aria-hidden="true"
+                  className={stack ? "flex size-7 items-center justify-center rounded-full bg-ink text-sm text-page" : "text-base text-calm-strong"}
+                >
                   ✓
                 </span>
               )}

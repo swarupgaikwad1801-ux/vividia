@@ -87,7 +87,7 @@ export default function FollowUp({ lang, entries, today = todayIso(), onOpen }: 
     return (
       <section
         aria-live="polite"
-        className="flex flex-col gap-2 rounded-card border border-line bg-surface p-4"
+        className="flex flex-col gap-2 rounded-card border-[2.5px] border-ink bg-surface p-4"
       >
         <p className="text-base" {...says("followup.stopped", lang)} />
       </section>
@@ -99,7 +99,7 @@ export default function FollowUp({ lang, entries, today = todayIso(), onOpen }: 
     return (
       <section
         aria-live="polite"
-        className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4"
+        className="flex flex-col gap-3 rounded-card border-[2.5px] border-ink bg-surface p-4"
       >
         <p
           className="text-base"

@@ -66,6 +66,12 @@
 
   --radius-card: 1.25rem;
 
+  /* The sticker: every surface a child can tap wears the same outline and
+     the same solid shadow, so "this is pressable" reads the same everywhere
+     (tiles, language cards, pills, Next). Pressing pushes it down onto its
+     shadow (.sticker below). */
+  --shadow-sticker: 0 4px 0 var(--color-ink);
+
   --animate-pop-in: pop-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   --animate-slide-in: slide-in 280ms ease-out both;
   --animate-bob: bob 2.4s ease-in-out infinite;
@@ -105,8 +111,8 @@
 /* Need help pulses gently while danger is on screen (HelpPulse in
    DangerDialog.tsx sets data-danger on the root). A soft ring, not a flash; reduced motion stops it. */
 @keyframes help-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(158 43 43 / 0.55); }
-  50% { box-shadow: 0 0 0 8px rgb(158 43 43 / 0); }
+  0%, 100% { box-shadow: var(--shadow-sticker), 0 0 0 0 rgb(158 43 43 / 0.55); }
+  50% { box-shadow: var(--shadow-sticker), 0 0 0 8px rgb(158 43 43 / 0); }
 }
 :root[data-danger] .need-help {
   animation: help-pulse 1.6s ease-in-out infinite;
@@ -242,6 +248,29 @@
 }
 
 @layer components {
+  /* The sticker (see --shadow-sticker). The press itself is a utility on
+     each element, `motion-safe:active:translate-y-1 active:shadow-none`, so
+     with reduced motion the shadow still answers the finger but nothing
+     moves. */
+  .sticker {
+    border: 2.5px solid var(--color-ink);
+    box-shadow: var(--shadow-sticker);
+    transition:
+      translate 90ms ease-out,
+      box-shadow 90ms ease-out,
+      background-color 150ms ease-out;
+  }
+  /* Picked: filled with a light tint of the screen's own colour and pressed
+     in, so it sits lower than its neighbours. The check badge says the same
+     thing without colour (PictureQuestions.tsx). */
+  .sticker-on {
+    background-color: color-mix(in srgb, var(--color-scene) 42%, white);
+    translate: 0 3px;
+    box-shadow:
+      0 1px 0 var(--color-ink),
+      inset 0 3px 0 rgb(27 27 47 / 0.14);
+  }
+
   /* A chunky tappable thing: squishes when pressed. */
   .squish {
     transition: transform 120ms ease-out;
@@ -249,4 +278,57 @@
   .squish:active {
     transform: scale(0.94);
   }
+}
+
+/*
+ * Scenery (27 Oct polish): a landscape strip along the bottom of every
+ * bright scene: two low ridges in a darker shade of the screen's own
+ * colour, low contrast so it never competes with a tile. No clouds and no
+ * motion (27 Oct: the app is for young people up to about 20).
+ * Full viewport width, so on a wide screen it fills the empty sides of the
+ * narrow content column.
+ *
+ * CSS only, on the scene wrapper App.tsx already renders: `isolation`
+ * makes that wrapper a stacking context, so the z-index -1 strips paint
+ * above its colour but below every piece of content in it. The fixed
+ * Skip / Next bar is portalled outside the wrapper at z-20 and stays on top.
+ *
+ * The shapes are masks, so one drawing takes each scene's colour. The quiet
+ * scene (help, crisis, the lock) gets none: it stays plain and still.
+ */
+[data-scene]:not([data-scene="quiet"]) {
+  isolation: isolate;
+  --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 14%);
+}
+/* Lighter shades where the scene is already darker, so even ink-soft text
+   that lands on a hill keeps 4.5:1 (checked: pink 4.55, lilac 4.76; ink
+   itself is 5.5:1 or more on every hill). */
+[data-scene="lilac"]:not([data-scene="quiet"]) { --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 11%); }
+[data-scene="pink"]:not([data-scene="quiet"]) { --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 7%); }
+[data-scene]:not([data-scene="quiet"])::before,
+[data-scene]:not([data-scene="quiet"])::after {
+  content: "";
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--scenery-hills);
+  mask-repeat: repeat-x;
+  mask-position: left bottom;
+}
+/* Two long, low ridges, one behind the other: a horizon, not a cartoon.
+   Each is one 1600-wide tile whose ends meet at the same height and slope,
+   so the repeat has no seam. Still, so nothing moves while a person reads. */
+[data-scene]:not([data-scene="quiet"])::before {
+  height: clamp(90px, 16vh, 150px);
+  opacity: 0.55;
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 150' preserveAspectRatio='none'><path d='M0 70 C260 30 520 30 800 62 C1080 94 1340 96 1600 70 L1600 150 L0 150 Z'/></svg>");
+  mask-size: 1600px 100%;
+}
+[data-scene]:not([data-scene="quiet"])::after {
+  height: clamp(60px, 10vh, 100px);
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 100' preserveAspectRatio='none'><path d='M0 46 C300 74 560 20 900 34 C1180 46 1380 70 1600 46 L1600 100 L0 100 Z'/></svg>");
+  mask-size: 1600px 100%;
 }
