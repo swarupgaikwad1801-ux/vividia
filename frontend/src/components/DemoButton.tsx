@@ -8,17 +8,16 @@ import type { DemoSession } from "../lib-demo/demoStory";
  * "Try Amara's story": the one button a judge presses.
  *
  * This is the first thing a judge touches, so it is the whole product in
- * miniature and it obeys the same two rules as every other screen.
+ * miniature.
  *
- * - **The notice is never conditional.** `demo.notice` ("Amara is a made-up
- *   example") renders beside the button before anything is loaded, while it
- *   loads and after. CLAUDE.md's honesty rules say a persona is fictional and
- *   says so; a label that only appears once the story is open would be a label
- *   a judge can miss.
- * - **Nothing is sent.** Pressing this seeds a timeline and writes a draft
- *   sentence. It makes no translate call, builds no report and chooses no
- *   adult. The judge presses send themselves, which is exactly the moment the
- *   demo exists to show.
+ * **Nothing is sent.** Pressing this seeds a timeline and writes a draft
+ * sentence. It makes no translate call, builds no report and chooses no
+ * adult. The judge presses send themselves, which is exactly the moment the
+ * demo exists to show.
+ *
+ * There is no "Amara is made up" line under the button: removed on Neel's
+ * call (27 Oct). The README, the video and Devpost say the persona is
+ * fictional.
  *
  * It is also reversible from here: once loaded, the same card offers clearing,
  * so nobody is stranded in demo state and the team can test on a clean app.
@@ -104,12 +103,6 @@ export default function DemoButton({ lang, onLoaded, onCleared, className = "" }
           {loading ? t("demo.loading", lang) : t("demo.button", lang)}
         </button>
       )}
-
-      {/*
-        Always visible, in every state. This is the "fictional and says so"
-        rule, and it is why the notice sits outside the branches above.
-      */}
-      <p className="text-sm text-ink-soft">{t("demo.notice", lang)}</p>
 
       {/*
         One live region for every outcome, so a screen reader hears the result
