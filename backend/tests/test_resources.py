@@ -25,10 +25,17 @@ def tavily_returning(results, seen=None):
 
 
 @pytest.fixture(autouse=True)
-def no_real_network(monkeypatch):
+def no_real_network(monkeypatch, tmp_path):
     monkeypatch.setenv("TAVILY_API_KEY", "test-key")
     monkeypatch.setattr(res, "_transport", tavily_returning([]))
-    res._cache.clear()
+    # The cache lives in a file now so it survives a redeploy, which means
+    # each test needs its own: a shared one would leak lookups between tests
+    # and would write into the working tree. This replaces _cache.clear().
+    monkeypatch.setattr(res, "STATE_FILE", tmp_path / "tavily_state.json")
+    monkeypatch.delenv("TAVILY_DAILY_CAP", raising=False)
+    res._reset_state_for_tests()
+    yield
+    res._reset_state_for_tests()
 
 
 def test_helplines_are_shown_without_any_lookup(monkeypatch):
@@ -104,7 +111,11 @@ def test_a_state_is_searched_once_a_day(monkeypatch):
     ], seen))
     first, _ = run(res.resources_with_source("BY", "de"))
     second, source = run(res.resources_with_source("by", "de"))
-    assert len(seen) == 1
+    # Counted by kind, not by request: a search carries "query", an extract
+    # carries "urls". The first lookup may also extract from the page it
+    # found; what must not happen twice is the LOOKUP.
+    searches = [body for body in seen if "query" in body]
+    assert len(searches) == 1, f"the state was searched more than once: {searches}"
     assert source == "live" and second == first
 
 

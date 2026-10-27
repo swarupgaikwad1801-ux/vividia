@@ -735,6 +735,15 @@ child is our difference; **a real benchmark is required, not optional**.
 - Works on a cheap Android phone in Chrome at 360px; Arabic RTL correct.
 - Verification shows progress and finishes in about 10 s or less.
 - Friendly error in the child's language for timeouts and no network.
+- **One failure never hides the part that matters.** Ask of every screen and
+  step that does more than one thing: *if this one part fails, does the child
+  still get the essential part?* Load independent things independently
+  (`Promise.allSettled`, not `Promise.all`; one `.catch` each), and show
+  whatever loaded with a message where the rest would be. We hit the same
+  bug three times in one week: an optional ambiguity check took down the
+  whole translation (#32), a clarification that could not be applied was
+  silently dropped (#21), and a failed helpline lookup threw away 110/112
+  that had loaded fine (#47).
 - Nothing about the child stored on the server; the backend logs no message
   content.
 - Quick exit works in under 1 s.
