@@ -44,8 +44,6 @@ import { forgetEverything } from "../lib/forgetEverything";
 import PinRemovedNotice from "../components/PinRemovedNotice";
 import TimelineDeleteAll from "../components/TimelineDeleteAll";
 import TimelineEntryCard from "../components/TimelineEntryCard";
-import { tPending } from "../components/TimelinePendingStrings";
-import { pinText } from "../components/pinText";
 import { pinStatus } from "../lib/pin";
 
 export interface TimelineProps {
@@ -97,7 +95,7 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
     // still remembered that they had taken a report to a teacher.
     // forgetEverything() is the one place that knows the full list.
     forgetEverything();
-    setStatus(tPending("timeline.deletedAll", lang));
+    setStatus(t("timeline.deletedAll", lang));
     refresh();
   }, [lang, refresh]);
 
@@ -109,10 +107,10 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
       <PinRemovedNotice lang={lang} />
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("timeline.title", lang)}</h1>
+        <h1 className="text-2xl">{t("timeline.title", lang)}</h1>
         {/* Only ever a claim about this list. Never about the whole app. */}
         {persistent ? (
-          <p className="text-sm text-ink-soft">{tPending("timeline.storageNote", lang)}</p>
+          <p className="text-sm text-ink-soft">{t("timeline.storageNote", lang)}</p>
         ) : (
           <p className="rounded-card border border-help bg-help-soft p-3 text-sm font-medium text-help">
             {t("timeline.notPersistent", lang)}
@@ -151,7 +149,7 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
                    ~7.7:1 in dark. */
                 className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
               >
-                {tPending("timeline.buildReport", lang)}
+                {t("timeline.buildReport", lang)}
               </button>
             ) : null}
             {/* Last, and visually quiet: it is the child's to use, not a thing
@@ -171,7 +169,7 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
           onClick={onSetPin}
           className="min-h-tap self-start rounded-card border border-line px-4 text-base font-medium text-ink"
         >
-          {pinText(pinStatus() === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
+          {t(pinStatus() === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
         </button>
       ) : null}
     </main>

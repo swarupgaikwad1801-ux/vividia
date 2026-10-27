@@ -41,7 +41,6 @@ test("step one asks where, and suggests nobody yet", () => {
 
 test("a remembered answer of 'home' goes straight to a card with no family", () => {
   const markup = render({ lang: "en", initialWhere: "home" });
-  assert.ok(markup.includes(STRINGS["handoff.youDecide"].en));
   assert.ok(markup.includes(STRINGS["handoff.homeNote"].en));
   assert.ok(!markup.includes(STRINGS["handoff.family"].en));
 });

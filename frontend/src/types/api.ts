@@ -207,6 +207,16 @@ export interface HealthResponse {
   engine: "mock" | "live";
   /** role -> model id, e.g. { fanout: "...", judge: "..." } */
   models: Record<string, string>;
+  /**
+   * Spend to watch while the demo is public, values as strings:
+   * `tavily_spent_today`, `tavily_daily_cap`, `tavily_cached_states`.
+   *
+   * Empty in mock mode, which spends nothing. Optional, so a client written
+   * before this field is unaffected — no screen depends on it. It exists so a
+   * person can watch the Tavily allowance, which has to last until judging
+   * closes on 15 Dec.
+   */
+  budget?: Record<string, string>;
 }
 
 export type ErrorCode =
