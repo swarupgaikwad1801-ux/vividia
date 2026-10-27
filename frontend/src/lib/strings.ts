@@ -75,6 +75,114 @@ export const STRINGS = {
     hi: "Example numbers. Kuch bhi check nahi hua, aur upar ka German tumhari baat nahi hai.",
   },
 
+  // --- help-a-character story (lib/story.ts) ---
+  // Kim is gender-neutral in all three languages: no he/she in English or
+  // German, and the Hinglish avoids verbs that agree with Kim's gender.
+  // Logic and text only: no screen opens the story yet. Hinglish is a draft
+  // until a native read.
+  "story.button": { en: "Help Kim", de: "Hilf Kim", hi: "Kim ki madad karo" },
+  "story.buttonNote": {
+    en: "A short story. No writing needed.",
+    de: "Eine kurze Geschichte. Ohne Schreiben.",
+    hi: "Ek chhoti kahani. Kuch likhna nahi hai.",
+  },
+  "story.title": { en: "Kim's day", de: "Kims Tag", hi: "Kim ka din" },
+  "story.intro": {
+    en: "This is Kim. It is Kim's first year at this school. Walk through Kim's day and choose what happens.",
+    de: "Das ist Kim. Es ist Kims erstes Jahr an dieser Schule. Geh mit Kim durch den Tag und wähl aus, was passiert.",
+    hi: "Yeh Kim hai. Is school mein Kim ka pehla saal hai. Kim ke din mein saath chalo aur chuno ki kya hota hai.",
+  },
+  "story.private": {
+    en: "This is only a story. Nothing you tap here is saved or sent.",
+    de: "Das ist nur eine Geschichte. Nichts, was du hier antippst, wird gespeichert oder verschickt.",
+    hi: "Yeh sirf ek kahani hai. Yahan jo bhi tap karo, na save hota hai, na kahin bheja jaata hai.",
+  },
+  "story.start": { en: "Start", de: "Los geht's", hi: "Shuru karo" },
+  "story.next": { en: "Next", de: "Weiter", hi: "Aage" },
+  "story.question": { en: "What happens to Kim here?", de: "Was passiert Kim hier?", hi: "Yahan Kim ke saath kya hota hai?" },
+
+  "story.scene.way": { en: "On the way to school", de: "Auf dem Schulweg", hi: "School ke raaste mein" },
+  "story.scene.classroom": { en: "In class", de: "Im Unterricht", hi: "Class mein" },
+  // Not "chhutti": in Hindi that also means a holiday (see content/ambiguous_words.json).
+  "story.scene.break": { en: "At break time", de: "In der Pause", hi: "Break ke time" },
+  "story.scene.evening": { en: "In the evening, on the phone", de: "Abends am Handy", hi: "Shaam ko, phone pe" },
+
+  "story.happens.nothing": { en: "Nothing bad", de: "Nichts Schlimmes", hi: "Kuch bura nahi" },
+  "story.happens.pushed": { en: "Someone pushes Kim", de: "Jemand schubst Kim", hi: "Koi Kim ko dhakka deta hai" },
+  "story.happens.hit": { en: "Someone hits Kim", de: "Jemand schlägt Kim", hi: "Koi Kim ko maarta hai" },
+  "story.happens.names": {
+    en: "Someone calls Kim names",
+    de: "Jemand beschimpft Kim",
+    hi: "Koi Kim ko bure naamon se bulata hai",
+  },
+  "story.happens.taken": {
+    en: "Someone takes Kim's things",
+    de: "Jemand nimmt Kim Sachen weg",
+    hi: "Koi Kim ki cheezein le leta hai",
+  },
+  "story.happens.left_out": { en: "Kim is left out", de: "Kim wird ausgeschlossen", hi: "Kim ko shaamil nahi kiya jaata" },
+  "story.happens.online": {
+    en: "Someone writes mean things about Kim",
+    de: "Jemand schreibt gemeine Dinge über Kim",
+    hi: "Koi Kim ke baare mein buri baatein likhta hai",
+  },
+
+  "story.calmDay": { en: "Kim had a calm day.", de: "Kim hatte einen ruhigen Tag.", hi: "Kim ka din shaanti se beeta." },
+  "story.hardDay": {
+    en: "Kim had a hard day. What could help?",
+    de: "Kim hatte einen schweren Tag. Was könnte helfen?",
+    hi: "Kim ka din mushkil raha. Kya madad kar sakta hai?",
+  },
+  "story.noWrong": { en: "There is no wrong answer.", de: "Es gibt keine falsche Antwort.", hi: "Isme koi galat jawab nahi hai." },
+  "story.help.teacher": { en: "Tell a teacher", de: "Einer Lehrkraft sagen", hi: "Teacher ko batana" },
+  "story.help.friend": {
+    en: "Tell a friend",
+    de: "Einem Freund oder einer Freundin sagen",
+    hi: "Kisi dost ko batana",
+  },
+  "story.help.write": { en: "Write it down", de: "Aufschreiben", hi: "Likh lena" },
+  "story.help.keep": { en: "Keep it secret", de: "Für sich behalten", hi: "Kisi ko na batana" },
+  "story.reply.teacher": {
+    en: "Telling a teacher is a good step. Words written down first make it easier.",
+    de: "Es einer Lehrkraft zu sagen, ist ein guter Schritt. Vorher aufgeschriebene Worte machen es leichter.",
+    hi: "Teacher ko batana ek achha kadam hai. Pehle se likhi baat se batana aasaan ho jaata hai.",
+  },
+  "story.reply.friend": {
+    en: "A friend can listen, and can come along to an adult.",
+    de: "Ein Freund oder eine Freundin kann zuhören und mit zu einem Erwachsenen kommen.",
+    hi: "Dost sun sakte hain, aur kisi bade ke paas saath chal sakte hain.",
+  },
+  "story.reply.write": {
+    en: "Writing it down helps to remember what happened, and when.",
+    de: "Aufschreiben hilft, sich zu merken, was wann passiert ist.",
+    hi: "Likh lene se yaad rehta hai ki kya hua, aur kab.",
+  },
+  "story.reply.keep": {
+    en: "Many children do that at first. That's okay. Telling someone later is still possible, any time.",
+    de: "Das machen viele Kinder am Anfang. Das ist okay. Später kann man es immer noch jemandem sagen.",
+    hi: "Kai bachche shuru mein aisa hi karte hain. Koi baat nahi. Baad mein bhi kisi ko bataya ja sakta hai, kabhi bhi.",
+  },
+
+  "story.bridge": {
+    en: "Sometimes things like this happen to real children too. Has something like this happened to you?",
+    de: "Manchmal passiert so etwas auch echten Kindern. Ist dir so etwas auch passiert?",
+    hi: "Kabhi-kabhi asli bachchon ke saath bhi aisa hota hai. Kya tumhare saath bhi aisa kuch hua hai?",
+  },
+  "story.bridgeYes": { en: "Yes, I want to tell", de: "Ja, ich möchte es erzählen", hi: "Haan, mujhe batana hai" },
+  "story.bridgeNotNow": { en: "Not now", de: "Jetzt nicht", hi: "Abhi nahi" },
+  "story.how": {
+    en: "How do you want to tell it? It can be like Kim's story, or different.",
+    de: "Wie möchtest du es erzählen? Es kann wie bei Kim sein oder ganz anders.",
+    hi: "Tumhe kaise batana hai? Yeh Kim ki kahani jaisa ho sakta hai, ya alag.",
+  },
+  "story.howWrite": { en: "Write it in my words", de: "In meinen Worten schreiben", hi: "Apne words mein likhna" },
+  "story.howPictures": { en: "Tap pictures", de: "Bilder antippen", hi: "Pictures chunna" },
+  "story.notNow": {
+    en: "That's okay. Kim's story is here whenever you want. The help button is on every screen.",
+    de: "Das ist okay. Kims Geschichte ist da, wann immer du willst. Den Hilfe-Knopf gibt es auf jeder Seite.",
+    hi: "Koi baat nahi. Kim ki kahani jab chaho yahan hai. Madad ka button har screen pe hai.",
+  },
+
   "help.button": { en: "Need help now?", de: "Brauchst du jetzt Hilfe?", hi: "Abhi madad chahiye?" },
   "help.title": { en: "People who can help", de: "Menschen, die helfen können", hi: "Yeh log madad kar sakte hain" },
   // The red pill in the top bar: short, so it fits beside Leave now at 360px.
