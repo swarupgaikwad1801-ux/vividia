@@ -58,8 +58,19 @@ def asked(monkeypatch):
     return seen
 
 
+# The sentence the disputes are about. Every phrase these tests put to
+# `_ask_the_child` has to appear in it, because the other guard on that path
+# drops a phrase the child never wrote - which is the whole of #86. A fixture
+# of "some text" quietly tested nothing once that landed: all three disputes
+# were rejected for the wrong reason and the severity rule was never reached.
+CHILD_WROTE = (
+    "कल छुट्टी के बाद उसने मेरा टिफ़िन लिया और कहा देख लेगा, "
+    "ब्रेक में और कुछ भी हुआ"
+)
+
+
 async def ask(disputes, found=None):
-    return await T._ask_the_child("some text", disputes, found or [], "hi", Usage())
+    return await T._ask_the_child(CHILD_WROTE, disputes, found or [], "hi", Usage())
 
 
 async def test_a_minor_dispute_is_not_put_to_the_child(asked):
@@ -75,8 +86,10 @@ async def test_a_critical_dispute_still_is(asked):
 async def test_a_dispute_with_no_severity_is_still_asked(asked):
     # Fail towards asking: an unlabelled dispute is an unfamiliar shape, not a
     # judgement that it does not matter.
-    await ask([{"phrase": "x", "kind": "source_ambiguous", "readings": [{}, {}]}])
-    assert asked == ["x"]
+    # The phrase has to be one the child wrote, or the other guard drops it
+    # first and this test passes for a reason it is not about.
+    await ask([{"phrase": "और कुछ", "kind": "source_ambiguous", "readings": [{}, {}]}])
+    assert asked == ["और कुछ"]
 
 
 async def test_dropping_a_minor_frees_the_slot_for_a_real_one(asked):

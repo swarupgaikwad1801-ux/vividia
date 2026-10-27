@@ -20,6 +20,7 @@
 
 import { useState } from "react";
 
+import AdultGuide from "./AdultGuide.tsx";
 import CardLanguageSwitch from "./CardLanguageSwitch.tsx";
 import { SparkleBurst } from "../art/Things.tsx";
 import SourceMark from "./SourceMark.tsx";
@@ -87,6 +88,12 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
           </p>
         ) : null}
       </article>
+
+      {/* Under the child's words, not above them: the card is what the child
+          holds up, and the guide is for the person now reading it. It follows
+          `showing`, so switching the card to German switches the guide with
+          it - one language on screen at a time (issue #3). */}
+      <AdultGuide showing={showing} lang={lang} />
 
       <button
         type="button"
