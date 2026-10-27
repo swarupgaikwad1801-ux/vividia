@@ -332,6 +332,7 @@ export default function Write({
           >
             {t("write.send", lang)}
           </button>
+          {text.trim() && <p className="text-xs text-ink-soft">{t("draft.kept", lang)}</p>}
         </section>
       )}
 

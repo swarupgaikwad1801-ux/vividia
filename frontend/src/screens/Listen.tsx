@@ -329,6 +329,7 @@ export default function Listen({
           >
             {t("heard.send", lang)}
           </button>
+          {text && <p className="px-1 text-xs text-ink-soft">{t("draft.kept", lang)}</p>}
         </div>
       )}
 

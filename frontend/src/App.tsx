@@ -60,6 +60,8 @@ import { emergency } from "./lib/api";
 import { BUILT_IN_EMERGENCY } from "./lib/contacts";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
+import { forgetDrafts, readDrafts, saveDrafts } from "./lib/drafts";
+import { onQuickExit } from "./lib/quickExit";
 import type { Turn } from "./lib/listening";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
@@ -163,12 +165,17 @@ export default function App() {
   // a frightened child has just managed to write is the one thing this app
   // must never do. `Write` reports every keystroke up here and reads it back
   // when it mounts again. Nothing else may put text in a child's mouth.
-  const [draft, setDraft] = useState("");
+  // Both drafts start from what was kept on this phone (lib/drafts.ts).
+  const [draft, setDraft] = useState(() => readDrafts().write);
   // The listening conversation and its unsent message, kept here for the
   // same reason as `draft`: Back, Help or a language change must not lose a
   // word of it. Cleared only when it has become an entry.
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [talkDraft, setTalkDraft] = useState("");
+  const [talkDraft, setTalkDraft] = useState(() => readDrafts().talk);
+  useEffect(() => saveDrafts({ write: draft, talk: talkDraft }), [draft, talkDraft]);
+  // Leave now wipes them before the page goes: leaving in a hurry must not
+  // leave a half-written disclosure on the phone.
+  useEffect(() => onQuickExit(forgetDrafts), []);
   // "Saved. It is kept on this phone only.", once, on the screen a save
   // leads to (GOV.UK confirmation pattern: say it is done, and where it
   // is). Gone at the next screen change.
