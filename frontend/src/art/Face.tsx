@@ -32,7 +32,7 @@ const dotEyes = (dy = 0) => (
 
 const FACES: Record<string, FaceParts> = {
   good: {
-    fill: "#FFD23F",
+    fill: "#EBC88A",
     eyes: (
       <>
         <path d="M29 45 q7 -9 14 0" fill="none" stroke={INK} strokeWidth="4.5" strokeLinecap="round" />
@@ -43,12 +43,12 @@ const FACES: Record<string, FaceParts> = {
     mouth: <path d="M33 59 q17 20 34 0 z" fill={INK} />,
   },
   ok: {
-    fill: "#9EE6C2",
+    fill: "#BBDEC9",
     eyes: dotEyes(),
     mouth: <path d="M35 64 q15 5 30 -2" fill="none" stroke={INK} strokeWidth="4.5" strokeLinecap="round" />,
   },
   sad: {
-    fill: "#8FD8F5",
+    fill: "#AED3DA",
     eyes: (
       <>
         {dotEyes(2)}
@@ -60,7 +60,7 @@ const FACES: Record<string, FaceParts> = {
     extra: <path d="M66 52 q4 7 0 10 q-4 -3 0 -10 z" fill="#FFFFFF" stroke={INK} strokeWidth="2" />,
   },
   scared: {
-    fill: "#D7C8FF",
+    fill: "#D5CDEF",
     eyes: (
       <>
         <circle cx="36" cy="44" r="9" fill="#FFFFFF" stroke={INK} strokeWidth="3.5" />
@@ -74,7 +74,7 @@ const FACES: Record<string, FaceParts> = {
     mouth: <ellipse cx="50" cy="68" rx="7" ry="8" fill={INK} />,
   },
   angry: {
-    fill: "#FF9A7A",
+    fill: "#E5A994",
     eyes: (
       <>
         {dotEyes(3)}
@@ -85,7 +85,7 @@ const FACES: Record<string, FaceParts> = {
     mouth: <path d="M36 69 q14 -7 28 0" fill="none" stroke={INK} strokeWidth="5" strokeLinecap="round" />,
   },
   alone: {
-    fill: "#FFC7A8",
+    fill: "#F0CDB9",
     eyes: (
       <>
         <circle cx="31" cy="46" r="4.5" fill={INK} />

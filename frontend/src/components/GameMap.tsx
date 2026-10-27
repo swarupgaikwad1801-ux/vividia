@@ -41,11 +41,11 @@ import { fill, t } from "../lib/strings";
 
 const INK = "#1B1B2F";
 const SCENE_FILL: Record<string, string> = {
-  sun: "#FFD23F",
-  sky: "#4CC9F0",
-  grass: "#38D47A",
-  pink: "#FF6FB5",
-  lilac: "#B69CFF",
+  sun: "#EBC88A",
+  sky: "#86C3C2",
+  grass: "#92C7A0",
+  pink: "#E3A0BA",
+  lilac: "#B5A7E3",
 };
 
 /**

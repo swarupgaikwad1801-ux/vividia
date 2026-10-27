@@ -45,7 +45,7 @@ export default function Notebook({ lines, className }: { lines: number; classNam
       {/* Shadow, cover, then the two pages: the chunky offset shadow every
           card in the app has. */}
       <rect x="14" y="22" width="178" height="108" rx="12" fill={INK} />
-      <rect x="8" y="16" width="178" height="108" rx="12" fill="#FF6FB5" stroke={INK} strokeWidth="4" />
+      <rect x="8" y="16" width="178" height="108" rx="12" fill="#E3A0BA" stroke={INK} strokeWidth="4" />
       <path d="M18 26 h74 a6 6 0 0 1 6 6 v84 h-74 a6 6 0 0 1 -6 -6 z" fill={PAGE} stroke={INK} strokeWidth="3" />
       <path d="M176 26 h-74 a6 6 0 0 0 -6 6 v84 h74 a6 6 0 0 0 6 -6 z" fill={PAGE} stroke={INK} strokeWidth="3" />
       <line x1="97" y1="28" x2="97" y2="116" stroke={INK} strokeWidth="3" />
@@ -72,7 +72,7 @@ export default function Notebook({ lines, className }: { lines: number; classNam
       {/* A small heart on the first page, so the book is clearly a kind one. */}
       <path
         d="M168 36 c-3 -5 -10 -3 -9 3 c1 4 9 9 9 9 s8 -5 9 -9 c1 -6 -6 -8 -9 -3 z"
-        fill="#FF6FB5"
+        fill="#E3A0BA"
         stroke={INK}
         strokeWidth="2"
       />
@@ -83,7 +83,7 @@ export default function Notebook({ lines, className }: { lines: number; classNam
           lost its place and sat in the corner (seen in the 360px render). */}
       <g transform={`translate(${pen.x + 58} ${pen.y - 22}) rotate(35)`}>
         <g>
-          <rect x="0" y="0" width="9" height="34" rx="2" fill="#FFD23F" stroke={INK} strokeWidth="2.5" />
+          <rect x="0" y="0" width="9" height="34" rx="2" fill="#EBC88A" stroke={INK} strokeWidth="2.5" />
           <rect x="0" y="0" width="9" height="7" rx="2" fill="#FF8FB8" stroke={INK} strokeWidth="2.5" />
           <path d="M0 34 l4.5 9 l4.5 -9 z" fill="#F9D7BE" stroke={INK} strokeWidth="2.5" strokeLinejoin="round" />
         </g>

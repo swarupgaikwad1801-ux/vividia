@@ -10,6 +10,10 @@
  * The art is our own (src/art/), drawn in that spirit: chunky people with big
  * heads, simple shapes, many skin tones. Nothing is copied from any app.
  *
+ * Soft theme (27 Oct, Swarup): the same scenes, outlines and stickers, but
+ * light, low-saturation colours, from research with 13-25 year olds (see the
+ * scene tokens below). Bright saturated colour is the one thing changed.
+ *
  * What does NOT change: help, crisis, safety and the lock stay calm and still
  * (the "calm" scene, no motion), there are no points, scores, streaks or
  * badges, and no character ever speaks (CLAUDE.md: no AI friend).
@@ -20,18 +24,21 @@
  */
 @theme {
   /* Surfaces and text */
-  --color-page: #ffffff;
-  --color-surface: #ffffff;
+  /* Warm paper, not stark white: white with primary colours read as
+     "school" or "for younger children" to 13-25 year olds (Garrido
+     et al. 2024). */
+  --color-page: #fffcf7;
+  --color-surface: #fffcf7;
   --color-ink: #1b1b2f;
   --color-ink-soft: #2e2e48;
-  --color-line: #d9d6e8;
+  --color-line: #ddd8e3;
 
   /* Primary: the child's own actions (write, save, continue). A black pill
      with white text. The names stay "calm" so every screen picks this up
      without a class change. */
   --color-calm: #1b1b2f;
   --color-calm-strong: #000000;
-  --color-calm-soft: #f1ecff;
+  --color-calm-soft: #efeaf3;
 
   /* Help and crisis. Serious, never an alarm colour: a child reaching for
      this is already scared, and neon red adds to that. */
@@ -41,12 +48,21 @@
   /* The scene: one flat colour per place on the map. Set by data-scene on
      the screen's wrapper (see below), read by bg-scene. */
   --color-scene: #ffffff;
-  --color-sun: #ffd23f;
-  --color-sky: #4cc9f0;
-  --color-grass: #38d47a;
-  --color-pink: #ff6fb5;
-  --color-lilac: #b69cff;
-  --color-quiet: #e8f1f2;
+  /* Soft theme (27 Oct). Light, low-saturation scenes: in Valdez and
+     Mehrabian (1994) brightness raised pleasure and saturation raised
+     arousal, so light + unsaturated is pleasant and calm. Young people
+     13-25 in Garrido et al. (2024) called bright apps "shouty" on a bad
+     day, found red aggressive, blue sad and yellow over-cheerful, and
+     named green, purple and pink as neutral. So: sand instead of
+     yellow, sea-glass instead of blue, and sage, rose and lavender.
+     The names stay, so no screen changes. Ink is 11.9:1 or more on
+     every one. */
+  --color-sun: #f3e3c3;
+  --color-sky: #cfe6e3;
+  --color-grass: #d3e5cb;
+  --color-pink: #f0d3dc;
+  --color-lilac: #ddd5f0;
+  --color-quiet: #e6ecea;
 
   /* Type. 17px base, because this is read on a cheap phone held low, often
      in a hurry. All bundled via @fontsource (main.tsx), nothing fetched.
@@ -87,12 +103,12 @@
  * ink on a bright colour reads the same in a dark room. (The previous dark
  * palette was removed with the teal one.)
  */
-[data-scene="sun"] { --color-scene: var(--color-sun); }
-[data-scene="sky"] { --color-scene: var(--color-sky); }
-[data-scene="grass"] { --color-scene: var(--color-grass); }
-[data-scene="pink"] { --color-scene: var(--color-pink); }
-[data-scene="lilac"] { --color-scene: var(--color-lilac); }
-[data-scene="quiet"] { --color-scene: var(--color-quiet); }
+[data-scene="sun"] { --color-scene: var(--color-sun); --color-scene-deep: #ebc88a; }
+[data-scene="sky"] { --color-scene: var(--color-sky); --color-scene-deep: #86c3c2; }
+[data-scene="grass"] { --color-scene: var(--color-grass); --color-scene-deep: #92c7a0; }
+[data-scene="pink"] { --color-scene: var(--color-pink); --color-scene-deep: #e3a0ba; }
+[data-scene="lilac"] { --color-scene: var(--color-lilac); --color-scene-deep: #b5a7e3; }
+[data-scene="quiet"] { --color-scene: var(--color-quiet); --color-scene-deep: #b9c9c6; }
 
 @keyframes pop-in {
   from { opacity: 0; transform: scale(0.85); }
@@ -271,7 +287,9 @@
      in, so it sits lower than its neighbours. The check badge says the same
      thing without colour (PictureQuestions.tsx). */
   .sticker-on {
-    background-color: color-mix(in srgb, var(--color-scene) 42%, white);
+    /* Halfway to the art's shade of this scene (--color-scene-deep): a
+       clear colour, not a grey, on a pastel scene. Ink is 9:1 or more. */
+    background-color: color-mix(in srgb, var(--color-scene), var(--color-scene-deep, var(--color-scene)) 55%);
     translate: 0 3px;
     box-shadow:
       0 1px 0 var(--color-ink),
@@ -305,13 +323,8 @@
  */
 [data-scene]:not([data-scene="quiet"]) {
   isolation: isolate;
-  --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 14%);
+  --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 9%);
 }
-/* Lighter shades where the scene is already darker, so even ink-soft text
-   that lands on a hill keeps 4.5:1 (checked: pink 4.55, lilac 4.76; ink
-   itself is 5.5:1 or more on every hill). */
-[data-scene="lilac"]:not([data-scene="quiet"]) { --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 11%); }
-[data-scene="pink"]:not([data-scene="quiet"]) { --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 7%); }
 [data-scene]:not([data-scene="quiet"])::before,
 [data-scene]:not([data-scene="quiet"])::after {
   content: "";
