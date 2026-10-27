@@ -408,6 +408,13 @@ export const STRINGS = {
     hi: "Kuch din mein app poochega ki sab kaisa chal raha hai.",
   },
   "handoff.done": { en: "Done", de: "Fertig", hi: "Ho gaya" },
+  // The closed label on the adult's guide. Once it is open the server's own
+  // title replaces this, so this only has to say who the section is for.
+  "handoff.forAdult": {
+    en: "For the adult: the first 5 minutes",
+    de: "Für die erwachsene Person: die ersten 5 Minuten",
+    hi: "Bade logon ke liye: pehle 5 minute",
+  },
 
   // Back and next on every screen (issue #3). Back stays inside the app, so
   // quick exit still has nothing to go back to.

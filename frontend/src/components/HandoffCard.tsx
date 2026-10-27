@@ -133,15 +133,14 @@ export default function HandoffCard({
         )}
 
         {/*
-          GAP, not a placeholder: the adult also gets a short sourced guide on
-          how to respond in the next five minutes. The content exists, reviewed
-          and sourced, in `content/adult_guide.json` - but there is no
-          `GET /api/guide` in `backend/main.py`, no `GuideResponse` in
-          `src/types/api.ts` and no client function in `src/lib/api.ts`. Both
-          of those files are frozen contracts I must not change, and inventing
-          an endpoint would mean shipping a card that 404s in front of a judge.
-          So nothing about the guide is rendered yet. Wire it here once the
-          endpoint is agreed; the PR description has the shape it needs.
+          The gap this comment used to describe is closed. `GET /api/guide`,
+          `GuideResponse` and `guide()` all exist now, and the adult's short
+          sourced guide renders on `HandoffShow` - deliberately not here.
+
+          This screen is the child choosing who to show, and it speaks only
+          their language. The guide is addressed to the adult, in the
+          language the adult is reading, so it belongs beside the big card
+          behind the same language switch. See `AdultGuide.tsx`.
         */}
 
         {loading && (
