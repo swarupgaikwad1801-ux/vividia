@@ -404,6 +404,43 @@ export const STRINGS = {
   },
   "handoff.done": { en: "Done", de: "Fertig", hi: "Ho gaya" },
 
+  // The 5-minute guide for the adult (components/AdultGuide.tsx).
+  //
+  // Only these labels are translated here. Everything inside the guide - the
+  // title, the steps, the footer, the ladder - is written and sourced in
+  // `content/adult_guide.json` and served already translated, so it is never
+  // passed through `t()`. The guide exists in de and en only; the response
+  // says which was served and the element carries that `lang`.
+  //
+  // `guide.open` is the one line the CHILD may read, because they are the one
+  // holding the phone out, so it is in the child's language like the rest of
+  // the card's chrome.
+  "guide.open": {
+    en: "For the grown-up: what to do first",
+    de: "Für die erwachsene Person: die ersten Schritte",
+    hi: "Bade logon ke liye: pehle kya karna hai",
+  },
+  "guide.loading": { en: "Opening…", de: "Wird geöffnet…", hi: "Khul raha hai…" },
+  // Not "check your connection": the adult is reading a card a child just
+  // handed them, and an error about our network is not their problem. It says
+  // what is missing and nothing more.
+  "guide.failed": {
+    en: "The guide could not be opened.",
+    de: "Die Anleitung konnte nicht geöffnet werden.",
+    hi: "Guide nahi khul payi.",
+  },
+  "guide.source": { en: "Source", de: "Quelle", hi: "Source" },
+  "guide.checked": {
+    en: "Checked on {date}",
+    de: "Zuletzt geprüft am {date}",
+    hi: "{date} ko check kiya gaya",
+  },
+  "guide.ladder": {
+    en: "If nothing changes, the next person to ask",
+    de: "Wenn sich nichts ändert: wer als Nächstes hilft",
+    hi: "Agar kuch nahi badla, toh aage kaun",
+  },
+
   // Back and next on every screen (issue #3). Back stays inside the app, so
   // quick exit still has nothing to go back to.
   "nav.back": { en: "Back", de: "Zurück", hi: "Peeche" },
