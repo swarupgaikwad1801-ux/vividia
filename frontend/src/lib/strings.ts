@@ -1161,6 +1161,132 @@ export const STRINGS = {
     de: "Kann ein Wort zwei Dinge bedeuten, fragt sie dich.",
     hi: "Agar kisi word ke do matlab ho sakte hain, toh woh tumse poochta hai.",
   },
+  // ---- 28 Oct feature batch. German and Hinglish need a native read. ----
+
+  // Calm tools (components/CalmTools.tsx): box breathing and 5-4-3-2-1.
+  "calm.open": { en: "Need a moment first?", de: "Erst mal kurz durchatmen?", hi: "Pehle ek pal chahiye?" },
+  "calm.breathe": { en: "Breathe", de: "Atmen", hi: "Saans lo" },
+  "calm.ground": { en: "Notice 5 things", de: "5 Dinge bemerken", hi: "5 cheezein dekho" },
+  "calm.in": { en: "Breathe in", de: "Einatmen", hi: "Saans andar lo" },
+  "calm.hold": { en: "Hold", de: "Halten", hi: "Roko" },
+  "calm.out": { en: "Breathe out", de: "Ausatmen", hi: "Saans bahar chhodo" },
+  "calm.breatheHint": {
+    en: "Follow the square: 4 seconds on each side. Stop whenever you like.",
+    de: "Folge dem Quadrat: 4 Sekunden pro Seite. Hör auf, wann du willst.",
+    hi: "Square ke saath chalo: har side 4 second. Jab chaho ruk jao.",
+  },
+  "calm.start": { en: "Start", de: "Start", hi: "Shuru karo" },
+  "calm.stop": { en: "Stop", de: "Stopp", hi: "Ruko" },
+  "calm.g5": { en: "5 things you can see", de: "5 Dinge, die du sehen kannst", hi: "5 cheezein jo tum dekh sakte ho" },
+  "calm.g4": { en: "4 things you can touch", de: "4 Dinge, die du anfassen kannst", hi: "4 cheezein jo tum chhoo sakte ho" },
+  "calm.g3": { en: "3 things you can hear", de: "3 Dinge, die du hören kannst", hi: "3 cheezein jo tum sun sakte ho" },
+  "calm.g2": { en: "2 things you can smell", de: "2 Dinge, die du riechen kannst", hi: "2 cheezein jo tum soongh sakte ho" },
+  "calm.g1": { en: "1 thing you can taste", de: "1 Ding, das du schmecken kannst", hi: "1 cheez jiska taste tum le sakte ho" },
+  "calm.groundHint": {
+    en: "Name them in your head. Tap Next when you are ready.",
+    de: "Nenn sie im Kopf. Tipp auf Weiter, wenn du so weit bist.",
+    hi: "Mann mein unke naam lo. Ready ho toh Aage dabao.",
+  },
+  "calm.next": { en: "Next", de: "Weiter", hi: "Aage" },
+  "calm.again": { en: "Again", de: "Nochmal", hi: "Phir se" },
+  "calm.done": { en: "Done. Take your time.", de: "Fertig. Lass dir Zeit.", hi: "Ho gaya. Apna time lo." },
+  "calm.close": { en: "Close", de: "Schließen", hi: "Band karo" },
+
+  // Feeling words (screens/MoodReply.tsx): naming a feeling more exactly.
+  "feel.title": { en: "Want to find the exact word?", de: "Willst du das genaue Wort finden?", hi: "Sahi word dhoondhna hai?" },
+  "feel.hint": {
+    en: "Tap any that fit. They go into your writing, and you can change them.",
+    de: "Tipp alle an, die passen. Sie kommen in deinen Text, und du kannst sie ändern.",
+    hi: "Jo sahi lage un par tap karo. Woh tumhare likhne mein aayenge, aur tum unhe badal sakte ho.",
+  },
+  "feel.sentence": { en: "I feel {words}.", de: "Ich fühle mich {words}.", hi: "Mujhe {words} lag raha hai." },
+  "feel.hurt": { en: "hurt", de: "verletzt", hi: "hurt" },
+  "feel.embarrassed": { en: "embarrassed", de: "beschämt", hi: "sharminda" },
+  "feel.leftOut": { en: "left out", de: "ausgeschlossen", hi: "bahar kiya hua" },
+  "feel.disappointed": { en: "disappointed", de: "enttäuscht", hi: "niraash" },
+  "feel.nervous": { en: "nervous", de: "nervös", hi: "nervous" },
+  "feel.worried": { en: "worried", de: "besorgt", hi: "pareshaan" },
+  "feel.unsafe": { en: "unsafe", de: "nicht sicher", hi: "safe nahi" },
+  "feel.panicky": { en: "panicky", de: "panisch", hi: "ghabrahat" },
+  "feel.annoyed": { en: "annoyed", de: "genervt", hi: "irritated" },
+  "feel.frustrated": { en: "frustrated", de: "frustriert", hi: "frustrated" },
+  "feel.unfair": { en: "treated unfairly", de: "unfair behandelt", hi: "unfair treat kiya hua" },
+  "feel.furious": { en: "furious", de: "wütend", hi: "bahut gussa" },
+  "feel.lonely": { en: "lonely", de: "einsam", hi: "akela" },
+  "feel.ignored": { en: "ignored", de: "ignoriert", hi: "ignore kiya hua" },
+  "feel.invisible": { en: "invisible", de: "unsichtbar", hi: "jaise koi dekhta hi nahi" },
+  "feel.different": { en: "different", de: "anders", hi: "alag" },
+
+  // Sentence starters (components/SentenceStarters.tsx). `.say` is what goes
+  // into the text box; the label is the same words with "...".
+  "start.title": { en: "Need a way to start?", de: "Brauchst du einen Anfang?", hi: "Shuru kaise karein?" },
+  "start.when": { en: "It happened when ", de: "Es ist passiert, als ", hi: "Yeh tab hua jab " },
+  "start.said": { en: "They said: ", de: "Sie haben gesagt: ", hi: "Unhone kaha: " },
+  "start.did": { en: "They did this: ", de: "Sie haben das gemacht: ", hi: "Unhone yeh kiya: " },
+  "start.saw": { en: "Someone who saw it: ", de: "Gesehen hat es: ", hi: "Jisne dekha: " },
+  "start.felt": { en: "It made me feel ", de: "Ich habe mich gefühlt: ", hi: "Mujhe aisa laga: " },
+  "start.want": { en: "What I want now: ", de: "Was ich jetzt möchte: ", hi: "Ab mujhe chahiye: " },
+
+  // The card: print, keep the screen on, full screen (components/HandoffShow.tsx).
+  "card.print": { en: "Print or save as PDF", de: "Drucken oder als PDF speichern", hi: "Print karo ya PDF save karo" },
+  "card.printBoth": {
+    en: "Both languages, on one page.",
+    de: "Beide Sprachen auf einer Seite.",
+    hi: "Dono languages, ek page par.",
+  },
+  "card.awake": {
+    en: "The screen stays on while this card is open.",
+    de: "Der Bildschirm bleibt an, solange diese Karte offen ist.",
+    hi: "Jab tak yeh card khula hai, screen on rahegi.",
+  },
+  "card.fullscreen": { en: "Show full screen", de: "Im Vollbild zeigen", hi: "Full screen mein dikhao" },
+  "card.exitFullscreen": { en: "Close full screen", de: "Vollbild schließen", hi: "Full screen band karo" },
+
+  // Timeline: undo a delete, and the last four weeks at a glance.
+  "timeline.deletedOne": { en: "Deleted.", de: "Gelöscht.", hi: "Delete ho gaya." },
+  "timeline.undo": { en: "Undo", de: "Rückgängig", hi: "Wapas lao" },
+  "timeline.weeks": { en: "The last 4 weeks", de: "Die letzten 4 Wochen", hi: "Pichhle 4 hafte" },
+  "timeline.weeksCount": {
+    en: "Something is saved on {n} of the last 28 days.",
+    de: "An {n} der letzten 28 Tage ist etwas gespeichert.",
+    hi: "Pichhle 28 dinon mein se {n} din kuch save hai.",
+  },
+  "timeline.weeksWhy": {
+    en: "Dates help a grown-up see how often it happens.",
+    de: "Daten helfen Erwachsenen zu sehen, wie oft es passiert.",
+    hi: "Dates se bade log samajh paate hain ki yeh kitni baar hota hai.",
+  },
+
+  // Saved confirmation, shown once on the screen after a save (App.tsx).
+  "saved.note": {
+    en: "Saved. It is kept on this phone only.",
+    de: "Gespeichert. Es bleibt nur auf diesem Handy.",
+    hi: "Save ho gaya. Yeh sirf is phone par hai.",
+  },
+
+  // Draft kept on the phone (lib/drafts.ts).
+  "draft.kept": {
+    en: "What you type is kept on this phone until you save it or leave with Leave now.",
+    de: "Was du tippst, bleibt auf diesem Handy, bis du es speicherst oder auf Schnell raus tippst.",
+    hi: "Jo tum type karte ho woh is phone par rehta hai, jab tak tum save na karo ya Leave now na dabao.",
+  },
+
+  // Offline, everywhere except the two writing screens that say it themselves.
+  "net.offline": {
+    en: "No internet. Pictures, your saved words and the help numbers still work.",
+    de: "Kein Internet. Bilder, deine gespeicherten Worte und die Hilfenummern gehen trotzdem.",
+    hi: "Internet nahi hai. Pictures, tumhari saved baatein aur help numbers phir bhi chalenge.",
+  },
+
+  // Skip link (App.tsx), for keyboard and screen-reader users.
+  "nav.skip": { en: "Skip to content", de: "Zum Inhalt springen", hi: "Content par jao" },
+
+  // Leave now: the keyboard shortcut, said where it can be found (QuickExitButton).
+  "exit.keys": {
+    en: "Or press Esc three times",
+    de: "Oder dreimal Esc drücken",
+    hi: "Ya Esc teen baar dabao",
+  },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;
