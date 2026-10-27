@@ -256,3 +256,58 @@ async def resources(state: str, lang: str) -> list[Resource]:
     # national_helplines() only reads that file: no network, no key, nothing
     # to pay for, so the mock stays usable with nothing configured.
     return national_helplines()
+
+
+# What kind of thing the child said, for the listening screen's kind sentence.
+#
+# A keyword list, like _CRISIS above and for the same reason: the real
+# listen() asks a model what the child MEANS, and a mock cannot. Anything this
+# misses gets "other", whose sentence ("thank you for telling us") is right
+# for every message, so a miss costs warmth, never correctness. Ordered by
+# what matters most for safety: a threat sent online is still a threat.
+_KINDS: list[tuple[str, list[str]]] = [
+    ("threat", [r"\bget me\b", r"\bor else\b", r"\bregret\b", r"\bwait(ing)? for me\b",
+                r"\bdekh lena\b", r"\bdekh lunga\b", r"\bdekh lega\b", r"देख ले",
+                r"\bsonst\b", r"\bbereuen\b"]),
+    ("good", [r"\bgood day\b", r"\bwas (good|fine|okay)\b", r"\bnobody bothered\b",
+              r"\bit stopped\b", r"\bachha (din|tha)\b", r"\bguter tag\b"]),
+    ("asking", [r"\bwhat should i do\b", r"\bwhat do i do\b", r"\bwill it stop\b",
+                r"\bkya karu\b", r"\bkya karun\b", r"\bwas soll ich\b"]),
+    ("online", [r"\bonline\b", r"\bgroup\b", r"\bchat\b", r"\bwhatsapp\b", r"\binsta\w*\b",
+                r"\bpost(ed|s)?\b", r"\bphoto\b", r"\bmessage\w*\b", r"\bgruppe\b", r"\bfoto\b"]),
+    ("hurt", [r"\bhit\w*\b", r"\bpush\w*\b", r"\bkick\w*\b", r"\bspat\b", r"\bpunch\w*\b",
+              r"\bhurt\b", r"\bmaar\w*\b", r"\bmar(a|te|ta)\b", r"\bdhakka\b", r"मार", r"धक्का",
+              r"\bschl[aä]g\w*\b", r"\bgeschubst\b", r"\bgetreten\b"]),
+    ("taken", [r"\btook\b", r"\btake\w*\b", r"\bstole\w*\b", r"\bsnatch\w*\b", r"\bbroke\w*\b",
+               r"\bchheen\w*\b", r"\bchhin\w*\b", r"छीन", r"\bweggenommen\b", r"\bgeklaut\b"]),
+    ("names", [r"\bcall(ed|s)? me\b", r"\bnames?\b", r"\blaugh\w*\b", r"\bmock\w*\b",
+               r"\bhans\w*\b", r"\bbulate\b", r"\bchhed\w*\b", r"हँस", r"\bausgelacht\b",
+               r"\bbeleidig\w*\b", r"\bbeschimpf\w*\b"]),
+    ("left_out", [r"\bleft out\b", r"\bleave me out\b", r"\bignor\w*\b", r"\balone\b",
+                  r"\bnobody\b", r"\bno one\b", r"\bnikal\w*\b", r"\bakela\b", r"\bkoi nahi\b",
+                  r"अकेल", r"\bausgeschlossen\b", r"\ballein\b", r"\bniemand\b"]),
+    ("feeling", [r"\bsad\b", r"\bscared\b", r"\bafraid\b", r"\btired\b", r"\bfeel\w*\b",
+                 r"\bdukhi\b", r"\bdar\b", r"\bthak\w*\b", r"दुखी", r"डर",
+                 r"\btraurig\b", r"\bangst\b", r"\bm[uü]de\b"]),
+]
+_KIND_PATTERNS = [
+    (kind, [re.compile(pattern, re.IGNORECASE | re.UNICODE) for pattern in patterns])
+    for kind, patterns in _KINDS
+]
+
+
+async def listen(text: str, lang: str) -> dict:
+    await asyncio.sleep(0.6 * PRETEND_LATENCY)
+    for kind, patterns in _KIND_PATTERNS:
+        if any(pattern.search(text) for pattern in patterns):
+            return {"kind": kind, "calls_made": 0}
+    return {"kind": "other", "calls_made": 0}
+
+
+async def reply(text: str, lang: str) -> dict:
+    """Always None: a mock cannot write to a child, so it does not pretend to.
+
+    The screen then shows the reviewed sentence for "other", which is exactly
+    what live mode shows whenever a written reply fails its checks.
+    """
+    return {"reply": None, "calls_made": 0}
