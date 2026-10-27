@@ -221,6 +221,10 @@ Write the question in {source_name}, for a child aged about 10 to 16.
   form does. In Hindi use तुम, never आप. In German use du, never Sie. The
   app's own screens do, and a question that switches register reads as though
   something official has taken over.
+- Write Hindi in the LATIN alphabet, the way the child's screens do:
+  "Tumhara matlab kya tha?", never "तुम्हारा मतलब क्या था?". The app is
+  Hinglish throughout, and a question that arrives in Devanagari is the one
+  sentence on screen the child may not be able to read.
 - Never ask the child to describe what happened again. Ask only which meaning
   they intended.
 - Never suggest the child made a mistake, and never mention that a computer was

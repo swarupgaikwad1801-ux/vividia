@@ -43,8 +43,25 @@ _EDGE = r"[\wऀ-ॣ०-ॿ]"
 # आप and the case forms a sentence actually uses. The optional suffix plus the
 # closing edge check is what keeps आपस ("mutual") out of the results - a real
 # word that merely starts with the same two letters.
-FORMAL = re.compile(rf"(?<!{_EDGE})आप(?:का|की|के|को|से|ने)?(?!{_EDGE})")
-INFORMAL = re.compile(rf"(?<!{_EDGE})तुम(?:्हारा|्हारी|्हारे|्हें|से|ने)?(?!{_EDGE})")
+_FORMAL_DEV = rf"(?<!{_EDGE})आप(?:का|की|के|को|से|ने)?(?!{_EDGE})"
+_INFORMAL_DEV = rf"(?<!{_EDGE})तुम(?:्हारा|्हारी|्हारे|्हें|से|ने)?(?!{_EDGE})"
+
+# The same two words in the Latin alphabet, because the engine's Hindi is
+# Hinglish now (Neel's item 4) and a register check that only reads Devanagari
+# would pass an engine that had gone back to आप in Latin letters - "aapko",
+# "aapki" - without noticing. Register is a property of the word, not the
+# script it is spelled in.
+_FORMAL_LAT = r"\b(?:aap|aapka|aapki|aapke|aapko|aapse|aapne)\b"
+_INFORMAL_LAT = r"\b(?:tum|tumhara|tumhari|tumhare|tumhe|tumse|tumne|tumhara)\b"
+
+FORMAL = re.compile(f"{_FORMAL_DEV}|{_FORMAL_LAT}", re.IGNORECASE)
+INFORMAL = re.compile(f"{_INFORMAL_DEV}|{_INFORMAL_LAT}", re.IGNORECASE)
+
+# Devanagari anywhere in a child-facing engine string. The screens are Hinglish
+# (#77), so a sentence that arrives in Devanagari is the one thing on screen a
+# child reading Latin script may not be able to read - and it arrives exactly
+# when something has gone wrong or they are being asked a question.
+DEVANAGARI = re.compile(r"[\u0900-\u097F]")
 
 
 def hindi_strings_a_child_reads():
@@ -83,9 +100,38 @@ def test_the_child_is_never_addressed_as_आप(where, text):
 
 def test_at_least_some_of_it_actually_says_तुम():
     # Not every sentence needs a pronoun, but if none of them had one the test
-    # above would be satisfied by Hindi that addresses nobody at all.
+    # above would be satisfied by Hindi that addresses nobody at all. Counted
+    # across both scripts: "tum" and तुम are the same word and the same choice.
     speaking = [where for where, text in CHILD_FACING if INFORMAL.search(text)]
     assert len(speaking) >= 8, f"only {len(speaking)} strings address the child: {speaking}"
+
+
+@pytest.mark.parametrize("where,text", CHILD_FACING, ids=[w for w, _ in CHILD_FACING])
+def test_the_engine_writes_hindi_in_the_script_the_screens_use(where, text):
+    """Neel's item 4: the engine was Devanagari while the screens went Hinglish.
+
+    A child met Latin script on every button and Devanagari the moment
+    something failed, a question was asked, or the safety message fired - the
+    three places where being unable to read it costs the most. The register
+    sweep above fixed WHICH second person we use; this fixes whether the child
+    can read it at all.
+    """
+    found = DEVANAGARI.findall(text)
+    assert not found, (
+        f"{where} is written in Devanagari while the screens are Hinglish. "
+        f"The child reads one script, not two: {''.join(found[:20])}"
+    )
+
+
+def test_the_question_prompt_asks_for_the_latin_alphabet():
+    """The clarification question is written by the model, not by us.
+
+    So the only place to say it is the prompt, and a prompt rule that nobody
+    pins is one merge away from being gone - which is what the test below this
+    one already exists to prevent for तुम.
+    """
+    assert "LATIN alphabet" in QUESTION_SYSTEM
+    assert "Tumhara matlab kya tha?" in QUESTION_SYSTEM
 
 
 def test_the_report_header_still_addresses_the_adult_formally():
