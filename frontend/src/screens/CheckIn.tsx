@@ -45,7 +45,10 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
             <button
               type="button"
               onClick={() => onChoose(mood.code)}
-              className="squish flex w-full flex-col items-center justify-center gap-1 rounded-card border-[3px] border-ink bg-surface px-1 pt-2 pb-2 hover:bg-calm-soft"
+              // Quiet like an unpicked picture tile, and pressed down the
+              // same way (PictureQuestions.tsx). A tap commits, so there is
+              // no picked state to show here.
+              className="flex w-full flex-col items-center justify-center gap-1 rounded-card border-2 border-b-4 border-line bg-surface px-1 pt-2 pb-2 transition-[translate] duration-100 hover:bg-calm-soft motion-safe:active:translate-y-0.5 motion-safe:active:border-b-2"
             >
               {/*
                 The face is decoration (aria-hidden, art/Face.tsx): the label
