@@ -23,7 +23,6 @@
 
 import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
-import { SpokenQuestion } from "./ReadAloud";
 
 interface Props {
   lang: Lang;
@@ -54,7 +53,7 @@ export default function ReportApproval({ lang, approved, onApprove, onChange }: 
 
   return (
     <section className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
-      <SpokenQuestion as="h2" lang={lang} text={t("approve.title", lang)} className="text-lg font-semibold" />
+      <h2 className="text-lg font-semibold">{t("approve.title", lang)}</h2>
       <p className="text-base text-ink-soft">{t("report.readAll", lang)}</p>
       {/* "Yes" first and full width because it is the child's own decision,
           not a risk to guard against; "change it" is equally reachable and not
