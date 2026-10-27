@@ -317,7 +317,7 @@ export default function Write({ lang, initialText, onTextChange, onApproved }: W
       )}
 
       {/* Continue only closes it: `text` and the result stay as they are. */}
-      {danger && <DangerDialog lang={lang} onClose={() => setDanger(false)} />}
+      {danger && <DangerDialog lang={lang} message={result?.safety.message_child} onClose={() => setDanger(false)} />}
 
       {phase === "result" && result && (
         // tabIndex -1 so the focus move above has somewhere to land; it is not

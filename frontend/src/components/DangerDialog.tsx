@@ -96,11 +96,17 @@ export interface DangerDialogViewProps {
   failed: boolean;
   /** krisenchat, when `/api/resources` has answered. */
   chat: Resource | null;
+  /**
+   * The safety check's own calm text (`safety.message_child`), already in the
+   * child's language. Shown instead of `danger.hint` when it is non-empty;
+   * the picture path has none and keeps the hint.
+   */
+  message?: string;
   onContinue: () => void;
 }
 
 /** What the dialog shows, without fetching or a portal, so a test can render it. */
-export function DangerDialogView({ lang, contacts, failed, chat, onContinue }: DangerDialogViewProps) {
+export function DangerDialogView({ lang, contacts, failed, chat, message, onContinue }: DangerDialogViewProps) {
   return (
     <div
       role="alertdialog"
@@ -113,7 +119,7 @@ export function DangerDialogView({ lang, contacts, failed, chat, onContinue }: D
         {t("danger.title", lang)}
       </h2>
       <p id="danger-hint" className="text-base text-ink">
-        {failed ? t("help.dangerLineNoNumber", lang) : t("danger.hint", lang)}
+        {failed ? t("help.dangerLineNoNumber", lang) : message?.trim() || t("danger.hint", lang)}
       </p>
 
       {!failed && contacts && contacts.length > 0 && (
@@ -165,12 +171,14 @@ function tabStops(dialog: HTMLElement): HTMLElement[] {
 
 export interface DangerDialogProps {
   lang: string;
+  /** `safety.message_child` on the Write path; see DangerDialogViewProps. */
+  message?: string;
   /** Continue or Esc: closes the dialog and nothing else. */
   onClose: () => void;
 }
 
 /** Mount it to open it; the screen unmounts it on `onClose`. */
-export default function DangerDialog({ lang, onClose }: DangerDialogProps) {
+export default function DangerDialog({ lang, message, onClose }: DangerDialogProps) {
   const [contacts, setContacts] = useState<readonly Resource[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [chat, setChat] = useState<Resource | null>(null);
@@ -224,7 +232,7 @@ export default function DangerDialog({ lang, onClose }: DangerDialogProps) {
   return createPortal(
     // z-30: under the sticky bar (z-40), so Leave now stays visible and tappable.
     <div ref={box} className="fixed inset-0 z-30 flex items-center justify-center bg-ink/60 px-4 pt-16 pb-4">
-      <DangerDialogView lang={lang} contacts={contacts} failed={failed} chat={chat} onContinue={onClose} />
+      <DangerDialogView lang={lang} contacts={contacts} failed={failed} chat={chat} message={message} onContinue={onClose} />
     </div>,
     document.body,
   );

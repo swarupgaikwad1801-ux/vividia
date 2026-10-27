@@ -111,6 +111,24 @@ test("an unexpected extra contact keeps its own name", () => {
   assert.ok(markup.includes(">Extra service<"));
 });
 
+test("an urgent result's message_child is the pop-up's message, in place of the hint", () => {
+  const { emergency } = served();
+  const message = "You wrote something that sounds serious. You can call for help now.";
+  const view = (props: { message?: string; failed?: boolean }) =>
+    renderToStaticMarkup(
+      createElement(DangerDialogView, { lang: "en", contacts: emergency, failed: false, chat: null, onContinue: () => {}, ...props }),
+    );
+  const withMessage = view({ message });
+  assert.ok(withMessage.includes(message));
+  assert.ok(!withMessage.includes(STRINGS["danger.hint"].en));
+  // The picture path passes none, and an empty one is not a message.
+  assert.ok(view({}).includes(STRINGS["danger.hint"].en));
+  assert.ok(view({ message: "  " }).includes(STRINGS["danger.hint"].en));
+  // Write hands the result's message to the pop-up; the picture path does not.
+  assert.match(read("screens/Write.tsx"), /<DangerDialog[^>]*message=\{result\?\.safety\.message_child\}/);
+  assert.doesNotMatch(read("screens/PictureQuestions.tsx"), /<DangerDialog[^>]*message=/);
+});
+
 test("if /api/emergency fails, it says where help is instead of the numbers", () => {
   const markup = renderToStaticMarkup(
     createElement(DangerDialogView, { lang: "de", contacts: null, failed: true, chat: null, onContinue: () => {} }),
@@ -135,7 +153,7 @@ test("Write and PictureQuestions both mount it, and Continue only closes it", ()
     const source = read(file);
     // onClose sets the dialog flag and nothing else: the child's text and
     // picks are other state, untouched.
-    assert.match(source, /<DangerDialog lang=\{lang\} onClose=\{\(\) => setDanger\(false\)\} \/>/, file);
+    assert.match(source, /<DangerDialog lang=\{lang\}[^>]*? onClose=\{\(\) => setDanger\(false\)\} \/>/, file);
     assert.match(source, /<HelpPulse \/>/, `${file} keeps the glow`);
   }
   assert.match(read("components/DangerDialog.tsx"), /onContinue=\{onClose\}/);
