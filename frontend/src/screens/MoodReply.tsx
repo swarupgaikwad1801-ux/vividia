@@ -47,6 +47,9 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
   const reply = moodReplyFor(mood);
   const [stopped, setStopped] = useState(false);
   const [picked, setPicked] = useState<readonly StringKey[]>([]);
+  // Closed until asked for, like the calm tools: the two ways to tell it
+  // must stay on the first screenful of a phone.
+  const [wordsOpen, setWordsOpen] = useState(false);
   const words = mood ? FEELING_WORDS[mood] : undefined;
   const sentence = picked.length
     ? fill("feel.sentence", lang, { words: picked.map((key) => t(key, lang)).join(", ") })
@@ -81,8 +84,18 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
 
       {/* Only after a hard feeling: a child who tapped Good or OK is not
           offered a way to calm down they did not ask for. */}
-      {words && (
-        <section aria-labelledby="feel-title" className="flex w-full flex-col items-center gap-2">
+      {words && !wordsOpen && (
+        <button
+          type="button"
+          aria-expanded={false}
+          onClick={() => setWordsOpen(true)}
+          className="min-h-tap rounded-full px-4 text-base font-bold text-ink underline decoration-2 underline-offset-4"
+        >
+          {t("feel.title", lang)}
+        </button>
+      )}
+      {words && wordsOpen && (
+        <section aria-labelledby="feel-title" className="animate-pop-in flex w-full flex-col items-center gap-2">
           <h2 id="feel-title" className="text-base font-bold text-ink">{t("feel.title", lang)}</h2>
           <p className="text-sm text-ink-soft">{t("feel.hint", lang)}</p>
           <div className="flex flex-wrap justify-center gap-2">
