@@ -34,7 +34,7 @@ OTHER_ID = "other"
 
 LABELS = {
     "en": "Something else — I'll explain",
-    "hi": "कुछ और — मैं बताऊँगा/बताऊँगी",
+    "hi": "Kuch aur — main bataunga/bataungi",
     "de": "Etwas anderes – ich erkläre es",
 }
 
@@ -42,9 +42,15 @@ FALLBACK_LANG = "en"
 
 # What the UI puts above the rewrite box once the child picks the option. Kept
 # here so the whole escape path is one piece of reviewable text.
+#
+# Hindi speaks to the child as तुम, not आप, to match the screens (#74) and the
+# German, which has always used du. आप is the form a child is addressed in by
+# a stranger or an official; this app is neither, and switching register
+# between the screen and the question is exactly how an app starts to feel
+# like a form. Found by Neel, issue #5.
 REWRITE_PROMPT = {
     "en": "Write it again in your own words. You can use your own language.",
-    "hi": "इसे अपने शब्दों में फिर से लिखें। आप अपनी भाषा में लिख सकते हैं।",
+    "hi": "Ise apne shabdon mein phir se likho. Tum apni language mein likh sakte ho.",
     "de": "Schreib es nochmal in deinen eigenen Worten. Du kannst deine eigene Sprache benutzen.",
 }
 

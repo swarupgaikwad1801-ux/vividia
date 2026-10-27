@@ -48,8 +48,13 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 # Read off the system prompt. Order matters: the clarified translate prompt is
 # the translate prompt plus a suffix, so it has to be tested for first.
+#
+# These are substrings of prompts.py, so rewording a prompt silently stops a
+# kind being recognised: a clarified call then records as a plain `translate`
+# and a test counting clarified calls sees 0 with no hint why. If a kind below
+# stops matching, the prompt moved - fix the marker, do not revert the prompt.
 _KINDS = [
-    ("translate_clarified", "The child has told you what they meant"),
+    ("translate_clarified", "already told you which reading is theirs"),
     ("translate_retry", "The reply MUST be written in"),
     ("back_translate", "This is a check: someone will compare your output"),
     ("translate", "You translate a child's own words into"),

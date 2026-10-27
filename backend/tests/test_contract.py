@@ -19,7 +19,13 @@ from app.schemas import (
 
 client = TestClient(main.app)
 
-DISCLOSURE = "They took my bag again and everyone laughed at me."
+# content/demo_story.json's `live_message`, and the sentence the reviewed word
+# list still has two honest readings for ("get me": a threat, or a lift home).
+# It is used here so the ambiguity and clarify tests below have something to
+# check in mock mode as well as in live. With a sentence that carries no
+# ambiguity they pass by iterating over an empty list, which is the kind of
+# green that hides a broken screen.
+DISCLOSURE = "He said he would get me after school."
 
 
 def test_health_reports_which_engine_is_wired_up():
@@ -40,7 +46,14 @@ def test_translate_returns_the_agreed_shape():
     body = TranslateResponse.model_validate(response.json())
     assert body.translation
     assert 0.0 <= body.confidence <= 1.0
-    assert body.usage.calls_made >= 1
+    # The true count, which depends on the engine. ">= 1" here was asserting
+    # the old mock's claim to have made eleven calls it never made; the mock
+    # now reports 0, because 0 is what it did.
+    engine = HealthResponse.model_validate(client.get("/api/health").json()).engine
+    if engine == "live":
+        assert body.usage.calls_made >= 1
+    else:
+        assert body.usage.calls_made == 0
 
 
 def test_translate_always_reports_a_safety_result():
