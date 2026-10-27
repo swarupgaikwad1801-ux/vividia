@@ -14,9 +14,13 @@ import type {
   ClarifyRequest,
   ClarifyResponse,
   Entry,
+  EmergencyResponse,
+  GuideResponse,
   ErrorCode,
   ErrorResponse,
   HealthResponse,
+  ListenRequest,
+  ListenResponse,
   ReportRequest,
   ReportResponse,
   ResourcesResponse,
@@ -118,6 +122,15 @@ export function translate(req: TranslateRequest): Promise<TranslateResponse> {
   return post("/api/translate", req, req.source_lang, SLOW_MS);
 }
 
+/**
+ * One message on the listening screen: what kind of thing the child said, and
+ * the safety check. Two small model calls in live mode, no translation - the
+ * German is only made when the child asks for a card.
+ */
+export function listen(req: ListenRequest): Promise<ListenResponse> {
+  return post("/api/listen", req, req.lang, QUICK_MS * 2);
+}
+
 export function clarify(req: ClarifyRequest): Promise<ClarifyResponse> {
   return post("/api/clarify", req, req.source_lang, SLOW_MS);
 }
@@ -129,6 +142,33 @@ export function report(req: ReportRequest): Promise<ReportResponse> {
 export function resources(lang: string, state = ""): Promise<ResourcesResponse> {
   const query = new URLSearchParams({ lang, ...(state ? { state } : {}) });
   return request(`/api/resources?${query}`, lang, { method: "GET" }, QUICK_MS);
+}
+
+/**
+ * 110 and 112, straight from content/helplines.json.
+ *
+ * No model call and outside the spending cap, so this answers on a day the
+ * demo has spent its allowance and with no API key at all - which is the
+ * whole reason the route exists (#30). Any screen showing the safety floor
+ * calls it rather than typing a number.
+ */
+export function emergency(lang = "en"): Promise<EmergencyResponse> {
+  return request("/api/emergency", lang, { method: "GET" }, QUICK_MS);
+}
+
+/**
+ * The 5-minute guide for the adult, in one language.
+ *
+ * `lang` is a request, not a guarantee: the guide exists in de and en, and
+ * the response says which was served. Read `response.lang`, do not assume
+ * the one you asked for.
+ *
+ * No model call and outside the spending cap, so this answers on a day the
+ * demo has spent its allowance.
+ */
+export function guide(lang = "de"): Promise<GuideResponse> {
+  const query = new URLSearchParams({ lang });
+  return request(`/api/guide?${query}`, lang, { method: "GET" }, QUICK_MS);
 }
 
 export function health(): Promise<HealthResponse> {

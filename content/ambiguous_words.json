@@ -1,5 +1,5 @@
 {
-  "_comment": "Words whose two meanings change what an adult should do. When one of these appears in a child's text, the app always asks the child which they meant; it never guesses. Asking the model alone proved unreliable: it knows these ambiguities when asked directly, but reports them inconsistently inside a judging task, and a knife threat that loses its timing is not something to leave to chance. The model check still runs alongside this and catches what the list does not. Each entry must be reviewed by a team member who speaks the language; this is a vocabulary question, so getting it wrong is visible. 25 Oct: 'maarna' removed after review. A child writing it is alive, so offering them 'kills' as a reading is impossible to answer and frightening; the hit/kill risk is a translation error for the judge, not a question for the child. 'kal' now carries skip_when so tense settles it where it can.",
+  "_comment": "Words whose two meanings change what an adult should do. When one of these appears in a child's text, the app always asks the child which they meant; it never guesses. Asking the model alone proved unreliable: it knows these ambiguities when asked directly, but reports them inconsistently inside a judging task, and a knife threat that loses its timing is not something to leave to chance. The model check still runs alongside this and catches what the list does not. Each entry must be reviewed by a team member who speaks the language; this is a vocabulary question, so getting it wrong is visible. 25 Oct: 'maarna' removed after review. A child writing it is alive, so offering them 'kills' as a reading is impossible to answer and frightening; the hit/kill risk is a translation error for the judge, not a question for the child. 'kal' now carries skip_when so tense settles it where it can. 26 Oct: every language's list is read whatever language the child's screens are in, because a child on English screens may still write Hindi ('kal chhutti ke baad'). Another language's words match as whole words only, and its skip_when is not applied, since in mixed text those grammar markers collide with the screen language (Hindi 'the' is English 'the'). See lexicon_ambiguities in engine/translate.py. An entry may set \"ask_first\": true when it decides WHETHER something is a threat; only two questions ever reach the child, so those are asked before words that only decide when or who.",
   "_review": {
     "hi": null,
     "en": null
@@ -24,7 +24,7 @@
         ],
         "note": "Hindi uses one word for both. With a threat this is the difference between something about to happen and something already over. Only asked when the sentence carries no tense marker: with one, the tense decides, and asking anyway spends a question the child does not owe us. Since a list match also forces the full check, asking about every 'kal' cost latency as well.",
         "skip_when": {
-          "_comment": "Tense decides 'kal' nearly always: a future verb makes it tomorrow, a past one yesterday. Only ask when neither is present. The Devanagari patterns use lookarounds, not \\b: a vowel sign such as ा (U+093E) is not a word character in Python's re, so \\b never matches after one and those patterns silently never fired. The Devanagari future pattern needs the vowel a future ending carries before ग (मारेगा, आएगा, आएंगे, करूँगा, करोगे): ending in -गा/-गी/-गे alone also matches nouns such as ज़िंदगी (life) and मुर्गी (hen), and a skip that fires on a noun makes the app silently choose between yesterday and tomorrow. The listed words have that vowel and are still not verbs, so they never count; गूंगा (mute) is listed because a child may be called it.",
+          "_comment": "Tense decides 'kal' nearly always: a future verb makes it tomorrow, a past one yesterday. Only ask when neither is present. The Devanagari patterns use lookarounds, not \\b: a vowel sign such as ा (U+093E) is not a word character in Python's re, so \\b never matches after one and those patterns silently never fired. The Devanagari future pattern needs the vowel a future ending carries before ग (मारेगा, आएगा, आएंगे, करूँगा, करोगे): ending in -गा/-गी/-गे alone also matches nouns such as ज़िंदगी (life) and मुर्गी (hen), and a skip that fires on a noun makes the app silently choose between yesterday and tomorrow. The listed words have that vowel and are still not verbs, so they never count; गूंगा (mute) is listed because a child may be called it. The list is partial on purpose: -ोगी is both a real verb (करोगी, you will do) and a noun ending (निरोगी, भोगी, वियोगी), and no pattern separates them. Dropping -ोगी would lose a verb a child writes to catch adjectives a child rarely does, so a missing literary word is not a bug. Closing it properly needs a morphological check, not a longer list.",
           "patterns": [
             "\\b\\w+(ega|egi|enge|oge|unga|ungi)\\b",
             "(?<![\\w\\u0900-\\u097F])(?!(?:रोगी|योगी|उपयोगी|सहयोगी|गूंगा|गूँगा|गूंगी|गूँगी|गूंगे|गूँगे)(?![\\w\\u0900-\\u097F]))[\\w\\u0900-\\u097F]*(?:[ेएूऊ][ंँ]?ग[ाीे]|[ोओ]ग[ेी])(?![\\w\\u0900-\\u097F])",
@@ -118,7 +118,12 @@
           "dekh lunga",
           "dekh legi",
           "देख लेना",
-          "देख लूँगा"
+          "देख लूँगा",
+          "dekh lega",
+          "dekh lenge",
+          "देख लेगा",
+          "देख लेगी",
+          "देख लेंगे"
         ],
         "readings": [
           {
@@ -130,7 +135,8 @@
             "target_phrasing": "schau es dir an"
           }
         ],
-        "note": "Nearly always the threat, but it reads as an ordinary phrase to anyone translating word by word."
+        "note": "Nearly always the threat, but it reads as an ordinary phrase to anyone translating word by word. Third-person future forms are listed explicitly: until 26 Oct देख लेगा matched only because _normalise shredded देख लूँगा to the same consonants, which was luck, not coverage.",
+        "ask_first": true
       }
     ],
     "en": [
@@ -151,7 +157,8 @@
             "target_phrasing": "mich abholen"
           }
         ],
-        "note": "Measured failure: 'he said he would get me after school' was translated as 'abholen', turning a threat into a lift home."
+        "note": "Measured failure: 'he said he would get me after school' was translated as 'abholen', turning a threat into a lift home.",
+        "ask_first": true
       },
       {
         "word": "playing with me",

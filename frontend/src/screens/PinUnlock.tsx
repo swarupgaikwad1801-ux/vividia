@@ -178,7 +178,7 @@ export default function PinUnlock({ lang, help, onUnlocked, store }: PinUnlockPr
           before the keypad, with a screen reader or with their eyes. */}
       {help}
 
-      <h1 className="text-2xl font-semibold tracking-tight">{fill("pin.unlock.title", lang)}</h1>
+      <h1 className="text-2xl">{fill("pin.unlock.title", lang)}</h1>
       <p className="text-base text-ink-soft">{fill("pin.unlock.hint", lang)}</p>
 
       {waitMs > 0 ? (

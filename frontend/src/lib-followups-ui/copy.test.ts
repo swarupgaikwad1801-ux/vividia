@@ -28,10 +28,10 @@ test("every draft is a key strings.ts does not have yet", () => {
 });
 
 test("a key that exists in strings.ts comes from strings.ts, not from here", () => {
-  const result = copy("handoff.youDecide", "de");
+  const result = copy("ladder.intro", "de");
   assert.equal(result.fromStrings, true);
   assert.equal(result.lang, "de");
-  assert.equal(result.text, STRINGS["handoff.youDecide"].de);
+  assert.equal(result.text, STRINGS["ladder.intro"].de);
 });
 
 test("the ladder and follow-up wording now comes from strings.ts in the child's language", () => {
@@ -42,14 +42,21 @@ test("the ladder and follow-up wording now comes from strings.ts in the child's 
 });
 
 test("an unknown language falls back to English rather than an empty screen", () => {
-  assert.equal(copy("handoff.youDecide", "fr").lang, "en");
-  assert.equal(copy("handoff.youDecide", "fr").text, STRINGS["handoff.youDecide"].en);
+  assert.equal(copy("ladder.intro", "fr").lang, "en");
+  assert.equal(copy("ladder.intro", "fr").text, STRINGS["ladder.intro"].en);
+});
+
+test("a feature name on Hinglish screens is English, and tagged as English", () => {
+  assert.deepEqual(says("ladder.title", "hi"), {
+    lang: "en",
+    children: STRINGS["ladder.title"].en,
+  });
 });
 
 test("says() carries the text and the language it is in together", () => {
-  assert.deepEqual(says("ladder.title", "hi"), {
+  assert.deepEqual(says("ladder.intro", "hi"), {
     lang: "hi",
-    children: STRINGS["ladder.title"].hi,
+    children: STRINGS["ladder.intro"].hi,
   });
   assert.deepEqual(says("handoff.classTeacher", "hi"), {
     lang: "hi",
