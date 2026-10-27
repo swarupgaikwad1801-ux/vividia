@@ -39,6 +39,7 @@ class Entry(TypedDict):
     text_de: str  # the child-approved German version
     place: str | None  # e.g. "schoolyard"
     people: str | None  # who was involved, as the child describes it
+    note: str | None  # the child's answer to a clarification, printed verbatim, never paraphrased
 
 
 class Report(TypedDict):

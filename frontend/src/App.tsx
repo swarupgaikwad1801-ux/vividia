@@ -266,6 +266,10 @@ export default function App() {
         const feel = picks.feel.find((code) => MOOD_CODES.includes(code)) ?? checkInMood ?? "";
         addEntry(entryFor(choices, lang, new Date().toISOString().slice(0, 10), feel), "pictures");
         refreshEntries();
+        // Spent on this entry, so it must not carry to the next one. Same
+        // reason as `keepWords`: a feeling reported about one thing is not a
+        // fact about the child.
+        setCheckInMood(null);
       }
       // An adult from home means the handoff must not suggest family: that
       // answer wins over anything remembered.
@@ -310,14 +314,17 @@ export default function App() {
       addEntry(
         {
           date: new Date().toISOString().slice(0, 10),
-          mood: "",
+          // The face the child tapped on the way in. `CheckIn` has always
+          // handed it up; until now this path threw it away and wrote `""`
+          // into every entry a child WROTE, so the one step that needs no
+          // language was answered and dropped. `null` is Skip, and "" keeps
+          // meaning "they did not say", which is a real answer.
+          mood: checkInMood ?? "",
           text_child: approved.text_child,
           text_de: approved.text_de,
         },
         "words",
       );
-      // Saved, so it is no longer a draft: the next visit to Write is empty.
-      setDraft("");
       // The conversation those words came from is filed with them.
       setTurns([]);
       setTalkDraft("");
@@ -327,9 +334,14 @@ export default function App() {
       // writing screen with a sentence the child has already filed the next
       // time they open it.
       setDraft("");
+      // The mood belonged to this entry, not to the child. Leaving it set
+      // would stamp the next thing they write with a feeling they reported
+      // about something else - the inference `lib/moods.ts` and CLAUDE.md say
+      // we never make.
+      setCheckInMood(null);
       setStep("timeline");
     },
-    [refreshEntries, setStep],
+    [checkInMood, refreshEntries, setStep],
   );
 
   // The red Need help button, from every screen: the calm list of people who

@@ -273,6 +273,10 @@ _KINDS: list[tuple[str, list[str]]] = [
               r"\bit stopped\b", r"\bachha (din|tha)\b", r"\bguter tag\b"]),
     ("asking", [r"\bwhat should i do\b", r"\bwhat do i do\b", r"\bwill it stop\b",
                 r"\bkya karu\b", r"\bkya karun\b", r"\bwas soll ich\b"]),
+    # Wanting someone to talk to, with nothing about what happened: the
+    # message in Neel's 27 Oct screenshot, "Merse baat karo please".
+    ("talk", [r"\btalk to me\b", r"\bbaat kar\w*\b", r"\bis anyone there\b", r"\bkoi hai\b",
+              r"\bsprich mit mir\b", r"\brede mit mir\b", r"^\s*(hi|hello|hallo)\b"]),
     ("online", [r"\bonline\b", r"\bgroup\b", r"\bchat\b", r"\bwhatsapp\b", r"\binsta\w*\b",
                 r"\bpost(ed|s)?\b", r"\bphoto\b", r"\bmessage\w*\b", r"\bgruppe\b", r"\bfoto\b"]),
     ("hurt", [r"\bhit\w*\b", r"\bpush\w*\b", r"\bkick\w*\b", r"\bspat\b", r"\bpunch\w*\b",
@@ -297,11 +301,19 @@ _KIND_PATTERNS = [
 
 
 async def listen(text: str, lang: str) -> dict:
+    """The kind by keyword, and `told` always empty.
+
+    Which details a message gives (where, when, who) is a reading of what the
+    child meant, and a keyword list cannot do that honestly: "after school"
+    is a time, "school" alone is a place, "he" may or may not be who did it.
+    So the mock claims nothing, and the screen asks for every detail, which
+    is what live mode does whenever the model's answer is missing.
+    """
     await asyncio.sleep(0.6 * PRETEND_LATENCY)
     for kind, patterns in _KIND_PATTERNS:
         if any(pattern.search(text) for pattern in patterns):
-            return {"kind": kind, "calls_made": 0}
-    return {"kind": "other", "calls_made": 0}
+            return {"kind": kind, "told": [], "calls_made": 0}
+    return {"kind": "other", "told": [], "calls_made": 0}
 
 
 async def reply(text: str, lang: str) -> dict:

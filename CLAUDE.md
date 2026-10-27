@@ -196,7 +196,7 @@ asking them; that is how we avoid merge conflicts.
 | Who | Owns | Files |
 |-----|------|-------|
 | **Swarup Gaikwad** | AI engine and model orchestration: strategies A/B/C, prompts, judge, cost and latency instrumentation, engine tests | `backend/engine/` (except `resources.py`), `eval/bakeoff.py`, `eval/probe_thinking.py` |
-| **Vernika Sharma** | Full-stack and product: all screens (React + Vite + TypeScript + Tailwind), i18n + Arabic RTL, browser storage and deletion, PIN, quick exit, the FastAPI app, deployment | `frontend/`, `backend/main.py` |
+| **Vernika Sharma** | Full-stack and product: all screens (React + Vite + TypeScript + Tailwind), i18n (English, German, Hindi), browser storage and deletion, PIN, quick exit, the FastAPI app, deployment | `frontend/`, `backend/main.py` |
 | **Neel Shah** | Evaluation, QA, Tavily and submission: the dataset, the eval runner and charts, Tavily resource discovery, end-to-end QA, diagrams, video, Devpost | `backend/engine/resources.py`, `content/`, `eval/testset/`, `eval/run_eval.py`, `SAFETY.md`, `FEEDBACK.md` |
 
 Neel is an engineering contributor, not a presentation role: the eval runner
@@ -739,7 +739,7 @@ child is our difference; **a real benchmark is required, not optional**.
 ## Quality bar ("perfect")
 
 - Every button works; no placeholders, nothing labelled "simulated".
-- Works on a cheap Android phone in Chrome at 360px; Arabic RTL correct.
+- Works on a cheap Android phone in Chrome at 360px.
 - Verification shows progress and finishes in about 10 s or less.
 - Friendly error in the child's language for timeouts and no network.
 - **One failure never hides the part that matters.** Ask of every screen and
@@ -848,10 +848,23 @@ Thu 29 Oct by 22:00. Day-by-day plan: see `PLAN.md`.
     would sit in Finland. Say "nothing is retained", not "runs in the EU".
   - Compliance we may cite: GDPR, ISO 27001, ISO 27701, SOC 2 Type II,
     EU-US Data Privacy Framework.
-  - **Credits: $1.00 trial, 29 days. Account balance $0.00.** The $25 promo
-    code had not arrived by email as of 24 Oct. Redeem it at Billing →
-    Payments → + → "With promo code". The demo must stay up until 15 Dec, so
-    chase this; $1 is roughly 2,000 translated messages.
+  - **Credits.** The 24 Oct note here ("$1.00 trial, balance $0.00, promo
+    code not arrived") is out of date; read the current state off the
+    console. **Read spend off the usage-by-model page, never the account
+    balance**: the balance lags and is the difference of two unknowns, and
+    reasoning from it produced a figure wrong by 2.8x (#73).
+  - **$1 is roughly 890 checked sentences, ~750 with VAT, not 2,000.**
+    Measured: **$0.00112 per sentence** on the adaptive path, over 515
+    sentences in `eval/results/` (both models $0.30/M in, $0.90/M out, VAT
+    19%). An earlier correction here said $0.027 per sentence; that was
+    about 24x too high (#73). The demo's daily cap (`DEFAULT_DAILY_USD` in
+    `app/limits.py`) and the per-client limit are what make it last to
+    15 Dec (corrected 27 Oct).
+  - **Deploy check ends with one real `POST /api/translate`** (about $0.001),
+    not with `/api/health`. Health reports which mode the code is in and
+    never calls a model, so on 26 Oct it said `"engine":"live"` while every
+    translation failed on a mis-pasted `NEBIUS_BASE_URL`. Health stays
+    unmetered on purpose (decided 26 Oct, #5).
 - **API keys live only in `.env`.** Never in any other file inside the repo
   (a txt file of keys in the repo is one `git add .` away from being public).
   Keep a personal copy outside the repo folder.
