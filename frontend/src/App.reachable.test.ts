@@ -20,7 +20,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -142,4 +142,64 @@ test("no screen is rendered for a step that does not exist", () => {
 
   const orphans = [...new Set(rendered)].filter((s) => !declared.has(s));
   assert.deepEqual(orphans, [], `rendered for a step that is not in the union: ${orphans.join(", ")}`);
+});
+
+/**
+ * The blind spot the tests above have, found the hard way.
+ *
+ * All of them read `App.tsx` and reason about the `Step` union, so they catch
+ * a screen that is in the union with no door. They are blind to a screen or
+ * component file that **nothing imports at all**: it is not a member of
+ * anything, so there is nothing for them to notice. `tsc` is blind to it too -
+ * an unused module is not an error - and so is the bundler, which simply
+ * leaves it out.
+ *
+ * That cost us `DemoButton` twice. "Try Amara's story" was written, tested and
+ * styled, mounted in #88, and then unmounted again when the screen stack
+ * rewrote App.tsx underneath it (#77) while #88 was still open. Both times the
+ * suite stayed green. A **Must** item, the first thing a judge presses,
+ * invisible to every check we had.
+ *
+ * So this test asks the cruder question the others cannot: does any
+ * non-test file import this one?
+ */
+
+/** Every non-test source file under `src/`, as absolute paths. */
+function sourceFiles(): string[] {
+  return readdirSync(HERE, { recursive: true, encoding: "utf-8" })
+    .filter((rel) => /\.tsx?$/.test(rel) && !/\.test\.tsx?$/.test(rel))
+    .map((rel) => join(HERE, rel));
+}
+
+test("every screen and component file is imported by something", () => {
+  const files = sourceFiles();
+  assert.ok(files.length > 10, `read only ${files.length} source files; the walk has stopped working`);
+
+  const everything = files.map((path) => readFileSync(path, "utf-8")).join("\n");
+
+  // Known and accepted, with a reason. Anything else here should be a question
+  // asked of whoever owns the file, not a line added to this list.
+  const KNOWN_ORPHANS = new Set<string>([]);
+
+  const orphans: string[] = [];
+  for (const path of files) {
+    const dir = path.slice(HERE.length + 1).replace(/\\/g, "/");
+    if (!/^(screens|components)\//.test(dir)) continue;
+
+    // Matches `from "./Foo"`, `from "../components/Foo"` and the `.tsx` form.
+    // The file's own text is in `everything`, but a file cannot import itself,
+    // so there is nothing to exclude.
+    const base = dir.replace(/^.*\//, "").replace(/\.tsx?$/, "");
+    const imported = new RegExp(`from\\s+"[^"]*/${base}(\\.tsx?)?"`).test(everything);
+
+    if (!imported && !KNOWN_ORPHANS.has(dir)) orphans.push(dir);
+  }
+
+  assert.deepEqual(
+    orphans,
+    [],
+    `nothing imports: ${orphans.join(", ")}. A file nothing imports is not in the ` +
+      `bundle, so the feature does not exist however well it is written. Mount it, ` +
+      `or delete it, or add it to KNOWN_ORPHANS with a reason.`,
+  );
 });

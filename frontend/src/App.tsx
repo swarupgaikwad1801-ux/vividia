@@ -27,10 +27,13 @@ import Report from "./screens/Report";
 import Timeline from "./screens/Timeline";
 import Write from "./screens/Write";
 
+import DemoButton from "./components/DemoButton";
 import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
+
+import type { DemoSession } from "./lib-demo/demoStory";
 
 import { t } from "./lib/strings";
 import type { Lang } from "./lib/strings";
@@ -287,6 +290,50 @@ export default function App() {
     [refreshEntries, setStep],
   );
 
+  /**
+   * "Try Amara's story": the judge's way in, and the first button pressed on
+   * the demo URL.
+   *
+   * `DemoButton` has already fetched the story and seeded the timeline by the
+   * time this runs, so all that is left is the part only the shell can do:
+   * show the entries it added, put the live sentence in the writing screen,
+   * and go there. Nothing is translated and nothing is sent - the judge
+   * presses send themselves, which is the moment the demo exists for.
+   *
+   * The language follows the story rather than the other way round. The story
+   * is written in one language, so `Write` would otherwise be told to
+   * translate it *from* whatever the UI happened to be set to, and a wrong
+   * source language on the text is a wrong answer we asked for. `saveLang` is
+   * deliberately not called: this is the example's language for as long as the
+   * example is loaded, not a choice the child made.
+   */
+  const startDemo = useCallback(
+    (session: DemoSession) => {
+      const storyLang = session.draft.lang;
+      if (storyLang === "en" || storyLang === "de" || storyLang === "hi") {
+        setLang(storyLang);
+      }
+      refreshEntries();
+      setDraft(session.draft.text);
+      setStep("write");
+    },
+    [refreshEntries, setStep],
+  );
+
+  /**
+   * The example has been taken back out, so the app has to look like it never
+   * ran: the seeded entries are gone from storage and the prefilled sentence
+   * must go with them, or the writing screen still holds the example's words.
+   *
+   * Going to `checkIn` also resets the trail (`go` in lib/nav.ts), so Back
+   * cannot walk from a cleared app into the demo's writing screen.
+   */
+  const endDemo = useCallback(() => {
+    refreshEntries();
+    setDraft("");
+    setStep("checkIn");
+  }, [refreshEntries, setStep]);
+
   // The red Need help button, from every screen: the calm list of people who
   // can help (screens/HelpScreen.tsx). Back returns to where the child was.
   //
@@ -404,6 +451,13 @@ export default function App() {
               handoff ending true. */}
           <FollowUp lang={lang} entries={entries} onOpen={() => setStep("escalation")} />
           <CheckIn lang={lang} onChoose={afterCheckIn} />
+
+          {/* Below the check-in, not above it: a child who opens the app gets
+              their own question first, and the example is for the visitor.
+              It is on this screen because this is where both of them land, and
+              a judge should not have to find it. */}
+          <DemoButton lang={lang} onLoaded={startDemo} onCleared={endDemo} />
+
           {/* The three cards, on request only: small, at the bottom, for the
               child who wants to know and for anyone they show the app to. */}
           <div className="mx-4 mt-2 mb-6 flex flex-wrap justify-center gap-3">
