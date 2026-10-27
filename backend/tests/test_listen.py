@@ -15,6 +15,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import main
+from app.limits import Guard
 from app.schemas import ListenKind
 from engine import listen as live_listen
 from engine import mock
@@ -25,6 +26,10 @@ client = TestClient(main.app)
 @pytest.fixture(autouse=True)
 def no_waiting(monkeypatch):
     monkeypatch.setattr(mock, "PRETEND_LATENCY", 0)
+    # Every test client is one address, and this file alone sends more than
+    # the per-client allowance in an hour. A fresh guard per test keeps the
+    # limiter from failing tests that are not about it (test_limits.py is).
+    monkeypatch.setattr(main, "GUARD", Guard())
 
 
 def heard(text: str, lang: str = "en") -> dict:
