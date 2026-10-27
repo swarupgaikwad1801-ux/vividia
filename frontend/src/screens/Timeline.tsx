@@ -44,7 +44,7 @@ import { forgetEverything } from "../lib/forgetEverything";
 import PinRemovedNotice from "../components/PinRemovedNotice";
 import TimelineDeleteAll from "../components/TimelineDeleteAll";
 import TimelineEntryCard from "../components/TimelineEntryCard";
-import { tPending } from "../components/TimelinePendingStrings";
+import { pinStatus } from "../lib/pin";
 
 export interface TimelineProps {
   lang: Lang;
@@ -54,9 +54,20 @@ export interface TimelineProps {
    * that goes nowhere is worse than no button.
    */
   onBuildReport?: () => void;
+  /**
+   * The child wants to set or change the PIN.
+   *
+   * It lives here because this is the screen about their own stored words -
+   * the same screen that carries "delete everything" and the notice saying a
+   * PIN was removed. Until this existed, `PinSet` was mounted in `App.tsx` and
+   * nothing ever navigated to it, so a child could not set a PIN at all and
+   * the lock could never engage. Same rule as `onBuildReport`: no callback,
+   * no button.
+   */
+  onSetPin?: () => void;
 }
 
-export default function Timeline({ lang, onBuildReport }: TimelineProps) {
+export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProps) {
   // Read once on mount and after every change. `listEntries()` is called
   // before `isPersistent()` because a failed read is what flips that flag.
   const [entries, setEntries] = useState<StoredEntry[]>(() => listEntries());
@@ -84,7 +95,7 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
     // still remembered that they had taken a report to a teacher.
     // forgetEverything() is the one place that knows the full list.
     forgetEverything();
-    setStatus(tPending("timeline.deletedAll", lang));
+    setStatus(t("timeline.deletedAll", lang));
     refresh();
   }, [lang, refresh]);
 
@@ -96,10 +107,10 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
       <PinRemovedNotice lang={lang} />
 
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("timeline.title", lang)}</h1>
+        <h1 className="text-2xl">{t("timeline.title", lang)}</h1>
         {/* Only ever a claim about this list. Never about the whole app. */}
         {persistent ? (
-          <p className="text-sm text-ink-soft">{tPending("timeline.storageNote", lang)}</p>
+          <p className="text-sm text-ink-soft">{t("timeline.storageNote", lang)}</p>
         ) : (
           <p className="rounded-card border border-help bg-help-soft p-3 text-sm font-medium text-help">
             {t("timeline.notPersistent", lang)}
@@ -138,7 +149,7 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
                    ~7.7:1 in dark. */
                 className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
               >
-                {tPending("timeline.buildReport", lang)}
+                {t("timeline.buildReport", lang)}
               </button>
             ) : null}
             {/* Last, and visually quiet: it is the child's to use, not a thing
@@ -147,6 +158,20 @@ export default function Timeline({ lang, onBuildReport }: TimelineProps) {
           </div>
         </>
       )}
+
+      {/* Outside the "has entries" branch on purpose: a child may want the
+          lock on before there is anything to lock, and setting it up first is
+          the sensible order, not an edge case. Quiet styling - it is a setting,
+          not a step in the journey. */}
+      {onSetPin ? (
+        <button
+          type="button"
+          onClick={onSetPin}
+          className="min-h-tap self-start rounded-card border border-line px-4 text-base font-medium text-ink"
+        >
+          {t(pinStatus() === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
+        </button>
+      ) : null}
     </main>
   );
 }

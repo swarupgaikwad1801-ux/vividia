@@ -28,9 +28,10 @@ import { t } from "../lib/strings.ts";
  *   empty `meaning_de`. Sending it would ask the server to translate a
  *   decision the child declined to make.
  * - **Nothing is pre-selected.** A default would be the app deciding.
- * - **`meaning_de` is shown under each option**, quietly and tagged `lang="de"`,
- *   because the child is choosing what a German-speaking adult will read. It
- *   is the consequence of the choice, so it belongs next to the choice.
+ * - **Only the child's language on the options.** `meaning_de` used to be
+ *   shown under each one; Neel removed it (issue #3: one language per
+ *   screen). The German the choice leads to appears in the result, side by
+ *   side with the child's words, right after they send it.
  * - **The question is printed as the backend sent it.** It is already in the
  *   child's language and quotes what they actually wrote; rewording it here
  *   would put our words in their question.
@@ -121,13 +122,8 @@ export default function WriteClarify({
                   onChange={() => onChoose(item.phrase, option.id)}
                   className="mt-1 size-5 accent-calm"
                 />
-                <span className="flex flex-col gap-0.5">
-                  <span lang={lang} className="text-base">
-                    {option.label}
-                  </span>
-                  <span lang="de" className="text-sm text-ink-soft">
-                    {option.meaning_de}
-                  </span>
+                <span lang={lang} className="text-base">
+                  {option.label}
                 </span>
               </label>
             ))}

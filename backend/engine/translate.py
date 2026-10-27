@@ -227,6 +227,130 @@ def _ambiguous_words() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))["languages"]
 
 
+# A word edge: not a letter, digit or underscore, and not Devanagari, whose
+# vowel signs are not \w in Python's re.
+#
+# The danda । (U+0964) and double danda ॥ (U+0965) sit inside the Devanagari
+# block but are punctuation - the Hindi full stop. Including them made every
+# word at the end of a Hindi sentence unmatchable: "वो देख लेगा।" found
+# nothing while "वो देख लेगा" found the threat.
+_WORD_EDGE = r"[\wऀ-ॣ०-ॿ]"
+
+
+def _whole_word(form: str, text: str) -> bool:
+    """True when `form` appears in `text` as whole words, case-insensitively.
+
+    Matched on the raw text rather than `_normalise`d, because `_normalise`
+    drops Devanagari vowel signs: कला (art) becomes कल, and "kal" would
+    match inside "nikal" or "kaleidoscope" as a substring.
+    """
+    flat = re.sub(r"\s+", " ", text.casefold())
+    pattern = rf"(?<!{_WORD_EDGE}){re.escape(form.casefold())}(?!{_WORD_EDGE})"
+    return re.search(pattern, flat) is not None
+
+
+_DEVANAGARI = re.compile(r"[ऀ-ॿ]")
+
+
+def _form_in(form: str, text: str) -> bool:
+    r"""Does `form` appear in `text`, for a form in the screen's own language?
+
+    Latin forms keep the matching they have always had: `_normalise` on both
+    sides, so punctuation and spacing do not matter and "chhed" still finds
+    "chhedkar".
+
+    Devanagari forms go through `_whole_word` on the raw text instead,
+    because `_normalise` destroys them. It replaces everything that is not `\w` with a space, and
+    Devanagari vowel signs are not `\w` in Python's `re`, so a form collapses
+    to its bare consonants:
+
+        देख लूँगा  ->  'द ख ल ग'
+        दीदी      ->  'द द'
+
+    A two-letter needle matches almost anything. In
+    "कल छुट्टी के बाद देख लेगा" the letters of "बाद देख" normalise to
+    "ब द द ख", which contains "द द" - so that sentence reported *didi*, and
+    the spurious match pushed the real threat past `ask_about[:2]`.
+
+    Whole-word matching costs the accidental tolerance for inflections that
+    shredding gave - छुट्टी no longer finds छुट्टियों - which is what the
+    `forms` list is for. A missing inflection is one line in that file and
+    shows up as a question not asked; a needle of two consonants cannot be
+    made safe at all.
+    """
+    if _DEVANAGARI.search(form):
+        return _whole_word(form, text)
+    return _normalise(form) in _normalise(text)
+
+
+def _rank(entry: dict) -> int:
+    """0 if this entry should be asked before the others, 1 otherwise."""
+    return 0 if entry.get("ask_first") else 1
+
+
+def _said_by_the_child(phrase: str, text: str) -> bool:
+    """Did the child actually write this phrase?
+
+    Everything quoted back to a child passes through here. A model can return
+    a phrase that appears nowhere in the sentence - it has done - and a quoted
+    phrase the child never used is the single most alarming thing this app can
+    put on screen. They wrote one sentence about their own life and the app
+    answers with somebody else's words in quotation marks.
+
+    The matching itself is `_form_in`, not a second copy of it. Both questions
+    are the same question - "is this string in what the child wrote?" - and a
+    rule with two implementations is a rule that eventually disagrees with
+    itself. `_form_in` is where the Devanagari reasoning lives; this adds only
+    the empty-phrase guard, because a model returning "" must not be read as
+    "the child wrote everything".
+    """
+    if not phrase:
+        return False
+    return _form_in(phrase, text)
+
+
+def _as_written(entry: dict, text: str) -> str:
+    """The form of this word the child actually typed, exactly as typed.
+
+    The word list files every form under one headword: "chhedte" under
+    "chhedna", "कल" under "kal". Quoting the headword back put a word on the
+    child's screen, in quotation marks, that they never wrote - and in the
+    Latin alphabet to a child who had just written Devanagari. That is the
+    thing `_said_by_the_child` exists to stop, and lexicon hits never went
+    through it.
+
+    The longest form wins, so "get me" beats an overlapping shorter form. A
+    Latin match is widened to the whole word it sits in, because `_form_in`
+    lets "chhed" find "chhedkar" and a child should see "chhedkar", not a
+    fragment of it. Devanagari forms already match whole words only.
+    """
+    for form in sorted(entry["forms"], key=len, reverse=True):
+        loose = r"[\s\W_]*".join(re.escape(part) for part in form.split())
+        found = re.search(loose, text, re.IGNORECASE | re.UNICODE)
+        if not found or not _form_in(form, text) and not _whole_word(form, text):
+            continue
+        start, end = found.span()
+        if not _DEVANAGARI.search(form):
+            while start > 0 and text[start - 1].isalnum():
+                start -= 1
+            while end < len(text) and text[end].isalnum():
+                end += 1
+        return text[start:end]
+    return entry["word"]
+
+
+def _lexicon_item(entry: dict, text: str) -> dict:
+    return {
+        "phrase": _as_written(entry, text),
+        # The headword, for code that needs to know WHICH entry this is.
+        # Never shown: the child sees `phrase`, which is their own spelling.
+        "word": entry["word"],
+        "readings": entry["readings"],
+        "severity": "critical",
+        "source": "lexicon",
+    }
+
+
 def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
     """Known two-meaning words, matched in code rather than asked of a model.
 
@@ -235,24 +359,51 @@ def lexicon_ambiguities(text: str, source_lang: str) -> list[dict]:
     sentence sometimes produced a question and sometimes nothing. A knife
     threat losing its timing is not something to leave to that. The model
     check still runs alongside this and catches words the list does not have.
+
+    Every language's list is read, not only `source_lang`'s. `source_lang` is
+    the language of the child's screens, and a child who reads English best
+    may still write Hindi, usually in Latin letters: "kal chhutti ke baad".
+    Reading only the English list, that sentence never asked about kal or
+    chhutti, the knife-threat case this list exists for.
     """
-    haystack = _normalise(text)
-    found = []
-    for entry in _ambiguous_words().get(source_lang, []):
+    words = _ambiguous_words()
+    # (rank, item): 0 for an entry marked `ask_first`, 1 otherwise. Sorted at
+    # the end, stably, so everything else keeps the order the file gives it.
+    found: list[tuple[int, dict]] = []
+    for entry in words.get(source_lang, []):
         # Some words are only ambiguous without their context. Hindi "kal" is
         # both tomorrow and yesterday, but a future or past verb settles it,
         # and asking anyway spends a question the child does not owe us.
         skip = entry.get("skip_when", {}).get("patterns", [])
         if any(re.search(pattern, text, re.IGNORECASE | re.UNICODE) for pattern in skip):
             continue
-        if any(_normalise(form) in haystack for form in entry["forms"]):
-            found.append({
-                "phrase": entry["word"],
-                "readings": entry["readings"],
-                "severity": "critical",
-                "source": "lexicon",
-            })
-    return found
+        if any(_form_in(form, text) for form in entry["forms"]):
+            found.append((_rank(entry), _lexicon_item(entry, text)))
+
+    for lang, entries in words.items():
+        if lang == source_lang or lang.startswith("_"):
+            continue
+        for entry in entries:
+            # Whole words only: a word from another language inside a word of
+            # this one ("kal" in "kale") is not that word.
+            #
+            # And no skip_when. Those patterns read the list language's own
+            # grammar, and in mixed text they collide with the screen
+            # language: Hindi past-tense "the" (थे) is English "the", so "kal"
+            # in "kal the teacher hit me" would be skipped, and the app would
+            # silently choose between yesterday and tomorrow. Asking once too
+            # often costs a tap; choosing wrongly loses a threat's timing.
+            if any(_whole_word(form, text) for form in entry["forms"]):
+                found.append((_rank(entry), _lexicon_item(entry, text)))
+
+    # Only two questions ever reach the child (`ask_about[:2]`), so when more
+    # than two words match, which two is a safety decision and not an
+    # accident of file order. A word that decides WHETHER this is a threat
+    # goes before one that decides WHEN: if "देख लेगा" is read as "take a
+    # look at it", the sentence is harmless and the timing of it does not
+    # matter. Getting that the wrong way round is what lost Neel's sentence.
+    found.sort(key=lambda pair: pair[0])
+    return [item for _, item in found]
 
 
 async def _find_ambiguity(text, source_lang, target_lang, usage):
@@ -300,11 +451,7 @@ async def _find_ambiguity_inner(text, source_lang, target_lang, usage):
     # Only ask about words the child actually wrote. The model has offered
     # phrases that appear nowhere in the sentence, and asking a child what
     # they meant by words they never used is worse than asking nothing.
-    haystack = _normalise(text)
-    from_model = [
-        item for item in found
-        if item.get("phrase") and _normalise(item["phrase"]) in haystack
-    ]
+    from_model = [item for item in found if _said_by_the_child(item.get("phrase", ""), text)]
 
     # The list is a safety net for what the model misses, not a second voice.
     # Where both describe the same words - the list has "get me", the model
@@ -512,7 +659,34 @@ async def _ask_the_child(text, disputes, source_ambiguities, source_lang, usage)
     ask_about = list(found or [])
     seen = {a["phrase"].lower() for a in ask_about}
     for dispute in disputes:
-        if dispute.get("kind") == "source_ambiguous" and dispute["phrase"].lower() not in seen:
+        if dispute.get("kind") != "source_ambiguous":
+            continue
+        # Two filters, and the order is the argument.
+        #
+        # First: did the child write it? A phrase from nowhere is wrong
+        # whatever severity the judge attached to it, so it never gets as far
+        # as being weighed. Questions reach the child from two paths and only
+        # the ambiguity finder ever checked this one; a judge quoting a phrase
+        # out of nowhere produced the screen that fix is named after - a child
+        # writes "I dont feel good" and the app asks what they meant by
+        # "laughed at me".
+        if not _said_by_the_child(dispute.get("phrase", ""), text):
+            continue
+
+        # Then: is it worth a question at all? "minor" is the judge's own word
+        # for a disagreement that changes nothing about who did what to whom.
+        # Asking anyway spends one of two questions on a child in the middle
+        # of describing being bullied, and buys an adult nothing: Neel's live
+        # run asked whether टिफ़िन meant the box or the lunch inside it, which
+        # changes no decision anyone makes.
+        #
+        # Only an explicit "minor" is dropped. A dispute arriving without a
+        # severity is still asked, because the lexicon sets "critical"
+        # deliberately and anything unlabelled is more likely a shape we did
+        # not anticipate than a question not worth asking.
+        if dispute.get("severity") == "minor":
+            continue
+        if dispute["phrase"].lower() not in seen:
             ask_about.append(dispute)
             seen.add(dispute["phrase"].lower())
     ask_about = ask_about[:2]  # never interrupt a child with more than two questions
@@ -552,7 +726,13 @@ async def _verify(text, candidates, source_lang, target_lang, usage, source_ambi
     # amount of choosing between candidates fixes this, so repair it.
     losses = [
         loss for loss in verdict.get("meaning_lost", [])
+        # Same rule as the questions. These phrases are not shown to the
+        # child, but they are quoted into the repair prompt as 'where the
+        # child wrote "X"' - so an invented phrase becomes an instruction to
+        # put words into the German that the child never said. That is the
+        # one thing this module exists to prevent.
         if loss.get("severity") == "critical"
+        and _said_by_the_child(loss.get("phrase", ""), text)
     ]
     # Everything the questions need is known now: the child's own sentence and
     # the judge's disputes. Start them here so they overlap the repair, the
