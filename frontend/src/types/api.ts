@@ -135,6 +135,19 @@ export interface Entry {
   text_de: string;
   place?: string | null;
   people?: string | null;
+  /**
+   * The child's answer to a clarification question, exactly as the child gave
+   * it: an option they tapped (our wording, their choice) or words they typed.
+   *
+   * A Hindi or English speaker's answer changes the German, so it needs no
+   * home of its own. A German speaker's does not: there is nothing to
+   * re-render, and inventing a "clearer" sentence would be exactly the
+   * paraphrase that `report.py` refuses to let a model produce. So the answer
+   * sits beside the entry as the child's own note.
+   *
+   * Printed verbatim. Never summarised, never rewritten.
+   */
+  note?: string | null;
 }
 
 /** POST /api/report */
