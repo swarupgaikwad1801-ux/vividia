@@ -1141,6 +1141,24 @@ export const STRINGS = {
   "langSetup.hello": { en: "Hello!", de: "Hallo!", hi: "Namaste!" },
   // Under the map: where you are, in words, as well as on the path.
   "map.step": { en: "Step {n} of {total}", de: "Schritt {n} von {total}", hi: "{total} mein se step {n}" },
+  // While the words are checked (live engine only): how the check works,
+  // in general. Not progress: the server sends no steps (WriteProgress).
+  "write.howTitle": { en: "How the check works", de: "So funktioniert die Prüfung", hi: "Check kaise hota hai" },
+  "write.how1": {
+    en: "The app translates your words twice, separately.",
+    de: "Die App übersetzt deine Worte zweimal, getrennt voneinander.",
+    hi: "App tumhari baat ko do baar, alag-alag translate karta hai.",
+  },
+  "write.how2": {
+    en: "If the two do not match, it makes more versions and translates them back to compare the meaning.",
+    de: "Passen die beiden nicht zusammen, macht sie mehr Versionen und übersetzt sie zurück, um die Bedeutung zu vergleichen.",
+    hi: "Agar dono match nahi karte, toh woh aur versions banata hai aur unhe wapas translate karke matlab compare karta hai.",
+  },
+  "write.how3": {
+    en: "If a word could mean two things, it asks you.",
+    de: "Kann ein Wort zwei Dinge bedeuten, fragt sie dich.",
+    hi: "Agar kisi word ke do matlab ho sakte hain, toh woh tumse poochta hai.",
+  },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;

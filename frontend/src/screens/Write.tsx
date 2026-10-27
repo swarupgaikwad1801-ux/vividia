@@ -322,7 +322,7 @@ export default function Write({
       )}
 
       {phase === "checking" && (
-        <WriteProgress lang={lang} elapsedMs={elapsedMs} onStop={backToEditor} />
+        <WriteProgress lang={lang} elapsedMs={elapsedMs} onStop={backToEditor} engine={engine} />
       )}
 
       {phase === "error" && failure && (

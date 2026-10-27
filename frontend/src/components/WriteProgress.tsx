@@ -1,4 +1,5 @@
 import { fill, t } from "../lib/strings.ts";
+import type { EngineMode } from "../lib/engineMode.ts";
 
 /**
  * The unit on the visible timer. "s" is the SI symbol and reads the same in
@@ -50,9 +51,11 @@ export interface WriteProgressProps {
   elapsedMs: number;
   /** Abandons the check and returns to the editor with the text intact. */
   onStop: () => void;
+  /** In mock mode nothing is checked, so the list of how it works is not shown. */
+  engine?: EngineMode;
 }
 
-export default function WriteProgress({ lang, elapsedMs, onStop }: WriteProgressProps) {
+export default function WriteProgress({ lang, elapsedMs, onStop, engine }: WriteProgressProps) {
   const seconds = Math.floor(elapsedMs / 1000);
   const fraction = Math.min(elapsedMs / EXPECTED_MS, 1);
 
@@ -86,6 +89,26 @@ export default function WriteProgress({ lang, elapsedMs, onStop }: WriteProgress
       </div>
 
       <p className="text-sm text-ink-soft">{t("write.whatWeDo", lang)}</p>
+
+      {/* How the check works, as a fixed list: it is true of every check,
+          and it ticks nothing off, because the server reports no steps
+          (see the note at the top). Hidden in mock mode, where none of it
+          happens. A real sequence, so it is numbered. */}
+      {engine !== "mock" && (
+        <div className="flex flex-col gap-2 border-t-2 border-dashed border-line pt-3">
+          <p className="text-sm font-bold text-ink">{t("write.howTitle", lang)}</p>
+          <ol className="flex flex-col gap-2">
+            {(["write.how1", "write.how2", "write.how3"] as const).map((key, index) => (
+              <li key={key} className="flex items-start gap-2 text-sm text-ink">
+                <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full border-2 border-ink bg-sun text-xs font-bold">
+                  {index + 1}
+                </span>
+                <span className="pt-0.5">{t(key, lang)}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       {elapsedMs >= LONG_MS && (
         <p className="text-sm text-ink-soft">{t("write.stillWorking", lang)}</p>
