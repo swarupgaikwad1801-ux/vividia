@@ -16,7 +16,7 @@ import type { Lang } from "../lib/strings";
 import { t } from "../lib/strings";
 import type { StoredEntry } from "../lib/timeline";
 import { moodEmoji, moodLabel } from "../lib/moods";
-import { tPending } from "./TimelinePendingStrings";
+import SourceMark from "./SourceMark";
 
 interface Props {
   entry: StoredEntry;
@@ -81,18 +81,15 @@ export default function TimelineEntryCard({ entry, lang, onDelete }: Props) {
         </button>
       </div>
 
-      <p lang={lang} className="mt-3 whitespace-pre-wrap text-base">
+      <div className="mt-3">
+        <SourceMark source={entry.source} lang={lang} />
+      </div>
+      <p lang={lang} className="mt-2 whitespace-pre-wrap text-base">
         {entry.text_child}
       </p>
 
-      <div className="mt-3 border-t border-line pt-3">
-        <p className="text-sm font-medium text-ink-soft">{t("write.german", lang)}</p>
-        {/* lang="de" so a screen reader pronounces it as German rather than
-            reading German words with the child's own phonetics. */}
-        <p lang="de" className="mt-1 whitespace-pre-wrap text-base">
-          {entry.text_de}
-        </p>
-      </div>
+      {/* Child's language only (issue #3). The German is kept with the entry
+          and shown on the card the child shows an adult, behind its switch. */}
 
       {/* Shown only when the child actually filled them in. Dropping details
           they chose to record would be a silent edit of their own account. */}
@@ -100,13 +97,13 @@ export default function TimelineEntryCard({ entry, lang, onDelete }: Props) {
         <dl className="mt-3 flex flex-col gap-1 text-sm text-ink-soft">
           {entry.place ? (
             <div className="flex gap-2">
-              <dt className="font-medium">{tPending("timeline.where", lang)}</dt>
+              <dt className="font-medium">{t("timeline.where", lang)}</dt>
               <dd lang={lang}>{entry.place}</dd>
             </div>
           ) : null}
           {entry.people ? (
             <div className="flex gap-2">
-              <dt className="font-medium">{tPending("timeline.who", lang)}</dt>
+              <dt className="font-medium">{t("timeline.who", lang)}</dt>
               <dd lang={lang}>{entry.people}</dd>
             </div>
           ) : null}

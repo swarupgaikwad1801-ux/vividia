@@ -149,11 +149,11 @@ available: for most of a child's week, it is not.
 | 4 | **Choose who hears it**: handoff card for one trusted adult, with a 5-minute guide for that adult. Child-initiated only | Must |
 | 7 | **Talk to a professional**: route to krisenchat / 116 111, bringing the words already written | Must |
 | 8 | **Don't get dropped**: follow-up check-ins + escalation ladder that carries the timeline | Must |
-| + | **Safety floor**: if the child writes about danger or self-harm, show 110/112 and krisenchat at once. Nothing is sent to anyone | Must |
+| + | **Safety floor**: if the child writes about danger or self-harm, or picks "hit" or "threatened", a pop-up opens at once with 110/112 as tap-to-call buttons and krisenchat with its languages; "Continue" closes it and keeps what the child entered. The red Need help glow stays as well. Nothing is sent to anyone | Must |
 | + | **Quick exit + PIN lock** | Must |
 | + | **"Try Amira's story"**: one-click pre-filled demo for judges | Must |
 | + | **Picture incident builder**: tap icons for what happened, where and who (pushed, hit, names, things taken, online, left out). For children who can't write either | Tier A |
-| + | **Read-aloud** of every screen and question in the child's language, using the device's own speech engine (nothing leaves the phone) | Tier A |
+| + | **Read-aloud**: removed on 27 Oct (Neel: not good enough to ship); future work | Removed |
 | + | **Hindi and English** as source languages, German as target (decided 24 Oct, see the language gate) | Tier A |
 | + | **Installable PWA, offline-first**: everything except translation works without network | Tier A |
 | + | **Accessibility**: WCAG 2.2 AA, screen-reader labels, large-text and dyslexia-friendly mode | Tier A |
@@ -425,6 +425,13 @@ machine-graded score in a language nobody on the team can check.
 Honesty rule that follows: we say the system is **built and measured for
 Hindi and English**, and that the architecture is language-independent. We do
 not claim it works in Arabic, Ukrainian or Turkish, and we do not demo them.
+
+**Screens for `hi` are Hinglish** (Hindi in Latin letters, informal "tum").
+Feature names and buttons ("Leave now", "Need help") stay
+English on those screens (`ENGLISH_IN_HINGLISH` in `strings.ts`); questions,
+answers and anything said to the child are Hinglish. Hindi copy is unreviewed
+(`HINDI_REVIEWED = false`). The language code stays `hi`. Engine questions, errors and safety
+messages for `hi` are Hinglish too (#93).
 
 The demo child is Hindi-speaking. Pick the name with the team; "Amira" no
 longer fits.
@@ -735,6 +742,15 @@ child is our difference; **a real benchmark is required, not optional**.
 - Works on a cheap Android phone in Chrome at 360px; Arabic RTL correct.
 - Verification shows progress and finishes in about 10 s or less.
 - Friendly error in the child's language for timeouts and no network.
+- **One failure never hides the part that matters.** Ask of every screen and
+  step that does more than one thing: *if this one part fails, does the child
+  still get the essential part?* Load independent things independently
+  (`Promise.allSettled`, not `Promise.all`; one `.catch` each), and show
+  whatever loaded with a message where the rest would be. We hit the same
+  bug three times in one week: an optional ambiguity check took down the
+  whole translation (#32), a clarification that could not be applied was
+  silently dropped (#21), and a failed helpline lookup threw away 110/112
+  that had loaded fine (#47).
 - Nothing about the child stored on the server; the backend logs no message
   content.
 - Quick exit works in under 1 s.
