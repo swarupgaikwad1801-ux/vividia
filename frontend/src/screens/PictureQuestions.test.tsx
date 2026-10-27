@@ -7,6 +7,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -20,7 +21,8 @@ import {
   WhereQuestion,
   WhoQuestion,
 } from "./PictureQuestions.tsx";
-import { NO_SAY, WHAT } from "../lib/pictures.ts";
+import CheckIn from "./CheckIn.tsx";
+import { NO_SAY, WHAT, WHERE } from "../lib/pictures.ts";
 import { LANGS, STRINGS } from "../lib/strings.ts";
 
 const noop = () => {};
@@ -117,5 +119,70 @@ test("the end is a neutral thank you and an optional offer to write", () => {
 test("'I don't want to say' is a tile on every question", () => {
   for (const Q of QUESTIONS) {
     assert.match(render(Q, { lang: "en", value: [], onChange: noop, onNext: noop }), new RegExp(`value="${NO_SAY}"`));
+  }
+});
+
+// --- the action bar and the card states (#3, patterns 2 and 3) ---------------------
+
+const source = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
+
+/** The Next button's opening tag: the last button in the rendered bar. */
+function nextButton(markup: string): string {
+  const bar = markup.slice(markup.indexOf("data-action-bar"));
+  return [...bar.matchAll(/<button[^>]*>/g)].at(-1)![0];
+}
+
+test("Skip and Next sit in one bar fixed to the bottom, Skip first, as the child sees them", () => {
+  const markup = render(WhereQuestion, { lang: "en", value: [], onChange: noop, onNext: noop });
+  const bar = markup.slice(markup.indexOf("data-action-bar"));
+  assert.match(markup, /data-action-bar="true" class="fixed inset-x-0 bottom-0 z-20 /);
+  assert.ok(bar.indexOf(STRINGS["q.skip"].en) < bar.indexOf(STRINGS["nav.next"].en));
+  assert.match(bar, /env\(safe-area-inset-bottom\)/);
+});
+
+test("before a pick, Next is a quiet, disabled button that says why; after one, the bold one", () => {
+  const before = nextButton(render(WhereQuestion, { lang: "en", value: [], onChange: noop, onNext: noop }));
+  assert.match(before, /disabled=""/);
+  assert.match(before, /aria-describedby="q-where-hint"/);
+  assert.match(before, /border-line/);
+  assert.doesNotMatch(before, /bg-calm/);
+
+  const after = nextButton(render(WhereQuestion, { lang: "en", value: [WHERE[0].code], onChange: noop, onNext: noop }));
+  assert.doesNotMatch(after, /disabled|aria-describedby/);
+  assert.match(after, /bg-calm text-page/);
+});
+
+test("the hint Next points at is on the screen", () => {
+  const markup = render(WhereQuestion, { lang: "en", value: [], onChange: noop, onNext: noop });
+  assert.match(markup, new RegExp(`<p id="q-where-hint"[^>]*>${STRINGS["q.pickOne"].en}</p>`));
+});
+
+test("the bar stays under the danger pop-up and the top bar with Need help and Leave now", () => {
+  const z = (text: string, re: RegExp) => Number(re.exec(text)![1]);
+  const bar = z(source("./PictureQuestions.tsx"), /fixed inset-x-0 bottom-0 z-(\d+)/);
+  assert.ok(bar < z(source("../components/DangerDialog.tsx"), /fixed inset-0 z-(\d+)/));
+  assert.ok(bar < z(source("../components/QuickExitButton.tsx"), /sticky top-0 z-(\d+)/));
+});
+
+test("a picked tile has the outline, the fill and a check mark; an unpicked one is a thin line", () => {
+  const markup = render(WhereQuestion, { lang: "en", value: [WHERE[0].code], onChange: noop, onNext: noop });
+  const labels = [...markup.matchAll(/<label[^>]*class="([^"]*)"[^>]*>([\s\S]*?)<\/label>/g)];
+  const picked = labels.filter((m) => /checked=""/.test(m[2]));
+  const unpicked = labels.filter((m) => !/checked=""/.test(m[2]));
+  assert.equal(picked.length, 1);
+  assert.match(picked[0][1], /border-calm bg-calm-soft/);
+  assert.match(picked[0][2], /✓/);
+  for (const m of unpicked) {
+    assert.match(m[1], /border-2 border-b-4 border-line bg-surface/);
+    assert.doesNotMatch(m[2], /✓/);
+  }
+});
+
+test("tiles and mood faces press down only when motion is allowed", () => {
+  const tiles = render(WhereQuestion, { lang: "en", value: [], onChange: noop, onNext: noop });
+  const faces = render(CheckIn, { lang: "en", onChoose: noop });
+  for (const markup of [tiles, faces]) {
+    assert.match(markup, /motion-safe:active:translate-y-0\.5/);
+    assert.doesNotMatch(markup, /(?<!motion-safe:)active:translate/);
   }
 });

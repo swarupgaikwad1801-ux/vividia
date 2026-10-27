@@ -37,6 +37,7 @@
  */
 
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import Face from "../art/Face";
 import QuestionPicture, { type QuestionKind } from "../art/Questions";
@@ -72,7 +73,14 @@ interface Tile {
   picture: ReactNode;
 }
 
-/** One big picture tile. A real checkbox or radio underneath, visually hidden. */
+/**
+ * One big picture tile. A real checkbox or radio underneath, visually hidden.
+ *
+ * Unpicked is quiet: a thin line, white. Picked is unmistakable: the primary
+ * outline, the soft fill and a check mark, so the state never rests on colour
+ * alone. A tap presses the tile down onto its thicker bottom edge; reduced
+ * motion turns that off (motion-safe).
+ */
 function TileButton({
   tile,
   checked,
@@ -93,8 +101,10 @@ function TileButton({
       // Tiles pop in one after another; the stagger is the only animation
       // that runs on its own here, and reduced motion stops it.
       style={{ animationDelay: `${index * 45}ms` } as CSSProperties}
-      className={`animate-pop-in squish relative flex cursor-pointer flex-col items-center gap-1 rounded-card border-[3px] border-ink p-2 text-center text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 ${
-        checked ? "bg-calm-soft" : "bg-surface"
+      className={`animate-pop-in relative flex cursor-pointer flex-col items-center gap-1 rounded-card p-2 text-center text-base font-bold text-ink transition-[translate] duration-100 motion-safe:active:translate-y-0.5 has-[:focus-visible]:outline has-[:focus-visible]:outline-3 ${
+        checked
+          ? "border-[3px] border-b-[5px] border-calm bg-calm-soft motion-safe:active:border-b-[3px]"
+          : "border-2 border-b-4 border-line bg-surface motion-safe:active:border-b-2"
       }`}
     >
       <input
@@ -154,22 +164,66 @@ function TileGrid({
   );
 }
 
-/** Skip and Next. Next is there only once something is chosen; Skip always is. */
-function Footer({ lang, ready, onNext, onSkip }: { lang: string; ready: boolean; onNext: () => void; onSkip: () => void }) {
-  return (
-    <div className="flex flex-col gap-3 pt-2">
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={!ready}
-        className="squish min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong disabled:opacity-40"
-      >
-        {t("nav.next", lang)}
-      </button>
-      <button type="button" onClick={onSkip} className="squish min-h-tap self-center rounded-full bg-surface px-6 text-base font-bold text-ink">
-        {t("q.skip", lang)}
-      </button>
+/**
+ * Skip and Next, in a bar fixed to the bottom of the screen, so the way on
+ * never scrolls out of reach under a long grid of tiles (#3, Swarup's points
+ * 5 and 7).
+ *
+ * Skip always works. Next stays a real button throughout: quiet (a thin
+ * outline) and disabled until something is picked, then the one bold button
+ * on the screen. While it is disabled it is described by the screen's hint
+ * ("Pick one"), so a screen reader says why, not just "dimmed".
+ *
+ * Portalled to <body>: the screen wrapper in App.tsx keeps a transform from
+ * its slide-in, and `fixed` inside a transform sticks to that box, not the
+ * screen. z-20 keeps it under the danger pop-up (z-30) and the top bar with
+ * Need help and Leave now (z-40). A spacer of the bar's height stays in the
+ * page, so the last tiles can scroll clear of it.
+ */
+function Footer({
+  lang,
+  ready,
+  hintId,
+  onNext,
+  onSkip,
+}: {
+  lang: string;
+  ready: boolean;
+  hintId?: string;
+  onNext: () => void;
+  onSkip: () => void;
+}) {
+  const bar = (
+    <div
+      data-action-bar
+      className="fixed inset-x-0 bottom-0 z-20 border-t-2 border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    >
+      <div className="mx-auto flex max-w-sm items-center gap-3">
+        <button type="button" onClick={onSkip} className="squish min-h-tap shrink-0 rounded-full px-4 text-base font-bold text-ink">
+          {t("q.skip", lang)}
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!ready}
+          aria-describedby={ready ? undefined : hintId}
+          className={`min-h-tap flex-1 rounded-full px-4 text-lg font-bold ${
+            ready
+              ? "squish border-[3px] border-calm bg-calm text-page hover:bg-calm-strong"
+              : "border-2 border-line bg-surface text-ink-soft/60"
+          }`}
+        >
+          {t("nav.next", lang)}
+        </button>
+      </div>
     </div>
+  );
+  return (
+    <>
+      <div aria-hidden="true" className="h-[calc(5rem+env(safe-area-inset-bottom,0px))] shrink-0" />
+      {/* No document when rendered to a string (tests): the bar stays inline. */}
+      {typeof document === "undefined" ? bar : createPortal(bar, document.body)}
+    </>
   );
 }
 
@@ -190,7 +244,11 @@ function Screen({
         <h1 id={id} className="text-3xl text-balance">
           {title}
         </h1>
-        {hint && <p className="text-base font-medium text-ink">{hint}</p>}
+        {hint && (
+          <p id={`${id}-hint`} className="text-base font-medium text-ink">
+            {hint}
+          </p>
+        )}
       </header>
       {children}
     </section>
@@ -240,7 +298,7 @@ export function WhatQuestion({ lang, value, onChange, onNext }: QuestionProps) {
     <Screen id="q-what" title={t("q.what.title", lang)} hint={t("q.what.hint", lang)}>
       {danger && <DangerDialog lang={lang} onClose={() => setDanger(false)} />}
       <TileGrid tiles={tilesFor("what", WHAT, lang)} value={value} multi name="q-what" labelledBy="q-what" onChange={choose} />
-      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
+      <Footer lang={lang} hintId="q-what-hint" ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -250,7 +308,7 @@ export function WhereQuestion({ lang, value, onChange, onNext }: QuestionProps) 
   return (
     <Screen id="q-where" title={t("q.where.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tilesFor("where", WHERE, lang)} value={value} multi={false} name="q-where" labelledBy="q-where" onChange={onChange} cols={2} />
-      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
+      <Footer lang={lang} hintId="q-where-hint" ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -260,7 +318,7 @@ export function OftenQuestion({ lang, value, onChange, onNext }: QuestionProps) 
   return (
     <Screen id="q-often" title={t("q.often.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tilesFor("often", OFTEN, lang)} value={value} multi={false} name="q-often" labelledBy="q-often" onChange={onChange} cols={2} />
-      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
+      <Footer lang={lang} hintId="q-often-hint" ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -338,7 +396,7 @@ export function FeelQuestion({ lang, value, onChange, onNext }: QuestionProps) {
   return (
     <Screen id="q-feel" title={t("q.feel.title", lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tiles} value={value} multi={false} name="q-feel" labelledBy="q-feel" onChange={onChange} />
-      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
+      <Footer lang={lang} hintId="q-feel-hint" ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -371,7 +429,7 @@ export function FollowUpQuestion({ step, lang, value, onChange, onNext }: Follow
   return (
     <Screen id={id} title={t(q.title, lang)} hint={t("q.pickOne", lang)}>
       <TileGrid tiles={tilesFor(q.kind, q.list, lang)} value={value} multi={false} name={id} labelledBy={id} onChange={onChange} cols={q.cols} />
-      <Footer lang={lang} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
+      <Footer lang={lang} hintId={`${id}-hint`} ready={value.length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
@@ -393,7 +451,7 @@ export function OwnWordsQuestion({ lang, value, onChange, onNext }: QuestionProp
         className="w-full rounded-card border-[3px] border-ink bg-surface p-4 text-lg text-ink"
         placeholder={t("write.placeholder", lang)}
       />
-      <Footer lang={lang} ready={text.trim().length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
+      <Footer lang={lang} hintId="q-own-hint" ready={text.trim().length > 0} onNext={() => onNext()} onSkip={() => { onChange([]); onNext(true); }} />
     </Screen>
   );
 }
