@@ -48,6 +48,9 @@
   /* The scene: one flat colour per place on the map. Set by data-scene on
      the screen's wrapper (see below), read by bg-scene. */
   --color-scene: #ffffff;
+  /* A deeper shade of the scene (set per scene below); a utility too, for
+     the calm tools' dot and current step. */
+  --color-scene-deep: #d9d3e6;
   /* Soft theme (27 Oct). Light, low-saturation scenes: in Valdez and
      Mehrabian (1994) brightness raised pleasure and saturation raised
      arousal, so light + unsaturated is pleasant and calm. Young people

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import Face, { hasFace } from "../art/Face";
+import CalmTools from "../components/CalmTools";
 import { moodReplyFor } from "../lib/moodReply";
 import { t } from "../lib/strings";
 import type { Lang } from "../lib/strings";
@@ -22,6 +23,9 @@ export interface MoodReplyProps {
   onWrite: () => void;
   onHome: () => void;
 }
+
+/** The faces after which "Need a moment first?" is offered. */
+const CALM_FOR = new Set(["sad", "scared", "angry", "alone"]);
 
 export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: MoodReplyProps) {
   const reply = moodReplyFor(mood);
@@ -53,6 +57,10 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
       )}
       <h1 id="mood-reply" className="text-3xl text-balance text-ink">{t(reply.title, lang)}</h1>
       {reply.question && <p className="text-lg text-ink">{t(reply.question, lang)}</p>}
+
+      {/* Only after a hard feeling: a child who tapped Good or OK is not
+          offered a way to calm down they did not ask for. */}
+      {mood && CALM_FOR.has(mood) && <CalmTools lang={lang} />}
 
       <div className="grid w-full grid-cols-2 gap-3">
         <button
