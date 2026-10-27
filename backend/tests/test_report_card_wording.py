@@ -81,13 +81,25 @@ async def test_a_card_with_three_entries_still_says_entries():
 
 
 async def test_the_mock_counts_to_one_too():
-    # Mock mode is what a judge sees if the key is missing, so its example text
-    # has to survive being read.
+    # Mock mode is what a judge sees if the key is missing, so its card has to
+    # survive being read.
+    #
+    # It no longer has a card of its own to get wrong. #87 deleted the fake
+    # one - which said "In 3 Fällen ist in der Schule etwas passiert" whatever
+    # those three entries contained - and delegates to the real builder, which
+    # makes no model calls and so costs nothing to run in mock mode. The
+    # singular rule is therefore the same rule, tested above, rather than a
+    # second copy that can drift from it.
     one = await mock.report(entries(1), "de")
     assert "In 1 Fällen" not in one["german_version"]
     assert "1 times" not in one["child_version"]
+    assert f"1 {LABELS['de']['entry']}" in one["german_version"]
+
     many = await mock.report(entries(4), "de")
-    assert "In 4 Fällen" in many["german_version"]
+    assert f"4 {LABELS['de']['entries']}" in many["german_version"]
+
+    # And the card is about these entries, which the fake one never was.
+    assert entries(4)[0]["text_de"] in many["german_version"]
 
 
 # --- what the card claims about its own words --------------------------------
