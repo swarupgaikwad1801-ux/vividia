@@ -265,10 +265,14 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
           >
             {t("write.send", lang)}
           </button>
-          {/* Said on the screen where the words are written, not buried in a
-              settings page: this is the moment the child is deciding whether
-              to trust the app at all. */}
-          <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
+          {/* `handoff.youDecide` ("Nothing is sent") used to sit here, directly
+              under the button that sends the child's words to Nebius for
+              inference. It is true on the handoff screen, where it means no
+              adult has been told; under this button it reads as "your words
+              do not leave this phone", which is the claim CLAUDE.md says must
+              never ship. Nothing replaces it, because the honest sentence is
+              about the cloud, not about adults, and this screen does not have
+              one yet. */}
         </section>
       )}
 
@@ -360,7 +364,10 @@ export default function Write({ lang, initialText, onApproved, onNeedHelp }: Wri
             </button>
           </div>
 
-          <p className="text-sm text-ink-soft">{t("handoff.youDecide", lang)}</p>
+          {/* The same sentence stood here, after the round trip. By this phase
+              the words have already been to the cloud and back - the German on
+              screen is the proof - so "Nothing is sent" is not merely unclear
+              here, it is contradicted by what the child is looking at. */}
         </div>
       )}
     </section>
