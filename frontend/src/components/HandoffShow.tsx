@@ -110,7 +110,7 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
         onClick={onDone}
         // text-page, not text-white: --color-calm is a light teal in dark
         // mode, where white falls below the 4.5:1 floor.
-        className="squish min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong"
+        className="sticker min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong motion-safe:active:translate-y-1 active:shadow-none"
       >
         {/* Says what the child did, not "Done": the next screen has Done.
             Nothing is recorded by pressing it. */}
