@@ -23,6 +23,26 @@ import "./index.css";
 // Bigger text / easier reading, before the first paint, so nothing flashes small.
 applyDisplay(readDisplay());
 
+// Vibrate on tap: only when the child turned it on (data-haptics, see
+// lib/display.ts), only on something pressable, and only where the phone
+// supports it. One listener for the whole app, so no screen changes.
+document.addEventListener("pointerdown", (event) => {
+  if (!document.documentElement.hasAttribute("data-haptics")) return;
+  if (typeof navigator.vibrate !== "function") return;
+  const target = event.target instanceof Element ? event.target : null;
+  if (target?.closest("button, label, a")) navigator.vibrate(8);
+});
+
+// Privacy cover, like Signal's "Screen Security": the moment the app is
+// hidden (home button, app switcher, another tab), the page goes blank, so
+// the preview a phone keeps of it shows nothing of what the child wrote.
+// Best effort: a browser may take that preview before this runs. It comes
+// back as soon as the app is visible again; nothing is lost.
+const cover = () => document.documentElement.toggleAttribute("data-covered", document.visibilityState === "hidden");
+document.addEventListener("visibilitychange", cover);
+window.addEventListener("pagehide", () => document.documentElement.setAttribute("data-covered", ""));
+window.addEventListener("pageshow", cover);
+
 const root = document.getElementById("root");
 if (!root) throw new Error("#root is missing from index.html");
 

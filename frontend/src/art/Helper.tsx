@@ -7,7 +7,7 @@
  */
 
 const INK = "#1B1B2F";
-const PINK = "#FF6FB5";
+const PINK = "#E3A0BA";
 const PAGE = "#FFFFFF";
 
 /**
@@ -31,7 +31,7 @@ export function NoteMark({ className }: { className?: string }) {
 export function ZipIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true" focusable="false">
-      <circle cx="16" cy="16" r="13" fill="#FFD23F" stroke={INK} strokeWidth="2.5" />
+      <circle cx="16" cy="16" r="13" fill="#EBC88A" stroke={INK} strokeWidth="2.5" />
       <circle cx="11" cy="12.5" r="1.8" fill={INK} />
       <circle cx="21" cy="12.5" r="1.8" fill={INK} />
       <path d="M8.5 20 h15" stroke={INK} strokeWidth="2.5" strokeLinecap="round" />

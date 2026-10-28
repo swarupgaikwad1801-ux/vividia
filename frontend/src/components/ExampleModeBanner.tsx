@@ -30,10 +30,21 @@ export default function ExampleModeBanner({ lang, engine }: ExampleModeBannerPro
       // role="status", not "alert": nothing has gone wrong and nothing needs
       // interrupting. It is a standing fact about the whole session.
       role="status"
-      className="mx-4 mt-3 flex flex-col gap-1 rounded-card border border-help bg-surface p-3"
+      // One compact strip (27 Oct): the same words, still on every screen and
+      // still not dismissable, but it no longer pushes each question halfway
+      // down a phone. The title runs into the body as one paragraph.
+      className="mx-4 mt-2 flex items-start gap-2 rounded-xl border-2 border-help bg-surface px-3 py-2"
     >
-      <p className="text-sm font-semibold text-help">{t("example.title", lang)}</p>
-      <p className="text-sm text-ink">{t("example.body", lang)}</p>
+      <span
+        aria-hidden="true"
+        className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-help text-xs font-bold text-page"
+      >
+        i
+      </span>
+      <p className="text-[0.8125rem] leading-snug text-ink">
+        <span className="font-bold text-help">{t("example.title", lang)}. </span>
+        {t("example.body", lang)}
+      </p>
     </section>
   );
 }

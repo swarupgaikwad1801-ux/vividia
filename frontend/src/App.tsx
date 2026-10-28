@@ -33,6 +33,7 @@ import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
 import ExampleModeBanner from "./components/ExampleModeBanner";
+import OfflineStrip from "./components/OfflineStrip";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
 import { activeDemo, clearDemo } from "./lib-demo/demoStory";
@@ -60,6 +61,9 @@ import { emergency } from "./lib/api";
 import { BUILT_IN_EMERGENCY } from "./lib/contacts";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
+import { forgetDrafts, readDrafts, saveDrafts } from "./lib/drafts";
+import { recordVisit } from "./lib/visits";
+import { onQuickExit } from "./lib/quickExit";
 import type { Turn } from "./lib/listening";
 import { pinStatus } from "./lib/pin";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
@@ -163,12 +167,27 @@ export default function App() {
   // a frightened child has just managed to write is the one thing this app
   // must never do. `Write` reports every keystroke up here and reads it back
   // when it mounts again. Nothing else may put text in a child's mouth.
-  const [draft, setDraft] = useState("");
+  // Both drafts start from what was kept on this phone (lib/drafts.ts).
+  const [draft, setDraft] = useState(() => readDrafts().write);
   // The listening conversation and its unsent message, kept here for the
   // same reason as `draft`: Back, Help or a language change must not lose a
   // word of it. Cleared only when it has become an entry.
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [talkDraft, setTalkDraft] = useState("");
+  const [talkDraft, setTalkDraft] = useState(() => readDrafts().talk);
+  useEffect(() => saveDrafts({ write: draft, talk: talkDraft }), [draft, talkDraft]);
+  // Leave now wipes them before the page goes: leaving in a hurry must not
+  // leave a half-written disclosure on the phone.
+  useEffect(() => onQuickExit(forgetDrafts), []);
+  // Today counts as a day they came back (lib/visits.ts): the date only.
+  useEffect(() => recordVisit(), []);
+  // "Saved. It is kept on this phone only.", once, on the screen a save
+  // leads to (GOV.UK confirmation pattern: say it is done, and where it
+  // is). Gone at the next screen change.
+  const [savedOn, setSavedOn] = useState<Step | null>(null);
+  useEffect(() => {
+    if (savedOn !== null && step !== savedOn) setSavedOn(null);
+  }, [step, savedOn]);
+
   // "Make a card" on the listening screen: the writing screen checks the
   // German straight away, because the child has already said everything.
   const [autoCheck, setAutoCheck] = useState(false);
@@ -285,6 +304,7 @@ export default function App() {
       } else {
         setTrail([HOME, "picMore"]);
       }
+      if (save) setSavedOn(own ? "listen" : "picMore");
     },
     [picks, checkInMood, lang, refreshEntries],
   );
@@ -339,6 +359,7 @@ export default function App() {
       // about something else - the inference `lib/moods.ts` and CLAUDE.md say
       // we never make.
       setCheckInMood(null);
+      setSavedOn("timeline");
       setStep("timeline");
     },
     [checkInMood, refreshEntries, setStep],
@@ -379,13 +400,27 @@ export default function App() {
   }
 
   const scene = SCENE[step];
-  const onMap = mapFor(step, picks, checkInMood);
+  // Not on the card the child holds up (27 Oct): an adult is reading that
+  // screen, and a game map above it pushed their words below the fold.
+  const onMap = step === "handoffShow" ? null : mapFor(step, picks, checkInMood);
   // The screen right after "What happened?", where the warm line answers it.
   const afterWhat = nextQuestion("picWhat", picks, checkInMood);
 
   return (
     // One flat colour per place (lib/scenes.ts), filling the whole screen.
     <div data-scene={scene} className="min-h-dvh bg-scene transition-colors duration-300">
+      {/* Skip to content (GOV.UK, WCAG 2.4.1): the first Tab stop, visible only
+          when focused, jumps past Back, Need help, Leave now, the banner and
+          the map to the screen itself. A button, not a #link: a hash would
+          add a history entry, and Back must never return to a screen the
+          child left with Leave now. */}
+      <button
+        type="button"
+        onClick={() => document.getElementById("content")?.focus()}
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-full focus:border-[2.5px] focus:border-ink focus:bg-surface focus:px-4 focus:py-2 focus:text-base focus:font-bold focus:text-ink"
+      >
+        {t("nav.skip", lang)}
+      </button>
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
@@ -440,6 +475,7 @@ export default function App() {
           typed anything for the app to have answered. Putting it there would
           add a second place for `engine` to go stale while guarding nothing. */}
       <ExampleModeBanner lang={lang} engine={engine} />
+      {step !== "write" && step !== "listen" && <OfflineStrip lang={lang} />}
 
       {onMap !== null && (
         <GameMap
@@ -454,9 +490,16 @@ export default function App() {
         />
       )}
 
+      {savedOn === step && (
+        <p role="status" className="animate-pop-in mx-4 mt-3 flex items-center gap-2 rounded-card border-[2.5px] border-ink bg-surface px-4 py-2.5 text-base font-bold text-ink">
+          <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink text-sm text-page">✓</span>
+          {t("saved.note", lang)}
+        </p>
+      )}
+
       {/* Keyed by step, so each new place slides in. Quiet scenes do not
           move. Reduced motion stops it anyway (index.css). */}
-      <div key={step} className={`flex flex-col ${scene === "quiet" ? "" : "animate-slide-in"}`}>
+      <div key={step} id="content" tabIndex={-1} className={`flex flex-col outline-none ${scene === "quiet" ? "" : "animate-slide-in"}`}>
       {step === "language" && (
         <LanguageSetup
           lang={lang}
@@ -500,7 +543,13 @@ export default function App() {
           lang={lang}
           mood={checkInMood}
           onPictures={() => setStep("picWhat")}
-          onWrite={() => setStep("listen")}
+          onWrite={(words) => {
+            // The feeling words the child tapped start their text; anything
+            // they had already typed stays first.
+            if (words) setTalkDraft((now) => (now.trim() ? `${now}
+${words}` : words));
+            setStep("listen");
+          }}
           onHome={() => setTrail([HOME])}
         />
       )}
@@ -637,6 +686,7 @@ export default function App() {
           where={where}
           chosen={adult}
           onDone={() => setStep("handoffDone")}
+          engine={engine}
         />
       )}
 

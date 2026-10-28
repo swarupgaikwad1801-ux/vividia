@@ -10,6 +10,10 @@
  * The art is our own (src/art/), drawn in that spirit: chunky people with big
  * heads, simple shapes, many skin tones. Nothing is copied from any app.
  *
+ * Soft theme (27 Oct, Swarup): the same scenes, outlines and stickers, but
+ * light, low-saturation colours, from research with 13-25 year olds (see the
+ * scene tokens below). Bright saturated colour is the one thing changed.
+ *
  * What does NOT change: help, crisis, safety and the lock stay calm and still
  * (the "calm" scene, no motion), there are no points, scores, streaks or
  * badges, and no character ever speaks (CLAUDE.md: no AI friend).
@@ -20,18 +24,21 @@
  */
 @theme {
   /* Surfaces and text */
-  --color-page: #ffffff;
-  --color-surface: #ffffff;
+  /* Warm paper, not stark white: white with primary colours read as
+     "school" or "for younger children" to 13-25 year olds (Garrido
+     et al. 2024). */
+  --color-page: #fffcf7;
+  --color-surface: #fffcf7;
   --color-ink: #1b1b2f;
   --color-ink-soft: #2e2e48;
-  --color-line: #d9d6e8;
+  --color-line: #ddd8e3;
 
   /* Primary: the child's own actions (write, save, continue). A black pill
      with white text. The names stay "calm" so every screen picks this up
      without a class change. */
   --color-calm: #1b1b2f;
   --color-calm-strong: #000000;
-  --color-calm-soft: #f1ecff;
+  --color-calm-soft: #efeaf3;
 
   /* Help and crisis. Serious, never an alarm colour: a child reaching for
      this is already scared, and neon red adds to that. */
@@ -41,12 +48,24 @@
   /* The scene: one flat colour per place on the map. Set by data-scene on
      the screen's wrapper (see below), read by bg-scene. */
   --color-scene: #ffffff;
-  --color-sun: #ffd23f;
-  --color-sky: #4cc9f0;
-  --color-grass: #38d47a;
-  --color-pink: #ff6fb5;
-  --color-lilac: #b69cff;
-  --color-quiet: #e8f1f2;
+  /* A deeper shade of the scene (set per scene below); a utility too, for
+     the calm tools' dot and current step. */
+  --color-scene-deep: #d9d3e6;
+  /* Soft theme (27 Oct). Light, low-saturation scenes: in Valdez and
+     Mehrabian (1994) brightness raised pleasure and saturation raised
+     arousal, so light + unsaturated is pleasant and calm. Young people
+     13-25 in Garrido et al. (2024) called bright apps "shouty" on a bad
+     day, found red aggressive, blue sad and yellow over-cheerful, and
+     named green, purple and pink as neutral. So: sand instead of
+     yellow, sea-glass instead of blue, and sage, rose and lavender.
+     The names stay, so no screen changes. Ink is 11.9:1 or more on
+     every one. */
+  --color-sun: #f3e3c3;
+  --color-sky: #cfe6e3;
+  --color-grass: #d3e5cb;
+  --color-pink: #f0d3dc;
+  --color-lilac: #ddd5f0;
+  --color-quiet: #e6ecea;
 
   /* Type. 17px base, because this is read on a cheap phone held low, often
      in a hurry. All bundled via @fontsource (main.tsx), nothing fetched.
@@ -77,6 +96,9 @@
   --animate-bob: bob 2.4s ease-in-out infinite;
   --animate-sparkle: sparkle 900ms ease-out both;
   --animate-wiggle: wiggle 2.8s ease-in-out infinite;
+  /* The handoff card turning over when the adult picks the other language:
+     the same card, other side. Reduced motion makes it an instant swap. */
+  --animate-card-flip: card-flip 420ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
 }
 
 /*
@@ -84,12 +106,58 @@
  * ink on a bright colour reads the same in a dark room. (The previous dark
  * palette was removed with the teal one.)
  */
-[data-scene="sun"] { --color-scene: var(--color-sun); }
-[data-scene="sky"] { --color-scene: var(--color-sky); }
-[data-scene="grass"] { --color-scene: var(--color-grass); }
-[data-scene="pink"] { --color-scene: var(--color-pink); }
-[data-scene="lilac"] { --color-scene: var(--color-lilac); }
-[data-scene="quiet"] { --color-scene: var(--color-quiet); }
+[data-scene="sun"] { --color-scene: var(--color-sun); --color-scene-deep: #ebc88a; }
+[data-scene="sky"] { --color-scene: var(--color-sky); --color-scene-deep: #86c3c2; }
+[data-scene="grass"] { --color-scene: var(--color-grass); --color-scene-deep: #92c7a0; }
+[data-scene="pink"] { --color-scene: var(--color-pink); --color-scene-deep: #e3a0ba; }
+[data-scene="lilac"] { --color-scene: var(--color-lilac); --color-scene-deep: #b5a7e3; }
+[data-scene="quiet"] { --color-scene: var(--color-quiet); --color-scene-deep: #b9c9c6; }
+
+/*
+ * Night palette: "Darker colours" in the Text options (lib/display.ts sets
+ * data-night on <html>). An option, never the default. Young people 13-25
+ * in Garrido et al. 2024 mostly preferred dark, "Spotify-like" palettes,
+ * some found dark gloomy, and they suggested subtle colour against a dark
+ * background as the middle ground: so each scene keeps its hue as a dark,
+ * muted tint. Every colour token is redefined here, so screens need no
+ * change; text-page on a calm or help pill becomes dark-on-light.
+ * Contrast (checked with a script): ink 10:1 or more on every scene and
+ * card, ink-soft 7.9:1 or more, ink on a picked tile 7.2:1 or more, help
+ * text 6.2:1 or more.
+ */
+:root[data-night] {
+  --color-page: #1c1a24;
+  --color-surface: #33303e;
+  --color-ink: #ece9f3;
+  --color-ink-soft: #c9c4d6;
+  --color-line: #4d4859;
+  --color-calm: #ece9f3;
+  --color-calm-strong: #ffffff;
+  --color-calm-soft: #3b3747;
+  --color-help: #ec9a9a;
+  --color-help-soft: #3d2629;
+  --color-sun: #352e25;
+  --color-sky: #1f3132;
+  --color-grass: #22302a;
+  --color-pink: #372630;
+  --color-lilac: #2a2740;
+  --color-quiet: #22272a;
+  /* A shadow, not a light ledge: ink is light here. */
+  --shadow-sticker: 0 4px 0 #0c0b10;
+  color-scheme: dark;
+}
+/* Outlines: a soft grey at night, not the light ink, which glared. Text
+   keeps the light ink. 3:1 or more against every scene and card. */
+:root[data-night] .sticker,
+:root[data-night] [class*="border-ink"] {
+  border-color: #8f8a9e;
+}
+:root[data-night] [data-scene="sun"] { --color-scene-deep: #6e5c3e; }
+:root[data-night] [data-scene="sky"] { --color-scene-deep: #3f6b69; }
+:root[data-night] [data-scene="grass"] { --color-scene-deep: #46694f; }
+:root[data-night] [data-scene="pink"] { --color-scene-deep: #71495a; }
+:root[data-night] [data-scene="lilac"] { --color-scene-deep: #57507f; }
+:root[data-night] [data-scene="quiet"] { --color-scene-deep: #45504f; }
 
 @keyframes pop-in {
   from { opacity: 0; transform: scale(0.85); }
@@ -98,6 +166,10 @@
 @keyframes slide-in {
   from { opacity: 0; transform: translateX(24px); }
   to { opacity: 1; transform: translateX(0); }
+}
+@keyframes card-flip {
+  0% { transform: perspective(900px) rotateY(-90deg); opacity: 0.4; }
+  100% { transform: perspective(900px) rotateY(0deg); opacity: 1; }
 }
 @keyframes bob {
   0%, 100% { transform: translateY(0); }
@@ -116,6 +188,36 @@
 }
 :root[data-danger] .need-help {
   animation: help-pulse 1.6s ease-in-out infinite;
+}
+
+/* Privacy cover (main.tsx): blank while the app is hidden. */
+:root[data-covered] #root,
+:root[data-covered] .print-only { visibility: hidden; }
+:root[data-covered] body { background: var(--color-page); }
+
+/* The handoff card in full screen (HandoffShow.tsx): the stage fills the
+   screen with the scene's paper colour, the card text grows, and it
+   scrolls if the words run long. */
+.card-stage:fullscreen {
+  overflow: auto;
+  padding: 20px;
+  background: var(--color-surface);
+}
+.card-stage:fullscreen article { box-shadow: none; }
+.card-stage:fullscreen article p { font-size: 1.625rem; }
+
+/* Printing the handoff card (components/HandoffShow.tsx): only the
+   print-only block reaches paper, both languages, black on white, no scene,
+   no buttons. */
+.print-only { display: none; }
+@media print {
+  @page { margin: 16mm; }
+  #root { display: none !important; }
+  body { background: #fff !important; }
+  .print-only { display: block; color: #000; background: #fff; }
+  .print-only * { color: #000 !important; }
+  .print-side { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+  .print-side + .print-side { border-top: 2px solid #000; padding-top: 20px; }
 }
 
 /* Bigger text and easier reading (lib/display.ts sets these on <html>).
@@ -264,7 +366,9 @@
      in, so it sits lower than its neighbours. The check badge says the same
      thing without colour (PictureQuestions.tsx). */
   .sticker-on {
-    background-color: color-mix(in srgb, var(--color-scene) 42%, white);
+    /* Halfway to the art's shade of this scene (--color-scene-deep): a
+       clear colour, not a grey, on a pastel scene. Ink is 9:1 or more. */
+    background-color: color-mix(in srgb, var(--color-scene), var(--color-scene-deep, var(--color-scene)) 55%);
     translate: 0 3px;
     box-shadow:
       0 1px 0 var(--color-ink),
@@ -298,13 +402,8 @@
  */
 [data-scene]:not([data-scene="quiet"]) {
   isolation: isolate;
-  --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 14%);
+  --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 9%);
 }
-/* Lighter shades where the scene is already darker, so even ink-soft text
-   that lands on a hill keeps 4.5:1 (checked: pink 4.55, lilac 4.76; ink
-   itself is 5.5:1 or more on every hill). */
-[data-scene="lilac"]:not([data-scene="quiet"]) { --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 11%); }
-[data-scene="pink"]:not([data-scene="quiet"]) { --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 7%); }
 [data-scene]:not([data-scene="quiet"])::before,
 [data-scene]:not([data-scene="quiet"])::after {
   content: "";

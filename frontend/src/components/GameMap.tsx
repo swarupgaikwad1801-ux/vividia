@@ -41,11 +41,11 @@ import { fill, t } from "../lib/strings";
 
 const INK = "#1B1B2F";
 const SCENE_FILL: Record<string, string> = {
-  sun: "#FFD23F",
-  sky: "#4CC9F0",
-  grass: "#38D47A",
-  pink: "#FF6FB5",
-  lilac: "#B69CFF",
+  sun: "#EBC88A",
+  sky: "#86C3C2",
+  grass: "#92C7A0",
+  pink: "#E3A0BA",
+  lilac: "#B5A7E3",
 };
 
 /**
@@ -259,7 +259,8 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
 
       <svg viewBox="0 0 340 120" aria-hidden="true" focusable="false" className="block w-full">
         {/* The path */}
-        <path d={PATH} fill="none" stroke="#D9D6E8" strokeWidth="9" strokeLinecap="round" />
+        {/* The line colour token, so the night palette can dim it. */}
+        <path d={PATH} fill="none" style={{ stroke: "var(--color-line)" }} strokeWidth="9" strokeLinecap="round" />
         <path d={PATH} fill="none" stroke={INK} strokeWidth="2.5" strokeDasharray="2 8" strokeLinecap="round" />
 
         {/* Three states, readable at a glance and without counting:

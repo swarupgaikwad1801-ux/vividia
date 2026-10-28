@@ -84,7 +84,7 @@ export default function HandoffCard({
         home is made or implied.
       */}
       {familyExcluded(where) && (
-        <p className="rounded-card border border-line bg-surface px-4 py-3 text-base text-ink-soft">
+        <p className="rounded-card border-[2.5px] border-ink bg-surface px-4 py-3 text-base text-ink-soft">
           {t("handoff.homeNote", lang)}
         </p>
       )}
@@ -99,8 +99,8 @@ export default function HandoffCard({
           return (
             <label
               key={option.id}
-              className={`squish relative flex cursor-pointer flex-col items-center gap-1 rounded-card border-[3px] border-ink p-2 text-center text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 ${
-                checked ? "bg-calm-soft" : "bg-surface"
+              className={`sticker motion-safe:active:translate-y-1 active:shadow-none relative flex cursor-pointer flex-col items-center gap-1 rounded-card p-2 text-center text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-4 ${
+                checked ? "sticker-on" : "bg-surface"
               }`}
             >
               <input
@@ -112,7 +112,7 @@ export default function HandoffCard({
                 className="sr-only"
               />
               {checked && (
-                <span aria-hidden="true" className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-ink text-sm text-page">
+                <span aria-hidden="true" className="animate-pop-in absolute -top-2.5 -right-2.5 flex size-7 items-center justify-center rounded-full border-2 border-page bg-ink text-sm text-page">
                   ✓
                 </span>
               )}
@@ -124,7 +124,7 @@ export default function HandoffCard({
       </div>
 
       {/* The card the child holds up. */}
-      <article className="flex flex-col gap-3 rounded-card border-[3px] border-ink bg-surface p-4">
+      <article className="flex flex-col gap-3 rounded-card border-[2.5px] border-ink bg-surface p-4">
         {recipient && (
           <header className="flex flex-col gap-0.5 border-b border-line pb-3">
             <span className="text-sm text-ink-soft">{t("handoff.showTo", lang)}</span>
@@ -158,7 +158,7 @@ export default function HandoffCard({
               <button
                 type="button"
                 onClick={onRetry}
-                className="min-h-tap rounded-card border border-calm px-4 text-base font-medium text-calm"
+                className="sticker min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
               >
                 {t("handoff.retry", lang)}
               </button>

@@ -148,7 +148,7 @@ export default function Handoff({
               onClick={onNext}
               // text-page, not text-white: --color-calm is a light teal in
               // dark mode, where white falls below the 4.5:1 floor.
-              className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page transition-colors hover:bg-calm-strong"
+              className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page hover:bg-calm-strong motion-safe:active:translate-y-1 active:shadow-none"
             >
               {t("nav.next", lang)}
             </button>

@@ -77,11 +77,16 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: Qui
             360px (measured, en/de/hi). */}
         <div className="flex items-center justify-end gap-2">
           {beside}
+          {/* The Escape shortcut, said where it can be found: on hover or
+              keyboard focus only (a phone has no Esc key), and to screen
+              readers through aria-keyshortcuts. */}
+          <span className="group relative">
           <button
             type="button"
             onClick={() => quickExit(url)}
             // DangerDialog keeps this in its Tab cycle, so it stays reachable.
             data-quick-exit
+            aria-keyshortcuts="Escape Escape Escape"
             className="sticker min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-2.5 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
           >
             {/* An arrow out of a door, for a child who reads the shape faster
@@ -102,6 +107,13 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: Qui
             </svg>
             {t("quickExit.button", lang)}
           </button>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-full right-0 z-50 mt-2 hidden rounded-full bg-ink px-3 py-1 text-xs font-bold whitespace-nowrap text-page group-has-[:focus-visible]:block [@media(hover:hover)]:group-hover:block"
+          >
+            {t("exit.keys", lang)}
+          </span>
+          </span>
         </div>
       </div>
     </div>

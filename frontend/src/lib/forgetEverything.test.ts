@@ -153,6 +153,10 @@ test("every storage key in the app has a decision recorded here", () => {
     // forgetAvatar. Unlike the language, nothing needs it to find the way
     // back, and on a shared phone a saved traveller shows the app was used.
     "vividia.avatar.v1",
+    // forgetDrafts: half-written words, the most sensitive thing on the phone.
+    "vividia.drafts.v1",
+    // forgetVisits: a list of days shows the app was used on a shared phone.
+    "vividia.visits.v1",
   ]);
 
   /** Deliberately kept, with the reason, so the next person need not re-decide. */

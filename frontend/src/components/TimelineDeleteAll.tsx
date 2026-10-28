@@ -51,7 +51,7 @@ export default function TimelineDeleteAll({ lang, onConfirm }: Props) {
       <button
         type="button"
         onClick={() => setAsking(true)}
-        className="min-h-tap rounded-card border border-line px-4 text-base font-medium text-help transition-colors hover:border-help"
+        className="min-h-tap rounded-full border-2 border-help bg-surface px-4 text-base font-bold text-help"
       >
         {t("timeline.deleteAll", lang)}
       </button>
@@ -78,7 +78,7 @@ export default function TimelineDeleteAll({ lang, onConfirm }: Props) {
           onClick={() => setAsking(false)}
           /* text-page rather than text-white: --color-calm is a light teal in
              dark mode, where white text on it fails contrast. */
-          className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page"
+          className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
         >
           {t("timeline.deleteAllNo", lang)}
         </button>
@@ -88,7 +88,7 @@ export default function TimelineDeleteAll({ lang, onConfirm }: Props) {
             setAsking(false);
             onConfirm();
           }}
-          className="min-h-tap rounded-card border border-help bg-surface px-4 text-base font-semibold text-help"
+          className="min-h-tap rounded-full border-2 border-help bg-surface px-4 text-base font-bold text-help"
         >
           {t("timeline.deleteAllYes", lang)}
         </button>

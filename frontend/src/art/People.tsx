@@ -3,7 +3,7 @@
  * to, and the kid heads a child can pick as their traveller on the map.
  *
  * Chunky: a big head on a small body, simple shapes, a thick ink outline,
- * rosy cheeks. Many skin tones and hair types. They are pictures of people,
+ * no rosy cheeks (removed 27 Oct, for an audience up to about 20). Many skin tones and hair types. They are pictures of people,
  * never speakers: no speech bubbles, no names, no text in the art (CLAUDE.md:
  * no AI friend, no mascot). All aria-hidden: the label next to each picture
  * is what a screen reader reads.
@@ -12,7 +12,6 @@
 import type { ReactNode } from "react";
 
 const INK = "#1B1B2F";
-const CHEEK = "#FF8FB8";
 
 export const SKIN = ["#F9D7BE", "#E8B48E", "#C98B5E", "#A0663F", "#6E4128", "#4A2C1C"] as const;
 
@@ -84,8 +83,6 @@ function Head({ cx, cy, r, skin, hair, hairColor, glasses }: HeadSpec & { cx: nu
       {back}
       <circle cx={cx} cy={cy} r={r} fill={skin} stroke={INK} strokeWidth={3.5 * s} />
       {front}
-      <circle cx={cx - r * 0.55} cy={cy + r * 0.3} r={r * 0.18} fill={CHEEK} opacity="0.75" />
-      <circle cx={cx + r * 0.55} cy={cy + r * 0.3} r={r * 0.18} fill={CHEEK} opacity="0.75" />
       <circle cx={cx - r * 0.33} cy={cy + r * 0.05} r={r * 0.11} fill={INK} />
       <circle cx={cx + r * 0.33} cy={cy + r * 0.05} r={r * 0.11} fill={INK} />
       {glasses && (
@@ -123,15 +120,15 @@ function Adult({ x = 0, scale = 1, spec }: { x?: number; scale?: number; spec: A
         </>
       )}
       {spec.prop === "book" && (
-        <rect x="52" y="88" width="20" height="16" rx="2" fill="#4CC9F0" stroke={INK} strokeWidth="2.5" transform="rotate(-8 62 96)" />
+        <rect x="52" y="88" width="20" height="16" rx="2" fill="#86C3C2" stroke={INK} strokeWidth="2.5" transform="rotate(-8 62 96)" />
       )}
       {spec.prop === "heart" && (
-        <path d="M44 92 c0 -6 8 -6 6 0 c-2 -6 6 -6 6 0 c0 5 -6 8 -6 11 c0 -3 -6 -6 -6 -11 z" fill="#FF6FB5" stroke={INK} strokeWidth="2" />
+        <path d="M44 92 c0 -6 8 -6 6 0 c-2 -6 6 -6 6 0 c0 5 -6 8 -6 11 c0 -3 -6 -6 -6 -11 z" fill="#E3A0BA" stroke={INK} strokeWidth="2" />
       )}
       {spec.prop === "whistle" && (
         <>
           <path d="M40 76 L50 90 L60 76" fill="none" stroke={INK} strokeWidth="2.5" />
-          <circle cx="50" cy="93" r="4" fill="#FFD23F" stroke={INK} strokeWidth="2" />
+          <circle cx="50" cy="93" r="4" fill="#EBC88A" stroke={INK} strokeWidth="2" />
         </>
       )}
       <Head cx={50} cy={44} r={28} {...spec} />
@@ -141,12 +138,12 @@ function Adult({ x = 0, scale = 1, spec }: { x?: number; scale?: number; spec: A
 
 /** The adults the handoff screen offers, by AdultId. */
 export const ADULTS: Record<string, AdultSpec[]> = {
-  classTeacher: [{ skin: SKIN[2], hair: "bun", hairColor: "#3B2A20", outfit: "#38D47A", glasses: true, prop: "book" }],
-  trustedTeacher: [{ skin: SKIN[0], hair: "short", hairColor: "#C9763A", outfit: "#B69CFF", prop: "heart" }],
-  socialWorker: [{ skin: SKIN[4], hair: "curly", hairColor: "#1B1B2F", outfit: "#FFD23F", prop: "lanyard" }],
+  classTeacher: [{ skin: SKIN[2], hair: "bun", hairColor: "#3B2A20", outfit: "#92C7A0", glasses: true, prop: "book" }],
+  trustedTeacher: [{ skin: SKIN[0], hair: "short", hairColor: "#C9763A", outfit: "#B5A7E3", prop: "heart" }],
+  socialWorker: [{ skin: SKIN[4], hair: "curly", hairColor: "#1B1B2F", outfit: "#EBC88A", prop: "lanyard" }],
   family: [
-    { skin: SKIN[3], hair: "long", hairColor: "#2B1B14", outfit: "#FF6FB5" },
-    { skin: SKIN[3], hair: "cap", hairColor: "#4CC9F0", outfit: "#38D47A" },
+    { skin: SKIN[3], hair: "long", hairColor: "#2B1B14", outfit: "#E3A0BA" },
+    { skin: SKIN[3], hair: "cap", hairColor: "#86C3C2", outfit: "#92C7A0" },
   ],
 };
 
@@ -168,12 +165,14 @@ export function AdultPicture({ id, className }: { id: string; className?: string
 }
 
 /** The kid heads a child can pick as their traveller on the map. */
+// The first one is the default. Short hair, not the puffs that used to lead:
+// the default traveller should not read as a small child (27 Oct).
 export const AVATARS: readonly HeadSpec[] = [
-  { skin: SKIN[1], hair: "puffs", hairColor: "#2B1B14" },
   { skin: SKIN[0], hair: "short", hairColor: "#F2C14E" },
+  { skin: SKIN[1], hair: "puffs", hairColor: "#2B1B14" },
   { skin: SKIN[4], hair: "curly", hairColor: "#1B1B2F" },
   { skin: SKIN[2], hair: "long", hairColor: "#5A3420" },
-  { skin: SKIN[3], hair: "cap", hairColor: "#FF6FB5" },
+  { skin: SKIN[3], hair: "cap", hairColor: "#E3A0BA" },
   { skin: SKIN[5], hair: "bun", hairColor: "#1B1B2F" },
 ];
 

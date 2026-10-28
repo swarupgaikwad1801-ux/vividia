@@ -7,6 +7,7 @@ import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
 import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDialog.tsx";
 import type { EngineMode } from "../lib/engineMode.ts";
+import SentenceStarters, { withStarter } from "../components/SentenceStarters";
 
 
 /**
@@ -292,13 +293,26 @@ export default function Write({
       {!online && (
         // The wording is the same sentence lib/api.ts shows for a failed
         // fetch, so the child reads one explanation, not two.
-        <p role="status" className="rounded-card border border-line bg-help-soft p-3 text-sm text-help">
+        <p role="status" className="rounded-card border-[2.5px] border-ink bg-help-soft p-3 text-sm text-help">
           {t("errors.network", lang)}
         </p>
       )}
 
       {phase === "writing" && (
         <section className="flex flex-col gap-3">
+          <SentenceStarters
+            lang={lang}
+            onPick={(starter) => {
+              const next = withStarter(text, starter);
+              setText(next);
+              onTextChange?.(next);
+              requestAnimationFrame(() => {
+                const box = editorRef.current;
+                box?.focus();
+                box?.setSelectionRange(next.length, next.length);
+              });
+            }}
+          />
           <textarea
             ref={editorRef}
             value={text}
@@ -313,7 +327,7 @@ export default function Write({
             aria-labelledby="write-title"
             aria-describedby="write-hint"
             placeholder={t("write.placeholder", lang)}
-            className="w-full resize-y rounded-card border border-line bg-surface p-3 text-base leading-relaxed placeholder:text-ink-soft"
+            className="w-full resize-y rounded-card border-[2.5px] border-ink bg-surface p-3 text-base leading-relaxed placeholder:text-ink-soft"
           />
           <button
             type="button"
@@ -321,19 +335,20 @@ export default function Write({
             disabled={!draft || !online}
             // text-page, not text-white: --color-calm is a light teal in dark
             // mode, where white measures ~2.3:1 against the 4.5:1 floor.
-            className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50"
+            className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:opacity-50 disabled:shadow-none motion-safe:active:translate-y-1 active:shadow-none"
           >
             {t("write.send", lang)}
           </button>
+          {text.trim() && <p className="text-xs text-ink-soft">{t("draft.kept", lang)}</p>}
         </section>
       )}
 
       {phase === "checking" && (
-        <WriteProgress lang={lang} elapsedMs={elapsedMs} onStop={backToEditor} />
+        <WriteProgress lang={lang} elapsedMs={elapsedMs} onStop={backToEditor} engine={engine} />
       )}
 
       {phase === "error" && failure && (
-        <section role="alert" className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
+        <section role="alert" className="flex flex-col gap-3 rounded-card border-[2.5px] border-ink bg-surface p-4">
           <p className="text-base">{failure.message}</p>
           <div className="flex flex-col gap-2 sm:flex-row">
             {failure.retryable && lastRun && (
@@ -341,7 +356,7 @@ export default function Write({
                 type="button"
                 onClick={() => void run(lastRun)}
                 disabled={!online}
-                className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page disabled:opacity-50 sm:flex-1"
+                className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:opacity-50 disabled:shadow-none sm:flex-1 motion-safe:active:translate-y-1 active:shadow-none"
               >
                 {t("write.retry", lang)}
               </button>
@@ -349,7 +364,7 @@ export default function Write({
             <button
               type="button"
               onClick={backToEditor}
-              className="min-h-tap rounded-card border border-line px-4 text-base font-medium sm:flex-1"
+              className="sticker min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink sm:flex-1 motion-safe:active:translate-y-1 active:shadow-none"
             >
               {t("approve.change", lang)}
             </button>
@@ -403,7 +418,7 @@ export default function Write({
               <button
                 type="button"
                 onClick={approve}
-                className="min-h-tap rounded-card bg-calm px-4 text-base font-semibold text-page sm:flex-1"
+                className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page sm:flex-1 motion-safe:active:translate-y-1 active:shadow-none"
               >
                 {t("approve.yes", lang)}
               </button>
@@ -411,7 +426,7 @@ export default function Write({
             <button
               type="button"
               onClick={backToEditor}
-              className="min-h-tap rounded-card border border-line px-4 text-base font-medium sm:flex-1"
+              className="sticker min-h-tap rounded-full bg-surface px-4 text-base font-bold text-ink sm:flex-1 motion-safe:active:translate-y-1 active:shadow-none"
             >
               {t("approve.change", lang)}
             </button>
