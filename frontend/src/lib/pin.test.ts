@@ -101,12 +101,33 @@ test("a badly formatted PIN is refused without storing anything", async () => {
 
 // --- what gets stored ------------------------------------------------------
 
-test("the PIN itself is never stored", async () => {
+test("the PIN itself is never stored", async (t) => {
+  // A fixed salt, so the stored text is the same on every run. With a random
+  // one, the 96 hex characters of salt and hash contained "4321" by chance in
+  // about 1 run in 700, and the test failed with no leak (main, run
+  // 40595401307). This salt's record contains no "4321" unless the PIN is
+  // written into it.
+  t.mock.method(crypto, "getRandomValues", <T extends ArrayBufferView | null>(bytes: T): T => {
+    if (bytes) new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength).fill(0);
+    return bytes;
+  });
   await setPin("4321", store);
 
   const raw = store.data.get(PIN_KEY) ?? "";
   assert.ok(raw.length > 0);
   assert.equal(raw.includes("4321"), false, "the PIN is in storage in the clear");
+});
+
+test("the PIN is not stored beside a real random salt either", async () => {
+  // The same promise with real randomness: everything except the salt and the
+  // hash values (random hex, which can spell any digits) must be free of it.
+  await setPin("4321", store);
+
+  const record = JSON.parse(store.data.get(PIN_KEY) ?? "{}");
+  assert.match(record.salt, /^[0-9a-f]{32}$/);
+  assert.match(record.hash, /^[0-9a-f]{64}$/);
+  const rest = JSON.stringify({ ...record, salt: "", hash: "" });
+  assert.equal(rest.includes("4321"), false, "the PIN is in storage in the clear");
 });
 
 test("stores a salt and a hash, and nothing else", async () => {
