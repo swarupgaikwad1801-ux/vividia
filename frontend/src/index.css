@@ -76,10 +76,9 @@
   --font-sans: "Inter", "Baloo 2", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Noto Sans Devanagari", "Helvetica Neue", Arial,
     sans-serif;
-  /* Headlines (c-bigtype, 28 Oct): Bricolage Grotesque, variable weight
-     and optical size, so the big question gets the display cut and a chip
-     label the text cut from one file. Baloo 2 for any Devanagari. */
-  --font-display: "Bricolage Grotesque Variable", "Baloo 2", var(--font-sans);
+  /* Headlines: Outfit 800 (Neel's pick, back on 28 Oct after the Bricolage
+     trial, agreed with Swarup), Baloo 2 for any Devanagari. */
+  --font-display: "Outfit", "Baloo 2", var(--font-sans);
   --text-base: 1.0625rem;
 
   /* The smallest thing a thumb may have to hit. WCAG 2.2 target size. */
@@ -342,8 +341,9 @@
   }
 
   /* Headlines: every h1, and an h2 that is a screen's question (.headline).
-     Smaller h2s are labels and stay in Inter. Bricolage is variable (200-800),
-     but a headline is always 800; a screen's question also wears .q-title. */
+     Smaller h2s are labels and stay in Inter. Only Outfit's 800 weight is
+     bundled, so a headline is always 800: do not add font-semibold etc.
+     A screen's question also wears .q-title. */
   h1,
   .headline {
     font-family: var(--font-display);
@@ -385,37 +385,11 @@
     box-shadow: none;
     transition:
       translate 90ms ease-out,
-      scale 160ms cubic-bezier(0.2, 0.8, 0.3, 1),
       filter 90ms ease-out,
       background-color 150ms ease-out;
   }
   .sticker:active {
     filter: brightness(0.94);
-  }
-  /* Hover zoom (Swarup, 28 Oct): a chip you can tap grows a little under the
-     mouse, or under keyboard focus (a picture tile is a label, so the focus
-     is on the checkbox inside it: hence :has), so it is clear what a click
-     would hit.
-     Only with a real pointer that can hover: on a phone a tap is already
-     answered by the press, and a hover state there sticks after the finger
-     lifts. `scale` is its own property, so it adds to the press's `translate`
-     instead of replacing it. 5% fits inside the 12px gap between tiles, so
-     a grown chip never covers its neighbour. Nothing that can't be tapped
-     grows: disabled buttons, and the card itself, which isn't a button. */
-  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    :is(button, a, label, summary, [role="button"]).sticker:not(:disabled, [aria-disabled="true"]):is(:hover, :focus-visible, :has(:focus-visible)) {
-      scale: 1.05;
-    }
-    :is(button, a, label, summary, [role="button"]).sticker:not(:disabled, [aria-disabled="true"]):active {
-      scale: 1.01;
-    }
-  }
-  /* With reduced motion nothing grows; the hovered chip darkens a little
-     instead, so the hint is still there. */
-  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
-    :is(button, a, label, summary, [role="button"]).sticker:not(:disabled, [aria-disabled="true"]):hover {
-      filter: brightness(0.96);
-    }
   }
   /* Picked: the deeper, solid fill of the scene. The ✓ badge says the same
      thing without colour (PictureQuestions.tsx). Ink on it is 7.7:1 or more. */
@@ -432,59 +406,28 @@
   }
 
   /* The question: the biggest thing on every screen, bigger than anything
-     you can tap. 40px on a 390px phone, rising to about 76px at 1440.
-     Optical sizing is automatic, so at this size Bricolage uses its display
-     cut. A long German word breaks with a hyphen rather than running off the
-     edge (the html lang attribute picks the dictionary). */
+     you can tap. One size at every width (28 Oct: no separate desktop
+     layout), the size it had on a 390px phone. A long German word breaks
+     with a hyphen rather than running off the edge (the html lang attribute
+     picks the dictionary). */
   .q-title {
-    font-size: clamp(2.5rem, 1.55rem + 3.6vw, 4.75rem);
+    font-size: 2.5rem;
     line-height: 0.98;
     letter-spacing: -0.035em;
     text-wrap: balance;
     hyphens: auto;
     overflow-wrap: break-word;
   }
-  /* The first screen's one word ("Hello!"), larger again, so it stands
-     clearly above the three greetings it is chosen from. */
   /* A question of more than about six words: still the biggest thing on
-     the screen, but not seven lines tall in the wide left column. */
+     the screen, but not seven lines tall on a narrow phone. */
   .q-title[data-long] {
-    font-size: clamp(2.125rem, 1.4rem + 2.4vw, 3.5rem);
+    font-size: 2.125rem;
     line-height: 1.02;
   }
+  /* The first screen's one word ("Hello!"), larger again, so it stands
+     clearly above the three greetings it is chosen from. */
   .q-title.q-hero {
-    font-size: clamp(3.75rem, 2.4rem + 6vw, 7.5rem);
+    font-size: 3.75rem;
     line-height: 0.92;
-  }
-}
-
-/*
- * Wide screens (c-bigtype, 28 Oct). The base was a 384px column floating in
- * an empty field at 1440. Here the shell widens and a question screen
- * splits: the question large on the left, the choices on the right. `.split`
- * has two children (the question block, the answers block); below lg it is
- * an ordinary flex column, and the answer block is display: contents there
- * so the phone layout is exactly the one-column stack.
- * Any other screen keeps a readable measure inside the wider shell.
- */
-@media (min-width: 64rem) {
-  #content > :not(.split) {
-    max-width: 40rem;
-  }
-  /* A whole screen (they centre themselves with mx-auto) sits left-aligned
-     under the question's edge, like the split screens. Lines such as the
-     warm line keep their own margins. */
-  #content > :is(main, section):not(.split) {
-    margin-inline: 0;
-  }
-  .split {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    column-gap: clamp(3rem, 5vw, 6rem);
-    align-items: start;
-  }
-  .split > :first-child {
-    position: sticky;
-    top: 5.5rem;
   }
 }

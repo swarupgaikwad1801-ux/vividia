@@ -381,7 +381,7 @@ export default function App() {
     // The lock is a quiet scene: plain colour, no map, no motion.
     return (
       <div data-scene="quiet" className="min-h-dvh bg-scene">
-        <div className="mx-auto flex min-h-dvh max-w-sm flex-col lg:max-w-6xl lg:px-6">
+        <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
           <div className="flex justify-end px-4 pt-3">
             <QuickExitButton lang={lang} />
           </div>
@@ -421,7 +421,7 @@ export default function App() {
       >
         {t("nav.skip", lang)}
       </button>
-    <div className="mx-auto flex min-h-dvh max-w-sm flex-col lg:max-w-6xl lg:px-6">
+    <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
           quieter, so a child reaching for Leave now does not hit it. Need
@@ -491,7 +491,7 @@ export default function App() {
       )}
 
       {savedOn === step && (
-        <p role="status" className="animate-pop-in mx-4 mt-3 flex items-center gap-2 rounded-card bg-surface px-4 py-2.5 text-base font-bold text-ink lg:max-w-xl">
+        <p role="status" className="animate-pop-in mx-4 mt-3 flex items-center gap-2 rounded-card bg-surface px-4 py-2.5 text-base font-bold text-ink">
           <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink text-sm text-page">✓</span>
           {t("saved.note", lang)}
         </p>

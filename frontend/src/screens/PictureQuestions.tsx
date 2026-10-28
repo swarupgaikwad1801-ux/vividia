@@ -213,7 +213,7 @@ function TileGrid({
         // Two across on a phone, so a word has the chip's whole width; three
         // across in the wide right-hand column. `cols` no longer changes the
         // count: a 2-up screen and a 3-up screen now look the same.
-        <div data-cols={cols} className="tile-grid grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3">
+        <div data-cols={cols} className="tile-grid grid grid-cols-2 gap-2.5">
           {answers.map((tile, i) => (
             <TileButton
               key={tile.code}
@@ -277,10 +277,9 @@ function Footer({
 }) {
   const bar = (
     <div data-action-bar className="fixed inset-x-0 bottom-0 z-20 pointer-events-none">
-      {/* The page's own colour with a hairline, not a white card: on a wide
-          screen the buttons sit under the choices, in the right column. */}
-      <div className="pointer-events-auto mx-auto w-full border-t border-ink/15 bg-scene px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:max-w-sm lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-[clamp(3rem,5vw,6rem)] lg:border-t-0 lg:px-10 lg:pb-6">
-        <div className="flex items-center gap-3 lg:col-start-2">
+      {/* The page's own colour with a hairline, not a white card. */}
+      <div className="pointer-events-auto mx-auto w-full border-t border-ink/15 bg-scene px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:max-w-sm">
+        <div className="flex items-center gap-3">
         <button type="button" onClick={onSkip} className="squish min-h-tap shrink-0 rounded-full px-4 text-base font-bold text-ink underline decoration-ink/50 decoration-2 underline-offset-[5px]">
           {t("q.skip", lang)}
         </button>
@@ -322,7 +321,7 @@ function Screen({
   children: ReactNode;
 }) {
   return (
-    <section aria-labelledby={id} className="split flex flex-col gap-5 px-4 pt-6 pb-5 lg:pt-12">
+    <section aria-labelledby={id} className="flex flex-col gap-5 px-4 pt-6 pb-5">
       <header className="flex flex-col gap-3">
         <h1 id={id} className="q-title" data-long={title.length > 40 ? "" : undefined}>
           {title}
@@ -339,8 +338,8 @@ function Screen({
           </div>
         )}
       </header>
-      {/* The answers: one block, so on a wide screen it is the right column. */}
-      <div className="contents lg:flex lg:flex-col lg:gap-5">{children}</div>
+      {/* The answers: one block (display: contents, so it adds no layout). */}
+      <div className="contents">{children}</div>
     </section>
   );
 }

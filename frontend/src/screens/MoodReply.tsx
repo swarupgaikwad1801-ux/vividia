@@ -58,7 +58,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
 
   if (stopped) {
     return (
-      <section aria-labelledby="mood-bye" className="flex flex-col items-start gap-6 px-4 pt-6 pb-8 text-left lg:pt-12">
+      <section aria-labelledby="mood-bye" className="flex flex-col items-start gap-6 px-4 pt-6 pb-8 text-left">
         {face && <Face code={face} className="animate-pop-in size-16" />}
         <h1 id="mood-bye" className="q-title text-ink">{t("moodReply.bye", lang)}</h1>
         <button
@@ -73,9 +73,8 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
   }
 
   return (
-    <section aria-labelledby="mood-reply" className="split flex flex-col items-start gap-4 px-4 pt-6 pb-6 text-left lg:pt-12">
-      {/* The reply as one block (left column on a wide screen): the face
-          small, the words large. */}
+    <section aria-labelledby="mood-reply" className="flex flex-col items-start gap-4 px-4 pt-6 pb-6 text-left">
+      {/* The reply as one block: the face small, the words large. */}
       <div className="flex flex-col items-start gap-4">
       {face && (
         <span className="block">
@@ -86,7 +85,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
       {reply.question && <p className="text-xl text-ink">{t(reply.question, lang)}</p>}
       </div>
 
-      <div className="contents lg:flex lg:flex-col lg:items-start lg:gap-4">
+      <div className="contents">
 
       {/* Only after a hard feeling: a child who tapped Good or OK is not
           offered a way to calm down they did not ask for. */}
@@ -128,11 +127,11 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
 
       {mood && CALM_FOR.has(mood) && <CalmTools lang={lang} />}
 
-      <div className="grid w-full grid-cols-2 gap-2.5 lg:gap-3">
+      <div className="grid w-full grid-cols-2 gap-2.5">
         <button
           type="button"
           onClick={onPictures}
-          className="sticker flex min-h-28 flex-col items-start justify-between gap-3 rounded-card bg-surface p-4 text-left font-display text-xl leading-tight font-semibold text-ink motion-safe:active:translate-y-1 lg:min-h-36"
+          className="sticker flex min-h-28 flex-col items-start justify-between gap-3 rounded-card bg-surface p-4 text-left font-display text-xl leading-tight font-semibold text-ink motion-safe:active:translate-y-1"
         >
           <span aria-hidden="true" className="text-3xl leading-none">🖼️</span>
           {t("moodReply.pictures", lang)}
@@ -140,7 +139,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
         <button
           type="button"
           onClick={() => onWrite(sentence)}
-          className="sticker flex min-h-28 flex-col items-start justify-between gap-3 rounded-card bg-surface p-4 text-left font-display text-xl leading-tight font-semibold text-ink motion-safe:active:translate-y-1 lg:min-h-36"
+          className="sticker flex min-h-28 flex-col items-start justify-between gap-3 rounded-card bg-surface p-4 text-left font-display text-xl leading-tight font-semibold text-ink motion-safe:active:translate-y-1"
         >
           <span aria-hidden="true" className="text-3xl leading-none">✏️</span>
           {t("moodReply.write", lang)}
