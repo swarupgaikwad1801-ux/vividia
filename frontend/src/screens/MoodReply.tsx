@@ -58,13 +58,13 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
 
   if (stopped) {
     return (
-      <section aria-labelledby="mood-bye" className="flex flex-col items-center gap-5 px-4 py-8 text-center">
-        {face && <Face code={face} className="animate-pop-in size-24" />}
-        <h1 id="mood-bye" className="text-3xl text-balance text-ink">{t("moodReply.bye", lang)}</h1>
+      <section aria-labelledby="mood-bye" className="flex flex-col items-start gap-6 px-4 pt-6 pb-8 text-left lg:pt-12">
+        {face && <Face code={face} className="animate-pop-in size-16" />}
+        <h1 id="mood-bye" className="q-title text-ink">{t("moodReply.bye", lang)}</h1>
         <button
           type="button"
           onClick={onHome}
-          className="sticker min-h-tap w-full rounded-full bg-calm px-4 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
+          className="sticker min-h-tap w-full rounded-full bg-calm px-4 text-lg font-bold text-page motion-safe:active:translate-y-1"
         >
           {t("heard.home", lang)}
         </button>
@@ -73,14 +73,20 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
   }
 
   return (
-    <section aria-labelledby="mood-reply" className="flex flex-col items-center gap-5 px-4 py-6 text-center">
+    <section aria-labelledby="mood-reply" className="split flex flex-col items-start gap-4 px-4 pt-6 pb-6 text-left lg:pt-12">
+      {/* The reply as one block (left column on a wide screen): the face
+          small, the words large. */}
+      <div className="flex flex-col items-start gap-4">
       {face && (
         <span className="block">
-          <Face code={face} className="animate-pop-in size-24" />
+          <Face code={face} className="animate-pop-in size-16" />
         </span>
       )}
-      <h1 id="mood-reply" className="text-3xl text-balance text-ink">{t(reply.title, lang)}</h1>
-      {reply.question && <p className="text-lg text-ink">{t(reply.question, lang)}</p>}
+      <h1 id="mood-reply" className="q-title text-ink">{t(reply.title, lang)}</h1>
+      {reply.question && <p className="text-xl text-ink">{t(reply.question, lang)}</p>}
+      </div>
+
+      <div className="contents lg:flex lg:flex-col lg:items-start lg:gap-4">
 
       {/* Only after a hard feeling: a child who tapped Good or OK is not
           offered a way to calm down they did not ask for. */}
@@ -89,16 +95,16 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
           type="button"
           aria-expanded={false}
           onClick={() => setWordsOpen(true)}
-          className="min-h-tap rounded-full px-4 text-base font-bold text-ink underline decoration-2 underline-offset-4"
+          className="min-h-tap rounded-full px-1 text-base font-bold text-ink underline decoration-ink/50 decoration-2 underline-offset-[5px]"
         >
           {t("feel.title", lang)}
         </button>
       )}
       {words && wordsOpen && (
-        <section aria-labelledby="feel-title" className="animate-pop-in flex w-full flex-col items-center gap-2">
+        <section aria-labelledby="feel-title" className="animate-pop-in flex w-full flex-col items-start gap-2">
           <h2 id="feel-title" className="text-base font-bold text-ink">{t("feel.title", lang)}</h2>
           <p className="text-sm text-ink-soft">{t("feel.hint", lang)}</p>
-          <div className="flex flex-wrap justify-center gap-2">
+          <div className="flex flex-wrap justify-start gap-2">
             {words.map((key) => {
               const on = picked.includes(key);
               return (
@@ -107,7 +113,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
                   type="button"
                   aria-pressed={on}
                   onClick={() => setPicked(on ? picked.filter((k) => k !== key) : [...picked, key])}
-                  className={`sticker min-h-tap rounded-full px-3.5 text-sm font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none ${
+                  className={`sticker min-h-tap rounded-full px-3.5 text-sm font-bold text-ink motion-safe:active:translate-y-1 ${
                     on ? "sticker-on" : "bg-surface"
                   }`}
                 >
@@ -122,11 +128,11 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
 
       {mood && CALM_FOR.has(mood) && <CalmTools lang={lang} />}
 
-      <div className="grid w-full grid-cols-2 gap-3">
+      <div className="grid w-full grid-cols-2 gap-2.5 lg:gap-3">
         <button
           type="button"
           onClick={onPictures}
-          className="sticker flex min-h-24 flex-col items-center justify-center gap-1 rounded-card bg-surface p-3 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
+          className="sticker flex min-h-28 flex-col items-start justify-between gap-3 rounded-card bg-surface p-4 text-left font-display text-xl leading-tight font-semibold text-ink motion-safe:active:translate-y-1 lg:min-h-36"
         >
           <span aria-hidden="true" className="text-3xl leading-none">🖼️</span>
           {t("moodReply.pictures", lang)}
@@ -134,7 +140,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
         <button
           type="button"
           onClick={() => onWrite(sentence)}
-          className="sticker flex min-h-24 flex-col items-center justify-center gap-1 rounded-card bg-surface p-3 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
+          className="sticker flex min-h-28 flex-col items-start justify-between gap-3 rounded-card bg-surface p-4 text-left font-display text-xl leading-tight font-semibold text-ink motion-safe:active:translate-y-1 lg:min-h-36"
         >
           <span aria-hidden="true" className="text-3xl leading-none">✏️</span>
           {t("moodReply.write", lang)}
@@ -144,10 +150,11 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
       <button
         type="button"
         onClick={() => setStopped(true)}
-        className="sticker min-h-tap rounded-full bg-surface px-6 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
+        className="min-h-tap rounded-full px-1 text-base font-bold text-ink underline decoration-ink/50 decoration-2 underline-offset-[5px] motion-safe:active:translate-y-1"
       >
         {t(reply.stop, lang)}
       </button>
+      </div>
     </section>
   );
 }

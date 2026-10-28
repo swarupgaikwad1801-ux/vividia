@@ -87,7 +87,10 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: Qui
             // DangerDialog keeps this in its Tab cycle, so it stays reachable.
             data-quick-exit
             aria-keyshortcuts="Escape Escape Escape"
-            className="sticker min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-2.5 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
+            // Big and clear (c-bigtype): an ink ring on the page, not a filled
+            // chip. Quieter than the red Need help beside it, but the only
+            // outlined thing on the screen, so it is never lost.
+            className="min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-ink px-2.5 text-base font-bold text-ink transition-colors duration-100 hover:bg-ink/5 active:bg-ink/10"
           >
             {/* An arrow out of a door, for a child who reads the shape faster
                 than the word, or reads no German or English at all. */}

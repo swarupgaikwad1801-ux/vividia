@@ -87,7 +87,7 @@ export default function HelpScreen({ lang }: HelpScreenProps) {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-col gap-4 px-4 py-6">
-      <h1 className="text-3xl text-balance">{t("help.title", lang)}</h1>
+      <h1 className="q-title">{t("help.title", lang)}</h1>
 
       <HelpList lang={lang} contacts={view.danger} urgent />
       <HelpList lang={lang} contacts={view.talk} />
@@ -107,7 +107,9 @@ export function HelpList({ lang, contacts, urgent = false }: { lang: string; con
       {contacts.map((contact) => (
         <li
           key={`${contact.name}-${contact.contact}`}
-          className={`flex flex-col gap-0.5 rounded-card border-[3px] bg-surface p-4 ${urgent ? "border-help" : "border-ink"}`}
+          // Flat, like the chips: the emergency numbers on the soft red of
+          // the help family, the others on the page's chip colour.
+          className={`flex flex-col gap-0.5 rounded-card p-4 ${urgent ? "bg-help-soft" : "bg-surface"}`}
         >
           {/* A real tel: or web link where there is one, so one tap reaches
               it. The contact itself is always printed, because inside some
@@ -115,7 +117,7 @@ export function HelpList({ lang, contacts, urgent = false }: { lang: string; con
           {contact.href ? (
             <a
               href={contact.href}
-              className={`min-h-tap font-bold text-help underline ${contact.kind === "phone" ? "text-2xl" : "text-lg break-all"}`}
+              className={`min-h-tap font-display font-extrabold text-help underline decoration-2 underline-offset-4 ${contact.kind === "phone" ? "text-4xl leading-tight" : "text-lg break-all"}`}
             >
               {contact.contact}
             </a>

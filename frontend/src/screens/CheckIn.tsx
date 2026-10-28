@@ -30,16 +30,20 @@ export interface CheckInProps {
 
 export default function CheckIn({ lang, onChoose }: CheckInProps) {
   return (
-    <section className="flex flex-col gap-6 px-4 py-6" aria-labelledby="checkin-title">
-      <h1 id="checkin-title" className="text-3xl text-balance">
+    <section className="split flex flex-col gap-6 px-4 pt-6 pb-6 lg:pt-12" aria-labelledby="checkin-title">
+      <h1 id="checkin-title" className="q-title">
         {t("checkin.title", lang)}
       </h1>
+
+      {/* The answers as one block: the right-hand column on a wide screen,
+          and nothing at all (display: contents) on a phone. */}
+      <div className="contents lg:flex lg:flex-col lg:gap-6">
 
       {/*
         Six moods in two rows of three: the layout moods.ts was written for,
         and the one that fits a 360px phone without shrinking a tap target.
       */}
-      <ul className="tile-grid grid grid-cols-3 gap-3">
+      <ul className="tile-grid grid grid-cols-3 gap-2.5 lg:gap-3">
         {MOODS.map((mood) => (
           <li key={mood.code}>
             <button
@@ -48,7 +52,7 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
               // A sticker like a picture tile, and pressed down the same way
               // (PictureQuestions.tsx). A tap commits, so there is no picked
               // state to show here.
-              className="sticker flex w-full flex-col items-center justify-center gap-1 rounded-card bg-surface px-1 pt-2 pb-2 hover:bg-calm-soft motion-safe:active:translate-y-1 active:shadow-none"
+              className="sticker flex w-full flex-col items-start justify-center gap-2 rounded-card bg-surface px-3 pt-3 pb-3 hover:bg-scene-deep/50 motion-safe:active:translate-y-1"
             >
               {/*
                 The face is decoration (aria-hidden, art/Face.tsx): the label
@@ -59,14 +63,14 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
               */}
               <span className="block">
                 {hasFace(mood.code) ? (
-                  <Face code={mood.code} className="size-16" />
+                  <Face code={mood.code} className="size-14" />
                 ) : (
                   <span aria-hidden="true" className="text-4xl leading-none">
                     {mood.emoji}
                   </span>
                 )}
               </span>
-              <span className="text-center text-base font-bold text-ink">
+              <span className="text-left font-display text-lg leading-tight font-semibold text-ink">
                 {mood.label[lang] ?? mood.label.en}
               </span>
             </button>
@@ -82,10 +86,11 @@ export default function CheckIn({ lang, onChoose }: CheckInProps) {
       <button
         type="button"
         onClick={() => onChoose(null)}
-        className="sticker min-h-tap self-center rounded-full bg-surface px-6 text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
+        className="min-h-tap self-start rounded-full px-1 text-base font-bold text-ink underline decoration-ink/50 decoration-2 underline-offset-[5px] motion-safe:active:translate-y-1"
       >
         {t("checkin.skip", lang)}
       </button>
+      </div>
     </section>
   );
 }

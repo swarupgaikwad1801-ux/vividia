@@ -108,7 +108,11 @@ function TileButton({
       // No entrance of their own: the screen slides in as one piece, which
       // reads calmer than tiles popping in one by one.
       data-index={index}
-      className={`sticker relative flex cursor-pointer flex-col items-center gap-1 rounded-card px-2 pt-2.5 pb-2 text-center text-base font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-4 ${
+      // Big and clear (c-bigtype): a flat chip of the scene's colour, the
+      // picture top-left and the word under it, left-aligned like the
+      // question. Picked is the deeper solid fill plus the ✓ inside the
+      // corner.
+      className={`sticker relative flex cursor-pointer flex-col items-start gap-1.5 rounded-card px-3.5 pt-3 pb-3 text-left font-display text-lg font-semibold text-ink motion-safe:active:translate-y-1 has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-4 ${
         checked ? "sticker-on" : "bg-surface"
       }`}
     >
@@ -123,15 +127,15 @@ function TileButton({
       {checked && (
         <span
           aria-hidden="true"
-          className="animate-pop-in absolute -top-2.5 -right-2.5 flex size-7 items-center justify-center rounded-full border-2 border-page bg-ink text-sm text-page"
+          className="animate-pop-in absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-full bg-ink text-sm font-bold text-page"
         >
           ✓
         </span>
       )}
       {/* One bounce when picked (pop-in), not a loop: the check badge is
           the lasting signal. */}
-      <span className={`flex h-16 w-full items-center justify-center ${checked ? "animate-pop-in" : ""}`}>{tile.picture}</span>
-      <span className="flex min-h-[2lh] w-full items-center justify-center leading-tight">
+      <span className="flex h-14 w-full items-center justify-start">{tile.picture}</span>
+      <span className="mt-auto w-full">
         <span className="leading-tight">{tile.label}</span>
       </span>
     </label>
@@ -160,8 +164,9 @@ function NoSayButton({
 }) {
   return (
     <label
-      className={`relative flex min-h-tap cursor-pointer items-center justify-center gap-2.5 rounded-full border-[2.5px] border-dashed border-ink px-4 py-2 text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-4 ${
-        checked ? "border-solid bg-surface" : "bg-surface/55"
+      // Quieter than the chips: a dashed edge and no fill until picked.
+      className={`relative flex min-h-tap cursor-pointer items-center justify-start gap-2.5 self-start rounded-full border-2 border-dashed border-ink/45 px-4 py-2 text-base font-bold text-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-4 ${
+        checked ? "border-solid border-ink bg-surface" : "bg-transparent"
       }`}
     >
       <input
@@ -205,7 +210,10 @@ function TileGrid({
   return (
     <div role={multi ? "group" : "radiogroup"} aria-labelledby={labelledBy} className="flex flex-col gap-4">
       {answers.length > 0 && (
-        <div className={`tile-grid grid gap-3 ${cols === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+        // Two across on a phone, so a word has the chip's whole width; three
+        // across in the wide right-hand column. `cols` no longer changes the
+        // count: a 2-up screen and a 3-up screen now look the same.
+        <div data-cols={cols} className="tile-grid grid grid-cols-2 gap-2.5 lg:grid-cols-3 lg:gap-3">
           {answers.map((tile, i) => (
             <TileButton
               key={tile.code}
@@ -269,8 +277,11 @@ function Footer({
 }) {
   const bar = (
     <div data-action-bar className="fixed inset-x-0 bottom-0 z-20 pointer-events-none">
-      <div className="pointer-events-auto mx-auto flex w-full items-center gap-3 border-t-[2.5px] border-ink bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:max-w-sm sm:rounded-t-card sm:border-x-[2.5px]">
-        <button type="button" onClick={onSkip} className="squish min-h-tap shrink-0 rounded-full px-4 text-base font-bold text-ink">
+      {/* The page's own colour with a hairline, not a white card: on a wide
+          screen the buttons sit under the choices, in the right column. */}
+      <div className="pointer-events-auto mx-auto w-full border-t border-ink/15 bg-scene px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:max-w-sm lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-[clamp(3rem,5vw,6rem)] lg:border-t-0 lg:px-10 lg:pb-6">
+        <div className="flex items-center gap-3 lg:col-start-2">
+        <button type="button" onClick={onSkip} className="squish min-h-tap shrink-0 rounded-full px-4 text-base font-bold text-ink underline decoration-ink/50 decoration-2 underline-offset-[5px]">
           {t("q.skip", lang)}
         </button>
         <button
@@ -280,12 +291,13 @@ function Footer({
           aria-describedby={ready ? undefined : hintId}
           className={`min-h-tap flex-1 rounded-full px-4 text-lg font-bold ${
             ready
-              ? "sticker bg-calm text-page hover:bg-calm-strong motion-safe:active:translate-y-1 active:shadow-none"
-              : "border-2 border-line bg-surface text-ink-soft/60"
+              ? "sticker bg-calm text-page hover:bg-calm-strong motion-safe:active:translate-y-1"
+              : "border-2 border-line bg-transparent text-ink-soft"
           }`}
         >
           {t("nav.next", lang)}
         </button>
+        </div>
       </div>
     </div>
   );
@@ -310,24 +322,25 @@ function Screen({
   children: ReactNode;
 }) {
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-4 px-4 py-5">
-      <header className="flex flex-col gap-2.5">
-        <h1 id={id} className="text-3xl text-balance">
+    <section aria-labelledby={id} className="split flex flex-col gap-5 px-4 pt-6 pb-5 lg:pt-12">
+      <header className="flex flex-col gap-3">
+        <h1 id={id} className="q-title" data-long={title.length > 40 ? "" : undefined}>
           {title}
         </h1>
         {/* The screen's one fixed line of help, as a note with a pen mark.
             Static copy from strings.ts, never generated, so it carries no
             AI label. */}
         {hint && (
-          <div className="flex items-center gap-2 self-start rounded-full border-[2.5px] border-ink bg-surface py-1 pr-3.5 pl-1">
-            <NoteMark className="size-7 shrink-0" />
-            <p id={`${id}-hint`} className="text-base font-semibold text-ink">
+          <div className="flex items-center gap-2 self-start">
+            <NoteMark className="size-6 shrink-0" />
+            <p id={`${id}-hint`} className="text-lg font-medium text-ink-soft">
               {hint}
             </p>
           </div>
         )}
       </header>
-      {children}
+      {/* The answers: one block, so on a wide screen it is the right column. */}
+      <div className="contents lg:flex lg:flex-col lg:gap-5">{children}</div>
     </section>
   );
 }
@@ -338,12 +351,12 @@ function tilesFor<C extends string>(kind: QuestionKind, list: readonly Choice<C>
     ...list.map((choice) => ({
       code: choice.code,
       label: choice.label[l],
-      picture: <QuestionPicture kind={kind} code={choice.code} className="h-16 w-full" />,
+      picture: <QuestionPicture kind={kind} code={choice.code} className="h-full w-auto" />,
     })),
     {
       code: NO_SAY,
       label: t("q.noSay", lang),
-      picture: <QuestionPicture kind={kind} code={NO_SAY} className="h-16 w-full" />,
+      picture: <QuestionPicture kind={kind} code={NO_SAY} className="h-full w-auto" />,
     },
   ];
 }

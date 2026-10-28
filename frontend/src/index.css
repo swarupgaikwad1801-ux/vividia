@@ -76,20 +76,27 @@
   --font-sans: "Inter", "Baloo 2", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Noto Sans Devanagari", "Helvetica Neue", Arial,
     sans-serif;
-  /* Headlines: Outfit 800 (Neel's pick), Baloo 2 for any Devanagari. */
-  --font-display: "Outfit", "Baloo 2", var(--font-sans);
+  /* Headlines (c-bigtype, 28 Oct): Bricolage Grotesque, variable weight
+     and optical size, so the big question gets the display cut and a chip
+     label the text cut from one file. Baloo 2 for any Devanagari. */
+  --font-display: "Bricolage Grotesque Variable", "Baloo 2", var(--font-sans);
   --text-base: 1.0625rem;
 
   /* The smallest thing a thumb may have to hit. WCAG 2.2 target size. */
   --spacing-tap: 2.75rem;
 
-  --radius-card: 1.25rem;
+  /* Radius follows hierarchy, not one value for everything: a choice chip
+     is softly squared, a pill is fully round, a text field is tighter. */
+  --radius-card: 1.375rem;
+  --radius-field: 0.875rem;
 
   /* The sticker: every surface a child can tap wears the same outline and
      the same solid shadow, so "this is pressable" reads the same everywhere
      (tiles, language cards, pills, Next). Pressing pushes it down onto its
      shadow (.sticker below). */
-  --shadow-sticker: 0 4px 0 var(--color-ink);
+  /* Big and clear (c-bigtype): no outline and no offset shadow. Kept as a
+     token (transparent) because the help pulse composes it. */
+  --shadow-sticker: 0 0 0 0 transparent;
 
   --animate-pop-in: pop-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   --animate-slide-in: slide-in 280ms ease-out both;
@@ -106,12 +113,23 @@
  * ink on a bright colour reads the same in a dark room. (The previous dark
  * palette was removed with the teal one.)
  */
-[data-scene="sun"] { --color-scene: var(--color-sun); --color-scene-deep: #ebc88a; }
-[data-scene="sky"] { --color-scene: var(--color-sky); --color-scene-deep: #86c3c2; }
-[data-scene="grass"] { --color-scene: var(--color-grass); --color-scene-deep: #92c7a0; }
-[data-scene="pink"] { --color-scene: var(--color-pink); --color-scene-deep: #e3a0ba; }
-[data-scene="lilac"] { --color-scene: var(--color-lilac); --color-scene-deep: #b5a7e3; }
-[data-scene="quiet"] { --color-scene: var(--color-quiet); --color-scene-deep: #b9c9c6; }
+/*
+ * Big and clear (c-bigtype, 28 Oct): each scene is a trio, not one colour.
+ *   --color-scene       the page: a light tint of the scene's hue
+ *   --color-surface     a choice at rest: a flat chip in the scene's soft colour
+ *   --color-scene-deep  a choice that is picked: the deeper, solid fill
+ * The colour moves off the page and into the things you can press, and
+ * there are no white cards left to box them in. Set on :root too (via :has)
+ * so the portalled Skip / Next bar and the sticky top bar wear the scene.
+ * Contrast (script, WCAG 2.2): ink on page 13.9:1 or more, on a chip
+ * 11.3:1 or more, on a picked chip 7.7:1 or more; ink-soft on a chip 8.8:1.
+ */
+:root:has([data-scene="sun"]), [data-scene="sun"] { --color-scene: #f8eedb; --color-surface: #efd9ae; --color-scene-deep: #e6c07f; }
+:root:has([data-scene="sky"]), [data-scene="sky"] { --color-scene: #e4f1ef; --color-surface: #c6e1dd; --color-scene-deep: #86c3c2; }
+:root:has([data-scene="grass"]), [data-scene="grass"] { --color-scene: #e6f0e1; --color-surface: #cbe1c1; --color-scene-deep: #92c7a0; }
+:root:has([data-scene="pink"]), [data-scene="pink"] { --color-scene: #f8e7ec; --color-surface: #efcdd8; --color-scene-deep: #e3a0ba; }
+:root:has([data-scene="lilac"]), [data-scene="lilac"] { --color-scene: #ece7f8; --color-surface: #d8cff0; --color-scene-deep: #b5a7e3; }
+:root:has([data-scene="quiet"]), [data-scene="quiet"] { --color-scene: #eef2f1; --color-surface: #dbe4e2; --color-scene-deep: #b9c9c6; }
 
 /*
  * Night palette: "Darker colours" in the Text options (lib/display.ts sets
@@ -152,12 +170,15 @@
 :root[data-night] [class*="border-ink"] {
   border-color: #8f8a9e;
 }
-:root[data-night] [data-scene="sun"] { --color-scene-deep: #6e5c3e; }
-:root[data-night] [data-scene="sky"] { --color-scene-deep: #3f6b69; }
-:root[data-night] [data-scene="grass"] { --color-scene-deep: #46694f; }
-:root[data-night] [data-scene="pink"] { --color-scene-deep: #71495a; }
-:root[data-night] [data-scene="lilac"] { --color-scene-deep: #57507f; }
-:root[data-night] [data-scene="quiet"] { --color-scene-deep: #45504f; }
+/* Night, as a trio too: the dark scene tint as the page, a lifted chip, and
+   a deep shade for picked, darkened until the light ink on it is 7.1:1 or
+   more (script). Ink on a night page 12.6:1 or more, on a chip 9.7:1. */
+:root[data-night]:has([data-scene="sun"]), :root[data-night] [data-scene="sun"] { --color-scene: #2a251f; --color-surface: #3d3428; --color-scene-deep: #584a32; }
+:root[data-night]:has([data-scene="sky"]), :root[data-night] [data-scene="sky"] { --color-scene: #1c2829; --color-surface: #283c3d; --color-scene-deep: #315251; }
+:root[data-night]:has([data-scene="grass"]), :root[data-night] [data-scene="grass"] { --color-scene: #1e2723; --color-surface: #2a3a32; --color-scene-deep: #37523e; }
+:root[data-night]:has([data-scene="pink"]), :root[data-night] [data-scene="pink"] { --color-scene: #2a1f25; --color-surface: #3f2c36; --color-scene-deep: #664251; }
+:root[data-night]:has([data-scene="lilac"]), :root[data-night] [data-scene="lilac"] { --color-scene: #221f31; --color-surface: #312d4b; --color-scene-deep: #4d4771; }
+:root[data-night]:has([data-scene="quiet"]), :root[data-night] [data-scene="quiet"] { --color-scene: #1d2123; --color-surface: #2a3033; --color-scene-deep: #444e4d; }
 
 @keyframes pop-in {
   from { opacity: 0; transform: scale(0.85); }
@@ -310,7 +331,9 @@
 
 @layer base {
   body {
-    background-color: var(--color-page);
+    /* The scene's page colour (set on :root by the scene trios), so an
+       overscroll or a short screen never shows a different colour below. */
+    background-color: var(--color-scene, var(--color-page));
     color: var(--color-ink);
     font-family: var(--font-sans);
     /* Mobile-first: the layout is designed at 360px and grows from there. */
@@ -319,9 +342,8 @@
   }
 
   /* Headlines: every h1, and an h2 that is a screen's question (.headline).
-     Smaller h2s are labels and stay in Inter. Tight tracking, as Neel asked,
-     to sit closer to a heavy display face. Only Outfit's 800 weight is
-     bundled, so a headline is always 800: do not add font-semibold etc. */
+     Smaller h2s are labels and stay in Inter. Bricolage is variable (200-800),
+     but a headline is always 800; a screen's question also wears .q-title. */
   h1,
   .headline {
     font-family: var(--font-display);
@@ -350,29 +372,29 @@
 }
 
 @layer components {
-  /* The sticker (see --shadow-sticker). The press itself is a utility on
-     each element, `motion-safe:active:translate-y-1 active:shadow-none`, so
-     with reduced motion the shadow still answers the finger but nothing
-     moves. */
+  /* The chip (c-bigtype, 28 Oct). The class keeps its old name, "sticker",
+     so every screen picks the change up without a class change, but the
+     sticker kit is gone: no ink outline, no offset shadow. A pressable thing
+     is a flat field of the scene's colour (bg-surface is the scene's chip
+     tint, see the scene trios above). The press itself is still a utility on
+     each element, `motion-safe:active:translate-y-1`, and the fill darkens
+     a little under the finger, so with reduced motion the tap is still
+     answered, by colour, without movement. */
   .sticker {
-    border: 2.5px solid var(--color-ink);
-    box-shadow: var(--shadow-sticker);
+    border: 0;
+    box-shadow: none;
     transition:
       translate 90ms ease-out,
-      box-shadow 90ms ease-out,
+      filter 90ms ease-out,
       background-color 150ms ease-out;
   }
-  /* Picked: filled with a light tint of the screen's own colour and pressed
-     in, so it sits lower than its neighbours. The check badge says the same
-     thing without colour (PictureQuestions.tsx). */
+  .sticker:active {
+    filter: brightness(0.94);
+  }
+  /* Picked: the deeper, solid fill of the scene. The ✓ badge says the same
+     thing without colour (PictureQuestions.tsx). Ink on it is 7.7:1 or more. */
   .sticker-on {
-    /* Halfway to the art's shade of this scene (--color-scene-deep): a
-       clear colour, not a grey, on a pastel scene. Ink is 9:1 or more. */
-    background-color: color-mix(in srgb, var(--color-scene), var(--color-scene-deep, var(--color-scene)) 55%);
-    translate: 0 3px;
-    box-shadow:
-      0 1px 0 var(--color-ink),
-      inset 0 3px 0 rgb(27 27 47 / 0.14);
+    background-color: var(--color-scene-deep);
   }
 
   /* A chunky tappable thing: squishes when pressed. */
@@ -382,52 +404,61 @@
   .squish:active {
     transform: scale(0.94);
   }
+
+  /* The question: the biggest thing on every screen, bigger than anything
+     you can tap. 40px on a 390px phone, rising to about 76px at 1440.
+     Optical sizing is automatic, so at this size Bricolage uses its display
+     cut. A long German word breaks with a hyphen rather than running off the
+     edge (the html lang attribute picks the dictionary). */
+  .q-title {
+    font-size: clamp(2.5rem, 1.55rem + 3.6vw, 4.75rem);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+  /* The first screen's one word ("Hello!"), larger again, so it stands
+     clearly above the three greetings it is chosen from. */
+  /* A question of more than about six words: still the biggest thing on
+     the screen, but not seven lines tall in the wide left column. */
+  .q-title[data-long] {
+    font-size: clamp(2.125rem, 1.4rem + 2.4vw, 3.5rem);
+    line-height: 1.02;
+  }
+  .q-title.q-hero {
+    font-size: clamp(3.75rem, 2.4rem + 6vw, 7.5rem);
+    line-height: 0.92;
+  }
 }
 
 /*
- * Scenery (27 Oct polish): a landscape strip along the bottom of every
- * bright scene: two low ridges in a darker shade of the screen's own
- * colour, low contrast so it never competes with a tile. No clouds and no
- * motion (27 Oct: the app is for young people up to about 20).
- * Full viewport width, so on a wide screen it fills the empty sides of the
- * narrow content column.
- *
- * CSS only, on the scene wrapper App.tsx already renders: `isolation`
- * makes that wrapper a stacking context, so the z-index -1 strips paint
- * above its colour but below every piece of content in it. The fixed
- * Skip / Next bar is portalled outside the wrapper at z-20 and stays on top.
- *
- * The shapes are masks, so one drawing takes each scene's colour. The quiet
- * scene (help, crisis, the lock) gets none: it stays plain and still.
+ * Wide screens (c-bigtype, 28 Oct). The base was a 384px column floating in
+ * an empty field at 1440. Here the shell widens and a question screen
+ * splits: the question large on the left, the choices on the right. `.split`
+ * has two children (the question block, the answers block); below lg it is
+ * an ordinary flex column, and the answer block is display: contents there
+ * so the phone layout is exactly the one-column stack.
+ * Any other screen keeps a readable measure inside the wider shell.
  */
-[data-scene]:not([data-scene="quiet"]) {
-  isolation: isolate;
-  --scenery-hills: color-mix(in srgb, var(--color-scene), var(--color-ink) 9%);
-}
-[data-scene]:not([data-scene="quiet"])::before,
-[data-scene]:not([data-scene="quiet"])::after {
-  content: "";
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-color: var(--scenery-hills);
-  mask-repeat: repeat-x;
-  mask-position: left bottom;
-}
-/* Two long, low ridges, one behind the other: a horizon, not a cartoon.
-   Each is one 1600-wide tile whose ends meet at the same height and slope,
-   so the repeat has no seam. Still, so nothing moves while a person reads. */
-[data-scene]:not([data-scene="quiet"])::before {
-  height: clamp(90px, 16vh, 150px);
-  opacity: 0.55;
-  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 150' preserveAspectRatio='none'><path d='M0 70 C260 30 520 30 800 62 C1080 94 1340 96 1600 70 L1600 150 L0 150 Z'/></svg>");
-  mask-size: 1600px 100%;
-}
-[data-scene]:not([data-scene="quiet"])::after {
-  height: clamp(60px, 10vh, 100px);
-  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 100' preserveAspectRatio='none'><path d='M0 46 C300 74 560 20 900 34 C1180 46 1380 70 1600 46 L1600 100 L0 100 Z'/></svg>");
-  mask-size: 1600px 100%;
+@media (min-width: 64rem) {
+  #content > :not(.split) {
+    max-width: 40rem;
+  }
+  /* A whole screen (they centre themselves with mx-auto) sits left-aligned
+     under the question's edge, like the split screens. Lines such as the
+     warm line keep their own margins. */
+  #content > :is(main, section):not(.split) {
+    margin-inline: 0;
+  }
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    column-gap: clamp(3rem, 5vw, 6rem);
+    align-items: start;
+  }
+  .split > :first-child {
+    position: sticky;
+    top: 5.5rem;
+  }
 }
