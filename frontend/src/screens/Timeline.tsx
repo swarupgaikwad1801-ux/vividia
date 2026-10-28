@@ -144,10 +144,6 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
         {status}
       </p>
 
-      {/* Outside the "has entries" branch: coming back counts even on a day
-          nothing was saved. */}
-      <LastFourWeeks entries={entries} lang={lang} />
-
       {undoable && (
         <div role="status" className="animate-pop-in flex items-center justify-between gap-3 rounded-full border-[2.5px] border-ink bg-ink py-1 pr-1 pl-4 text-page">
           <span className="text-base font-bold">{t("timeline.deletedOne", lang)}</span>
@@ -175,26 +171,26 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
             ))}
           </ul>
 
-          <div className="flex flex-col gap-3">
-            {onBuildReport ? (
-              <button
-                type="button"
-                onClick={onBuildReport}
-                /* text-page, not text-white: in dark mode --color-calm is a
-                   light teal and white on it is roughly 1.8:1. --color-page
-                   flips with the theme, so this reads at ~5.8:1 in light and
-                   ~7.7:1 in dark. */
-                className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
-              >
-                {t("timeline.buildReport", lang)}
-              </button>
-            ) : null}
-            {/* Last, and visually quiet: it is the child's to use, not a thing
-                to reach for by accident while reading. */}
-            <TimelineDeleteAll lang={lang} onConfirm={deleteEverything} />
-          </div>
+          {onBuildReport ? (
+            <button
+              type="button"
+              onClick={onBuildReport}
+              /* text-page, not text-white: in dark mode --color-calm is a
+                 light teal and white on it is roughly 1.8:1. --color-page
+                 flips with the theme, so this reads at ~5.8:1 in light and
+                 ~7.7:1 in dark. */
+              className="sticker min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
+            >
+              {t("timeline.buildReport", lang)}
+            </button>
+          ) : null}
         </>
       )}
+
+      {/* Below the child's own words (review, 28 Oct: the 28-day grid sat
+          above them). Outside the "has entries" branch: coming back counts
+          even on a day nothing was saved. */}
+      <LastFourWeeks entries={entries} lang={lang} />
 
       {/* Outside the "has entries" branch on purpose: a child may want the
           lock on before there is anything to lock, and setting it up first is
@@ -209,6 +205,11 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
           {t(pinStatus() === "set" ? "pin.set.titleChange" : "pin.set.title", lang)}
         </button>
       ) : null}
+
+      {/* At the very bottom, far from Make a card (review, 28 Oct: it sat
+          right under it), and visually quiet: it is the child's to use, not a
+          thing to reach for by accident while reading. */}
+      {entries.length > 0 && <TimelineDeleteAll lang={lang} onConfirm={deleteEverything} />}
     </main>
   );
 }

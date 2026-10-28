@@ -197,12 +197,14 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
 
   return (
     <div className="mx-4 mt-1 flex flex-col gap-1">
-      {/* Left: "Step 2 of 9", always. Right: the answer to a tapped stop,
-          and only that (it used to repeat the heading underneath). The
-          height is held either way so nothing below it jumps. */}
+      {/* Left: the name of the place the child is at, always. Not "Step 2
+          of 9": the questions branch on the answers, so the total jumped
+          (review, 28 Oct: "1 of 9" -> "1 of 8" -> "2 of 9"); the dots show
+          how far there is to go. Right: the answer to a tapped stop, and
+          only that. The height is held either way so nothing below jumps. */}
       <p aria-hidden="true" className="flex h-6 items-center justify-between gap-2 text-sm font-medium">
         <span className="shrink-0 font-display text-base font-bold text-ink">
-          {fill("map.step", lang, { n: at + 1, total: places.length })}
+          {t(place.label, lang)}
         </span>
         {asked !== null && (
           <span className="flex min-w-0 items-center gap-1.5">
@@ -225,7 +227,7 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
 
     <div className="relative">
       <p className="sr-only">
-        {fill("map.youAreHere", lang, { place: t(place.label, lang), n: at + 1, total: places.length })}
+        {fill("map.youAreHere", lang, { place: t(place.label, lang) })}
       </p>
 
       {/* The traveller is the one thing on the strip that opens something:

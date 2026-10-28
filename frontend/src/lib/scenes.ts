@@ -86,7 +86,9 @@ const ENDING: readonly MapPlace[] = [
 ];
 
 /** Steps that stand on the card stop (the checking, writing and card screens). */
-const ON_CARD: readonly Step[] = ["picReview", "picMore", "write", "timeline", "report"];
+// Not "write" or "timeline": checking words and My notes are not a stop on
+// the way, and the strip on top of them read as one (review, 28 Oct).
+const ON_CARD: readonly Step[] = ["picReview", "picMore", "report"];
 
 /**
  * The stops for these answers, and where the traveller stands for this step,

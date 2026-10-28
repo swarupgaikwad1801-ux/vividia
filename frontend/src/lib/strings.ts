@@ -637,9 +637,9 @@ export const STRINGS = {
   "map.who": { en: "Who sees it", de: "Wer es sieht", hi: "Kaun dekhega" },
   "map.done": { en: "Done", de: "Fertig", hi: "Ho gaya" },
   "map.youAreHere": {
-    en: "You are here: {place}, place {n} of {total}.",
-    de: "Du bist hier: {place}, Ort {n} von {total}.",
-    hi: "Tum yahan ho: {place}, {total} mein se {n}.",
+    en: "You are here: {place}.",
+    de: "Du bist hier: {place}.",
+    hi: "Tum yahan ho: {place}.",
   },
 
   // The traveller on the map: a picture the child picks, never a character
@@ -1259,7 +1259,6 @@ export const STRINGS = {
   // big greeting is in the device's language (LanguageSetup.tsx).
   "langSetup.hello": { en: "Hello!", de: "Hallo!", hi: "Namaste!" },
   // Under the map: where you are, in words, as well as on the path.
-  "map.step": { en: "Step {n} of {total}", de: "Schritt {n} von {total}", hi: "{total} mein se step {n}" },
   // While the words are checked (live engine only): how the check works,
   // in general. Not progress: the server sends no steps (WriteProgress).
   "write.howTitle": { en: "How the check works", de: "So funktioniert die Prüfung", hi: "Check kaise hota hai" },
