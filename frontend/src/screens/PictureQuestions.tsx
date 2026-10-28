@@ -65,6 +65,7 @@ import {
 } from "../lib/pictures";
 import { t, type StringKey } from "../lib/strings";
 import { PRIVATE_TEXT } from "../lib/privateText";
+import { PencilIcon } from "../art/Icons.tsx";
 
 
 // --- the pieces ----------------------------------------------------------------
@@ -641,8 +642,10 @@ export function MoreQuestion({ lang, onWrite, onNoThanks, onMakeCard }: MoreQues
         onClick={onWrite}
         className="sticker min-h-tap rounded-full bg-calm px-4 text-lg font-bold text-page hover:bg-calm-strong motion-safe:active:translate-y-1 active:shadow-none"
       >
-        <span aria-hidden="true">✏️ </span>
-        {t("q.more.yes", lang)}
+        <span className="inline-flex items-center justify-center gap-2">
+          <PencilIcon className="size-6" />
+          {t("q.more.yes", lang)}
+        </span>
       </button>
       {onMakeCard && (
         <button
