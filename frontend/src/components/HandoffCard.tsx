@@ -36,7 +36,7 @@ export interface HandoffCardProps {
   lang: string;
   /** The child's answer. Everything on this card is derived from it. */
   where: WhereItHappens;
-  /** Who the child picked; null means the card's own suggestion still stands. */
+  /** Who the child picked; null means nobody yet. Nobody is ever picked for them. */
   chosen: AdultId | null;
   onChoose: (adult: AdultId) => void;
   /** The report the child already approved, word by word, in step 3. */
@@ -60,12 +60,12 @@ export default function HandoffCard({
   onRetry,
 }: HandoffCardProps) {
   const options = suggestedAdults(where);
-  // The screen suggests one adult. Until the child picks, the card leads with
-  // that suggestion rather than showing an empty recipient - a card with a
-  // blank "show this to" line reads as broken, and the child can change it
-  // with one tap below.
+  // The child chooses (review, 28 Oct): nobody is ticked until they tap. The
+  // card used to arrive with the first suggestion already ticked, which is the
+  // app deciding for them. The suggestion is still shown, as a hint on its
+  // tile, and the card asks them to pick instead of naming someone.
   const suggestion = primarySuggestion(where);
-  const recipient = options.find((option) => option.id === chosen) ?? suggestion;
+  const recipient = options.find((option) => option.id === chosen) ?? null;
 
   return (
     <section aria-labelledby="handoff-title" className="flex flex-col gap-4">
@@ -118,6 +118,9 @@ export default function HandoffCard({
               )}
               <AdultPicture id={option.id} className="h-24 w-full" />
               <span>{t(option.labelKey, lang)}</span>
+              {option.id === suggestion?.id && (
+                <span className="text-sm font-medium text-ink-soft">{t("handoff.goodStart", lang)}</span>
+              )}
             </label>
           );
         })}
@@ -125,12 +128,14 @@ export default function HandoffCard({
 
       {/* The card the child holds up. */}
       <article className="flex flex-col gap-3 rounded-card border-[2.5px] border-ink bg-surface p-4">
-        {recipient && (
-          <header className="flex flex-col gap-0.5 border-b border-line pb-3">
-            <span className="text-sm text-ink-soft">{t("handoff.showTo", lang)}</span>
+        <header className="flex flex-col gap-0.5 border-b border-line pb-3">
+          <span className="text-sm text-ink-soft">{t("handoff.showTo", lang)}</span>
+          {recipient ? (
             <span className="text-lg font-semibold">{t(recipient.labelKey, lang)}</span>
-          </header>
-        )}
+          ) : (
+            <span className="text-base text-ink-soft">{t("handoff.pickHint", lang)}</span>
+          )}
+        </header>
 
         {/*
           The adult's 5-minute guide is NOT here, and that is the decision

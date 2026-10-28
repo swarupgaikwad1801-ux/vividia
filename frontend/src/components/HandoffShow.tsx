@@ -28,7 +28,7 @@ import type { EngineMode } from "../lib/engineMode.ts";
 import CardLanguageSwitch from "./CardLanguageSwitch.tsx";
 import SourceMark from "./SourceMark.tsx";
 import type { EntrySource } from "../lib/timeline.ts";
-import { primarySuggestion, suggestedAdults, type AdultId, type WhereItHappens } from "./HandoffSuggestions.ts";
+import { suggestedAdults, type AdultId, type WhereItHappens } from "./HandoffSuggestions.ts";
 import { formatDay } from "../lib-followups-ui/dates.ts";
 import { t } from "../lib/strings.ts";
 import type { Entry, ReportResponse } from "../types/api.ts";
@@ -54,8 +54,8 @@ export default function HandoffShow({ lang, entries, report, where, chosen, onDo
   const [turned, setTurned] = useState(false);
 
   // The same rule as HandoffCard, so the big card names the person the small
-  // one did.
-  const recipient = suggestedAdults(where).find((option) => option.id === chosen) ?? primarySuggestion(where);
+  // one did, and nobody when the child picked nobody.
+  const recipient = suggestedAdults(where).find((option) => option.id === chosen) ?? null;
 
   // What the card says in one language. The screen shows one side at a
   // time.

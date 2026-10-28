@@ -117,8 +117,14 @@ test("the card shows the child's own saved words before any summary", () => {
   assert.ok(!markup.includes("Mein eigener Satz."));
 });
 
-test("the card leads with one suggested adult", () => {
-  // "Suggesting one trusted adult": the recipient line is filled in before the
-  // child picks, so the card is never a blank thing to hold up.
+test("the card suggests one adult but ticks nobody: the child chooses", () => {
+  // Review, 28 Oct: "My class teacher" arrived ticked, which is the app
+  // choosing. The suggestion is a hint on its tile; the card asks to pick.
+  for (const where of ["home", "school", "online"] as const) {
+    const markup = text(render(where));
+    assert.ok(!markup.includes('checked=""'), where);
+    assert.equal(markup.split(STRINGS["handoff.goodStart"].en).length - 1, 1, where);
+    assert.ok(markup.includes(STRINGS["handoff.pickHint"].en), where);
+  }
   assert.ok(text(render("home")).includes(STRINGS["handoff.socialWorker"].en));
 });
