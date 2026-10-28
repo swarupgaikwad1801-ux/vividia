@@ -82,8 +82,11 @@ export default function WriteClarify({
       aria-label={t("clarify.title", lang)}
       className="flex flex-col gap-4 rounded-card border-[2.5px] border-ink bg-surface p-4"
     >
+      {/* The title is for screen readers only: each question below already
+          asks "What did you mean by …?", and saying it twice read as a
+          repeat (review, 28 Oct). */}
       <header className="flex flex-col gap-1">
-        <h2 className="text-lg font-medium">{t("clarify.title", lang)}</h2>
+        <h2 className="sr-only">{t("clarify.title", lang)}</h2>
         <p className="text-sm text-ink-soft">{t("clarify.hint", lang)}</p>
       </header>
 
@@ -106,13 +109,10 @@ export default function WriteClarify({
               <span lang={lang} className="text-sm text-ink-soft">
                 “{item.phrase}”
               </span>
-              {item.severity === "critical" && (
-                // Marks the questions where the two readings change who did
-                // what, or flip a negation. Text, not a colour alone.
-                <span className="w-fit rounded-card bg-help-soft px-2 py-0.5 text-xs font-medium text-help">
-                  {t("clarify.important", lang)}
-                </span>
-              )}
+              {/* No "Important" chip for a critical question any more: a red
+                  label on a question can alarm a child (review, 28 Oct). The
+                  question itself carries the weight; severity still decides
+                  what the engine asks. */}
             </legend>
 
             {options.map((option) => (
