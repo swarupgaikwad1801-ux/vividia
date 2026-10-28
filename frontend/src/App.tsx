@@ -426,8 +426,8 @@ export default function App() {
           including the lock. Getting around (Back, My notes) sits on the
           left; staying safe (Need help, Leave now) on the right, where a
           thumb finds it, so a child reaching for Leave now does not hit
-          Back. Need help and Leave now are icons only (Neel, 28 Oct): a red
-          phone and a door, 44px each, named for screen readers and on hover
+          Back. Need help and Leave now are icons only (Neel, 28 Oct): red
+          headphones and a door, 44px each, named for screen readers and on hover
           from strings.ts. All of it fits one row at 360px in en/de/hi. */}
       <div className="top-bar flex items-center justify-between gap-2 px-4 pt-1">
 
@@ -475,9 +475,12 @@ export default function App() {
                 // need-help: pulses while a danger line is on screen (index.css).
                 className="need-help sticker size-tap inline-flex shrink-0 items-center justify-center rounded-full bg-help text-page motion-safe:active:translate-y-0.5"
               >
-                {/* A phone handset: the emergency-call sign, still red. */}
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6" fill="currentColor">
-                  <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z" />
+                {/* Headphones, still red (Neel, 28 Oct): someone who listens, not a
+                    phone that might call someone, which a child could fear. */}
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 15v-3a8 8 0 0 1 16 0v3" />
+                  <path d="M4 15a2 2 0 0 1 2-2h1v7H6a2 2 0 0 1-2-2z" fill="currentColor" />
+                  <path d="M20 15a2 2 0 0 0-2-2h-1v7h1a2 2 0 0 0 2-2z" fill="currentColor" />
                 </svg>
               </button>
             )

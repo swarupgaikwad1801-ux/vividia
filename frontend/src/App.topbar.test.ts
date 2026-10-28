@@ -1,6 +1,6 @@
 /**
  * The top bar after Neel's 28 Oct change: My notes on the left, Need help and
- * Leave now as icons only (a red phone, a door).
+ * Leave now as icons only (red headphones, a door).
  *
  * An icon-only button is only usable if it still has a name, so these pin the
  * names to strings.ts, keep My notes off the PIN lock (it would open the
@@ -32,7 +32,7 @@ test("Leave now is an icon with its name from strings.ts, in every language", ()
   }
 });
 
-test("Need help is a red phone named by help.short, not typed in the component", () => {
+test("Need help is red headphones named by help.short, not typed in the component", () => {
   assert.match(APP, /aria-label=\{t\("help\.short", lang\)\}/);
   assert.match(APP, /title=\{t\("help\.short", lang\)\}/);
   assert.match(APP, /className="need-help sticker size-tap/, "Need help keeps its pulse hook and a 44px target");
@@ -47,8 +47,8 @@ test("My notes opens the timeline and never appears on the PIN lock", () => {
   assert.match(LOCK, /EmergencyHelp/);
 });
 
-test("a line that sends a child to Need help names the red phone, in every language", () => {
-  const phone = { en: "red phone", de: "rote", hi: "laal phone" } as const;
+test("a line that sends a child to Need help names the red headphones, in every language", () => {
+  const phone = { en: "red headphones", de: "roten Kopfhörer", hi: "laal headphone" } as const;
   for (const key of ["help.dangerLineNoNumber", "heard.urgent", "ladder.dangerNow", "ladder.contactsElsewhere"] as const) {
     for (const lang of LANGS) {
       const text = STRINGS[key][lang];

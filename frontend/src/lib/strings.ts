@@ -201,13 +201,13 @@ export const STRINGS = {
   "danger.orWrite": { en: "Or write to someone", de: "Oder schreib jemandem", hi: "Ya kisi ko likho" },
   "danger.continue": { en: "Continue", de: "Weiter", hi: "Aage chalo" },
   // Shown in the pop-up when /api/emergency cannot be reached. The top-bar
-  // button is a red phone with no visible word (28 Oct), so every line that
+  // button is red headphones with no visible word (28 Oct), so every line that
   // sends a child to it names the shape first, then its name (help.short,
   // which is also its screen-reader name and hover label).
   "help.dangerLineNoNumber": {
-    en: "In danger right now? Tap the red phone, “Need help”, at the top.",
-    de: "Gerade in Gefahr? Tipp oben auf das rote Telefon, „Hilfe“.",
-    hi: "Abhi khatra hai? Upar laal phone wala “Need help” button dabao.",
+    en: "In danger right now? Tap the red headphones, “Need help”, at the top.",
+    de: "Gerade in Gefahr? Tipp oben auf die roten Kopfhörer, „Hilfe“.",
+    hi: "Abhi khatra hai? Upar laal headphone wala “Need help” button dabao.",
   },
   "help.source": { en: "Checked on", de: "Geprüft am", hi: "Check kiya" },
   // From #85's Help screen, kept at the merge. hi is draft Hinglish.
@@ -402,9 +402,9 @@ export const STRINGS = {
   // button is "Need help" in Hinglish too (ENGLISH_IN_HINGLISH below), so the
   // Hindi names it in English rather than as "Madad chahiye".
   "heard.urgent": {
-    en: "What you wrote matters a lot. You don't have to be alone with this. Tap the red phone, “Need help”, at the top, any time.",
-    de: "Was du geschrieben hast, ist sehr wichtig. Du musst damit nicht allein sein. Tipp oben auf das rote Telefon, „Hilfe“, jederzeit.",
-    hi: "Tumne jo likha, woh bahut important hai. Iske saath akele rehna zaroori nahi. Upar laal phone wala “Need help” button dabao, kabhi bhi.",
+    en: "What you wrote matters a lot. You don't have to be alone with this. Tap the red headphones, “Need help”, at the top, any time.",
+    de: "Was du geschrieben hast, ist sehr wichtig. Du musst damit nicht allein sein. Tipp oben auf die roten Kopfhörer, „Hilfe“, jederzeit.",
+    hi: "Tumne jo likha, woh bahut important hai. Iske saath akele rehna zaroori nahi. Upar laal headphone wala “Need help” button dabao, kabhi bhi.",
   },
   // The gentle questions, one after each answer, chosen by lib/listening.ts
   // from what the child has not said yet. Every one is optional: the child
@@ -948,14 +948,14 @@ export const STRINGS = {
     hi: "Yeh aakhri step hai jo yeh app jaanta hai. Agar yeh hota rahe, to inmein se kisi ke paas phir jaana theek hai. Do baar poochna theek hai.",
   },
   "ladder.dangerNow": {
-    en: "If you are in danger right now, press the red phone, “Need help”, at the top.",
-    de: "Bist du gerade in Gefahr? Dann drück oben auf das rote Telefon, „Hilfe“.",
-    hi: "Agar abhi khatra hai, to upar laal phone wala “Need help” button dabao.",
+    en: "If you are in danger right now, press the red headphones, “Need help”, at the top.",
+    de: "Bist du gerade in Gefahr? Dann drück oben auf die roten Kopfhörer, „Hilfe“.",
+    hi: "Agar abhi khatra hai, to upar laal headphone wala “Need help” button dabao.",
   },
   "ladder.contactsElsewhere": {
-    en: "To see how to reach them, press the red phone, “Need help”, at the top.",
-    de: "Wie du sie erreichst, siehst du oben unter dem roten Telefon, „Hilfe“.",
-    hi: "Inse kaise baat karein, yeh upar laal phone wale “Need help” button mein hai.",
+    en: "To see how to reach them, press the red headphones, “Need help”, at the top.",
+    de: "Wie du sie erreichst, siehst du oben unter den roten Kopfhörern, „Hilfe“.",
+    hi: "Inse kaise baat karein, yeh upar laal headphone wale “Need help” button mein hai.",
   },
   "ladder.rung.head": { en: "The head of the school", de: "Die Schulleitung", hi: "School ke principal" },
   "ladder.rung.schoolPsychology": {
