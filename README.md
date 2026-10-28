@@ -59,8 +59,8 @@ working, but the German is a fixed example and the app says so.
 - If the child says it happens at home, the app never suggests family members
   as the trusted adult.
 - "Need help now?" is on every screen: 116 111, krisenchat and 110/112, each
-  checked against its official source, plus the school psychology service in
-  the child's state, looked up live and only from that state's official site.
+  checked against its official source, with their hours and the languages
+  they answer in.
 
 It is a communication tool. It does not diagnose, decide whether an
 allegation is true, counsel, or replace a safeguarding professional. It is a
@@ -155,10 +155,36 @@ rules and the cost accounting. Zero Data Retention is enabled on our
 organization, so prompts and outputs are not stored after processing. We do
 **not** claim EU inference: public endpoints report region "Global".
 
-**Tavily** looks up the school psychology service for the child's federal
-state, restricted to a hand-checked official domain per state, with results
-from any other host dropped in code (`engine/resources.py`). Children are
-never shown unvetted web content. Verified on the deployed backend on
+**Tavily** finds the school psychology service (schulpsychologische
+Beratungsstelle) for a German federal state. It is all in
+`backend/engine/resources.py`, served by `GET /api/resources?lang=en&state=BW`:
+
+- **One hand-checked official domain per state**, all 16 (`STATE_SITES`),
+  passed to Tavily as `include_domains`. Any result from another host is
+  dropped again in code, and the page we read details from is checked a
+  second time before it is fetched. A state code not in the list gets no
+  search at all, only the curated helplines.
+- **What is sent:** the state's name in a fixed German query
+  (`Schulpsychologische Beratungsstelle <state> Kontakt`). Never anything the
+  child wrote: the function does not receive it.
+- **What comes back:** the page's title and link. One Tavily Extract call on
+  the best page adds a phone number only when the page labels it as one
+  ("Tel.", "Telefon"…) near a mention of the service, and opening hours only
+  when they name a day and "Uhr". Otherwise the entry says "Siehe Webseite"
+  rather than guess.
+- **Cost control:** at most 20 Tavily requests a day (`TAVILY_DAILY_CAP`),
+  counted before each request goes out; each state's result is cached for 24
+  hours; the day's count is visible on `/api/health`. Past the cap, or with no
+  key, the response is the curated helplines, marked `source: "fallback"`.
+- **Not used for:** emergency numbers (110/112), the helplines (116 111,
+  krisenchat) or anything the model does. Those come from
+  `content/helplines.json`, which is checked by hand, and never depend on the
+  network.
+
+**What the app's screens do today:** the help screen and the danger pop-up
+call `/api/resources` *without* a state, so in the deployed app they show
+the curated list and no Tavily request is made. The state lookup is
+reachable through the API (above). It was verified on the deployed backend on
 26 Oct: Baden-Württemberg returned the official ZSL Regionalstellen, marked
 `source: "live"`.
 
