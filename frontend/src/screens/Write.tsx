@@ -9,6 +9,7 @@ import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDia
 import type { EngineMode } from "../lib/engineMode.ts";
 import { rememberMeaning } from "../lib/meanings.ts";
 import SentenceStarters, { withStarter } from "../components/SentenceStarters";
+import { PRIVATE_TEXT } from "../lib/privateText";
 
 
 /**
@@ -322,6 +323,7 @@ export default function Write({
             }}
           />
           <textarea
+            {...PRIVATE_TEXT}
             ref={editorRef}
             value={text}
             onChange={(event) => {

@@ -6,6 +6,7 @@ import { ApiError, listen } from "../lib/api.ts";
 import { HELP_NUDGE, MAX_CARD_CHARS, replyFor, wordsForCard, type Turn } from "../lib/listening.ts";
 import { t } from "../lib/strings.ts";
 import SentenceStarters, { withStarter } from "../components/SentenceStarters";
+import { PRIVATE_TEXT } from "../lib/privateText";
 
 /**
  * "Tell us what happened": the child talks, and we answer every message
@@ -315,6 +316,7 @@ export default function Listen({
             }}
           />
           <textarea
+            {...PRIVATE_TEXT}
             ref={editorRef}
             value={draft}
             onChange={(event) => onDraftChange(event.target.value)}
