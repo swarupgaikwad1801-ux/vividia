@@ -66,6 +66,7 @@ import { recordVisit } from "./lib/visits";
 import { onQuickExit } from "./lib/quickExit";
 import type { Turn } from "./lib/listening";
 import { pinStatus } from "./lib/pin";
+import { isNotes, notesGate } from "./lib/notesGate";
 import { languageSetupState, saveLang } from "./lib-lang/langStore";
 import { applyDocumentLang } from "./lib-lang/languages";
 import type { ReportResponse, Resource } from "./types/api";
@@ -149,13 +150,13 @@ export default function App() {
   const [setup] = useState(() => languageSetupState());
   const [lang, setLang] = useState<Lang>(setup.lang);
 
-  // Kept out of `step` on purpose: see the note on Step. Nothing but the
-  // child entering their PIN may ever set this to true.
-  //
-  // "unavailable" means storage refused, so we cannot tell whether a PIN
-  // exists. Locking on that would shut a child out of their own words
-  // because of a browser setting, so only a PIN we can actually read locks.
-  const [unlocked, setUnlocked] = useState(() => pinStatus() !== "set");
+  // Whether the child has typed their PIN to open their notes (issue #133,
+  // lib/notesGate.ts). Kept out of `step` on purpose: see the note on Step.
+  // Only PinUnlock (or setting a new PIN) may set it to true; leaving the
+  // notes, hiding the app and Leave now set it back to false, below.
+  const [notesOpen, setNotesOpen] = useState(false);
+  // After "I forgot my PIN": every notes screen asks for a new one first.
+  const [mustSetPin, setMustSetPin] = useState(false);
 
   const [trail, setTrail] = useState(() => start(setup.needsChoice ? "language" : "checkIn"));
   const step = current(trail);
@@ -168,16 +169,36 @@ export default function App() {
   // must never do. `Write` reports every keystroke up here and reads it back
   // when it mounts again. Nothing else may put text in a child's mouth.
   // Both drafts start from what was kept on this phone (lib/drafts.ts).
-  const [draft, setDraft] = useState(() => readDrafts().write);
+  // Not when a PIN is set: the PIN guards the notes, not the whole app any
+  // more (issue #133), so unsent words must not wait on the phone for
+  // whoever opens it. They still survive Back, Help and screen changes.
+  const [draft, setDraft] = useState(() => (pinStatus() === "set" ? "" : readDrafts().write));
   // The listening conversation and its unsent message, kept here for the
   // same reason as `draft`: Back, Help or a language change must not lose a
   // word of it. Cleared only when it has become an entry.
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [talkDraft, setTalkDraft] = useState(() => readDrafts().talk);
-  useEffect(() => saveDrafts({ write: draft, talk: talkDraft }), [draft, talkDraft]);
+  const [talkDraft, setTalkDraft] = useState(() => (pinStatus() === "set" ? "" : readDrafts().talk));
+  useEffect(() => {
+    if (pinStatus() === "set") forgetDrafts();
+    else saveDrafts({ write: draft, talk: talkDraft });
+  }, [draft, talkDraft]);
   // Leave now wipes them before the page goes: leaving in a hurry must not
   // leave a half-written disclosure on the phone.
   useEffect(() => onQuickExit(forgetDrafts), []);
+  // The notes lock again whenever the child leaves them, the app is hidden
+  // (home button, app switcher, a phone call), or they press Leave now
+  // (lib/quickExit.ts: "an unlocked PIN session" is one of the things it ends).
+  useEffect(() => onQuickExit(() => setNotesOpen(false)), []);
+  useEffect(() => {
+    const hide = () => {
+      if (document.visibilityState === "hidden") setNotesOpen(false);
+    };
+    document.addEventListener("visibilitychange", hide);
+    return () => document.removeEventListener("visibilitychange", hide);
+  }, []);
+  useEffect(() => {
+    if (!isNotes(step)) setNotesOpen(false);
+  }, [step]);
   // Today counts as a day they came back (lib/visits.ts): the date only.
   useEffect(() => recordVisit(), []);
   // "Saved. It is kept on this phone only.", once, on the screen a save
@@ -372,34 +393,9 @@ export default function App() {
   // never moves `step` - a lock with a button that navigates was the leak.
   const needHelp = useCallback(() => setStep("help"), [setStep]);
 
-  // The lock, before anything else and with its own return. An early return
-  // is the point: while a PIN is outstanding there is no code path below this
-  // line, so no screen, callback or future `setStep` can render the child's
-  // words. The previous version made this a `step`, and the one control on
-  // the locked screen navigated straight past it.
-  if (!unlocked) {
-    // The lock is a quiet scene: plain colour, no map, no motion.
-    return (
-      <div data-scene="quiet" className="min-h-dvh bg-scene">
-        <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
-          <div className="flex justify-end px-4 pt-3">
-            <QuickExitButton lang={lang} />
-          </div>
-          <PinUnlock
-            lang={lang}
-            // Help INSIDE the lock, which is why PinUnlock asks for it as a
-            // node rather than a callback: a child who cannot get past their
-            // own PIN still needs a way to reach 110. It opens in place rather
-            // than navigating, so the lock never leaves the screen.
-            help={<EmergencyHelp lang={lang} />}
-            onUnlocked={() => setUnlocked(true)}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  const scene = SCENE[step];
+  // Read on every render: setting or removing a PIN changes it mid-session.
+  const gate = notesGate(step, pinStatus(), notesOpen, mustSetPin);
+  const scene = gate === "open" ? SCENE[step] : "quiet";
   // Not on the card the child holds up (27 Oct): an adult is reading that
   // screen, and a game map above it pushed their words below the fold.
   const onMap = step === "handoffShow" ? null : mapFor(step, picks, checkInMood);
@@ -524,6 +520,41 @@ export default function App() {
       {/* Keyed by step, so each new place slides in. Quiet scenes do not
           move. Reduced motion stops it anyway (index.css). */}
       <div key={step} id="content" tabIndex={-1} className={`flex flex-col outline-none ${scene === "quiet" ? "" : "animate-slide-in"}`}>
+      {/* NOTES GATE START */}
+      {/* The PIN on the notes (issue #133, lib/notesGate.ts). In place of the
+          screen, never a step, so no navigation can reach past it, and with
+          no saved words inside it. Help and 110/112 are in the lock itself
+          (EmergencyHelp, which never moves `step`); Leave now is in the top
+          bar above, as on every screen. */}
+      {gate === "unlock" && (
+        <PinUnlock
+          lang={lang}
+          help={<EmergencyHelp lang={lang} />}
+          onUnlocked={() => setNotesOpen(true)}
+          // "I forgot my PIN" removes it and keeps everything saved; the
+          // child is then asked to make a new one before the notes open.
+          // No navigation: the gate itself turns into "make a PIN".
+          onForgot={() => {
+            setNotesOpen(false);
+            setMustSetPin(true);
+          }}
+        />
+      )}
+      {gate === "setFirst" && (
+        <PinSet
+          lang={lang}
+          // They have just typed it twice: the notes open now.
+          onDone={() => {
+            setMustSetPin(false);
+            setNotesOpen(true);
+          }}
+          // "Not now" goes back to where they were, not into the notes.
+          onSkip={goBack}
+        />
+      )}
+      {/* NOTES GATE END */}
+      {gate === "open" && (
+      <>
       {step === "language" && (
         <LanguageSetup
           lang={lang}
@@ -723,6 +754,8 @@ ${words}` : words));
       {step === "pinSet" && <PinSet lang={lang} onDone={() => setStep("timeline")} />}
 
       {step === "help" && <HelpScreen lang={lang} />}
+      </>
+      )}
       </div>
     </div>
     </div>

@@ -780,9 +780,9 @@ export const STRINGS = {
   "pin.set.title": { en: "Make a PIN", de: "PIN aussuchen", hi: "PIN banao" },
   "pin.set.titleChange": { en: "Change your PIN", de: "PIN ändern", hi: "Apna PIN badlo" },
   "pin.set.hint": {
-    en: "A PIN is 4 to 6 numbers. You type it to open the app.",
-    de: "Eine PIN sind 4 bis 6 Zahlen. Du tippst sie ein, um die App zu öffnen.",
-    hi: "PIN 4 se 6 number ka hota hai. App kholne ke liye ise type karna hota hai.",
+    en: "A PIN is 4 to 6 numbers. You type it to open your notes.",
+    de: "Eine PIN sind 4 bis 6 Zahlen. Du tippst sie ein, um deine Notizen zu öffnen.",
+    hi: "PIN 4 se 6 number ka hota hai. Apne notes kholne ke liye ise type karna hota hai.",
   },
   // Honest limit of the PIN: keep both halves.
   "pin.set.limit": {
@@ -802,9 +802,9 @@ export const STRINGS = {
   },
   "pin.set.tooShort": { en: "A PIN is 4 to 6 numbers.", de: "Eine PIN sind 4 bis 6 Zahlen.", hi: "PIN 4 se 6 number ka hota hai." },
   "pin.set.saved": {
-    en: "Your PIN is saved. You need it to open the app.",
-    de: "Deine PIN ist gespeichert. Du brauchst sie, um die App zu öffnen.",
-    hi: "Tumhara PIN save ho gaya. App kholne ke liye iski zaroorat hogi.",
+    en: "Your PIN is saved. You need it to open your notes.",
+    de: "Deine PIN ist gespeichert. Du brauchst sie, um deine Notizen zu öffnen.",
+    hi: "Tumhara PIN save ho gaya. Apne notes kholne ke liye iski zaroorat hogi.",
   },
   "pin.set.noStorage": {
     en: "This phone won't let the app save things, so you can't make a PIN here. Nothing was saved.",
@@ -1371,9 +1371,9 @@ export const STRINGS = {
 
   // Draft kept on the phone (lib/drafts.ts).
   "draft.kept": {
-    en: "What you type is kept on this phone until you save it or leave with the door button, “Leave now”.",
-    de: "Was du tippst, bleibt auf diesem Handy, bis du es speicherst oder auf den Tür-Knopf „Schnell raus“ tippst.",
-    hi: "Jo tum type karte ho woh is phone par rehta hai, jab tak tum save na karo ya darwaze wala “Leave now” button na dabao.",
+    en: "What you type stays here until you save it or leave with the door button, “Leave now”.",
+    de: "Was du tippst, bleibt hier, bis du es speicherst oder auf den Tür-Knopf „Schnell raus“ tippst.",
+    hi: "Jo tum type karte ho woh yahin rehta hai, jab tak tum save na karo ya darwaze wala “Leave now” button na dabao.",
   },
 
   // Offline, everywhere except the two writing screens that say it themselves.

@@ -48,6 +48,11 @@ export interface PinSetProps {
    * ever means "move me on".
    */
   onDone?: () => void;
+  /**
+   * "Not now", when it must not count as done: from My notes (issue #133) it
+   * goes back to where the child was instead of into the notes.
+   */
+  onSkip?: () => void;
   /** Test seam. Left out, `lib/pin.ts` uses the browser's own storage. */
   store?: PinStore;
 }
@@ -56,7 +61,7 @@ type Stage = "enter" | "confirm" | "saved" | "removed";
 
 type Notice = { tone: "problem" | "good"; text: string } | null;
 
-export default function PinSet({ lang, onDone, store }: PinSetProps) {
+export default function PinSet({ lang, onDone, onSkip, store }: PinSetProps) {
   const [status, setStatus] = useState(() => pinStatus(store));
   const [stage, setStage] = useState<Stage>("enter");
   const [first, setFirst] = useState("");
@@ -249,10 +254,10 @@ export default function PinSet({ lang, onDone, store }: PinSetProps) {
             </div>
           ) : null}
 
-          {stage === "enter" && onDone ? (
+          {stage === "enter" && (onSkip ?? onDone) ? (
             <button
               type="button"
-              onClick={onDone}
+              onClick={onSkip ?? onDone}
               className="min-h-tap rounded-card px-4 text-base text-ink-soft underline"
             >
               {fill("pin.set.skip", lang)}
