@@ -317,6 +317,7 @@ async def listen(request: ListenRequest, http: Request) -> ListenResponse:
     # money"). Past that point the chat speaks its reviewed lines and the
     # rest of the budget stays for checking the child's words for a card.
     written = None
+    why = None
     if (
         heard["kind"] != "unclear"
         and not safety["urgent"]
@@ -327,11 +328,13 @@ async def listen(request: ListenRequest, http: Request) -> ListenResponse:
         except Exception:  # noqa: BLE001 - the reviewed sentence is always there
             answer = {"reply": None}
         written = answer.get("reply")
+        why = answer.get("why")
         heard = {**heard, "usage": _add_usage(heard.get("usage"), answer.get("usage"))}
 
-    # The length, the kind and whether a reply was written, never the text.
-    log.info("listen lang=%s chars=%d kind=%s written=%s",
-             request.lang, len(request.text), heard["kind"], written is not None)
+    # The length, the kind, whether a reply was written and which gate
+    # stopped it (a fixed label from listen.reply), never the text.
+    log.info("listen lang=%s chars=%d kind=%s written=%s why=%s",
+             request.lang, len(request.text), heard["kind"], written is not None, why or "-")
     usage = _usage_of(heard, started)
     GUARD.record_spend(usage["estimated_cost_usd"])
     return ListenResponse(

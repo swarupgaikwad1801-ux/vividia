@@ -318,7 +318,8 @@ Rules, all of them:
 - No advice and no instructions. Never "you should" or "you must".
 - No promises. Never say it will stop, get better or be okay.
 - No questions.
-- Do not repeat names, places, numbers or other details from the message.
+- Do not repeat names, places or numbers from the message. Saying back
+  what happened in general words is good ("they took something of yours").
 - Do not judge or blame anyone in the message, and never the child.
 - If the message is not about the child's own life (hi, thanks, bye, "ok",
   small talk, a question about something else, a test), answer that kindly
@@ -355,12 +356,15 @@ CHECK_SYSTEM = """You check one short answer that an app wants to show a
 child aged 10 to 16 who is being bullied, right after the child's message.
 
 Answer "ok": true only if ALL of these hold:
-- It is kind, and it fits what the child wrote.
+- It is kind, and it fits what the child wrote. For a message that is not
+  about the child's life (hi, thanks, a question, a test), one kind sentence
+  saying we are here fits.
 - It speaks as "we", never as "I", "me" or "my".
 - It gives no advice and no instructions.
 - It makes no promise that things will stop, improve or be okay.
 - It asks no question.
-- It repeats no names, places, numbers or other details from the message.
+- It repeats no names, places or numbers from the message. Saying back in
+  general words what happened or how the child feels is good, not a problem.
 - It blames or judges nobody, and never the child.
 - Nothing in it could frighten, shame or hurt a child.
 - It is written in {language}.
@@ -428,7 +432,11 @@ def reply_problems(reply: str, lang: str) -> list[str]:
 
 
 async def reply(text: str, lang: str) -> dict:
-    """{"reply": str | None, "usage": {...}}. None means: use the fixed sentence.
+    """{"reply": str | None, "why": str, "usage": {...}}. None means: use the fixed sentence.
+
+    "why" says which gate stopped a reply, as a fixed label for the server
+    log (a rule's own text, "check said no", or the error's type). It never
+    holds the child's words or the reply.
 
     Never raises. Two calls when the first gate passes, one when it does not.
     """
@@ -446,20 +454,21 @@ async def reply(text: str, lang: str) -> dict:
             step="reply",
         )
         written = json.loads(raw).get("reply", "").strip()
-        if reply_problems(written, lang):
-            return {"reply": None, "usage": usage.as_dict()}
+        problems = reply_problems(written, lang)
+        if problems:
+            return {"reply": None, "why": "rule: " + problems[0], "usage": usage.as_dict()}
         verdict = await call(
             "judge",
             CHECK_SYSTEM.format(language=language),
             f"Child's message: {text}\nAnswer: {written}",
             usage,
             temperature=0.0,
-            max_tokens=20,
+            max_tokens=60,
             response_format=CHECK_SCHEMA,
             step="reply_check",
         )
         if json.loads(verdict).get("ok") is not True:
-            return {"reply": None, "usage": usage.as_dict()}
+            return {"reply": None, "why": "check said no", "usage": usage.as_dict()}
         return {"reply": written, "usage": usage.as_dict()}
-    except Exception:  # noqa: BLE001 - the fixed sentence is always there
-        return {"reply": None, "usage": usage.as_dict()}
+    except Exception as error:  # noqa: BLE001 - the fixed sentence is always there
+        return {"reply": None, "why": "error: " + type(error).__name__, "usage": usage.as_dict()}
