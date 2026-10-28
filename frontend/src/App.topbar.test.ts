@@ -19,8 +19,11 @@ import { LANGS, STRINGS, t } from "./lib/strings.ts";
 
 const APP = readFileSync(new URL("./App.tsx", import.meta.url), "utf-8");
 
-/** The lock's early return: everything a locked child can reach. */
-const LOCK = APP.slice(APP.indexOf("if (!unlocked) {"), APP.indexOf("const scene = SCENE[step];"));
+/**
+ * The PIN lock on the notes (issue #133): what a child sees in place of their
+ * notes until they type their PIN. It replaced the early-return lock at start-up.
+ */
+const LOCK = APP.slice(APP.indexOf("{/* NOTES GATE START */}"), APP.indexOf("{/* NOTES GATE END */}"));
 
 test("Leave now is an icon with its name from strings.ts, in every language", () => {
   for (const lang of LANGS) {
@@ -39,12 +42,15 @@ test("Need help is red headphones named by help.short, not typed in the componen
 });
 
 test("My notes opens the timeline and never appears on the PIN lock", () => {
-  assert.ok(LOCK.length > 0, "could not find the lock's early return in App.tsx");
+  assert.ok(LOCK.length > 0, "could not find the notes lock in App.tsx");
   assert.match(APP, /onClick=\{\(\) => setStep\("timeline"\)\}[\s\S]{0,1200}t\("nav\.notes", lang\)/);
   assert.doesNotMatch(LOCK, /nav\.notes|setStep\("timeline"\)/, "My notes on the lock bypasses the PIN");
-  // The lock still has its own way out and its own help (EmergencyHelp).
-  assert.match(LOCK, /<QuickExitButton/);
+  // The lock still has its own help (EmergencyHelp, which never moves step),
+  // and Leave now stays in the top bar, which is drawn on every screen and
+  // around the lock, never inside a branch that the lock replaces.
   assert.match(LOCK, /EmergencyHelp/);
+  const bar = APP.slice(APP.indexOf('<div className="top-bar'), APP.indexOf("{/* NOTES GATE START */}"));
+  assert.match(bar, /<QuickExitButton/, "Leave now is not in the bar above the lock");
 });
 
 test("a line that sends a child to Need help names the red headphones, in every language", () => {

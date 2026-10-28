@@ -58,13 +58,18 @@ export interface PinUnlockProps {
   help: ReactNode;
   /** The PIN was accepted, removed, or there was none to check. Let them in. */
   onUnlocked: () => void;
+  /**
+   * "I forgot my PIN": after removing it, ask for a new one instead of
+   * opening (issue #133). Left out, the screen opens as before.
+   */
+  onForgot?: () => void;
   /** Test seam. Left out, `lib/pin.ts` uses the browser's own storage. */
   store?: PinStore;
 }
 
 type Notice = { tone: "problem" | "good"; text: string } | null;
 
-export default function PinUnlock({ lang, help, onUnlocked, store }: PinUnlockProps) {
+export default function PinUnlock({ lang, help, onUnlocked, onForgot, store }: PinUnlockProps) {
   const [digits, setDigits] = useState("");
   const [notice, setNotice] = useState<Notice>(null);
   const [busy, setBusy] = useState(false);
@@ -163,7 +168,8 @@ export default function PinUnlock({ lang, help, onUnlocked, store }: PinUnlockPr
 
   const forget = (): void => {
     clearPin(store);
-    open();
+    if (onForgot) onForgot();
+    else open();
   };
 
   const seconds = Math.ceil(waitMs / 1000);
