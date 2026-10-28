@@ -718,6 +718,12 @@ export const STRINGS = {
 
   // Handoff (moved from components/HandoffTempStrings.ts, which was English only).
   "handoff.showTo": { en: "Show this to", de: "Das zeigst du", hi: "Yeh dikhana hai" },
+  "handoff.goodStart": { en: "Often a good start", de: "Oft ein guter Anfang", hi: "Aksar achhi shuruaat" },
+  "handoff.pickHint": {
+    en: "Tap a person above. You choose.",
+    de: "Tippe oben auf eine Person. Du entscheidest.",
+    hi: "Upar kisi ek par tap karo. Tum chuno.",
+  },
   "handoff.changeWhere": { en: "Change where it happens", de: "Ort ändern", hi: "Jagah badlo" },
   "handoff.preparing": { en: "Getting your words ready…", de: "Deine Worte werden fertig gemacht…", hi: "Tumhari baat ready ho rahi hai…" },
   "handoff.retry": { en: "Try again", de: "Nochmal versuchen", hi: "Phir se karo" },
