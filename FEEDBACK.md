@@ -3,6 +3,45 @@
 Notes for the hackathon's "Most Valuable Feedback" submission field. Written
 as we hit things, not reconstructed afterwards. Keep it specific and factual.
 
+## Short version (paste this into Devpost)
+
+We built Vividia on Token Factory between 24 and 30 Oct 2026. We tried Nano,
+Lightning, Super and Super-VL; the app uses Super-VL for the translation
+passes and Super 120B as the judge. What cost us the most time, most
+expensive first:
+
+1. **Two silent blockers between a green deploy and a working app.** The
+   trial ended with credits still on the account, and calls were blocked
+   until we found "Switch to paid usage" in the console. Separately, the base
+   URL in our host's settings was a whole cURL example copied from the
+   console. Both showed up only on a real request, after deploy. A clear API
+   error naming the trial state, and a "copy base URL" button, would remove
+   both.
+2. **`reasoning_effort: "none"` on Nemotron Nano returns an empty answer**
+   with `finish_reason: "stop"`, while the same value works on Lightning. The
+   other documented ways to turn reasoning off (`detailed thinking off`,
+   `/no_think`, `chat_template_kwargs`) are accepted and ignored. A silent
+   empty answer looks like success in a pipeline.
+3. **Quality depends on the language, and the catalog doesn't say so.**
+   Lightning returned Ukrainian input unchanged in 5 of 12 runs; Super and
+   Super-VL failed 0 of 12. A note on which languages each model was tested
+   on would have saved us a wrong model choice.
+4. **The account balance is not a spend meter.** It said "last updated
+   yesterday". It suggested we had spent $0.27; the usage-by-model page said
+   $1.23, about 4.5x more. Real-time spend next to the balance would prevent
+   this.
+5. **Docs and messaging:** the structured-output examples don't run as
+   written (a missing comma, a key spelled `"response format"`), and the
+   launch post promises EU or US data residency while the Legal Quick Guide
+   says public endpoints have no region commitment.
+
+What worked well: Zero Data Retention as one organization-level checkbox, a
+Legal Quick Guide honest enough that we dropped a claim we couldn't keep,
+generous token limits on Super-VL (2M TPM), and strict JSON-schema output on
+`nemotron-3-super-120b-a12b`, which our judge relies on.
+
+The details and evidence for each point are below.
+
 ## Onboarding
 
 - **The quickstart code block is easy to mis-copy.** The console shows a cURL
@@ -12,6 +51,14 @@ as we hit things, not reconstructed afterwards. Keep it specific and factual.
   file. A "copy base URL" button next to the base URL itself would avoid this.
 - **The base URL is not stated as its own field** anywhere obvious; it only
   appears inside the sample code (`https://api.tokenfactory.nebius.com/v1/`).
+- **The same mis-copy reached our production server (26 Oct).** On our host
+  (Render), `NEBIUS_BASE_URL` held a whole cURL example from the console
+  (`'https://…/v1/chat/completions' \ -X 'POST' \ …`), and once a value
+  pasted with its `NAME=` prefix still attached. Every translation failed with
+  `InvalidURL` from 26 Oct until the evening of 27 Oct, while our health
+  check stayed green. We now
+  refuse a base URL that isn't a URL at startup. A copy button on the base
+  URL alone would stop this at the source.
 
 ## Credits
 
@@ -21,6 +68,27 @@ as we hit things, not reconstructed afterwards. Keep it specific and factual.
   `Trial: $1.00 - 29 days` and `Account balance $0.00`.
   The Discord channel shows many participants in the same position, which
   suggests a delivery or queueing problem rather than individual error.
+  (Update: the code did arrive and was redeemed; the balance read $29.75 on
+  26 Oct.)
+- **Credits on the account did not mean calls were allowed (26 Oct).** With
+  $29.75 on the balance, Token Factory calls were blocked. The console said:
+  `Trial expired. Trial ended. Usage stopped based on your after-trial
+  preference. Switch to paid usage to continue.` We found it only after the
+  backend was deployed and its health check was green, on the first real
+  translation request. Suggestion: an API error body that names this state
+  ("trial ended, switch to paid usage"), and an email when it happens, so a
+  team does not debug its own code first.
+- **Switching to paid usage means spending can go past the credits** once a
+  card is attached. Our app caps its own daily spend, but that protects the
+  demo budget, not the card. A hard spend limit offered right at the "switch
+  to paid usage" step would make that switch an easy yes for a student team.
+- **The account balance lags and is not a spend meter.** On 27 Oct it showed
+  "last updated yesterday 22:05 UTC". Read as spend, it said $0.27; the
+  usage-by-model page said $1.03 + $0.20 VAT = $1.23, about 4.5x more. We
+  published a wrong cost ratio from the balance before checking the usage
+  page. Real-time spend,
+  or a clear "this is not today's spend" next to the balance, would prevent
+  this.
 - The card requirement is clear once found, but it is documented in the
   billing docs rather than surfaced before signup.
 
