@@ -51,8 +51,14 @@ Always on screen: **Need help** (helplines, works offline) and **Leave now**
 (or Esc three times), which leaves in under a second.
 
 If the top of the screen says **Example mode**, the server is running
-without the models (or today's spending cap was reached): you see the app
-working, but the German is a fixed example and the app says so.
+without the models: you see the app working, but the German is a fixed
+example and the app says so.
+
+The public demo has a daily spending cap. Once half of it is used, the chat
+answers with its reviewed sentences instead of writing its own. When all of
+it is used, the app says *"The translation is not working today…"* until the
+next day, with krisenchat and 116 111 in the same message; **Need help**
+keeps working, because it needs no model.
 
 - Nothing is ever shared automatically. No monitoring, no automatic alerts,
   no AI "friend", no diagnosis.
@@ -140,8 +146,11 @@ shares the translator's blind spots cannot see the translator's mistakes.
 
 | Model | Role | Where |
 |-------|------|-------|
-| `nvidia/Nemotron-3.5-Super-VL` | the fan-out: N independent translations, the back-translations, the repair pass | `engine/translate.py` |
-| `nvidia/nemotron-3-super-120b-a12b` | the judge, the source-ambiguity check, the safety classifier | `engine/translate.py`, `engine/safety.py` |
+| `nvidia/Nemotron-3.5-Super-VL` | the fan-out: N independent translations, the back-translations, the repair pass; in the chat, what kind of thing the child said and the chat's own short answer | `engine/translate.py`, `engine/listen.py` |
+| `nvidia/nemotron-3-super-120b-a12b` | the judge, the source-ambiguity check, the safety classifier; in the chat, the second check every written answer must pass | `engine/translate.py`, `engine/safety.py`, `engine/listen.py` |
+
+Both are called through **Nebius Token Factory**'s OpenAI-compatible chat
+completions API (`engine/client.py`). No other Nebius services are used.
 
 Super-VL is the fan-out model **because of a measurement, not its name**.
 `Nemotron-3_5-Lightning` won the English bake-off (`eval/bakeoff.py`) and was
@@ -235,13 +244,13 @@ all agree and all be wrong; that is exactly what case 2 is.
 ### What it costs
 
 Strategy **C (adaptive)** is what the app runs: two cheap passes first, and
-the other eleven calls only when that sentence shows it needs them.
+the other thirteen calls only when that sentence shows it needs them.
 
 | | model calls | latency |
 |---|---|---|
 | a sentence that needs no verifying | 2 | about 1–2 s |
 | the eval's average sentence (C) | 9.6–11.4 | 7–11 s |
-| full verification with a repair | 13 | longer than the average |
+| full verification with a repair | 15 | longer than the average |
 
 Call counts for the first and last rows are exact: they are what the pipeline
 makes, asserted in `backend/tests/test_latency.py`. The middle row is measured:
@@ -275,6 +284,16 @@ python -m uvicorn main:app --reload         # http://127.0.0.1:8000/docs
 ENGINE_MODE=live python -m uvicorn main:app # real Nemotron calls
 ```
 
+The app itself, in a second terminal. Requires Node 20.19+ or 22.12+ (Vite 8). From the repo root:
+
+```bash
+cd frontend
+npm ci
+cp .env.example .env.local      # Windows: copy .env.example .env.local
+npm run dev                     # http://localhost:5173, talks to the API above
+npm test                        # the frontend tests; npm run build checks types
+```
+
 ### The checks
 
 Everything here is offline and spends nothing, which is also what CI runs
@@ -296,14 +315,15 @@ Tests that **do** spend credit are opt-in:
 
 ```bash
 ENGINE_MODE=live python -m pytest tests/test_safety.py -v   # 17 live cases
-python eval/bakeoff.py                                      # model bake-off
-python eval/language_gate.py --languages hi                 # per-language gate
+python ../eval/bakeoff.py                                   # model bake-off
+python ../eval/language_gate.py --languages hi              # per-language gate
 ```
 
 ## Results
 
-Reported only once measured, on sentences written by native speakers rather
-than machine-translated. Nothing goes in this table before then.
+**Preliminary.** The test sentences were drafted by the team with Claude's
+help, not machine-translated. The native-speaker review is still pending:
+`_review` in `eval/testset/*.json` is empty, so these numbers may move.
 
 Two full runs of the same sets, a day apart (`eval/results/`, files
 `*_20261024T22*` and `*_20261025T16*`):
@@ -313,15 +333,15 @@ Two full runs of the same sets, a day apart (`eval/results/`, files
 | English (50), meaning kept | 48/50 | 49/50 | 48/50 |
 | Hindi (30), meaning kept | 28/30 | 28/30 | 27/30 |
 | **Total** | **76/80** | **77/80** | **75/80** |
-| times the child was asked what they meant | 0 | 10 | 9 |
 | mean model calls | 1 | 10.5 | 10.3 |
 | missed crises (safety set) | – | 0 | 0 |
 
 **On accuracy the two are level.** The models are not deterministic, so ours
 moves by a sentence or two between runs, which on 80 sentences is noise, and
-we do not claim a win. What the extra calls buy is the questions: about one
-sentence in eight carried two honest meanings, and the app asked the child
-instead of guessing. Both runs predate the 28 Oct cross-checks (point 4
+we do not claim a win. What the extra calls buy is the questions: where a
+sentence carried two honest meanings, the app asked the child instead of
+guessing. How often is not given here: the run files and #52 count it
+differently, so the count waits for the re-run. Both runs predate the 28 Oct cross-checks (point 4
 above); a rerun is pending.
 
 Measured so far, and reproducible:
@@ -342,13 +362,13 @@ English**, and that the architecture is language-independent.
 
 - Live demo: **https://vividia-swarupgaikwad1801-ux.vercel.app** (see **Try it in 60 seconds** above).
 - Video: _TBD_
-- Benchmark: 50 English and 30 Hindi sentences, drafted by the team with
-  Claude's help and then read line by line by a team member who speaks the
-  language, scored against a reference meaning with `eval/run_eval.py`.
+- Benchmark (preliminary): 50 English and 30 Hindi sentences, drafted by
+  the team with Claude's help, native-speaker review pending, scored against
+  a reference meaning with `eval/run_eval.py`.
   Results: **76/80 for a single pass; 77/80 and 75/80 for ours** in two
   runs a day apart - level, since a sentence or two in eighty is noise, not
   a difference (table in **Results**).
-  What the extra calls buy is the 8 sentences where the child's own words
+  What the extra calls buy is the sentences where the child's own words
   had two meanings and the app asked them instead of guessing. 0 missed
   crises on the safety set. Numbers stand once the native review of the
   sentences is signed off; the method and raw output are in `eval/`.

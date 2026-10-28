@@ -11,7 +11,7 @@ filled in after the live eval or cut. App name: **Vividia**. Always write it as 
 **Tagline (≤ 200 chars):**
 > Helps children who can't speak up about bullying put it into words in their own language, checks every translation with NVIDIA Nemotron, and asks the child when meaning is unclear.
 
-*(After the eval run, consider: "Kept the meaning in [TBD]% of sentences where a single translation kept [TBD]%.")*
+*(No accuracy number in the tagline: the benchmark is preliminary and the two strategies are level.)*
 
 ---
 
@@ -105,7 +105,7 @@ exactly what the child meant, and leaves the child in charge of who hears it.
   unnamed actor ("they", "he") used to count too; removing it cut escalation
   from 37 to 19 of 50 English sentences and raised the score. A sentence that
   needs no verifying takes 2 calls and about 1–2 s; the full verification
-  with a repair takes 13 (call counts asserted in `test_latency.py`; timings
+  with a repair takes 15 (call counts asserted in `test_latency.py`; timings
   measured 24–25 Oct, a laptop calling Token Factory).
 - **Safety, twice:** the model classifies each message, and fixed rules read
   it too. Either can raise the help prompt; the rules can never lower it.
@@ -125,7 +125,7 @@ exactly what the child meant, and leaves the child in charge of who hears it.
 - **Stack:** React + Vite + TypeScript + Tailwind, FastAPI, Python.
 - **Benchmark:** `eval/run_eval.py` compares a single translation with our
   pipeline on 50 English and 30 Hindi sentences drafted by the team with
-  Claude's help and reviewed by native speakers, scored against a
+  Claude's help (native-speaker review pending, so preliminary), scored against a
   team-written answer key with plain string matching, so no model grades
   another model. Results: **level: 76/80 and 77/80**, a margin too small
   on 80 sentences to claim. What the extra
@@ -186,7 +186,10 @@ exactly what the child meant, and leaves the child in charge of who hears it.
 - A child can go from a feeling to a German card they hold up in about a
   minute, by tapping pictures, without writing a word and without a single
   model call.
-- [TBD: the headline benchmark result.]
+- On 80 team-drafted sentences (preliminary, native review pending), a
+  single pass kept the meaning in 76, ours in 77 and 75 in two runs a day
+  apart: level. The difference is that ours asks the child when their words
+  carry two meanings, instead of guessing.
 
 ## What we learned
 

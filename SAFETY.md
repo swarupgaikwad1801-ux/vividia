@@ -1,7 +1,6 @@
 # SAFETY.md
 
-Neel owns this file. **Updated 24 Oct 2026** to match `main` and the open
-PRs; **statuses re-checked 28 Oct 2026** against `main` and the live demo
+Neel owns this file. **Updated 28 Oct 2026** to match `main`; **statuses re-checked 28 Oct 2026** against `main` and the live demo
 (each "done" below was checked in the code or in a browser that day). It is the honest account of where a child's words go, who could misuse
 the app or the phone, what we do about it, and what we cannot do. Nothing
 marked *planned* or *requested* is claimed anywhere else until it ships.
@@ -31,8 +30,8 @@ flowchart LR
     A -- "child's text" --> F
     A -- "child's text" --> J
     A -- "German + questions" --> T
-    T -- "state code only" --> R
-    R -- "fixed German query + state name<br/>(never the child's text)" --> TV
+    T -. "state code only<br/>(API only: no screen sends one yet)" .-> R
+    R -. "fixed German query + state name<br/>(never the child's text)" .-> TV
     R -- "curated helplines<br/>+ vetted local result" --> T
 ```
 
@@ -56,8 +55,8 @@ flowchart LR
 | 5 | **A false or revenge report** | The report is "the child's own words, which they approved", never a verdict (adult guide footer). The app never names, contacts or notifies anyone | done: onboarding says "The app tells nobody behind your back" |
 | 6 | **A translation changes the meaning** ("hits me" → "trifft mich", meets me) | Fan-out + back-translation compared with the original + repair; a *different* model judges; confidence capped after repair; output that echoes the input is rejected | done |
 | 7 | **A clarifying question leads the child** | Only real two-meaning phrases are asked, never our own mistakes; always a third option "something else, I'll explain" | done (#18: every question carries "something else") |
-| 8 | **The child is in danger right now** | The model only classifies; the code decides; the words a child in crisis sees are fixed, human-written text with verified contacts. Detection is a prompt, not a gate: the help button is on every screen whether or not it fires. Tuned against false alarms ("my mum will kill me") | done. Since 28 Oct a second, independent check: fixed rules beside the model can raise the prompt when the model misses a plain threat or is down, never lower it, and are held to the same "must not fire" list |
-| 9 | A web search shows a child unvetted content | Tavily restricted to one hand-checked official site per state, all 16 states; other hosts dropped in code; unknown codes get curated helplines only | done: verified live on the deployed backend, 26 Oct |
+| 8 | **The child is in danger right now** | The model only classifies; the code decides; the words a child in crisis sees are fixed, human-written text with verified contacts. Detection is a prompt, not a gate: the help button is on every screen whether or not it fires. Tuned against false alarms ("my mum will kill me") | done. Since 28 Oct a second, independent check: fixed rules beside the model can raise the prompt when the model misses a plain threat or is down, never lower it, and are held to the same "must not fire" list. Since 28 Oct a third category, **sexual**: a sexual disclosure, slang included ("bj", "nudes"), opens the same help pop-up with fixed words ("it is not your fault") and people to talk to; checked live on 28 Oct |
+| 9 | A web search shows a child unvetted content | Tavily restricted to one hand-checked official site per state, all 16 states; other hosts dropped in code; unknown codes get curated helplines only | backend/API only; no screen sends a state yet. The restriction was verified live on the deployed backend, 26 Oct |
 | 10 | A helpline number or hours are out of date | Every contact carries its source and check date; re-checked before the demo and before 15 Dec | done: each helpline on the help screen shows its source link and "checked N days ago" |
 | 11 | The app is mistaken for counselling, diagnosis or legal advice | Onboarding says it is "not a person and not a doctor"; no AI friend, no diagnosis, no judgement on whether something is true | done: onboarding says "It is not a person and not a doctor" |
 | 12 | Someone abuses the public demo and drains credits | Per-IP rate limit and daily spending cap | done: `backend/app/limits.py` (40 requests per hour per client, daily $ cap) |
@@ -67,6 +66,7 @@ flowchart LR
 | 16 | **Half-written words are left on the phone** | Unsent text is kept so a closed tab does not lose it, but Leave now wipes it before leaving, and Delete everything wipes it | done, browser-checked 28 Oct |
 | 17 | **The app remembers too much about the child** | Only on the phone, and only: the days the app was opened (last 28, dates only), and the reading the child chose for a phrase (up to 50). No streaks, no mood history. Delete everything clears all of it; a test fails if a new storage key is not covered | done |
 | 18 | **The live app cannot reach its backend** and shows a frightened child "no internet" | Found 28 Oct (the browser blocked every call). The production address is now allowed in code, not only in a dashboard setting, with tests that other sites are still refused | done |
+| 19 | **A chat answer written by the model says something harmful** | Since 28 Oct the chat writes its own short answer. It reaches the child only through two gates: rules in code (no "I", no promise, no advice, no question, no number or link, the right alphabet, no gendered Hinglish) and a second model that reads it against the same rules. Any failure shows the reviewed sentence instead. Never for a message the safety check flagged, and only while half the day's budget is left. The log records why an answer was stopped, never the text | done; live sample 28 Oct: 5 of 7 answers passed, the Hinglish and German ones fell back to reviewed sentences |
 
 ## German context we design for
 
