@@ -1,0 +1,39 @@
+# Keeps the demo backend awake for judges.
+#
+# Render's free tier puts the service to sleep after about 15 minutes with no
+# requests, and the next visitor waits ~30 s on a blank screen: a judge would
+# reasonably think the app is broken. This visits /api/health every 10 minutes.
+#
+# /api/health never calls a model (main.py), so this spends no Nebius credit
+# and no Tavily credit, and it is not counted by the per-client rate limit.
+# One always-on free service uses ~744 of Render's 750 free hours a month.
+#
+# GitHub may delay scheduled runs by some minutes and pauses schedules on a
+# repository with no activity for 60 days, which is after judging ends
+# (15 Dec 2026). Run it by hand from the Actions tab at any time.
+name: keep demo awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Visit /api/health
+        run: |
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://vividia-8964.onrender.com/api/health) || code=000
+            echo "attempt $attempt: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          # Fail on purpose: GitHub emails the repo owner about a failed run,
+          # which is how we hear the demo is down before a judge does.
+          echo "::error::the demo backend did not answer /api/health with 200"
+          exit 1
