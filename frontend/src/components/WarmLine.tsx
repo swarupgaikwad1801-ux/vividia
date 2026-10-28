@@ -12,7 +12,9 @@ import { t, type StringKey } from "../lib/strings";
 export default function WarmLine({ line, lang }: { line: StringKey | null; lang: string }) {
   if (!line) return null;
   return (
-    <p className="mx-4 mt-4 rounded-card bg-calm-soft px-4 py-3 text-base font-bold text-ink text-pretty">
+    // Big and clear (c-bigtype): plain words, no box. Only things you can
+    // press have a shape.
+    <p className="mx-4 mt-5 max-w-xl text-lg font-semibold text-ink text-pretty">
       {t(line, lang)}
     </p>
   );

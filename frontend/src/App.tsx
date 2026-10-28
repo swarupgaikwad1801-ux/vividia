@@ -381,7 +381,7 @@ export default function App() {
     // The lock is a quiet scene: plain colour, no map, no motion.
     return (
       <div data-scene="quiet" className="min-h-dvh bg-scene">
-        <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
+        <div className="mx-auto flex min-h-dvh max-w-sm flex-col lg:max-w-6xl lg:px-6">
           <div className="flex justify-end px-4 pt-3">
             <QuickExitButton lang={lang} />
           </div>
@@ -421,7 +421,7 @@ export default function App() {
       >
         {t("nav.skip", lang)}
       </button>
-    <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
+    <div className="mx-auto flex min-h-dvh max-w-sm flex-col lg:max-w-6xl lg:px-6">
       {/* Outside the switch on purpose: the way out is on every screen,
           including the lock. Back sits in the opposite corner and looks
           quieter, so a child reaching for Leave now does not hit it. Need
@@ -455,7 +455,7 @@ export default function App() {
                 type="button"
                 onClick={needHelp}
                 // need-help: pulses while a danger line is on screen (index.css).
-                className="need-help sticker min-h-tap shrink-0 whitespace-nowrap rounded-full bg-help px-2.5 text-base font-bold text-page motion-safe:active:translate-y-1 active:shadow-none"
+                className="need-help sticker min-h-tap shrink-0 whitespace-nowrap rounded-full bg-help px-3 text-base font-bold text-page motion-safe:active:translate-y-0.5"
               >
                 {t("help.short", lang)}
               </button>
@@ -491,7 +491,7 @@ export default function App() {
       )}
 
       {savedOn === step && (
-        <p role="status" className="animate-pop-in mx-4 mt-3 flex items-center gap-2 rounded-card border-[2.5px] border-ink bg-surface px-4 py-2.5 text-base font-bold text-ink">
+        <p role="status" className="animate-pop-in mx-4 mt-3 flex items-center gap-2 rounded-card bg-surface px-4 py-2.5 text-base font-bold text-ink lg:max-w-xl">
           <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ink text-sm text-page">✓</span>
           {t("saved.note", lang)}
         </p>
@@ -524,13 +524,13 @@ export default function App() {
               for the child who wants to know and for anyone they show the
               app to. The row wraps only for Text's options, which take a line
               of their own below it. */}
-          <div className="mx-4 mt-1 flex flex-wrap justify-center gap-1.5">
+          <div className="mx-4 mt-1 flex flex-wrap justify-start gap-1.5">
             <LanguageButton lang={lang} onOpen={() => setStep("language")} />
             <DisplayButton lang={lang} />
             <button
               type="button"
               onClick={() => setStep("onboarding")}
-              className="sticker min-h-tap whitespace-nowrap rounded-full bg-surface px-2.5 text-sm font-bold text-ink motion-safe:active:translate-y-1 active:shadow-none"
+              className="sticker min-h-tap whitespace-nowrap rounded-full bg-surface px-3.5 text-sm font-bold text-ink motion-safe:active:translate-y-0.5"
             >
               {t("onboarding.again", lang)}
             </button>

@@ -195,12 +195,14 @@ export default function Listen({
       {urgentSeen && <HelpPulse />}
       {danger !== null && <DangerDialog lang={lang} message={danger} onClose={() => setDanger(null)} />}
 
-      <header className="flex flex-col items-center gap-1 text-center">
-        <Notebook lines={turns.length} className="h-32 w-auto drop-shadow-none" />
-        <h1 id="listen-title" className="text-3xl text-balance text-ink">
+      {/* Big and clear (c-bigtype): left-aligned, the notebook small, the
+          words large. */}
+      <header className="flex flex-col items-start gap-3 pt-3 text-left">
+        <Notebook lines={turns.length} className="h-16 w-auto drop-shadow-none" />
+        <h1 id="listen-title" className="q-title text-ink">
           {t("heard.title", lang)}
         </h1>
-        {turns.length === 0 && <p className="text-base text-ink-soft">{t("heard.hint", lang)}</p>}
+        {turns.length === 0 && <p className="text-lg text-ink-soft">{t("heard.hint", lang)}</p>}
       </header>
 
       {/* The conversation. role=log so a screen reader announces each new
@@ -210,13 +212,13 @@ export default function Listen({
           const reply = turn.kind !== null ? replyFor(index, turns) : null;
           return (
             <li key={index} className="flex flex-col gap-2">
-              <div className="animate-pop-in ml-10 self-end rounded-card rounded-br-md border-[3px] border-ink bg-surface px-4 py-3 shadow-[3px_3px_0_0_#1B1B2F]">
+              <div className="animate-pop-in ml-10 self-end rounded-card rounded-br-md bg-surface px-4 py-3">
                 <span className="sr-only">{t("heard.you", lang)}: </span>
                 <p lang={lang} className="whitespace-pre-wrap text-base text-ink">{turn.text}</p>
               </div>
 
               {reading === index && (
-                <div className="mr-10 flex items-center gap-2 self-start rounded-card rounded-bl-md border-[3px] border-ink bg-sun px-4 py-3">
+                <div className="mr-10 flex items-center gap-2 self-start rounded-card rounded-bl-md bg-sun px-4 py-3">
                   <span className="sr-only">{t("heard.reading", lang)}</span>
                   {[0, 1, 2].map((dot) => (
                     <span
@@ -230,7 +232,7 @@ export default function Listen({
               )}
 
               {failed?.index === index && (
-                <div role="alert" className="mr-10 flex flex-col items-start gap-2 self-start rounded-card border-[3px] border-ink bg-surface px-4 py-3">
+                <div role="alert" className="mr-10 flex flex-col items-start gap-2 self-start rounded-card bg-surface px-4 py-3">
                   <p className="text-base text-ink">{failed.message}</p>
                   <button
                     type="button"
@@ -245,7 +247,7 @@ export default function Listen({
 
               {reply && (
                 <>
-                  <div className="animate-pop-in mr-10 self-start rounded-card rounded-bl-md border-[3px] border-ink bg-sun px-4 py-3">
+                  <div className="animate-pop-in mr-10 self-start rounded-card rounded-bl-md bg-sun px-4 py-3">
                     <span className="sr-only">{t("heard.us", lang)}: </span>
                     {reply.lines.map((key) => (
                       <p key={key} className="text-base text-ink">{t(key, lang)}</p>
@@ -271,7 +273,7 @@ export default function Listen({
                       would read as the app asking it again. */}
                   {index === turns.length - 1 && reply.ask && (
                     <div
-                      className="animate-pop-in mr-10 self-start rounded-card rounded-bl-md border-[3px] border-ink bg-sun px-4 py-3"
+                      className="animate-pop-in mr-10 self-start rounded-card rounded-bl-md bg-sun px-4 py-3"
                       style={{ animationDelay: "350ms" }}
                     >
                       <p className="text-base font-semibold text-ink">{t(reply.ask, lang)}</p>
@@ -294,9 +296,11 @@ export default function Listen({
       {/* The writing box stays at the bottom of the conversation, so the next
           thing to say is always right there. */}
       {full ? (
-        <p className="rounded-card border-[3px] border-ink bg-surface p-3 text-base text-ink">{t("heard.full", lang)}</p>
+        <p className="rounded-card bg-surface p-3 text-base text-ink">{t("heard.full", lang)}</p>
       ) : (
-        <div className="flex flex-col gap-2 rounded-card border-[3px] border-ink bg-surface p-2">
+        // The writing box: a flat field of the scene's chip colour; the ring
+        // appears when the text area inside has keyboard focus.
+        <div className="flex flex-col gap-2 rounded-card bg-surface p-3 has-[textarea:focus-visible]:outline has-[textarea:focus-visible]:outline-3 has-[textarea:focus-visible]:outline-ink">
           <SentenceStarters
             lang={lang}
             onPick={(starter) => {
@@ -314,7 +318,7 @@ export default function Listen({
             ref={editorRef}
             value={draft}
             onChange={(event) => onDraftChange(event.target.value)}
-            rows={3}
+            rows={5}
             maxLength={room}
             lang={lang}
             aria-label={t("heard.title", lang)}
@@ -325,7 +329,7 @@ export default function Listen({
             type="button"
             onClick={writeDown}
             disabled={!text || !online || reading !== null}
-            className="sticker motion-safe:active:translate-y-1 active:shadow-none min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:opacity-50"
+            className="sticker motion-safe:active:translate-y-1 min-h-tap rounded-full bg-calm px-4 text-base font-bold text-page disabled:bg-ink/10 disabled:text-ink-soft"
           >
             {t("heard.send", lang)}
           </button>
@@ -336,7 +340,7 @@ export default function Listen({
       {/* The card, offered once we have answered, and never more than that:
           there all the time, pushed never. */}
       {answered && (
-        <div className="animate-pop-in flex flex-col gap-2 rounded-card border-[3px] border-ink bg-calm-soft p-4">
+        <div className="animate-pop-in flex flex-col gap-2 rounded-card bg-calm-soft p-4">
           <p className="text-base text-ink">{t("heard.cardOffer", lang)}</p>
           <div className="flex gap-2">
             <button

@@ -131,7 +131,7 @@ export default function CalmTools({ lang }: { lang: Lang }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-expanded={false}
-        className="min-h-tap rounded-full px-4 text-base font-bold text-ink underline decoration-2 underline-offset-4"
+        className="min-h-tap rounded-full px-1 text-base font-bold text-ink underline decoration-ink/50 decoration-2 underline-offset-[5px]"
       >
         {t("calm.open", lang)}
       </button>
@@ -141,7 +141,7 @@ export default function CalmTools({ lang }: { lang: Lang }) {
   return (
     <section
       aria-label={t("calm.open", lang)}
-      className="animate-pop-in flex w-full flex-col gap-4 rounded-card border-[2.5px] border-ink bg-surface p-4"
+      className="animate-pop-in flex w-full flex-col gap-4 rounded-card bg-surface p-4"
     >
       <div role="group" aria-label={t("calm.open", lang)} className="flex gap-2">
         {(["breathe", "ground"] as const).map((id) => (

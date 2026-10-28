@@ -4,13 +4,17 @@ import App from "./App";
 import { applyDisplay, readDisplay } from "./lib/display";
 // Fonts are bundled, not fetched from a font service: the app works offline
 // and no request leaves the phone to load a typeface. Only the weights and
-// scripts the screens use. Inter for text (latin); Outfit 800 for headlines
-// (Neel's pick, the closest free look to a heavy geometric display face);
+// scripts the screens use. Inter for text (latin); a display face for headlines
+// (see below);
 // Baloo 2 for Devanagari, which neither covers: the screens are Hinglish in
 // Roman letters, but a child may still type Devanagari, and it shows on their
 // card and in the engine's questions. Its files load only when a Devanagari
 // letter is on screen (unicode-range), so a Hinglish screen costs nothing.
-import "@fontsource/outfit/latin-800.css";
+// Bricolage Grotesque replaces Outfit for headlines (c-bigtype, 28 Oct): one
+// variable file per script with weight and optical-size axes, so the big
+// question gets the display cut. Latin, latin-ext and Vietnamese ranges load
+// only when those letters are on screen.
+import "@fontsource-variable/bricolage-grotesque/opsz.css";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-500.css";
 import "@fontsource/inter/latin-600.css";
