@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import Notebook from "../art/Notebook.tsx";
-import DangerDialog, { HelpPulse } from "../components/DangerDialog.tsx";
+import DangerDialog, { HelpPulse, noteChatChecked } from "../components/DangerDialog.tsx";
 import { ApiError, listen } from "../lib/api.ts";
 import { HELP_NUDGE, MAX_CARD_CHARS, askedBefore, replyFor, wordsForCard, type Turn } from "../lib/listening.ts";
 import { t } from "../lib/strings.ts";
@@ -121,6 +121,8 @@ export default function Listen({
             : turn,
         ),
       );
+      // So "Make a card" does not open the same pop-up again for these words.
+      noteChatChecked(all[index].text, heard.safety.urgent);
       if (heard.safety.urgent) {
         setUrgentSeen(true);
         setDanger(heard.safety.message_child);
