@@ -3,9 +3,10 @@
 Neel owns this file. **Draft, 24 Oct 2026; beats 2, 5 and 8 and the shot list
 updated 28 Oct** to the app on `main` that day.
 
-**Status, 28 Oct:** a 60 s explainer without voice-over is cut, built from
+**Status, 28 Oct:** a 66 s explainer without voice-over is cut, built from
 this script and the live app (`C:\Users\neels\Videos\vividia-explainer\`, not
-in the repo). It follows beats 1, 2, 5, 6 and 8, plus the danger pop-up.
+in the repo). It follows beats 1, 2, 5, 6 and 8, plus the calm tools, the
+danger pop-up and the PIN.
 Beat 3 is shown as a labelled illustration, because filming the real
 question costs one live model call (Neel to approve). This 3:00 script with
 voice-over is still the plan for the YouTube submission.
