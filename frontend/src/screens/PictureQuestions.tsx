@@ -64,6 +64,7 @@ import {
   type Choices,
 } from "../lib/pictures";
 import { t, type StringKey } from "../lib/strings";
+import { PRIVATE_TEXT } from "../lib/privateText";
 
 
 // --- the pieces ----------------------------------------------------------------
@@ -533,6 +534,7 @@ export function OwnWordsQuestion({ lang, value, onChange, onNext }: QuestionProp
   return (
     <Screen id="q-own" title={t("q.own.title", lang)} hint={t("q.own.hint", lang)}>
       <textarea
+        {...PRIVATE_TEXT}
         aria-labelledby="q-own"
         value={text}
         onChange={(event) => onChange(event.target.value ? [event.target.value] : [])}
