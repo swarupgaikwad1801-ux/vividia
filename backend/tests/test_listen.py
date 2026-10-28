@@ -237,5 +237,25 @@ def test_the_route_asks_for_a_reply_for_every_message_but_never_when_urgent(monk
     assert asked == ["Heute war es wieder schlimm.", "They took my bag again.", "thanks"]
 
 
+def test_past_half_the_budget_the_chat_keeps_to_its_reviewed_lines(monkeypatch):
+    # Swarup, 28 Oct: "i dont have money". The cap stays at $0.40 a day, so
+    # the written answers stop first and checking a card's words goes on.
+    async def spy(text, lang):
+        return {"reply": "We hear you.", "calls_made": 0}
+
+    monkeypatch.setattr(mock, "reply", spy)
+    half_spent = Guard(daily_usd=1.0)
+    half_spent.record_spend(0.6)
+    monkeypatch.setattr(main, "GUARD", half_spent)
+    answer = heard("They took my bag again.")
+    assert answer["kind"] == "taken"
+    assert answer["reply"] is None
+
+    plenty = Guard(daily_usd=1.0)
+    plenty.record_spend(0.4)
+    monkeypatch.setattr(main, "GUARD", plenty)
+    assert heard("They took my bag again.")["reply"] == "We hear you."
+
+
 def test_the_mock_never_writes(monkeypatch):
     assert heard("Heute war es wieder schlimm.", "de")["reply"] is None

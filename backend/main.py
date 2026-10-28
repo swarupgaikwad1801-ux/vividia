@@ -102,6 +102,10 @@ app.add_middleware(
 # even on a day when the demo has spent its allowance.
 GUARD = Guard()
 
+# The chat writes its own answers only while this share of the day's budget
+# is left (listen below); the rest is kept for checking words for a card.
+REPLY_BUDGET_SHARE = 0.5
+
 # Neel owns these files; the routes below only read them.
 DEMO_STORY = REPO_ROOT / "content" / "demo_story.json"
 ADULT_GUIDE = REPO_ROOT / "content" / "adult_guide.json"
@@ -307,8 +311,17 @@ async def listen(request: ListenRequest, http: Request) -> ListenResponse:
     # the safety check flagged - a child in crisis gets fixed, sourced words
     # only - and never for keys hit at random, which have nothing to answer.
     # Sequential on purpose - it needs both answers above.
+    #
+    # Only while half the day's budget is left. The written answer is two
+    # more calls, and the cap cannot be raised (Swarup, 28 Oct: "i dont have
+    # money"). Past that point the chat speaks its reviewed lines and the
+    # rest of the budget stays for checking the child's words for a card.
     written = None
-    if heard["kind"] != "unclear" and not safety["urgent"]:
+    if (
+        heard["kind"] != "unclear"
+        and not safety["urgent"]
+        and GUARD.remaining_today() >= GUARD.daily_usd * REPLY_BUDGET_SHARE
+    ):
         try:
             answer = await ENGINE.reply(request.text, request.lang)
         except Exception:  # noqa: BLE001 - the reviewed sentence is always there
