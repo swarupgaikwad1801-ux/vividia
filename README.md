@@ -45,8 +45,7 @@ Open **https://vividia-swarupgaikwad1801-ux.vercel.app** on a phone or a laptop,
    and a set of fixed rules both read every message, so this works even if
    the model is slow or down. Nothing is sent to anyone.
 3. **No words needed.** Tap a face → **Tap pictures** → pick tiles → **Make a
-   card** → **Auf Deutsch**: the card turns over for the teacher. **Print or
-   save as PDF** puts both languages on one page.
+   card** → **Auf Deutsch**: the card turns over for the teacher.
 
 Always on screen: **Need help** (helplines, works offline) and **Leave now**
 (or Esc three times), which leaves in under a second.
