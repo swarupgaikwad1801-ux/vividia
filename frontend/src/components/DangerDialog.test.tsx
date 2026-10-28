@@ -16,7 +16,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { Resource } from "../types/api.ts";
-import { DangerDialogView, opensForResult, opensForTiles } from "./DangerDialog.tsx";
+import { DangerDialogView, noteChatChecked, opensForResult, opensForTiles, shownAlreadyInChat } from "./DangerDialog.tsx";
 import { STRINGS } from "../lib/strings.ts";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -165,4 +165,22 @@ test("Leave now stays above the dialog and in its Tab cycle", () => {
   const dialog = read("components/DangerDialog.tsx");
   assert.match(dialog, /fixed inset-0 z-30/);
   assert.match(dialog, /\[data-quick-exit\]/);
+});
+
+test("the chat's pop-up is not shown again on Make a card for the same words", () => {
+  // Review, 28 Oct: one sentence opened it in the chat and again on the card.
+  noteChatChecked("he said he will stab me", true);
+  noteChatChecked("at school", false);
+  assert.equal(shownAlreadyInChat("he said he will stab me at school"), true);
+  // New words the chat never saw: shown again, a missed pop-up costs more.
+  assert.equal(shownAlreadyInChat("he said he will stab me at school and he has a gun"), false);
+  // Words the chat checked but never flagged: the card's own check decides.
+  assert.equal(shownAlreadyInChat("at school"), false);
+});
+
+test("Continue stays on screen when the dialog scrolls", () => {
+  const markup = renderToStaticMarkup(
+    createElement(DangerDialogView, { lang: "en", contacts: [], failed: false, chat: null, onContinue: () => {} }),
+  );
+  assert.match(markup, /class="sticky bottom-0[^"]*"[^>]*>|data-danger-continue="" class="sticky bottom-0/);
 });

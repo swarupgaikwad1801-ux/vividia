@@ -50,6 +50,10 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
   // Closed until asked for, like the calm tools: the two ways to tell it
   // must stay on the first screenful of a phone.
   const [wordsOpen, setWordsOpen] = useState(false);
+  // The two small extras (the exact word, a moment to calm down) behind one
+  // quiet link, so they do not compete with the two big choices (review,
+  // 28 Oct: three underlined links under the reply).
+  const [moreOpen, setMoreOpen] = useState(false);
   const words = mood ? FEELING_WORDS[mood] : undefined;
   const sentence = picked.length
     ? fill("feel.sentence", lang, { words: picked.map((key) => t(key, lang)).join(", ") })
@@ -89,7 +93,17 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
 
       {/* Only after a hard feeling: a child who tapped Good or OK is not
           offered a way to calm down they did not ask for. */}
-      {words && !wordsOpen && (
+      {(words || (mood && CALM_FOR.has(mood))) && !moreOpen && (
+        <button
+          type="button"
+          aria-expanded={false}
+          onClick={() => setMoreOpen(true)}
+          className="min-h-tap rounded-full px-1 text-base font-bold text-ink-soft underline decoration-ink/40 decoration-2 underline-offset-[5px]"
+        >
+          {t("moodReply.more", lang)}
+        </button>
+      )}
+      {moreOpen && words && !wordsOpen && (
         <button
           type="button"
           aria-expanded={false}
@@ -125,7 +139,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
         </section>
       )}
 
-      {mood && CALM_FOR.has(mood) && <CalmTools lang={lang} />}
+      {moreOpen && mood && CALM_FOR.has(mood) && <CalmTools lang={lang} />}
 
       <div className="grid w-full grid-cols-2 gap-2.5">
         <button
@@ -133,7 +147,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
           onClick={onPictures}
           className="sticker flex min-h-28 flex-col items-start justify-between gap-3 rounded-card bg-surface p-4 text-left font-display text-xl leading-tight font-semibold text-ink motion-safe:active:translate-y-1"
         >
-          <span aria-hidden="true" className="text-3xl leading-none">🖼️</span>
+          <PicturesIcon />
           {t("moodReply.pictures", lang)}
         </button>
         <button
@@ -141,7 +155,7 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
           onClick={() => onWrite(sentence)}
           className="sticker flex min-h-28 flex-col items-start justify-between gap-3 rounded-card bg-surface p-4 text-left font-display text-xl leading-tight font-semibold text-ink motion-safe:active:translate-y-1"
         >
-          <span aria-hidden="true" className="text-3xl leading-none">✏️</span>
+          <PencilIcon />
           {t("moodReply.write", lang)}
         </button>
       </div>
@@ -155,5 +169,27 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
       </button>
       </div>
     </section>
+  );
+}
+
+/** Pictures: a framed picture with a sun and a hill, in the sticker line. */
+function PicturesIcon() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false" className="size-8 text-ink">
+      <rect x="3" y="5" width="26" height="22" rx="4" fill="none" stroke="currentColor" strokeWidth="2.5" />
+      <circle cx="11" cy="12" r="2.5" fill="currentColor" />
+      <path d="M4.5 24 L13 16.5 L18 21 L22 17.5 L27.5 23" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Writing: a pencil on a line, in the sticker line. */
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false" className="size-8 text-ink">
+      <path d="M7 22 L21 8 L25 12 L11 26 L6 27 Z" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M18 11 L22 15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M15 29 L28 29" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
   );
 }

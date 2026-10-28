@@ -5,7 +5,7 @@ import { t } from "../lib/strings.ts";
 import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
-import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDialog.tsx";
+import DangerDialog, { HelpPulse, opensForResult, shownAlreadyInChat } from "../components/DangerDialog.tsx";
 import type { EngineMode } from "../lib/engineMode.ts";
 import { rememberMeaning } from "../lib/meanings.ts";
 import SentenceStarters, { withStarter } from "../components/SentenceStarters";
@@ -171,6 +171,8 @@ export default function Write({
   useEffect(() => {
     if (!opensForResult(result, checkedText, dangerShownFor.current)) return;
     dangerShownFor.current = checkedText;
+    // The chat already showed it for exactly these words: not twice.
+    if (shownAlreadyInChat(checkedText)) return;
     setDanger(true);
   }, [result, checkedText]);
 

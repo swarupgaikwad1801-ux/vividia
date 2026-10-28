@@ -125,3 +125,17 @@ test("only when both fail is there nothing to show", () => {
   const loaded = settledHelpView(failed("a"), failed("b"), "en", NOW);
   assert.deepEqual(loaded, { status: "error", error: "a" });
 });
+
+test("an English or Hinglish child reads what each service is, in their language", () => {
+  // Review, 28 Oct: "Polizei (Notruf)" was all an English child read.
+  for (const lang of ["en", "hi"]) {
+    const view = helpView([POLICE, AMBULANCE], [CHAT], "fallback", lang, NOW);
+    assert.ok(view.danger.every((contact) => contact.plainName), lang);
+    assert.ok(view.talk[0].plainName, lang);
+    assert.equal(view.danger[0].name, "Polizei (Notruf)", "the official name stays");
+  }
+  const german = helpView([POLICE], [CHAT], "fallback", "de", NOW);
+  assert.equal(german.danger[0].plainName, null, "a German reader is not told twice");
+  // A service we do not know keeps its own name only.
+  assert.equal(helpView([], [ENGLISH_SERVICE], "fallback", "en", NOW).talk[0].plainName, null);
+});

@@ -540,8 +540,12 @@ async def guide(lang: str = GUIDE_FALLBACK) -> GuideResponse:
     #
     # The numbers are still one tap away on every screen, from
     # /api/emergency, which is where they belong.
+    #
+    # Read by the adult, inside a guide that says "Sie": a rung written to the
+    # child ("Deine Klassenlehrerin") has a "for_adult" form ("… des Kindes")
+    # that is used here instead (review, 28 Oct).
     ladder = [
-        LadderRung(id=rung["id"], text=rung[served])
+        LadderRung(id=rung["id"], text=(rung.get("for_adult") or {}).get(served) or rung[served])
         for rung in data.get("escalation_ladder", {}).get("steps", [])
         if isinstance(rung, dict) and rung.get("id") and rung.get(served)
         and rung["id"] != "emergency"

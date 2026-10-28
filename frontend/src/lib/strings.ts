@@ -198,6 +198,16 @@ export const STRINGS = {
   // Under 110 and 112, by position (helplines.json's names are German only).
   "danger.police": { en: "Police", de: "Polizei", hi: "Police" },
   "danger.ambulance": { en: "Ambulance and fire brigade", de: "Rettungsdienst und Feuerwehr", hi: "Ambulance aur fire brigade" },
+  "help.name.childLine": {
+    en: "Phone line for children and young people",
+    de: "Kinder- und Jugendtelefon",
+    hi: "Bachchon aur teens ke liye phone line",
+  },
+  "help.name.chat": {
+    en: "Chat with a counsellor, by text",
+    de: "Chat mit einer Beratung, per Text",
+    hi: "Counsellor se chat, likh kar",
+  },
   "danger.orWrite": { en: "Or write to someone", de: "Oder schreib jemandem", hi: "Ya kisi ko likho" },
   "danger.continue": { en: "Continue", de: "Weiter", hi: "Aage chalo" },
   // Shown in the pop-up when /api/emergency cannot be reached. The top-bar
@@ -570,7 +580,7 @@ export const STRINGS = {
   "write.checksOne": { en: "1 check", de: "1 Prüfung", hi: "1 check" },
   "write.checks": { en: "{n} checks", de: "{n} Prüfungen", hi: "{n} checks" },
   "write.secondsLong": { en: "{n} seconds so far", de: "schon {n} Sekunden", hi: "Ab tak {n} second" },
-  "clarify.important": { en: "Important", de: "Wichtig", hi: "Zaroori" },
+  "moodReply.more": { en: "More options", de: "Mehr Möglichkeiten", hi: "Aur options" },
   "clarify.send": { en: "That's what I meant", de: "Das habe ich gemeint", hi: "Mera yahi matlab tha" },
   "clarify.rewrite": { en: "Say it another way", de: "Anders sagen", hi: "Doosre tareeke se likho" },
   "clarify.rewriteWhy": {
@@ -637,9 +647,9 @@ export const STRINGS = {
   "map.who": { en: "Who sees it", de: "Wer es sieht", hi: "Kaun dekhega" },
   "map.done": { en: "Done", de: "Fertig", hi: "Ho gaya" },
   "map.youAreHere": {
-    en: "You are here: {place}, place {n} of {total}.",
-    de: "Du bist hier: {place}, Ort {n} von {total}.",
-    hi: "Tum yahan ho: {place}, {total} mein se {n}.",
+    en: "You are here: {place}.",
+    de: "Du bist hier: {place}.",
+    hi: "Tum yahan ho: {place}.",
   },
 
   // The traveller on the map: a picture the child picks, never a character
@@ -1259,7 +1269,6 @@ export const STRINGS = {
   // big greeting is in the device's language (LanguageSetup.tsx).
   "langSetup.hello": { en: "Hello!", de: "Hallo!", hi: "Namaste!" },
   // Under the map: where you are, in words, as well as on the path.
-  "map.step": { en: "Step {n} of {total}", de: "Schritt {n} von {total}", hi: "{total} mein se step {n}" },
   // While the words are checked (live engine only): how the check works,
   // in general. Not progress: the server sends no steps (WriteProgress).
   "write.howTitle": { en: "How the check works", de: "So funktioniert die Prüfung", hi: "Check kaise hota hai" },

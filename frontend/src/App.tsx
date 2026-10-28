@@ -498,7 +498,9 @@ export default function App() {
           someone believing an OUTPUT, and a child at the PIN screen has not
           typed anything for the app to have answered. Putting it there would
           add a second place for `engine` to go stale while guarding nothing. */}
-      <ExampleModeBanner lang={lang} engine={engine} />
+      {/* Full on the first screen, one line after it, and not on Need help,
+          where every line should be about help (review, 28 Oct). */}
+      {step !== "help" && <ExampleModeBanner lang={lang} engine={engine} compact={canGoBack(trail)} />}
       {step !== "write" && step !== "listen" && <OfflineStrip lang={lang} />}
 
       {onMap !== null && (

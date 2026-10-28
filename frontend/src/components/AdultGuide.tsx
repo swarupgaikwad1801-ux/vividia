@@ -54,7 +54,12 @@ export interface AdultGuideProps {
    * once they have made one. Asked for, not assumed: see the header.
    */
   showing: string;
-  /** The child's language, for the one line the child reads. */
+  /**
+   * The child's language. The open line leads in the card's language, because
+   * whoever reads the card reads this too (review, 28 Oct: the heading stayed
+   * English on a German card), and repeats small in the child's language, so
+   * the child still knows what they are opening.
+   */
   lang: string;
 }
 
@@ -82,19 +87,24 @@ export default function AdultGuide({ showing, lang }: AdultGuideProps) {
   return (
     <details className="rounded-card border-[3px] border-ink bg-surface">
       <summary className="squish min-h-tap cursor-pointer list-none px-4 py-3 text-base font-bold text-ink">
-        {t("guide.open", lang)}
+        <span lang={showing}>{t("guide.open", showing)}</span>
+        {lang !== showing && (
+          <span lang={lang} className="block text-sm font-medium text-ink-soft">
+            {t("guide.open", lang)}
+          </span>
+        )}
       </summary>
 
       <div className="border-t border-line px-4 py-3">
         {!data && !failed && (
           <p aria-live="polite" className="text-base text-ink-soft">
-            {t("guide.loading", lang)}
+            {t("guide.loading", showing)}
           </p>
         )}
 
         {failed && (
           <p role="alert" className="text-base text-ink">
-            {t("guide.failed", lang)}
+            {t("guide.failed", showing)}
           </p>
         )}
 

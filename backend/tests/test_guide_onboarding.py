@@ -153,3 +153,13 @@ def test_a_broken_file_is_a_calm_error_not_a_traceback(monkeypatch, path, name):
     assert response.status_code >= 400
     assert response.json()["message_child"]
     assert "Traceback" not in response.text
+
+
+def test_the_guide_ladder_speaks_about_the_child_not_to_them():
+    # Review, 28 Oct: "Deine Klassenlehrerin" inside a guide that says "Sie".
+    import re
+
+    for rung in get("/api/guide?lang=de")["ladder"]:
+        assert not re.search(r"\b(du|dein|deine|deiner|deinem|deinen)\b", rung["text"], re.IGNORECASE), rung
+    for rung in get("/api/guide?lang=en")["ladder"]:
+        assert not re.search(r"\byour\b", rung["text"], re.IGNORECASE), rung

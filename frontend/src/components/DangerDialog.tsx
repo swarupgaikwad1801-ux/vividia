@@ -66,6 +66,40 @@ export function opensForResult(result: { safety: { urgent: boolean } } | null, t
   return !!result && result.safety.urgent && text !== shownFor;
 }
 
+/**
+ * The chat's messages, as the chat's own safety check saw them, for this
+ * page load only (memory, never storage). Review, 28 Oct: one sentence
+ * opened the pop-up in the chat and again on "Make a card", because the
+ * card's check reads the same words.
+ */
+const chatChecked = new Set<string>();
+const chatShown = new Set<string>();
+
+/** The chat checked this message; `shown` when it opened the pop-up for it. */
+export function noteChatChecked(text: string, shown: boolean): void {
+  const words = text.trim();
+  if (!words) return;
+  chatChecked.add(words);
+  if (shown) chatShown.add(words);
+}
+
+/**
+ * True only when the pop-up was already shown in the chat for these words
+ * and the card holds nothing the chat did not check. Any new words, which
+ * the chat never saw, open it again: a missed pop-up costs more than a
+ * repeated one.
+ */
+export function shownAlreadyInChat(text: string): boolean {
+  let rest = text;
+  let shown = false;
+  for (const words of [...chatChecked].sort((a, b) => b.length - a.length)) {
+    if (!rest.includes(words)) continue;
+    if (chatShown.has(words)) shown = true;
+    rest = rest.split(words).join(" ");
+  }
+  return shown && !/[\p{L}\p{N}]/u.test(rest);
+}
+
 /** Open for this tap? Only when it adds a danger tile to a pick that had none. */
 export function opensForTiles(before: readonly string[], after: readonly string[]): boolean {
   const danger = (codes: readonly string[]) => codes.some((code) => (DANGER as readonly string[]).includes(code));
@@ -152,11 +186,14 @@ export function DangerDialogView({ lang, contacts, failed, chat, message, onCont
         </section>
       )}
 
+      {/* Pinned to the dialog's bottom edge: on an iPhone it sat below the
+          fold, so closing the pop-up meant finding a scroll first (review,
+          28 Oct). */}
       <button
         type="button"
         onClick={onContinue}
         data-danger-continue
-        className="min-h-tap rounded-card border-[3px] border-ink bg-surface px-4 text-lg font-bold text-ink"
+        className="sticky bottom-0 min-h-tap shrink-0 rounded-card border-[3px] border-ink bg-surface px-4 text-lg font-bold text-ink"
       >
         {t("danger.continue", lang)}
       </button>

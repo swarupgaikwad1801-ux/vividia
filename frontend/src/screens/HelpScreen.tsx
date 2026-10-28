@@ -119,12 +119,17 @@ export function HelpList({ lang, contacts, urgent = false }: { lang: string; con
               href={contact.href}
               className={`min-h-tap font-display font-extrabold text-help underline decoration-2 underline-offset-4 ${contact.kind === "phone" ? "text-4xl leading-tight" : "text-lg break-all"}`}
             >
-              {contact.contact}
+              {/* A web address reads as its domain: "krisenchat.de", not
+                  "https://krisenchat.de/". The link itself is unchanged. */}
+              {contact.kind === "web" ? contact.contact.replace(/^https?:\/\//i, "").replace(/\/$/, "") : contact.contact}
             </a>
           ) : (
             <span className="text-lg font-bold text-ink select-all break-all">{contact.contact}</span>
           )}
-          <span className="text-base font-medium text-ink">{contact.name}</span>
+          {contact.plainName && <span className="text-base font-bold text-ink">{contact.plainName}</span>}
+          <span lang="de" className={contact.plainName ? "text-sm text-ink-soft" : "text-base font-medium text-ink"}>
+            {contact.name}
+          </span>
           <span className="text-sm text-ink-soft">{contact.hours}</span>
           <span className="text-sm text-ink-soft">{contact.languages}</span>
           {(contact.checked || contact.sourceUrl) && (
