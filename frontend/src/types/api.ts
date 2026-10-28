@@ -82,6 +82,13 @@ export type ListenKind =
   | "good"
   | "asking"
   | "talk"
+  | "thanks"
+  | "bye"
+  | "unsure"
+  | "not_now"
+  | "about_app"
+  | "smalltalk"
+  | "unclear"
   | "other";
 
 /**
@@ -95,6 +102,12 @@ export interface ListenRequest {
   text: string;
   /** ISO 639-1, the child's language */
   lang: string;
+  /**
+   * The detail the app's last question asked for, so a short answer ("at the
+   * bus stop") is read as that answer. Only the question's name is sent,
+   * never an earlier message.
+   */
+  asked?: ListenDetail | null;
 }
 
 export interface ListenResponse {

@@ -57,8 +57,8 @@ async def report(entries: list, child_lang: str) -> Report:
     return await _report(entries, child_lang)
 
 
-async def listen(text: str, lang: str) -> dict:
-    return await _listen(text, lang)
+async def listen(text: str, lang: str, asked: str | None = None) -> dict:
+    return await _listen(text, lang, asked)
 
 
 async def reply(text: str, lang: str) -> dict:

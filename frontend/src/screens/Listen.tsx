@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Notebook from "../art/Notebook.tsx";
 import DangerDialog, { HelpPulse } from "../components/DangerDialog.tsx";
 import { ApiError, listen } from "../lib/api.ts";
-import { HELP_NUDGE, MAX_CARD_CHARS, replyFor, wordsForCard, type Turn } from "../lib/listening.ts";
+import { HELP_NUDGE, MAX_CARD_CHARS, askedBefore, replyFor, wordsForCard, type Turn } from "../lib/listening.ts";
 import { t } from "../lib/strings.ts";
 import SentenceStarters, { withStarter } from "../components/SentenceStarters";
 
@@ -102,7 +102,9 @@ export default function Listen({
     setFailed(null);
     setReading(index);
     try {
-      const heard = await listen({ text: all[index].text, lang });
+      // With the question we last asked, so "at the bus stop" is understood
+      // as the answer to "Where did it happen?" (lib/listening.ts).
+      const heard = await listen({ text: all[index].text, lang, asked: askedBefore(index, all) });
       if (id !== runRef.current) return;
       onTurnsChange(
         all.map((turn, i) =>

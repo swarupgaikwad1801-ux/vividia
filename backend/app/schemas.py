@@ -116,6 +116,13 @@ class ListenKind(str, Enum):
     GOOD = "good"
     ASKING = "asking"
     TALK = "talk"
+    THANKS = "thanks"
+    BYE = "bye"
+    UNSURE = "unsure"
+    NOT_NOW = "not_now"
+    ABOUT_APP = "about_app"
+    SMALLTALK = "smalltalk"
+    UNCLEAR = "unclear"
     OTHER = "other"
 
 
@@ -142,6 +149,10 @@ class ListenRequest(BaseModel):
 
     text: str = Field(min_length=1, max_length=2000)
     lang: str = Field(description="ISO 639-1, the child's language")
+    asked: ListenDetail | None = Field(
+        default=None,
+        description="The detail the app's last question asked for, so a short answer is read as that answer. Only the question's name, never earlier messages.",
+    )
 
 
 class ListenResponse(BaseModel):

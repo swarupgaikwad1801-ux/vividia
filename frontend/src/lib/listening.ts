@@ -72,6 +72,13 @@ const KIND_LINE: Record<ListenKind, StringKey> = {
   good: "heard.kind.good",
   asking: "heard.kind.asking",
   talk: "heard.kind.talk",
+  thanks: "heard.kind.thanks",
+  bye: "heard.kind.bye",
+  unsure: "heard.kind.unsure",
+  not_now: "heard.kind.not_now",
+  about_app: "heard.kind.about_app",
+  smalltalk: "heard.kind.smalltalk",
+  unclear: "heard.kind.unclear",
   other: "heard.kind.other",
 };
 
@@ -89,6 +96,11 @@ const DETAIL_ASK: Record<ListenDetail, StringKey> = {
   feeling: "heard.ask.feel",
 };
 
+/** The detail each question asks for, the other way round. */
+const ASK_DETAIL: ReadonlyMap<StringKey, ListenDetail> = new Map(
+  (Object.entries(DETAIL_ASK) as [ListenDetail, StringKey][]).map(([detail, key]) => [key, detail]),
+);
+
 /** Which details to ask about, in order, for something that happened. */
 function detailsFor(kind: ListenKind): ListenDetail[] {
   if (kind === "threat") return ["when", "where", "who", "feeling"];
@@ -96,6 +108,29 @@ function detailsFor(kind: ListenKind): ListenDetail[] {
   if (kind === "online") return ["when", "who", "feeling"];
   return ["where", "when", "who", "feeling"];
 }
+
+/**
+ * Messages that tell us nothing about the child's day: "thanks", "bye",
+ * "ok", "I don't want to talk about it", "are you a robot?", "I like pizza".
+ * Each gets its own line and NO "Thank you for telling us" (Swarup, 28 Oct:
+ * "even if we put random messages it still says thank you for your
+ * message"). They do not count as the first real message, so what the child
+ * writes after "hi" is still thanked, and they never ask a detail question:
+ * "idk" to "Where did it happen?" is answered "there's no rush", not with
+ * "When did it happen?".
+ */
+const CHATTER: ReadonlySet<ListenKind> = new Set([
+  "thanks", "bye", "unsure", "not_now", "about_app", "smalltalk",
+]);
+
+/**
+ * Kinds that open with "Thank you for telling us" when they are the first
+ * thing the child tells us: something that happened, or how they feel.
+ * Not "hi", a question, or good news, where thanks reads like a form letter.
+ */
+const THANKED: ReadonlySet<ListenKind> = new Set([
+  "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "other",
+]);
 
 /** Kinds that are about something that happened, so details can be asked. */
 const HAPPENED: ReadonlySet<ListenKind> = new Set([
@@ -112,6 +147,15 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
   const saidKinds = new Set<ListenKind>();
   const told = new Set<ListenDetail>();
   const asked = new Set<StringKey>();
+  // The detail the previous reply asked for, so an answer to it is thanked
+  // as an answer (Swarup, 28 Oct: "I want it to think").
+  let lastAsk: ListenDetail | null = null;
+  // Messages that were about the child, not keys hit at random or "ok":
+  // what the first of them is decides the open question.
+  let real = 0;
+  // "Thank you for telling us" is said once, on the first message that told
+  // us something (THANKED), however late it comes.
+  let thanked = false;
   // The kind of the first message about something that happened: its details
   // are the ones still worth asking about after a "talk" or a feeling.
   let incident: ListenKind | null = null;
@@ -120,24 +164,47 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
   for (let i = 0; i <= index && i < turns.length; i += 1) {
     const turn = turns[i];
     const kind = turn.kind ?? "other";
+    const answeredLastAsk = lastAsk !== null && (turn.told ?? []).includes(lastAsk);
+    // Keys hit at random: say we did not understand, offer another way, and
+    // ask nothing. Not "thank you for telling us" about nothing. It does not
+    // count as something said, so a real message after it is answered fully.
+    if (kind === "unclear") {
+      out.push({ lines: ["heard.kind.unclear"], ask: null });
+      lastAsk = null;
+      continue;
+    }
+    if (CHATTER.has(kind) && !turn.urgent) {
+      out.push({ lines: [chatterLine(kind, saidKinds)], ask: chatterAsk(kind, incident, asked) });
+      saidKinds.add(kind);
+      lastAsk = null;
+      continue;
+    }
     for (const detail of turn.told ?? []) told.add(detail);
     if (incident === null && HAPPENED.has(kind)) incident = kind;
-    const first = i === 0;
+    const first = real === 0;
+    real += 1;
 
     // A message the safety check flagged gets its own line and NO question.
     // Seen in the first render: "Sometimes I want to die" was answered "It
     // takes courage to write this. When did it happen?" The danger pop-up has
     // already opened; what is left in the conversation points to help and stops.
     if (turn.urgent) {
-      out.push({ lines: first ? ["heard.thanks.first", "heard.urgent"] : ["heard.urgent"], ask: null });
+      out.push({ lines: thanked ? ["heard.urgent"] : ["heard.thanks.first", "heard.urgent"], ask: null });
+      thanked = true;
       continue;
     }
 
     // Written for this message, so it is said even when an earlier message
     // was "other" too: it answers what they just wrote, not the kind.
     const written = kind === "other" ? turn.written?.trim() : "";
-    const lines: StringKey[] = first ? ["heard.thanks.first"] : [];
-    if (!written) {
+    const thank = !thanked && THANKED.has(kind);
+    if (thank) thanked = true;
+    const lines: StringKey[] = thank ? ["heard.thanks.first"] : [];
+    if (!written && kind === "other" && answeredLastAsk) {
+      // A short answer to the question we just asked: thank them for the
+      // answer, then go on to the next thing still missing.
+      lines.push("heard.gotIt");
+    } else if (!written) {
       if (!saidKinds.has(kind)) {
         lines.push(KIND_LINE[kind]);
       } else if (!first) {
@@ -149,9 +216,29 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
 
     const ask = nextAsk(kind, incident, told, asked, first);
     if (ask) asked.add(ask);
+    lastAsk = ask ? ASK_DETAIL.get(ask) ?? null : null;
     out.push(written ? { lines, written, ask } : { lines, ask });
   }
   return out;
+}
+
+/** The line for a CHATTER message: its own, or a short one when it was said. */
+function chatterLine(kind: ListenKind, said: ReadonlySet<ListenKind>): StringKey {
+  if (!said.has(kind)) return KIND_LINE[kind];
+  // "ok", then "ok" again: not the same three sentences twice.
+  if (kind === "unsure" || kind === "smalltalk") return "heard.ack.here";
+  return KIND_LINE[kind];
+}
+
+/**
+ * Only "who are you?" before anything has happened gets a question, the
+ * open one, once. "thanks", "bye", "not now" and "ok" are left alone: the
+ * card offer below the chat is still there, and asking again is pushing.
+ */
+function chatterAsk(kind: ListenKind, incident: ListenKind | null, asked: Set<StringKey>): StringKey | null {
+  if (kind !== "about_app" || incident !== null || asked.has("heard.ask.open")) return null;
+  asked.add("heard.ask.open");
+  return "heard.ask.open";
 }
 
 function nextAsk(
@@ -185,6 +272,17 @@ function nextAsk(
 }
 
 /** The reply to turn `index`, given everything the child wrote before it. */
+/**
+ * The detail the app asked for just before turn `index` was written, sent
+ * with that message so a short answer is read as an answer. null for the
+ * first message, or when the last question was not about a detail.
+ */
+export function askedBefore(index: number, turns: readonly Turn[]): ListenDetail | null {
+  if (index <= 0) return null;
+  const ask = replies(index - 1, turns)[index - 1]?.ask;
+  return ask ? ASK_DETAIL.get(ask) ?? null : null;
+}
+
 export function replyFor(index: number, turns: readonly Turn[]): Reply {
   return replies(index, turns)[index] ?? { lines: ["heard.kind.other"], ask: null };
 }

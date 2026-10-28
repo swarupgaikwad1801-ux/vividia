@@ -16,7 +16,8 @@ import { ACKS, HELP_NUDGE, MAX_CARD_CHARS, replyFor, wordsForCard, type Turn } f
 import { LANGS, STRINGS, t } from "./strings.ts";
 
 const KINDS: ListenKind[] = [
-  "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "talk", "other",
+  "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "talk",
+  "thanks", "bye", "unsure", "not_now", "about_app", "smalltalk", "unclear", "other",
 ];
 
 const turn = (kind: ListenKind, text = "x", told: ListenDetail[] = []): Turn => ({ text, kind, told });
@@ -25,13 +26,17 @@ const asks = (turns: Turn[]) => turns.map((_, i) => replyFor(i, turns).ask);
 
 test("every kind has its own sentence, in every language", () => {
   const seen = new Set<string>();
+  // Only something that happened, or a feeling, is thanked first (Swarup,
+  // 28 Oct: "hi" and "ok" were answered "Thank you for telling us").
+  const thanked = new Set(["hurt", "names", "left_out", "taken", "online", "threat", "feeling", "other"]);
   for (const kind of KINDS) {
     const { lines } = replyFor(0, [turn(kind)]);
-    assert.equal(lines[0], "heard.thanks.first");
-    assert.equal(lines.length, 2, `${kind} has no sentence of its own`);
-    seen.add(lines[1]);
+    assert.equal(lines[0] === "heard.thanks.first", thanked.has(kind), `${kind}: thanks`);
+    assert.equal(lines.length, thanked.has(kind) ? 2 : 1, `${kind} has no sentence of its own`);
+    const own = lines[lines.length - 1];
+    seen.add(own);
     for (const lang of LANGS) {
-      assert.ok(STRINGS[lines[1]][lang].trim(), `${lines[1]} is empty in ${lang}`);
+      assert.ok(STRINGS[own][lang].trim(), `${own} is empty in ${lang}`);
     }
   }
   assert.equal(seen.size, KINDS.length);
@@ -60,7 +65,7 @@ test("'talk to me' gets an open door, never a question about something not menti
   // The screenshot: "Merse baat karo please" was answered "An adult you trust
   // can help" and then "When did it happen?".
   const alone = replyFor(0, [turn("talk", "Merse baat karo please")]);
-  assert.deepEqual(alone, { lines: ["heard.thanks.first", "heard.kind.talk"], ask: "heard.ask.open" });
+  assert.deepEqual(alone, { lines: ["heard.kind.talk"], ask: "heard.ask.open" });
   const later = [turn("threat"), { text: "x", kind: "other", urgent: true } as Turn, turn("talk")];
   const reply = replyFor(2, later);
   assert.deepEqual(reply.lines, ["heard.kind.talk"]);
