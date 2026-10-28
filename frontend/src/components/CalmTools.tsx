@@ -9,7 +9,7 @@ import type { Lang } from "../lib/strings";
  * - **Breathe**: box breathing, in 4 / hold 4 / out 4 / hold 4, with a
  *   bubble that breathes: it grows as you breathe in while specks of air
  *   drift into it; on the hold it goes still and a thin ring closes round
- *   it; breathing out it shrinks and the specks drift away. Four rounds,
+ *   it; breathing out it shrinks and the specks drift away. Two rounds,
  *   one ripple, then it stops by itself. (Swarup picked the bubble, 28 Oct.)
  * - **Notice 5 things**: the 5-4-3-2-1 grounding steps, one at a time, each
  *   moved on by the child, never by a timer.
@@ -26,7 +26,7 @@ import type { Lang } from "../lib/strings";
  */
 
 const SIDE_S = 4;
-const ROUNDS = 4;
+const ROUNDS = 2; // two full in-and-out cycles (Swarup, 28 Oct; was four)
 const TOTAL_S = ROUNDS * 4 * SIDE_S;
 const PHASES: readonly StringKey[] = ["calm.in", "calm.hold", "calm.out", "calm.hold"];
 const GROUND: readonly StringKey[] = ["calm.g5", "calm.g4", "calm.g3", "calm.g2", "calm.g1"];
@@ -180,7 +180,7 @@ function Breathe({ lang }: { lang: Lang }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
-  // One ripple when the four rounds are done, then nothing moves.
+  // One ripple when the rounds are done, then nothing moves.
   useEffect(() => {
     const ripple = rippleRef.current;
     if (!finished || !ripple || reduce) return;
