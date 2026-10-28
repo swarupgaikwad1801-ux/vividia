@@ -27,6 +27,7 @@ from engine.client import Usage, call
 from engine.contract import Resource, SafetyResult
 from engine.prompts import language_name
 from engine.resources import emergency_numbers, national_helplines
+from engine.safety_rules import rule_category
 
 # Only the wording lives here. Contacts come from helplines.json via
 # resources.py, so a phone number exists in exactly one place in the repo.
@@ -140,6 +141,14 @@ async def safety_check(text: str, lang: str, usage: Usage | None = None) -> Safe
         category = verdict.get("category", "none")
     except Exception:  # noqa: BLE001 - a crash here must not stop the child
         category = "none"
+
+    # Cross-check: the fixed rules (safety_rules.py) read the same text
+    # independently. They can raise a prompt the model missed, or keep one
+    # when the model is down, but they never overrule a model that did
+    # fire. Narrow by design and held to the same MUST_NOT_FIRE list, so
+    # this adds no false alarms the tests would not catch. Costs no call.
+    if category not in ("danger", "self_harm"):
+        category = rule_category(text) or "none"
 
     if category not in ("danger", "self_harm"):
         return {"urgent": False, "category": "none", "message_child": ""}
