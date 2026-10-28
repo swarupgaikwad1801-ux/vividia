@@ -32,6 +32,13 @@ test("Leave now is an icon with its name from strings.ts, in every language", ()
   }
 });
 
+test("the top bar row itself is sticky, so Leave now never scrolls away", () => {
+  // A sticky element sticks only inside its parent. QuickExitButton's own
+  // sticky sat inside this row, which is exactly as tall as its buttons, so
+  // on a long screen Leave now scrolled off the top (live site, 28 Oct).
+  assert.match(APP, /className="top-bar sticky top-0 z-40 /);
+});
+
 test("Need help is red headphones named by help.short, not typed in the component", () => {
   assert.match(APP, /aria-label=\{t\("help\.short", lang\)\}/);
   assert.match(APP, /title=\{t\("help\.short", lang\)\}/);
