@@ -239,14 +239,25 @@ async def test_everyday_exaggeration_does_not_fire(monkeypatch):
 
 
 async def test_a_model_outage_does_not_block_the_child(monkeypatch):
-    """Detection is a prompt, not a gate: help is on every screen regardless."""
+    """Detection is a prompt, not a gate: a dead model never raises at the child.
+
+    Changed 28 Oct: with the model down, this sentence ("He said he will bring
+    a knife tomorrow...") used to get no prompt at all. The fixed rules in
+    safety_rules.py now cross-check every message, so an outage no longer
+    hides the clearest threats. A sentence the rules do not cover still comes
+    back "none" (below), so the outage path itself is unchanged.
+    """
     transcript = replay(monkeypatch, "safety_model_down")
 
     result = await safety_check(transcript.data["text"], "en")
 
-    assert result["category"] == "none"
-    assert result["urgent"] is False
+    assert result["category"] == "danger", "the rules still see a plain threat with the model down"
+    assert result["urgent"] is True
     assert transcript.count("safety") == 3, "all three attempts in client.call were used"
+
+    quiet = await safety_check("They took my bag again and everyone laughed at me.", "en")
+    assert quiet["category"] == "none"
+    assert quiet["urgent"] is False
 
 
 # --- accounting --------------------------------------------------------------
