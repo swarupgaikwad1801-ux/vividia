@@ -1335,13 +1335,7 @@ export const STRINGS = {
   "start.felt": { en: "It made me feel ", de: "Ich habe mich gefühlt: ", hi: "Mujhe aisa laga: " },
   "start.want": { en: "What I want now: ", de: "Was ich jetzt möchte: ", hi: "Ab mujhe chahiye: " },
 
-  // The card: print, keep the screen on, full screen (components/HandoffShow.tsx).
-  "card.print": { en: "Print or save as PDF", de: "Drucken oder als PDF speichern", hi: "Print karo ya PDF save karo" },
-  "card.printBoth": {
-    en: "Both languages, on one page.",
-    de: "Beide Sprachen auf einer Seite.",
-    hi: "Dono languages, ek page par.",
-  },
+  // The card: keep the screen on, full screen (components/HandoffShow.tsx).
   "card.awake": {
     en: "The screen stays on while this card is open.",
     de: "Der Bildschirm bleibt an, solange diese Karte offen ist.",

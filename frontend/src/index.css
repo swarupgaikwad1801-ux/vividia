@@ -211,8 +211,7 @@
 }
 
 /* Privacy cover (main.tsx): blank while the app is hidden. */
-:root[data-covered] #root,
-:root[data-covered] .print-only { visibility: hidden; }
+:root[data-covered] #root { visibility: hidden; }
 :root[data-covered] body { background: var(--color-page); }
 
 /* The handoff card in full screen (HandoffShow.tsx): the stage fills the
@@ -225,20 +224,6 @@
 }
 .card-stage:fullscreen article { box-shadow: none; }
 .card-stage:fullscreen article p { font-size: 1.625rem; }
-
-/* Printing the handoff card (components/HandoffShow.tsx): only the
-   print-only block reaches paper, both languages, black on white, no scene,
-   no buttons. */
-.print-only { display: none; }
-@media print {
-  @page { margin: 16mm; }
-  #root { display: none !important; }
-  body { background: #fff !important; }
-  .print-only { display: block; color: #000; background: #fff; }
-  .print-only * { color: #000 !important; }
-  .print-side { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
-  .print-side + .print-side { border-top: 2px solid #000; padding-top: 20px; }
-}
 
 /* Bigger text and easier reading (lib/display.ts sets these on <html>).
    Outside @layer so they win over the base styles. Every size is in rem, so
