@@ -23,9 +23,16 @@
 
 import type { Resource, ResourcesResponse } from "../types/api.ts";
 import { freshness, languageNote, sortForChild } from "./help.ts";
+import { t, type StringKey } from "./strings.ts";
 
 export interface ContactView {
+  /** The official name, as content/helplines.json has it (German). */
   name: string;
+  /**
+   * What the service is, in the child's language, shown above the official
+   * name; null when the child reads German or the service is not one we know.
+   */
+  plainName: string | null;
   /** Exactly as content/helplines.json or the official site has it. */
   contact: string;
   /** `tel:` for a phone number, the URL for a website, null if neither. */
@@ -57,10 +64,24 @@ export function contactLink(contact: string): { href: string | null; kind: Conta
   return { href: null, kind: "other" };
 }
 
+/**
+ * Review, 28 Oct: an English or Hinglish child read "Polizei (Notruf)" and
+ * krisenchat's headline was a raw URL. Keyed on the official NAME, never on a
+ * number: contacts are defined only in helplines.json.
+ */
+const PLAIN_NAME: Record<string, StringKey> = {
+  "Polizei (Notruf)": "danger.police",
+  "Feuerwehr und Rettungsdienst (Notruf)": "danger.ambulance",
+  "Nummer gegen Kummer – Kinder- und Jugendtelefon": "help.name.childLine",
+  krisenchat: "help.name.chat",
+};
+
 function toView(resource: Resource, lang: string, now: Date): ContactView {
   const { href, kind } = contactLink(resource.contact);
+  const plain = PLAIN_NAME[resource.name];
   return {
     name: resource.name,
+    plainName: plain && lang !== "de" ? t(plain, lang) : null,
     contact: resource.contact,
     href,
     kind,
