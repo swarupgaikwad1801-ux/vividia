@@ -570,6 +570,7 @@ export const STRINGS = {
   "write.checksOne": { en: "1 check", de: "1 Prüfung", hi: "1 check" },
   "write.checks": { en: "{n} checks", de: "{n} Prüfungen", hi: "{n} checks" },
   "write.secondsLong": { en: "{n} seconds so far", de: "schon {n} Sekunden", hi: "Ab tak {n} second" },
+  "moodReply.more": { en: "More options", de: "Mehr Möglichkeiten", hi: "Aur options" },
   "clarify.send": { en: "That's what I meant", de: "Das habe ich gemeint", hi: "Mera yahi matlab tha" },
   "clarify.rewrite": { en: "Say it another way", de: "Anders sagen", hi: "Doosre tareeke se likho" },
   "clarify.rewriteWhy": {
