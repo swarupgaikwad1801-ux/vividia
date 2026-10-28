@@ -20,10 +20,27 @@ import { t } from "../lib/strings.ts";
 export interface ExampleModeBannerProps {
   lang: string;
   engine: EngineMode;
+  /**
+   * One line after the first screen (review, 28 Oct: the full banner took
+   * about 9% of every screen). The whole sentence stays for screen readers.
+   */
+  compact?: boolean;
 }
 
-export default function ExampleModeBanner({ lang, engine }: ExampleModeBannerProps) {
+export default function ExampleModeBanner({ lang, engine, compact = false }: ExampleModeBannerProps) {
   if (engine !== "mock") return null;
+
+  if (compact) {
+    return (
+      <p role="status" className="mx-4 mt-1 flex w-fit items-center gap-1.5 rounded-full border-2 border-help bg-surface px-2.5 py-0.5 text-xs font-bold text-help">
+        <span aria-hidden="true" className="flex size-4 items-center justify-center rounded-full bg-help text-[0.625rem] text-page">
+          i
+        </span>
+        {t("example.title", lang)}
+        <span className="sr-only">. {t("example.body", lang)}</span>
+      </p>
+    );
+  }
 
   return (
     <section
