@@ -424,8 +424,12 @@ export default function App() {
           thumb finds it, so a child reaching for Leave now does not hit
           Back. Need help and Leave now are icons only (Neel, 28 Oct): red
           headphones and a door, 44px each, named for screen readers and on hover
-          from strings.ts. All of it fits one row at 360px in en/de/hi. */}
-      <div className="top-bar flex items-center justify-between gap-2 px-4 pt-1">
+          from strings.ts. All of it fits one row at 360px in en/de/hi.
+          The ROW is sticky, not just Leave now inside it: a sticky element
+          sticks only within its parent, and this row is exactly as tall as
+          its buttons, so Leave now used to scroll away on a long screen
+          (measured on the live site, 28 Oct). */}
+      <div className="top-bar sticky top-0 z-40 flex items-center justify-between gap-2 bg-scene px-4 pt-1">
 
         <div className="flex min-w-0 items-center gap-1">
           {canGoBack(trail) && (

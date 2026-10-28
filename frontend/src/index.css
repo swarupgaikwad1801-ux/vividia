@@ -313,6 +313,14 @@
   96% { transform: rotate(3deg); }
 }
 
+/* Nothing may make the page wider than the phone. Each screen slides in from
+   24px to the right, and the page settled wider than the screen (385px on a
+   360px Android, 411px on a 390px iPhone, 28 Oct), so the phone zoomed out
+   and the danger dialog's right edge was cut off. Both elements, because html
+   is the page's own scroller: body alone measured no change. clip, not
+   hidden: it makes no scroll container, so the sticky top bar still sticks. */
+html, body { overflow-x: clip; }
+
 @layer base {
   body {
     /* The scene's page colour (set on :root by the scene trios), so an
