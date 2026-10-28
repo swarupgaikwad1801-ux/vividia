@@ -62,20 +62,36 @@ app = FastAPI(
 )
 
 # The frontend runs on a different origin in development and in production.
-# Tighten this to the deployed origin before submitting.
+#
+# The deployed frontend's origin can be set as ALLOWED_ORIGINS on the host,
+# comma separated; without it only local development works. A wildcard would
+# let any page call this backend and spend our credits, so there is none.
+#
+# Our own production site is always allowed, whatever the host says. On 28 Oct
+# the live app at PRODUCTION_ORIGIN was refused by its own backend: every call
+# failed the CORS preflight, and the browser reports that as a network error,
+# so a child saw "no internet" on every check while the network was fine.
+# Nothing in the repo set the origin; it lived only in a dashboard setting
+# that never got the real URL (DEPLOY.md, "back to the backend dashboard").
+PRODUCTION_ORIGIN = "https://vividia-swarupgaikwad1801-ux.vercel.app"
+
+# Vercel builds every branch at vividia-git-<branch>-swarupgaikwad1801-ux.
+# vercel.app, so a PR can be tried before it is merged. Only this project's
+# scope; anything else still needs ALLOWED_ORIGINS. The spending cap and rate
+# limit (Guard) apply to every origin alike.
+PREVIEW_ORIGINS = r"https://vividia-git-[a-z0-9-]+-swarupgaikwad1801-ux\.vercel\.app"
+
+
+def allowed_origins() -> list[str]:
+    configured = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+    origins = [origin.strip().rstrip("/") for origin in configured.split(",") if origin.strip()]
+    return origins if PRODUCTION_ORIGIN in origins else [*origins, PRODUCTION_ORIGIN]
+
+
 app.add_middleware(
     CORSMiddleware,
-    # The deployed frontend's origin is set as ALLOWED_ORIGINS on the host,
-    # comma separated. Without it only local development works, which is the
-    # safe default: a wildcard would let any page call this backend and spend
-    # our credits.
-    allow_origins=[
-        origin.strip()
-        for origin in os.getenv(
-            "ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
-        ).split(",")
-        if origin.strip()
-    ],
+    allow_origins=allowed_origins(),
+    allow_origin_regex=PREVIEW_ORIGINS,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
