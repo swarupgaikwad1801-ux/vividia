@@ -1431,6 +1431,18 @@ export const STRINGS = {
     de: "Das hast du letztes Mal gemeint",
     hi: "Pichhli baar tumhara yahi matlab tha",
   },
+  // The chat (lib/listening.ts), 28 Oct. For keys hit at random, and for a
+  // short answer to the question we just asked. "We", no promises.
+  "heard.kind.unclear": {
+    en: "We are not sure we understood. Can you say it another way? You can also tap pictures instead.",
+    de: "Wir sind nicht sicher, ob wir das verstanden haben. Kannst du es anders sagen? Du kannst auch Bilder antippen.",
+    hi: "Hum shayad samjhe nahi. Kya tum ise doosre tareeke se bata sakte ho? Tum pictures bhi tap kar sakte ho.",
+  },
+  "heard.gotIt": {
+    en: "Thank you, that helps us understand.",
+    de: "Danke, das hilft uns zu verstehen.",
+    hi: "Shukriya, isse humein samajhne mein madad milti hai.",
+  },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;

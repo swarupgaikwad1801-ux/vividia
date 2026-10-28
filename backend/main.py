@@ -295,7 +295,7 @@ async def listen(request: ListenRequest, http: Request) -> ListenResponse:
     _metered(http, request.lang)
     try:
         heard, safety = await asyncio.gather(
-            ENGINE.listen(request.text, request.lang),
+            ENGINE.listen(request.text, request.lang, request.asked.value if request.asked else None),
             ENGINE.safety_check(request.text, request.lang),
         )
     except Exception as error:  # noqa: BLE001 - the child must never see a traceback

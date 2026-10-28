@@ -27,7 +27,8 @@ from engine.prompts import language_name
 
 # Mirrored in app/schemas.py (ListenKind) and frontend/src/types/api.ts.
 KINDS = (
-    "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "talk", "other",
+    "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "talk",
+    "unclear", "other",
 )
 
 # Which details the message already gives (Neel, 27 Oct: the questions must
@@ -60,6 +61,9 @@ Kinds:
 "talk" - they want someone to talk to or to listen, or check whether anyone
   is there ("talk to me please", "baat karo", "is anyone there?", "hello"),
   with nothing about what happened.
+"unclear" - you cannot tell what they mean at all: random letters, keys
+  hit at random, or words that make no sense together. Not for short,
+  misspelt or mixed-language messages a child could mean something by.
 "other" - anything else, or you are not sure.
 
 Pick the kind that matters most for this child's safety: a threat is
@@ -72,7 +76,56 @@ not ask for them again. Only what the child actually wrote; never guess:
 "when" - a time (today, yesterday, tomorrow, after school, every day).
 "who" - who did it (a name, "my friend", "a teacher", "three boys").
 "feeling" - how they feel (sad, scared, angry, alone).
-An empty list is a fine answer."""
+An empty list is a fine answer.
+
+Sometimes the app has just asked the child one question: where it happened,
+when, who did it, or how they feel. Then the message is often a short
+answer to it ("at the bus stop", "yesterday", "two boys from 7b",
+"scared"). Count that detail as told, and choose the kind by what the
+message itself says; a bare answer like that is "other"."""
+
+# What the app asked, in words the model reads (the app's own questions).
+ASKED_QUESTION = {
+    "where": "Where did it happen?",
+    "when": "When did it happen?",
+    "who": "Who did it?",
+    "feeling": "How do you feel about it?",
+}
+
+# Keyboard rows and runs a child's hand makes when it is not writing words.
+# Runs along a keyboard row. Only runs that occur in no English, German or
+# Hinglish word: "erty" (property) and "wert" (German "Wert") are left out.
+_MASH = re.compile(r"(asdf|sdfg|dfgh|fghj|ghjk|hjkl|qwer|rtyu|tyui|yuio|uiop|zxcv|yxcv|xcvb|cvbn|vbnm)", re.I)
+_VOWELS = set("aeiouyäöüàáâãåèéêëìíîïòóôõùúûý")
+_LATIN_WORD = re.compile(r"[a-zäöüßàáâãåèéêëìíîïòóôõùúûý]+")
+
+
+def looks_unclear(text: str) -> bool:
+    """True when a message is plainly not words: keys hit at random.
+
+    Checked in code, before any model call, so a child typing "asdfgh" is
+    told "we are not sure we understood" at once and no credit is spent.
+    Deliberately narrow:
+    - only Latin letters are judged; Devanagari, emoji and numbers never are;
+    - every word of 3+ letters must look random, so one real word is enough
+      to send the message on as usual;
+    - "ok", "pls", "hmm", "thnks" pass: a child may mean something by them.
+    """
+    letters = [ch for ch in text if ch.isalpha()]
+    if not letters or any(not ch.isascii() and ch.lower() not in _VOWELS and ch.lower() != "ß" for ch in letters):
+        return False
+    words = [word for word in _LATIN_WORD.findall(text.lower()) if len(word) >= 3]
+    if not words:
+        return False
+
+    def random_keys(word: str) -> bool:
+        return (
+            bool(_MASH.search(word))
+            or (len(word) >= 6 and not any(ch in _VOWELS for ch in word))
+            or (len(word) >= 5 and len(set(word)) == 1)
+        )
+
+    return all(random_keys(word) for word in words)
 
 LISTEN_SCHEMA = {
     "type": "json_schema",
@@ -92,19 +145,29 @@ LISTEN_SCHEMA = {
 }
 
 
-async def listen(text: str, lang: str) -> dict:
+async def listen(text: str, lang: str, asked: str | None = None) -> dict:
     """{"kind": one of KINDS, "told": [DETAILS...], "calls_made": int, "usage": {...}}.
+
+    `asked` is the detail the app's last question asked for ("where", ...),
+    so a short answer like "at the bus stop" is read as that answer instead
+    of as a new message about nothing (Swarup, 28 Oct: "I want it to think").
+    Only the name of the question is sent, never an earlier message.
 
     Never raises. A failure gives "other" and nothing told, so the screen
     falls back to its general line and asks for every detail.
     """
     usage = Usage()
     told: list[str] = []
+    if looks_unclear(text):
+        # Keys hit at random: no model can classify that, so none is asked.
+        return {"kind": "unclear", "told": [], "calls_made": 0, "usage": usage.as_dict()}
+    question = ASKED_QUESTION.get(asked or "")
+    context = f"The app just asked: {question}\n" if question else ""
     try:
         raw = await call(
             "fanout",
             LISTEN_SYSTEM,
-            f"Language: {language_name(lang)}\nMessage: {text}",
+            f"Language: {language_name(lang)}\n{context}Message: {text}",
             usage,
             temperature=0.0,
             max_tokens=60,

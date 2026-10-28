@@ -72,6 +72,7 @@ const KIND_LINE: Record<ListenKind, StringKey> = {
   good: "heard.kind.good",
   asking: "heard.kind.asking",
   talk: "heard.kind.talk",
+  unclear: "heard.kind.unclear",
   other: "heard.kind.other",
 };
 
@@ -88,6 +89,11 @@ const DETAIL_ASK: Record<ListenDetail, StringKey> = {
   who: "heard.ask.who",
   feeling: "heard.ask.feel",
 };
+
+/** The detail each question asks for, the other way round. */
+const ASK_DETAIL: ReadonlyMap<StringKey, ListenDetail> = new Map(
+  (Object.entries(DETAIL_ASK) as [ListenDetail, StringKey][]).map(([detail, key]) => [key, detail]),
+);
 
 /** Which details to ask about, in order, for something that happened. */
 function detailsFor(kind: ListenKind): ListenDetail[] {
@@ -112,6 +118,12 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
   const saidKinds = new Set<ListenKind>();
   const told = new Set<ListenDetail>();
   const asked = new Set<StringKey>();
+  // The detail the previous reply asked for, so an answer to it is thanked
+  // as an answer (Swarup, 28 Oct: "I want it to think").
+  let lastAsk: ListenDetail | null = null;
+  // Messages that were words, not keys hit at random: the first of them is
+  // thanked, even if an "unclear" one came before it.
+  let real = 0;
   // The kind of the first message about something that happened: its details
   // are the ones still worth asking about after a "talk" or a feeling.
   let incident: ListenKind | null = null;
@@ -120,9 +132,19 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
   for (let i = 0; i <= index && i < turns.length; i += 1) {
     const turn = turns[i];
     const kind = turn.kind ?? "other";
+    const answeredLastAsk = lastAsk !== null && (turn.told ?? []).includes(lastAsk);
+    // Keys hit at random: say we did not understand, offer another way, and
+    // ask nothing. Not "thank you for telling us" about nothing. It does not
+    // count as something said, so a real message after it is answered fully.
+    if (kind === "unclear") {
+      out.push({ lines: ["heard.kind.unclear"], ask: null });
+      lastAsk = null;
+      continue;
+    }
     for (const detail of turn.told ?? []) told.add(detail);
     if (incident === null && HAPPENED.has(kind)) incident = kind;
-    const first = i === 0;
+    const first = real === 0;
+    real += 1;
 
     // A message the safety check flagged gets its own line and NO question.
     // Seen in the first render: "Sometimes I want to die" was answered "It
@@ -137,7 +159,11 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
     // was "other" too: it answers what they just wrote, not the kind.
     const written = kind === "other" ? turn.written?.trim() : "";
     const lines: StringKey[] = first ? ["heard.thanks.first"] : [];
-    if (!written) {
+    if (!written && kind === "other" && answeredLastAsk) {
+      // A short answer to the question we just asked: thank them for the
+      // answer, then go on to the next thing still missing.
+      lines.push("heard.gotIt");
+    } else if (!written) {
       if (!saidKinds.has(kind)) {
         lines.push(KIND_LINE[kind]);
       } else if (!first) {
@@ -149,6 +175,7 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
 
     const ask = nextAsk(kind, incident, told, asked, first);
     if (ask) asked.add(ask);
+    lastAsk = ask ? ASK_DETAIL.get(ask) ?? null : null;
     out.push(written ? { lines, written, ask } : { lines, ask });
   }
   return out;
@@ -185,6 +212,17 @@ function nextAsk(
 }
 
 /** The reply to turn `index`, given everything the child wrote before it. */
+/**
+ * The detail the app asked for just before turn `index` was written, sent
+ * with that message so a short answer is read as an answer. null for the
+ * first message, or when the last question was not about a detail.
+ */
+export function askedBefore(index: number, turns: readonly Turn[]): ListenDetail | null {
+  if (index <= 0) return null;
+  const ask = replies(index - 1, turns)[index - 1]?.ask;
+  return ask ? ASK_DETAIL.get(ask) ?? null : null;
+}
+
 export function replyFor(index: number, turns: readonly Turn[]): Reply {
   return replies(index, turns)[index] ?? { lines: ["heard.kind.other"], ask: null };
 }

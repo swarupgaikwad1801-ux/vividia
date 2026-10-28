@@ -45,6 +45,7 @@ from engine.report import report as _real_report
 from engine.resources import national_helplines
 from engine.safety import message_for
 from engine.safety_rules import rule_category
+from engine.listen import DETAILS, looks_unclear
 
 # _normalise is imported rather than copied. It is the comparison the engine
 # already matches a child's phrases with, and a second definition here would
@@ -278,20 +279,27 @@ _KIND_PATTERNS = [
 ]
 
 
-async def listen(text: str, lang: str) -> dict:
-    """The kind by keyword, and `told` always empty.
+async def listen(text: str, lang: str, asked: str | None = None) -> dict:
+    """The kind by keyword; `told` only for the question the app just asked.
 
     Which details a message gives (where, when, who) is a reading of what the
     child meant, and a keyword list cannot do that honestly: "after school"
     is a time, "school" alone is a place, "he" may or may not be who did it.
-    So the mock claims nothing, and the screen asks for every detail, which
-    is what live mode does whenever the model's answer is missing.
+    So the mock claims nothing on its own. The one exception is no reading at
+    all: when the app has just asked "where?" and the child sends a short
+    message no kind fits, that message is their answer to it.
+
+    Keys hit at random ("asdfgh") are "unclear", by the same code check the
+    live engine runs before calling a model.
     """
     await asyncio.sleep(0.6 * PRETEND_LATENCY)
+    if looks_unclear(text):
+        return {"kind": "unclear", "told": [], "calls_made": 0}
     for kind, patterns in _KIND_PATTERNS:
         if any(pattern.search(text) for pattern in patterns):
             return {"kind": kind, "told": [], "calls_made": 0}
-    return {"kind": "other", "told": [], "calls_made": 0}
+    answered = [asked] if asked in DETAILS and len(text.strip()) <= 80 else []
+    return {"kind": "other", "told": answered, "calls_made": 0}
 
 
 async def reply(text: str, lang: str) -> dict:
