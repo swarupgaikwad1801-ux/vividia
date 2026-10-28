@@ -5,8 +5,9 @@
 A submission to the [Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com/),
 track **Best Apps and Agents**.
 
-> **Status:** in development (24–30 Oct 2026). Sections marked _TBD_ are
-> filled in as features land; nothing is claimed here before it works.
+> **Live demo: https://vividia-swarupgaikwad1801-ux.vercel.app** — no account, nothing to install. The free
+> server sleeps when idle, so the first screen can take about 30 seconds;
+> after that it is quick. Nothing is claimed here that the demo does not do.
 
 ## Why this exists
 
@@ -27,6 +28,32 @@ they approve word by word, and chooses whether to show it to one trusted
 adult, who also gets a short, sourced guide on how to respond.
 
 **The child's words. The child's story. The child's choice.**
+
+## Try it in 60 seconds
+
+Open **https://vividia-swarupgaikwad1801-ux.vercel.app** on a phone or a laptop, pick a language, then:
+
+1. **The question no translator asks.** Tap a face → **Write it my way** →
+   type *"He said he would get me after school"* → **Write it down** → **Make
+   a card**. Every pass translated it, and the app still stops to ask: *a
+   threat, or a lift home?* Only the child knows. Answer, and the German
+   follows the child's choice, not the model's guess. Do it twice: the second
+   time it offers your earlier meaning first ("You meant this last time")
+   but still lets you choose.
+2. **Help that does not wait for the model.** Type *"He said he will bring a
+   knife tomorrow"*. The danger screen opens with 110 / 112 to tap. The model
+   and a set of fixed rules both read every message, so this works even if
+   the model is slow or down. Nothing is sent to anyone.
+3. **No words needed.** Tap a face → **Tap pictures** → pick tiles → **Make a
+   card** → **Auf Deutsch**: the card turns over for the teacher. **Print or
+   save as PDF** puts both languages on one page.
+
+Always on screen: **Need help** (helplines, works offline) and **Leave now**
+(or Esc three times), which leaves in under a second.
+
+If the top of the screen says **Example mode**, the server is running
+without the models (or today's spending cap was reached): you see the app
+working, but the German is a fixed example and the app says so.
 
 - Nothing is ever shared automatically. No monitoring, no automatic alerts,
   no AI "friend", no diagnosis.
@@ -77,7 +104,7 @@ flowchart TB
         R["/api/report"]
         RES["/api/resources"]
         ENG["engine/translate.py<br/>strategies A / B / C"]
-        SAFE["engine/safety.py<br/>classify only"]
+        SAFE["engine/safety.py<br/>model + fixed-rule cross-check"]
         FIX["content/safety_messages.json<br/>human-written crisis text"]
     end
 
@@ -132,7 +159,9 @@ organization, so prompts and outputs are not stored after processing. We do
 **Tavily** looks up the school psychology service for the child's federal
 state, restricted to a hand-checked official domain per state, with results
 from any other host dropped in code (`engine/resources.py`). Children are
-never shown unvetted web content. *Pending PR #2.*
+never shown unvetted web content. Verified on the deployed backend on
+26 Oct: Baden-Württemberg returned the official ZSL Regionalstellen, marked
+`source: "live"`.
 
 ## How the verification works
 
@@ -168,6 +197,16 @@ the child's words carry two honest readings is theirs to decide
 `confidence` is **agreement between passes, not a correctness score.** They can
 all agree and all be wrong; that is exactly what case 2 is.
 
+4. **Cross-checks in code, at no extra cost** (added 28 Oct). Two agreeing
+   passes are only trusted when nothing else objects: a sentence with
+   negation, force or a threat — in English, German, and Hindi in Roman or
+   Devanagari letters — goes to the full verification, and so does one whose
+   agreed German **dropped a number** the child wrote ("3 times", "5 euros").
+   On the Hindi test set this raised the share of sentences that get the full
+   check from 0 of 30 to 11 of 30. The safety check is two checks as well:
+   the model, and fixed rules that can raise the help prompt when the model
+   misses a plain threat or is down, but can never lower it.
+
 ### What it costs
 
 Strategy **C (adaptive)** is what the app runs: two cheap passes first, and
@@ -175,12 +214,15 @@ the other eleven calls only when that sentence shows it needs them.
 
 | | model calls | latency |
 |---|---|---|
-| a sentence that needs no verifying | 2 | [TBD] |
-| full verification with a repair | 13 | [TBD] |
+| a sentence that needs no verifying | 2 | about 1–2 s |
+| the eval's average sentence (C) | 9.6–11.4 | 7–11 s |
+| full verification with a repair | 13 | longer than the average |
 
-Call counts are exact: they are what the pipeline makes, asserted in
-`backend/tests/test_latency.py`. Latency is left blank until it is measured on
-the deployed demo rather than on a laptop.
+Call counts for the first and last rows are exact: they are what the pipeline
+makes, asserted in `backend/tests/test_latency.py`. The middle row is measured:
+the averages of the two eval runs below (24–25 Oct, a laptop calling Token
+Factory). A single call measured 1.2–1.3 s and the first two calls run in
+parallel. The deployed demo adds a cold start of up to ~30 s after idle.
 
 ## Running it
 
@@ -238,11 +280,24 @@ python eval/language_gate.py --languages hi                 # per-language gate
 Reported only once measured, on sentences written by native speakers rather
 than machine-translated. Nothing goes in this table before then.
 
-| | baseline (A) | adaptive (C) |
-|---|---|---|
-| English, meaning kept | [TBD] | [TBD] |
-| Hindi, meaning kept | [TBD] | [TBD] |
-| mean model calls | [TBD] | [TBD] |
+Two full runs of the same sets, a day apart (`eval/results/`, files
+`*_20261024T22*` and `*_20261025T16*`):
+
+| | single pass (A) | ours (C), 24 Oct | ours (C), 25 Oct |
+|---|---|---|---|
+| English (50), meaning kept | 48/50 | 49/50 | 48/50 |
+| Hindi (30), meaning kept | 28/30 | 28/30 | 27/30 |
+| **Total** | **76/80** | **77/80** | **75/80** |
+| times the child was asked what they meant | 0 | 10 | 9 |
+| mean model calls | 1 | 10.5 | 10.3 |
+| missed crises (safety set) | – | 0 | 0 |
+
+**On accuracy the two are level.** The models are not deterministic, so ours
+moves by a sentence or two between runs, which on 80 sentences is noise, and
+we do not claim a win. What the extra calls buy is the questions: about one
+sentence in eight carried two honest meanings, and the app asked the child
+instead of guessing. Both runs predate the 28 Oct cross-checks (point 4
+above); a rerun is pending.
 
 Measured so far, and reproducible:
 
@@ -260,15 +315,14 @@ English**, and that the architecture is language-independent.
 
 ## Demo
 
-- Live demo: _TBD_. No API key needed: tap a face, choose **"Write it my
-  way"**, and write a sentence such as *"He said he would get me after
-  school"*, then make a card and watch the app ask what was meant.
+- Live demo: **https://vividia-swarupgaikwad1801-ux.vercel.app** (see **Try it in 60 seconds** above).
 - Video: _TBD_
 - Benchmark: 50 English and 30 Hindi sentences, drafted by the team with
   Claude's help and then read line by line by a team member who speaks the
   language, scored against a reference meaning with `eval/run_eval.py`.
-  Results: **76/80 for a single pass, 77/80 for ours** - level, since one
-  sentence in eighty is noise, not a difference.
+  Results: **76/80 for a single pass; 77/80 and 75/80 for ours** in two
+  runs a day apart - level, since a sentence or two in eighty is noise, not
+  a difference (table in **Results**).
   What the extra calls buy is the 8 sentences where the child's own words
   had two meanings and the app asked them instead of guessing. 0 missed
   crises on the safety set. Numbers stand once the native review of the
