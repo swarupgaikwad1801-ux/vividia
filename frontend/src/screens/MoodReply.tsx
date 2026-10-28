@@ -5,6 +5,7 @@ import CalmTools from "../components/CalmTools";
 import { moodReplyFor } from "../lib/moodReply";
 import { fill, t, type StringKey } from "../lib/strings";
 import type { Lang } from "../lib/strings";
+import { PencilIcon, PicturesIcon } from "../art/Icons.tsx";
 
 /**
  * Right after the check-in: an answer to the face the child tapped, then
@@ -169,27 +170,5 @@ export default function MoodReply({ lang, mood, onPictures, onWrite, onHome }: M
       </button>
       </div>
     </section>
-  );
-}
-
-/** Pictures: a framed picture with a sun and a hill, in the sticker line. */
-function PicturesIcon() {
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false" className="size-8 text-ink">
-      <rect x="3" y="5" width="26" height="22" rx="4" fill="none" stroke="currentColor" strokeWidth="2.5" />
-      <circle cx="11" cy="12" r="2.5" fill="currentColor" />
-      <path d="M4.5 24 L13 16.5 L18 21 L22 17.5 L27.5 23" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-/** Writing: a pencil on a line, in the sticker line. */
-function PencilIcon() {
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false" className="size-8 text-ink">
-      <path d="M7 22 L21 8 L25 12 L11 26 L6 27 Z" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M18 11 L22 15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M15 29 L28 29" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
   );
 }

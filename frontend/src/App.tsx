@@ -33,6 +33,7 @@ import GameMap from "./components/GameMap";
 import HandoffShow from "./components/HandoffShow";
 import QuickExitButton from "./components/QuickExitButton";
 import ExampleModeBanner from "./components/ExampleModeBanner";
+import ScreenErrorBoundary from "./components/ScreenErrorBoundary";
 import OfflineStrip from "./components/OfflineStrip";
 import type { AdultId, WhereItHappens } from "./components/HandoffSuggestions";
 
@@ -393,6 +394,14 @@ export default function App() {
   // never moves `step` - a lock with a button that navigates was the leak.
   const needHelp = useCallback(() => setStep("help"), [setStep]);
 
+  // Every new screen starts at its top. The page kept the old scroll, so a
+  // screen after a long one (My notes, the card) opened scrolled down with its
+  // question hidden under the top bar (feature check, 28 Oct). Before the
+  // return below, like every hook here (ui-lessons: rules of hooks).
+  useEffect(() => {
+    window.scrollTo?.({ top: 0 });
+  }, [step]);
+
   // Read on every render: setting or removing a PIN changes it mid-session.
   const gate = notesGate(step, pinStatus(), notesOpen, mustSetPin);
   const scene = gate === "open" ? SCENE[step] : "quiet";
@@ -526,6 +535,9 @@ export default function App() {
       {/* Keyed by step, so each new place slides in. Quiet scenes do not
           move. Reduced motion stops it anyway (index.css). */}
       <div key={step} id="content" tabIndex={-1} className={`flex flex-col outline-none ${scene === "quiet" ? "" : "animate-slide-in"}`}>
+      {/* A crash in one screen stays in that screen: the top bar above, with
+          Need help and Leave now, keeps working (components/ScreenErrorBoundary). */}
+      <ScreenErrorBoundary lang={lang} onHome={() => setTrail([HOME])}>
       {/* NOTES GATE START */}
       {/* The PIN on the notes (issue #133, lib/notesGate.ts). In place of the
           screen, never a step, so no navigation can reach past it, and with
@@ -762,6 +774,7 @@ ${words}` : words));
       {step === "help" && <HelpScreen lang={lang} />}
       </>
       )}
+      </ScreenErrorBoundary>
       </div>
     </div>
     </div>

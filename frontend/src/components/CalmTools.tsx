@@ -46,6 +46,12 @@ const SPECKS = 14;
 
 const ease = (x: number) => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, x)));
 
+/** The word for `seconds` into the exercise; always one of PHASES, even for a bad clock value. */
+export function phaseAt(seconds: number): StringKey {
+  const step = Math.floor(Math.max(0, seconds) / SIDE_S) % 4;
+  return PHASES[Number.isFinite(step) ? step : 0];
+}
+
 /** Core radius `t` seconds in: grows, stays, shrinks, stays. Continuous across steps. */
 function coreAt(t: number): number {
   if (t <= 0) return SMALL;
@@ -158,7 +164,11 @@ function Breathe({ lang }: { lang: Lang }) {
     let frame = 0;
     let shown = seconds ?? 0;
     const tick = (now: number) => {
-      const elapsed = Math.min(TOTAL_S, (now - begun) / 1000);
+      // Never below 0: a frame's timestamp is when the frame began, which can
+      // be a few ms BEFORE `begun` was read. Unclamped that gave -1 seconds,
+      // PHASES[-1] was undefined, and Start crashed the whole app to a blank
+      // page (Swarup, 28 Oct: "the breathe in feature is not working").
+      const elapsed = Math.min(TOTAL_S, Math.max(0, (now - begun) / 1000));
       const whole = Math.floor(elapsed);
       // With reduced motion the bubble changes once a second and never glides.
       draw(reduce ? whole : elapsed, now / 1000, reduce);
@@ -196,8 +206,8 @@ function Breathe({ lang }: { lang: Lang }) {
     return () => cancelAnimationFrame(frame);
   }, [finished, reduce]);
 
-  const s = seconds ?? 0;
-  const phase = PHASES[Math.floor(s / SIDE_S) % 4];
+  const s = Math.max(0, seconds ?? 0);
+  const phase = phaseAt(s);
   const left = SIDE_S - (s % SIDE_S);
   // Rounds already done, and the one under way.
   const done = finished ? ROUNDS : Math.floor(s / (4 * SIDE_S));
