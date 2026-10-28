@@ -86,6 +86,9 @@ def test_clarify_accepts_the_childs_choice_and_resolves_it():
     if not first.ambiguities:
         pytest.skip("engine returned no ambiguity for this text")
 
+    # The client sends back the ambiguities it was shown, unchanged. An option
+    # id alone is meaningless to the server: the id -> meaning_de mapping only
+    # exists in the response being held here.
     ambiguity = first.ambiguities[0]
     response = client.post(
         "/api/clarify",
@@ -93,6 +96,7 @@ def test_clarify_accepts_the_childs_choice_and_resolves_it():
             "text": DISCLOSURE,
             "source_lang": "en",
             "choices": {ambiguity.phrase: ambiguity.options[0].id},
+            "ambiguities": [a.model_dump() for a in first.ambiguities],
         },
     )
     assert response.status_code == 200

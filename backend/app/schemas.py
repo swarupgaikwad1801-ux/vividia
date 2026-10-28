@@ -170,12 +170,44 @@ class ClarifyRequest(BaseModel):
 
     `choices` maps Ambiguity.phrase to the chosen Option.id. The child decides
     the meaning; the model never resolves an ambiguity on its own.
+
+    `ambiguities` is the list the server returned from /api/translate, echoed
+    back unchanged. It is required, and that is the whole fix: an Option.id on
+    its own is meaningless to the server, because the id -> meaning_de mapping
+    only ever existed in the response the client is holding. Without it the
+    server had nothing to apply and silently translated as if the child had
+    never answered, while still reporting confidence 1.0.
+
+    Required rather than optional on purpose. A client that forgets it now gets
+    a 422 it can see, instead of a translation that quietly ignores the child.
+
+    Both fields are bounded because every answered decision is rendered into
+    the system prompt, and `text` being capped at 2000 characters is no
+    protection if the list beside it is unbounded: 5000 echoed ambiguities
+    measure at about 1.09 million characters of prompt. `translate()` never
+    offers more than two (`ambiguous[:2]`), so `max_length=3` is one slot of
+    headroom and costs an honest client nothing. `choices` is the looser 10
+    because a client may still hold a stale key from an earlier turn, and an
+    unknown key decides nothing anyway.
+
+    The bound is on these request fields and NOT on `Ambiguity` or `Option`,
+    which are also the response shape. A length cap there would make an
+    over-long model-generated label fail validation on its way out - a 500 for
+    the child instead of a question.
     """
 
     text: str = Field(min_length=1, max_length=2000)
     source_lang: str
     target_lang: str = Field(default="de")
-    choices: dict[str, str] = Field(description="{ambiguity.phrase: option.id}")
+    choices: dict[str, str] = Field(
+        max_length=10,
+        description="{ambiguity.phrase: option.id}",
+    )
+    ambiguities: list[Ambiguity] = Field(
+        min_length=1,
+        max_length=3,
+        description="The ambiguities /api/translate returned, sent back as they were received",
+    )
 
 
 # Same shape as a translate response; ambiguities should come back empty.

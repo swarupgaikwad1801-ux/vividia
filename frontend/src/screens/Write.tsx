@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, clarify, translate } from "../lib/api.ts";
-import type { TranslateResponse } from "../types/api.ts";
+import type { Ambiguity, TranslateResponse } from "../types/api.ts";
 import { t } from "../lib/strings.ts";
 import WriteClarify, { OTHER_ID } from "../components/WriteClarify.tsx";
 import WriteProgress from "../components/WriteProgress.tsx";
@@ -102,7 +102,7 @@ type Phase = "writing" | "checking" | "result" | "error";
 /** What the last send did, so "try again" repeats it rather than guessing. */
 type Run =
   | { kind: "translate"; text: string }
-  | { kind: "clarify"; text: string; choices: Record<string, string> };
+  | { kind: "clarify"; text: string; choices: Record<string, string>; ambiguities: Ambiguity[] };
 
 export default function Write({
   lang,
@@ -187,7 +187,14 @@ export default function Write({
       try {
         const response =
           next.kind === "clarify"
-            ? await clarify({ text: next.text, source_lang: lang, choices: next.choices })
+            ? await clarify({
+                text: next.text,
+                source_lang: lang,
+                choices: next.choices,
+                // Echoed back as received: an option id means nothing to the
+                // server without the list it came from (#21).
+                ambiguities: next.ambiguities,
+              })
             : await translate({ text: next.text, source_lang: lang });
         if (id !== runRef.current) return;
         setResult(response);
@@ -240,7 +247,7 @@ export default function Write({
       Object.entries(choices).filter(([, id]) => id !== OTHER_ID),
     );
     if (Object.keys(sendable).length === 0) return;
-    void run({ kind: "clarify", text: checkedText, choices: sendable });
+    void run({ kind: "clarify", text: checkedText, choices: sendable, ambiguities });
   }
 
   /** Back to the editor with the draft intact. Used by Stop, Change it, and Say it another way. */
