@@ -90,9 +90,10 @@ def test_the_mock_knows_the_messages_the_battery_missed():
         assert asyncio.run(mock.listen(text, "en"))["kind"] == kind, text
 
 
-def test_the_route_answers_plain_messages_without_a_written_reply():
+def test_the_route_reads_plain_messages_by_code():
     answer = client.post("/api/listen", json={"text": "thanks", "lang": "en"}).json()
     assert answer["kind"] == "thanks"
+    # The mock never writes; live, the model writes the answer (test_listen.py).
     assert answer["reply"] is None
 
 

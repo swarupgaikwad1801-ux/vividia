@@ -320,6 +320,10 @@ Rules, all of them:
 - No questions.
 - Do not repeat names, places, numbers or other details from the message.
 - Do not judge or blame anyone in the message, and never the child.
+- If the message is not about the child's own life (hi, thanks, bye, "ok",
+  small talk, a question about something else, a test), answer that kindly
+  in one sentence and say we are here when they want to tell us what is
+  going on. Never answer homework, maths or general-knowledge questions.
 - Write in {language}. {script_rule}
 
 Return only the answer."""

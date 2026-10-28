@@ -301,11 +301,14 @@ async def listen(request: ListenRequest, http: Request) -> ListenResponse:
     except Exception as error:  # noqa: BLE001 - the child must never see a traceback
         raise ChildSafeError(error, request.lang) from error
 
-    # A written reply only where no reviewed sentence fits, and never for a
-    # message the safety check flagged: a child in crisis gets fixed, sourced
-    # words only. Sequential on purpose - it needs both answers above.
+    # The model writes its own answer to every message (Swarup, 28 Oct: "CAN
+    # IT REPLY BY THINKING ITSELF"). The reviewed sentence for the kind is
+    # the fallback whenever the answer fails a check. Never for a message
+    # the safety check flagged - a child in crisis gets fixed, sourced words
+    # only - and never for keys hit at random, which have nothing to answer.
+    # Sequential on purpose - it needs both answers above.
     written = None
-    if heard["kind"] == "other" and not safety["urgent"]:
+    if heard["kind"] != "unclear" and not safety["urgent"]:
         try:
             answer = await ENGINE.reply(request.text, request.lang)
         except Exception:  # noqa: BLE001 - the reviewed sentence is always there

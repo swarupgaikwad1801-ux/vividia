@@ -215,7 +215,9 @@ def test_any_error_falls_back_to_the_reviewed_sentence(monkeypatch):
     assert reply is None
 
 
-def test_the_route_asks_for_a_reply_only_for_other_and_never_when_urgent(monkeypatch):
+def test_the_route_asks_for_a_reply_for_every_message_but_never_when_urgent(monkeypatch):
+    # Swarup, 28 Oct: "CAN IT REPLY BY THINKING ITSELF". Every kind gets a
+    # written answer; the reviewed sentence is only the fallback.
     asked = []
 
     async def spy(text, lang):
@@ -224,12 +226,15 @@ def test_the_route_asks_for_a_reply_only_for_other_and_never_when_urgent(monkeyp
 
     monkeypatch.setattr(mock, "reply", spy)
     assert heard("Heute war es wieder schlimm.", "de")["reply"] == "We hear you."
-    assert heard("They took my bag again.")["reply"] is None
+    assert heard("They took my bag again.")["reply"] == "We hear you."
+    assert heard("thanks")["reply"] == "We hear you."
     # "other" AND urgent: the case the rule exists for. Fixed words only.
     crisis = heard("Sometimes I want to die.")
     assert crisis["kind"] == "other" and crisis["safety"]["urgent"] is True
     assert crisis["reply"] is None
-    assert asked == ["Heute war es wieder schlimm."]
+    # Keys hit at random: nothing to answer, the fixed "say it another way".
+    assert heard("asdfghjkl")["reply"] is None
+    assert asked == ["Heute war es wieder schlimm.", "They took my bag again.", "thanks"]
 
 
 def test_the_mock_never_writes(monkeypatch):
