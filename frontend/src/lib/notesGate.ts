@@ -5,7 +5,7 @@
  * set one, the app went straight back to the notes, unlocked, and stayed so
  * until a reload. Now the PIN guards the notes themselves:
  *
- * - Opening **My notes** with no PIN asks the child to set one first.
+ * - Opening any of the notes with no PIN asks the child to set one first.
  * - With a PIN, the notes open only after it is typed, **every time**.
  * - They lock again when the child leaves the notes, when the app is hidden
  *   and when Leave now is pressed (App.tsx).
@@ -21,9 +21,12 @@
  *   while rendering, so no navigation can reach past it.
  * - With storage blocked (`pinStatus()` is "unavailable") nothing locks, so a
  *   browser setting cannot shut a child out of their own words.
- * - With no PIN, only My notes asks for one. Making a card straight after the
- *   picture questions still works without a PIN: a child who has not chosen
- *   one is not stopped in the middle of telling someone.
+ *
+ * Changed on Swarup's decision (28 Oct): the PIN is asked **always** before
+ * saved notes are shown. With no PIN, every screen of the notes asks for one
+ * first, the card straight after the picture questions included, because the
+ * card shows everything saved, not only today's answers. Only the PIN screen
+ * itself stays open: it is how a PIN gets made.
  */
 
 import type { Step } from "./nav";
@@ -55,7 +58,7 @@ export function notesGate(step: Step, pin: PinStatus, notesOpen: boolean, mustSe
   if (!NOTES_STEPS.has(step)) return "open";
   if (pin === "unavailable") return "open";
   if (pin === "set") return notesOpen ? "open" : "unlock";
-  return step === "timeline" || mustSetPin ? "setFirst" : "open";
+  return step === "pinSet" && !mustSetPin ? "open" : "setFirst";
 }
 
 /** True while `step` is one of the notes, so an open lock may stay open. */

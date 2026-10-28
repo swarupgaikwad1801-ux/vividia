@@ -16,10 +16,14 @@ test("with a PIN, every screen that shows saved words asks for it until it is ty
   }
 });
 
-test("without a PIN, My notes asks the child to set one first", () => {
-  assert.equal(notesGate("timeline", "none", false), "setFirst");
-  // Making a card right after the pictures is not stopped by a PIN they never chose.
-  assert.equal(notesGate("handoff", "none", false), "open");
+test("without a PIN, every screen that shows saved words asks the child to set one first", () => {
+  for (const step of NOTES_STEPS) {
+    if (step === "pinSet") continue;
+    assert.equal(notesGate(step, "none", false), "setFirst", step);
+    assert.equal(notesGate(step, "none", true), "setFirst", `${step}: an open flag is no PIN`);
+  }
+  // The card straight after the pictures shows every saved note, so it asks too.
+  assert.equal(notesGate("handoff", "none", false), "setFirst");
   assert.equal(notesGate("pinSet", "none", false), "open", "the PIN screen is how to make one");
 });
 
