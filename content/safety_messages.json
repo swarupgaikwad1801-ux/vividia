@@ -9,8 +9,13 @@
     },
     "self_harm": {
       "en": "What you wrote sounds heavy. You can talk to someone right now at krisenchat.de, by text. You do not have to be in danger to write to them.",
-      "hi": "Tumne jo likha woh bhaari lagta hai. Tum abhi krisenchat.de par kisi se likhkar baat kar sakte ho. Baat karne ke liye khatre mein hona zaroori nahi hai.",
+      "hi": "Tumne jo likha woh bhaari lagta hai. Abhi krisenchat.de par kisi se likh kar baat karo. Baat karne ke liye khatre mein hona zaroori nahi hai.",
       "de": "Was du geschrieben hast, klingt schwer. Du kannst gerade jetzt mit jemandem schreiben, auf krisenchat.de. Du musst nicht in Gefahr sein, um dort zu schreiben."
+    },
+    "sexual": {
+      "en": "If someone does sexual things with you that you don't want, or that feel wrong, it is not your fault. You can talk to someone about it for free, by phone or by text. The help is below.",
+      "hi": "Agar koi tumhare saath sexual cheezein karta hai jo tumhe nahi chahiye, ya jo galat lagti hain, to yeh tumhari galti nahi hai. Kisi se iske baare mein baat karo, free mein, phone par ya likh kar. Madad neeche hai.",
+      "de": "Wenn jemand sexuelle Dinge mit dir macht, die du nicht willst oder die sich falsch anfühlen, ist das nicht deine Schuld. Du kannst kostenlos mit jemandem darüber reden, am Telefon oder per Text. Die Hilfe steht unten."
     }
   },
   "ui_always_visible": {

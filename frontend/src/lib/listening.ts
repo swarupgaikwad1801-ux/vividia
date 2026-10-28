@@ -48,12 +48,12 @@ export interface Turn {
   told?: readonly ListenDetail[];
   /** The safety check found danger or self-harm in this message. */
   urgent?: boolean;
-  /** A checked, model-written answer for an "other" message, or null. */
+  /** A checked, model-written answer to this message, or null. */
   written?: string | null;
 }
 
 export interface Reply {
-  /** Shown together, in one bubble. Never empty. */
+  /** Shown together, in one bubble. Empty only when `written` is set. */
   lines: StringKey[];
   /** A checked written answer, shown after `lines`, in place of the kind's line. */
   written?: string;
@@ -174,7 +174,11 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
       continue;
     }
     if (CHATTER.has(kind) && !turn.urgent) {
-      out.push({ lines: [chatterLine(kind, saidKinds)], ask: chatterAsk(kind, incident, asked) });
+      // The model's own answer when it passed its checks (Swarup, 28 Oct:
+      // "CAN IT REPLY BY THINKING ITSELF"); the reviewed line otherwise.
+      const said = turn.written?.trim();
+      const ask = chatterAsk(kind, incident, asked);
+      out.push(said ? { lines: [], written: said, ask } : { lines: [chatterLine(kind, saidKinds)], ask });
       saidKinds.add(kind);
       lastAsk = null;
       continue;
@@ -195,8 +199,9 @@ function replies(index: number, turns: readonly Turn[]): Reply[] {
     }
 
     // Written for this message, so it is said even when an earlier message
-    // was "other" too: it answers what they just wrote, not the kind.
-    const written = kind === "other" ? turn.written?.trim() : "";
+    // was the same kind: it answers what they just wrote, not the kind. The
+    // kind's reviewed line is the fallback when no answer passed the checks.
+    const written = turn.written?.trim();
     const thank = !thanked && THANKED.has(kind);
     if (thank) thanked = true;
     const lines: StringKey[] = thank ? ["heard.thanks.first"] : [];

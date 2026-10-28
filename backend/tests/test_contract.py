@@ -61,7 +61,7 @@ def test_translate_always_reports_a_safety_result():
     body = TranslateResponse.model_validate(
         client.post("/api/translate", json={"text": DISCLOSURE, "source_lang": "en"}).json()
     )
-    assert body.safety.category in ("none", "danger", "self_harm")
+    assert body.safety.category in ("none", "danger", "self_harm", "sexual")
     if not body.safety.urgent:
         assert body.safety.message_child == ""
 

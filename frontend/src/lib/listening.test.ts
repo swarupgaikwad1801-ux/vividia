@@ -171,9 +171,21 @@ test("without a written reply, 'other' still gets the reviewed line", () => {
   ]);
 });
 
-test("a written reply is never used for a kind that has a reviewed line, or for urgent", () => {
-  const hurt: Turn = { text: "x", kind: "hurt", written: "anything" };
-  assert.equal(replyFor(0, [hurt]).written, undefined);
+test("a written reply answers every kind, and the details are still asked", () => {
+  // Swarup, 28 Oct: "CAN IT REPLY BY THINKING ITSELF".
+  const hurt: Turn = { text: "x", kind: "hurt", written: "We are sorry they hurt you." };
+  assert.deepEqual(replyFor(0, [hurt]), {
+    lines: ["heard.thanks.first"],
+    written: "We are sorry they hurt you.",
+    ask: "heard.ask.where",
+  });
+  const thanks: Turn = { text: "thx", kind: "thanks", written: "We are glad you wrote." };
+  assert.deepEqual(replyFor(0, [thanks]), { lines: [], written: "We are glad you wrote.", ask: null });
+});
+
+test("a written reply is never used when the message is urgent or random keys", () => {
   const urgent: Turn = { text: "x", kind: "other", urgent: true, written: "anything" };
   assert.equal(replyFor(0, [urgent]).written, undefined);
+  const keys: Turn = { text: "x", kind: "unclear", written: "anything" };
+  assert.equal(replyFor(0, [keys]).written, undefined);
 });

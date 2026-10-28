@@ -53,6 +53,29 @@ CRISIS: dict[str, list[str]] = {
         r"मरना चाह",  # marna chah- : want to die
         r"खुद को मार",  # khud ko maar- : hurt myself
     ],
+    # Something sexual done to or with the child, or asked of them. Swarup,
+    # 28 Oct: "my friend does give me bj" got "It takes courage to write
+    # this. Where did it happen?". Only words with no everyday meaning, or
+    # a body part right after "touch": "touched my bag" stays "none".
+    "sexual": [
+        r"\b(bj|bjs|blow ?jobs?|hand ?jobs?)\b",
+        r"\b(rape|raped|raping|rapes|molest\w*)\b",
+        r"\b(touch|touches|touched|touching|grab|grabs|grabbed|grabbing)\s+(me\s+)?(on\s+)?(my\s+)?"
+        r"(privates?|private parts|down there|crotch|penis|dick|vagina|pussy|boobs|breasts|butt|ass)\b",
+        r"\bmade me\b.{0,20}\b(suck|undress|strip|touch (him|her|them|his|it))\b",
+        r"\b(sex|sexual)\b.{0,20}\b(with me|to me)\b",
+        r"\b(nudes|nude (pics?|photos?|pictures?)|naked (pics?|photos?|pictures?))\b",
+        r"\bvergewaltig\w*",
+        r"\bmissbraucht\b",
+        r"\bsexuell\w*\s+(belästig|missbrauch|angefasst)\w*",
+        r"\b(nacktbild|nacktfoto)\w*",
+        r"\b(angefasst|anfassen|fasst|fasste)\b.{0,30}\b(intim\w*|brust|busen|penis|scheide|zwischen den beinen)\b",
+        r"\b(intim\w*|brust|busen|penis|scheide|zwischen den beinen)\b.{0,30}\b(angefasst|anfassen|fasst|fasste)\b",
+        r"\bgalat (tarike|tareeke) se (chhu|chhoo)\w*",
+        r"\bbalatkar\b",
+        r"बलात्कार",  # balatkar : rape
+        r"गलत तरीके से छु",  # galat tarike se chhu- : touched the wrong way
+    ],
 }
 
 PATTERNS = {
@@ -62,7 +85,7 @@ PATTERNS = {
 
 
 def rule_category(text: str) -> str | None:
-    """"danger", "self_harm", or None when no fixed rule matches."""
+    """"danger", "self_harm", "sexual", or None when no fixed rule matches."""
     for category, patterns in PATTERNS.items():
         if any(pattern.search(text) for pattern in patterns):
             return category
