@@ -1436,12 +1436,48 @@ export const STRINGS = {
   "heard.kind.unclear": {
     en: "We are not sure we understood. Can you say it another way? You can also tap pictures instead.",
     de: "Wir sind nicht sicher, ob wir das verstanden haben. Kannst du es anders sagen? Du kannst auch Bilder antippen.",
-    hi: "Hum shayad samjhe nahi. Kya tum ise doosre tareeke se bata sakte ho? Tum pictures bhi tap kar sakte ho.",
+    hi: "Hum shayad samjhe nahi. Doosre tareeke se batao, ya pictures tap karo.",
   },
   "heard.gotIt": {
     en: "Thank you, that helps us understand.",
     de: "Danke, das hilft uns zu verstehen.",
     hi: "Shukriya, isse humein samajhne mein madad milti hai.",
+  },
+  // Messages that tell us nothing about the child's day (CHATTER in
+  // lib/listening.ts), 28 Oct. No "thank you for telling us", no question,
+  // no promise. The chat is not saved, so "bye" promises nothing about the
+  // words staying. Hinglish uses commands and nouns, never a verb that shows
+  // whether the child is a boy or a girl (#130).
+  "heard.kind.thanks": {
+    en: "You're welcome. We're here whenever you want to write.",
+    de: "Gern. Wir sind da, wann immer du schreiben willst.",
+    hi: "Koi baat nahi. Jab bhi likhna ho, hum yahan hain.",
+  },
+  "heard.kind.bye": {
+    en: "Okay, bye for now. You can come back any time.",
+    de: "Okay, bis bald. Du kannst jederzeit wiederkommen.",
+    hi: "Okay, bye. Jab chaho, wapas aao.",
+  },
+  "heard.kind.unsure": {
+    en: "Okay. There's no rush. Write when you're ready, or not at all.",
+    de: "Okay. Keine Eile. Schreib, wenn du so weit bist, oder auch gar nicht.",
+    hi: "Okay. Koi jaldi nahi. Jab mann ho tab likho. Na likhna bhi theek hai.",
+  },
+  "heard.kind.not_now": {
+    en: "That's okay. You don't have to talk about it. If you want to later, we're here.",
+    de: "Das ist okay. Du musst nicht darüber reden. Wenn du später willst, sind wir da.",
+    hi: "Koi baat nahi. Iske baare mein baat karna zaroori nahi. Baad mein mann ho, toh hum yahan hain.",
+  },
+  // CLAUDE.md: not an AI friend. Said plainly when the child asks.
+  "heard.kind.about_app": {
+    en: "Vividia is an app, not a person. It helps you put what happened into words and, if you want, show them to an adult you trust.",
+    de: "Vividia ist eine App, kein Mensch. Sie hilft dir, in Worte zu fassen, was passiert ist, und es, wenn du willst, einem Erwachsenen zu zeigen, dem du vertraust.",
+    hi: "Vividia ek app hai, koi insaan nahi. Ye kya hua usko shabdon mein likhne mein madad karti hai, aur mann ho toh kisi bharose wale bade ko dikhane mein.",
+  },
+  "heard.kind.smalltalk": {
+    en: "Thanks for sharing that. You can write about anything here, and if something is bothering you, we're listening.",
+    de: "Danke, dass du das erzählst. Du kannst hier über alles schreiben, und wenn dich etwas bedrückt, hören wir zu.",
+    hi: "Batane ke liye thanks. Yahan kuch bhi likho, aur agar koi baat pareshaan kare, toh hum padh rahe hain.",
   },
 } as const satisfies Record<string, Text>;
 

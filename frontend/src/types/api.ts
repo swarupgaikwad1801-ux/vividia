@@ -82,6 +82,12 @@ export type ListenKind =
   | "good"
   | "asking"
   | "talk"
+  | "thanks"
+  | "bye"
+  | "unsure"
+  | "not_now"
+  | "about_app"
+  | "smalltalk"
   | "unclear"
   | "other";
 

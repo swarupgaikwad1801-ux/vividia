@@ -45,7 +45,7 @@ from engine.report import report as _real_report
 from engine.resources import national_helplines
 from engine.safety import message_for
 from engine.safety_rules import rule_category
-from engine.listen import DETAILS, looks_unclear
+from engine.listen import DETAILS, looks_unclear, quick_kind
 
 # _normalise is imported rather than copied. It is the comparison the engine
 # already matches a child's phrases with, and a second definition here would
@@ -251,27 +251,39 @@ _KINDS: list[tuple[str, list[str]]] = [
     ("good", [r"\bgood day\b", r"\bwas (good|fine|okay)\b", r"\bnobody bothered\b",
               r"\bit stopped\b", r"\bachha (din|tha)\b", r"\bguter tag\b"]),
     ("asking", [r"\bwhat should i do\b", r"\bwhat do i do\b", r"\bwill it stop\b",
+                r"\bhelp me\b", r"\bcan you help\b", r"\bmadad kar\w*\b", r"\bhilf mir\b",
                 r"\bkya karu\b", r"\bkya karun\b", r"\bwas soll ich\b"]),
     # Wanting someone to talk to, with nothing about what happened: the
     # message in Neel's 27 Oct screenshot, "Merse baat karo please".
     ("talk", [r"\btalk to me\b", r"\bbaat kar\w*\b", r"\bis anyone there\b", r"\bkoi hai\b",
-              r"\bsprich mit mir\b", r"\brede mit mir\b", r"^\s*(hi|hello|hallo)\b"]),
+              r"\bsprich mit mir\b", r"\brede mit mir\b", r"^\s*(hi+|hello|hallo|hey|namaste)\b",
+              r"\bhow are you\b", r"\bwie geht'?s\b", r"\bkaise ho\b"]),
     ("online", [r"\bonline\b", r"\bgroup\b", r"\bchat\b", r"\bwhatsapp\b", r"\binsta\w*\b",
                 r"\bpost(ed|s)?\b", r"\bphoto\b", r"\bmessage\w*\b", r"\bgruppe\b", r"\bfoto\b"]),
     ("hurt", [r"\bhit\w*\b", r"\bpush\w*\b", r"\bkick\w*\b", r"\bspat\b", r"\bpunch\w*\b",
               r"\bhurt\b", r"\bmaar\w*\b", r"\bmar(a|te|ta)\b", r"\bdhakka\b", r"मार", r"धक्का",
               r"\bschl[aä]g\w*\b", r"\bgeschubst\b", r"\bgetreten\b"]),
     ("taken", [r"\btook\b", r"\btake\w*\b", r"\bstole\w*\b", r"\bsnatch\w*\b", r"\bbroke\w*\b",
-               r"\bchheen\w*\b", r"\bchhin\w*\b", r"छीन", r"\bweggenommen\b", r"\bgeklaut\b"]),
+               r"\bhid\b", r"\bhidden\b", r"\ble (liya|li|lete|leta)\b", r"\bchura\w*\b",
+               r"\bchhupa\w*\b", r"\btod (diya|di)\b",
+               r"\bchheen\w*\b", r"\bchhin\w*\b", r"छीन", r"\bweggenommen\b", r"\bgeklaut\b",
+               r"\bversteckt\b", r"\bkaputt\w*\b"]),
     ("names", [r"\bcall(ed|s)? me\b", r"\bnames?\b", r"\blaugh\w*\b", r"\bmock\w*\b",
+               r"\bshout\w*\b", r"\byell\w*\b", r"\bscream\w*\b", r"\bchilla\w*\b",
+               r"\bschrei\w*\b", r"\banschrei\w*\b", r"\bgaali\b", r"\bgaliyan\b",
                r"\bhans\w*\b", r"\bbulate\b", r"\bchhed\w*\b", r"हँस", r"\bausgelacht\b",
                r"\bbeleidig\w*\b", r"\bbeschimpf\w*\b"]),
     ("left_out", [r"\bleft out\b", r"\bleave me out\b", r"\bignor\w*\b", r"\balone\b",
                   r"\bnobody\b", r"\bno one\b", r"\bnikal\w*\b", r"\bakela\b", r"\bkoi nahi\b",
-                  r"अकेल", r"\bausgeschlossen\b", r"\ballein\b", r"\bniemand\b"]),
+                  r"\bsaath nahi\b", r"\bnahi baith\w*\b", r"\bbaat nahi kar\w*\b",
+                  r"अकेल", r"\bausgeschlossen\b", r"\ballein\b", r"\bniemand\b", r"\bkeiner\b"]),
     ("feeling", [r"\bsad\b", r"\bscared\b", r"\bafraid\b", r"\btired\b", r"\bfeel\w*\b",
-                 r"\bdukhi\b", r"\bdar\b", r"\bthak\w*\b", r"दुखी", r"डर",
+                 r"\bdukhi\b", r"\bdar\b", r"\bdarr?\b", r"\bdar lag\w*\b", r"\bthak\w*\b", r"दुखी", r"डर",
                  r"\btraurig\b", r"\bangst\b", r"\bm[uü]de\b"]),
+    # Last, so anything about what happened wins: "I like pizza" is chat,
+    # "I like it when nobody talks to me" is not.
+    ("smalltalk", [r"^\s*i (like|love)\b", r"^\s*ich (mag|liebe)\b", r"\bpasand hai\b",
+                   r"\bwhat is \d", r"\d+\s*[-+*/x]\s*\d+", r"\bfavou?rite\b"]),
 ]
 _KIND_PATTERNS = [
     (kind, [re.compile(pattern, re.IGNORECASE | re.UNICODE) for pattern in patterns])
@@ -295,6 +307,9 @@ async def listen(text: str, lang: str, asked: str | None = None) -> dict:
     await asyncio.sleep(0.6 * PRETEND_LATENCY)
     if looks_unclear(text):
         return {"kind": "unclear", "told": [], "calls_made": 0}
+    quick = quick_kind(text)
+    if quick:
+        return {"kind": quick, "told": [], "calls_made": 0}
     for kind, patterns in _KIND_PATTERNS:
         if any(pattern.search(text) for pattern in patterns):
             return {"kind": kind, "told": [], "calls_made": 0}

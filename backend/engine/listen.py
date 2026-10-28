@@ -28,7 +28,7 @@ from engine.prompts import language_name
 # Mirrored in app/schemas.py (ListenKind) and frontend/src/types/api.ts.
 KINDS = (
     "hurt", "names", "left_out", "taken", "online", "threat", "feeling", "good", "asking", "talk",
-    "unclear", "other",
+    "thanks", "bye", "unsure", "not_now", "about_app", "smalltalk", "unclear", "other",
 )
 
 # Which details the message already gives (Neel, 27 Oct: the questions must
@@ -56,18 +56,33 @@ Kinds:
 "feeling" - they only said how they feel (sad, scared, tired, alone), with
   nothing about what happened.
 "good" - something went well: a good day, nobody bothered them, it stopped.
-"asking" - they ask what to do, or ask us a question ("what should I do?",
-  "is this normal?", "will it stop?").
+"asking" - they ask what to do about something happening to them, or ask
+  for help ("what should I do?", "is this normal?", "will it stop?",
+  "can you help me?").
 "talk" - they want someone to talk to or to listen, or check whether anyone
   is there ("talk to me please", "baat karo", "is anyone there?", "hello"),
   with nothing about what happened.
+"thanks" - they only say thank you.
+"bye" - they only say goodbye or that they are going. A goodbye that sounds
+  final ("goodbye forever", "you won't see me again") is not "bye": "other".
+"unsure" - a short answer with nothing in it: ok, yes, no, hmm, maybe,
+  "I don't know", "nothing".
+"not_now" - they do not want to talk or tell about it, or not now ("I
+  don't want to talk about it", "later", "nahi batana").
+"about_app" - they ask who or what we are: a person, a robot, an AI ("who
+  are you?", "are you a bot?", "tum kaun ho?").
+"smalltalk" - everyday chat or a question with nothing to do with how they
+  are or anything that happened to them: food, games, sport, homework,
+  "what is 2+2", "I like pizza".
 "unclear" - you cannot tell what they mean at all: random letters, keys
   hit at random, or words that make no sense together. Not for short,
   misspelt or mixed-language messages a child could mean something by.
 "other" - anything else, or you are not sure.
 
 Pick the kind that matters most for this child's safety: a threat is
-"threat" even if it was sent online. Read what the child means, not the
+"threat" even if it was sent online. A message that also says what happened
+or how they feel is that kind, never "thanks", "bye", "unsure", "not_now",
+"about_app" or "smalltalk": "ok but they hit me again" is "hurt". Read what the child means, not the
 words: children exaggerate, mix languages and misspell. If unsure, "other".
 
 Then list which of these details the message already gives, so the app does
@@ -127,6 +142,79 @@ def looks_unclear(text: str) -> bool:
 
     return all(random_keys(word) for word in words)
 
+
+# Short messages whose meaning is plain without a model: "thanks", "bye",
+# "ok", "idk", "I don't want to talk about it", "are you a robot?". Before
+# 28 Oct every one of them was answered "Thank you for telling us. It takes
+# courage to write this. Do you want to tell us more?" (Swarup: "even if we
+# put random messages it still says thank you for your message").
+#
+# Each pattern must match the WHOLE message, after lower-casing and dropping
+# punctuation, so "ok" is caught and "ok but they hit me" goes to the model
+# as usual. Nothing here can hide danger: the safety check reads every
+# message separately (main.py), and its result is answered first.
+_QUICK: list[tuple[str, list[str]]] = [
+    ("thanks", [
+        r"(ok(ay)? )?(thanks?|thank (you|u)|thanku|thx|thnx|ty|tysm)( (so much|a lot|very much))?",
+        r"(danke|dankeschön|vielen dank)( (schön|sehr))?",
+        r"(shukriya|dhanyavaad|dhanyawad|dhanyavad)( (ji|bahut))?",
+    ]),
+    ("bye", [
+        r"(ok(ay)? |chalo |thanks? |thank (you|u) )?(bye( bye)?|goodbye|good night|gn|see (you|u|ya)( later| tomorrow)?|cya|tata)",
+        r"(tschüss|tschüs|tschau|ciao|gute nacht|bis (dann|später|morgen|bald))",
+        r"(alvida|phir milenge|kal milte hain)",
+    ]),
+    ("not_now", [
+        r"(i )?(do ?n'?t|do not|dont) (want|wanna) (to )?(talk|tell|say|write)( (about )?(it|this|that))?( (now|right now|today|anymore))?",
+        r"(i'?m )?not (ready|now|today|right now)",
+        r"(maybe )?later|abhi (nahi|nhi)|baad (mein|me)",
+        r"(mujhe )?(abhi )?(nahi|nhi) (batana|bolna|likhna|baat karni)( hai)?",
+        r"(ich )?(will|möchte|mag) (jetzt )?nicht( darüber)?( reden| sprechen| erzählen)?",
+        r"(jetzt )?nicht jetzt|später|vielleicht später",
+    ]),
+    ("about_app", [
+        r"(who|what) (are|r) (you|u)",
+        r"(are|r) (you|u) (a |an )?(robot|bot|ai|human|real|person|chatbot|machine)",
+        r"who is this|who'?s this|is anyone real|who am i talking to|is this (a |an )?(robot|bot|ai|real person|human)",
+        r"(tum|aap|ap) (kaun|kon) (ho|hai)",
+        r"(kya )?(tum|aap) (robot|bot|insaan|ai) (ho|hai)",
+        r"(wer|was) bist du",
+        r"bist du (ein |eine )?(roboter|bot|mensch|ki|echt)",
+    ]),
+    ("unsure", [
+        r"(ok(ay)?|okk?|k|kk|hm+|m+|no+|nope|nah|yes|yeah|yep|ya|haa?n?|nahi|nhi|na|ja|nein|jein|achha)",
+        r"(idk|i (do ?n'?t|dont) know|dunno|i dunno|not sure|maybe|nothing|nvm|never ?mind)",
+        r"(pata nahi|pata nhi|maloom nahi|malum nahi|kuch nahi|kuchh nahi|shayad)",
+        r"(weiß nicht|weiss nicht|keine ahnung|vielleicht|nichts|egal)",
+    ]),
+]
+_QUICK_PATTERNS = [
+    (kind, re.compile("(?:" + "|".join(patterns) + ")", re.UNICODE)) for kind, patterns in _QUICK
+]
+
+
+def quick_kind(text: str) -> str | None:
+    """The kind of a short message whose meaning is plain, or None.
+
+    Checked in code before any model call, like looks_unclear(), so these
+    answers cost no credit and never depend on a model being up. Letters a
+    child holds down ("okkkk", "byeee") count once. A message of only "?" or
+    "..." is "unsure". Emoji alone are never judged: a crying face is a
+    feeling, and that is for the model.
+    """
+    stripped = text.strip()
+    if stripped and all(ch in "?.!¿ " for ch in stripped):
+        return "unsure"
+    words = re.sub(r"[^\w\s']", " ", text.lower().replace("\u2019", "'"))
+    words = re.sub(r"(.)\1{2,}", r"\1", words)
+    words = " ".join(words.split())
+    if not words or len(words) > 60:
+        return None
+    for kind, pattern in _QUICK_PATTERNS:
+        if pattern.fullmatch(words):
+            return kind
+    return None
+
 LISTEN_SCHEMA = {
     "type": "json_schema",
     "json_schema": {
@@ -161,6 +249,10 @@ async def listen(text: str, lang: str, asked: str | None = None) -> dict:
     if looks_unclear(text):
         # Keys hit at random: no model can classify that, so none is asked.
         return {"kind": "unclear", "told": [], "calls_made": 0, "usage": usage.as_dict()}
+    quick = quick_kind(text)
+    if quick:
+        # "thanks", "ok", "bye": plain without a model, so none is asked.
+        return {"kind": quick, "told": [], "calls_made": 0, "usage": usage.as_dict()}
     question = ASKED_QUESTION.get(asked or "")
     context = f"The app just asked: {question}\n" if question else ""
     try:

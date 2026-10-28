@@ -116,6 +116,12 @@ class ListenKind(str, Enum):
     GOOD = "good"
     ASKING = "asking"
     TALK = "talk"
+    THANKS = "thanks"
+    BYE = "bye"
+    UNSURE = "unsure"
+    NOT_NOW = "not_now"
+    ABOUT_APP = "about_app"
+    SMALLTALK = "smalltalk"
     UNCLEAR = "unclear"
     OTHER = "other"
 
