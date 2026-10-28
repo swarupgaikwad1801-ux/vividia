@@ -30,20 +30,20 @@ export interface CheckInProps {
 
 export default function CheckIn({ lang, onChoose }: CheckInProps) {
   return (
-    <section className="split flex flex-col gap-6 px-4 pt-6 pb-6 lg:pt-12" aria-labelledby="checkin-title">
+    <section className="flex flex-col gap-6 px-4 pt-6 pb-6" aria-labelledby="checkin-title">
       <h1 id="checkin-title" className="q-title">
         {t("checkin.title", lang)}
       </h1>
 
-      {/* The answers as one block: the right-hand column on a wide screen,
-          and nothing at all (display: contents) on a phone. */}
-      <div className="contents lg:flex lg:flex-col lg:gap-6">
+      {/* The answers as one block; display: contents, so it adds nothing to
+          the layout. */}
+      <div className="contents">
 
       {/*
         Six moods in two rows of three: the layout moods.ts was written for,
         and the one that fits a 360px phone without shrinking a tap target.
       */}
-      <ul className="tile-grid grid grid-cols-3 gap-2.5 lg:gap-3">
+      <ul className="tile-grid grid grid-cols-3 gap-2.5">
         {MOODS.map((mood) => (
           <li key={mood.code}>
             <button
