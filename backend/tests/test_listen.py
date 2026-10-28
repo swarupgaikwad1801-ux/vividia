@@ -190,6 +190,28 @@ def test_the_second_check_can_stop_it(monkeypatch):
     assert reply is None
 
 
+def test_saying_back_what_happened_passes_the_code_rules():
+    # Live check, 28 Oct: 7 of 8 replies were stopped. The writer was told
+    # to say back what happened and also to repeat no detail, and the
+    # checker read the same contradiction. Both now ask for general words.
+    assert live_listen.reply_problems("We hear that they took something of yours and laughed.", "en") == []
+    for prompt in (live_listen.REPLY_SYSTEM, live_listen.CHECK_SYSTEM):
+        assert "general words" in prompt
+        assert "other details" not in prompt
+
+
+def test_why_a_reply_was_stopped_never_holds_the_child_or_the_reply(monkeypatch):
+    child = "Lena took my phone"
+    bad = json.dumps({"reply": "I am sorry Lena took your phone."})
+    for answers in ([bad], [GOOD, json.dumps({"ok": False})], ["not json"]):
+        call, _ = fake_model(answers)
+        monkeypatch.setattr(live_listen, "call", call)
+        result = asyncio.run(live_listen.reply(child, "en"))
+        assert result["reply"] is None
+        assert result["why"]
+        assert "Lena" not in result["why"] and "phone" not in result["why"]
+
+
 @pytest.mark.parametrize(
     ("bad", "lang"),
     [
