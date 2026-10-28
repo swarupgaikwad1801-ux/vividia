@@ -423,30 +423,46 @@ export default function App() {
       </button>
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col">
       {/* Outside the switch on purpose: the way out is on every screen,
-          including the lock. Back sits in the opposite corner and looks
-          quieter, so a child reaching for Leave now does not hit it. Need
-          help (red) sits left of Leave now (dark outline), a gap apart.
-          All three are one row, the same height (44px) and the same type
-          (Inter, bold, base size); only their weight differs: Back is bare
-          text, Need help and Leave now are stickers. */}
+          including the lock. Getting around (Back, My notes) sits on the
+          left; staying safe (Need help, Leave now) on the right, where a
+          thumb finds it, so a child reaching for Leave now does not hit
+          Back. Need help and Leave now are icons only (Neel, 28 Oct): red
+          headphones and a door, 44px each, named for screen readers and on hover
+          from strings.ts. All of it fits one row at 360px in en/de/hi. */}
       <div className="top-bar flex items-center justify-between gap-2 px-4 pt-1">
 
-        {canGoBack(trail) ? (
-          <button
-            type="button"
-            onClick={goBack}
-            // nowrap + shrink-0: next to Leave now, the arrow otherwise wraps
-            // onto its own line at 360px. Same type as the two buttons beside
-            // it, but no outline, no fill and the softer ink, so it stays
-            // quieter than Leave now.
-            className="min-h-tap shrink-0 whitespace-nowrap rounded-full pr-1 text-base font-bold text-ink-soft hover:text-ink"
-          >
-            <span aria-hidden="true">← </span>
-            {t("nav.back", lang)}
-          </button>
-        ) : (
-          <span />
-        )}
+        <div className="flex min-w-0 items-center gap-1">
+          {canGoBack(trail) && (
+            <button
+              type="button"
+              onClick={goBack}
+              // nowrap + shrink-0: next to Leave now, the arrow otherwise wraps
+              // onto its own line at 360px. No outline, no fill and the softer
+              // ink, so it stays quieter than everything else in the bar.
+              className="min-h-tap shrink-0 whitespace-nowrap rounded-full pr-1 text-base font-bold text-ink-soft hover:text-ink"
+            >
+              <span aria-hidden="true">← </span>
+              {t("nav.back", lang)}
+            </button>
+          )}
+          {/* The child's saved words and the PIN, from every screen (before
+              this, only saving written words led there, so the picture path
+              and the chat never did). Not on the lock: the lock returns
+              early above, so this line never renders while locked. */}
+          {step !== "timeline" && (
+            <button
+              type="button"
+              onClick={() => setStep("timeline")}
+              className="sticker min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-3 text-sm font-bold text-ink motion-safe:active:translate-y-0.5"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 3h10l3 3v15H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+                <path d="M9 9h7M9 13h7M9 17h4" />
+              </svg>
+              {t("nav.notes", lang)}
+            </button>
+          )}
+        </div>
         <QuickExitButton
           lang={lang}
           beside={
@@ -454,10 +470,18 @@ export default function App() {
               <button
                 type="button"
                 onClick={needHelp}
+                aria-label={t("help.short", lang)}
+                title={t("help.short", lang)}
                 // need-help: pulses while a danger line is on screen (index.css).
-                className="need-help sticker min-h-tap shrink-0 whitespace-nowrap rounded-full bg-help px-3 text-base font-bold text-page motion-safe:active:translate-y-0.5"
+                className="need-help sticker size-tap inline-flex shrink-0 items-center justify-center rounded-full bg-help text-page motion-safe:active:translate-y-0.5"
               >
-                {t("help.short", lang)}
+                {/* Headphones, still red (Neel, 28 Oct): someone who listens, not a
+                    phone that might call someone, which a child could fear. */}
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 15v-3a8 8 0 0 1 16 0v3" />
+                  <path d="M4 15a2 2 0 0 1 2-2h1v7H6a2 2 0 0 1-2-2z" fill="currentColor" />
+                  <path d="M20 15a2 2 0 0 0-2-2h-1v7h1a2 2 0 0 0 2-2z" fill="currentColor" />
+                </svg>
               </button>
             )
           }

@@ -16,9 +16,9 @@
     },
     {
       "id": "leave-now",
-      "en": "“{button}” at the top closes the app fast. It does not delete your browser history.",
-      "de": "„{button}“ oben schließt die App sofort. Dein Browser-Verlauf wird aber nicht gelöscht.",
-      "hi": "Upar wala “{button}” button app turant band karta hai. Par browser history delete nahi hoti."
+      "en": "The door button at the top, “{button}”, closes the app fast. It does not delete your browser history.",
+      "de": "Der Tür-Knopf oben, „{button}“, schließt die App sofort. Dein Browser-Verlauf wird aber nicht gelöscht.",
+      "hi": "Upar darwaze wala “{button}” button app turant band karta hai. Par browser history delete nahi hoti."
     }
   ]
 }
