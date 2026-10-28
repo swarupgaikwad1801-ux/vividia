@@ -157,6 +157,8 @@ test("every storage key in the app has a decision recorded here", () => {
     "vividia.drafts.v1",
     // forgetVisits: a list of days shows the app was used on a shared phone.
     "vividia.visits.v1",
+    // forgetMeanings: what the child meant by a phrase is about them.
+    "vividia.meanings.v1",
   ]);
 
   /** Deliberately kept, with the reason, so the next person need not re-decide. */

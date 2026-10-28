@@ -1423,6 +1423,13 @@ export const STRINGS = {
     de: "Punkt: An dem Tag hast du etwas gespeichert.",
     hi: "Dot: us din tumne kuch save kiya.",
   },
+  // On the clarify question: the reading this child picked last time for the
+  // same phrase (lib/meanings.ts). Offered first, never pre-selected.
+  "clarify.lastTime": {
+    en: "You meant this last time",
+    de: "Das hast du letztes Mal gemeint",
+    hi: "Pichhli baar tumhara yahi matlab tha",
+  },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;

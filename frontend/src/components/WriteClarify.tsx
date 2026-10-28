@@ -1,5 +1,6 @@
 import type { Ambiguity } from "../types/api.ts";
 import { t } from "../lib/strings.ts";
+import { isRecalled, recalledMeaning } from "../lib/meanings.ts";
 
 /**
  * The question to the child — the thing this whole product is for.
@@ -88,6 +89,15 @@ export default function WriteClarify({
 
       {ambiguities.map((item, index) => {
         const group = `ambiguity-${index}`;
+        // What this child meant by the same phrase last time (lib/meanings.ts)
+        // goes first, marked, and is NOT pre-selected: they still choose.
+        // "Something else" stays last wherever it was.
+        const recalled = recalledMeaning(item.phrase);
+        const options = [...item.options].sort(
+          (a, b) =>
+            Number(a.id === OTHER_ID) - Number(b.id === OTHER_ID) ||
+            Number(isRecalled(b, recalled)) - Number(isRecalled(a, recalled)),
+        );
         return (
           <fieldset key={`${item.phrase}-${index}`} className="flex flex-col gap-2">
             <legend className="mb-1 flex flex-col gap-1">
@@ -105,7 +115,7 @@ export default function WriteClarify({
               )}
             </legend>
 
-            {item.options.map((option) => (
+            {options.map((option) => (
               <label
                 key={option.id}
                 className={`flex min-h-tap cursor-pointer items-start gap-3 rounded-card border p-3 ${
@@ -122,8 +132,15 @@ export default function WriteClarify({
                   onChange={() => onChoose(item.phrase, option.id)}
                   className="mt-1 size-5 accent-calm"
                 />
-                <span lang={lang} className="text-base">
-                  {option.label}
+                <span className="flex flex-col gap-1">
+                  <span lang={lang} className="text-base">
+                    {option.label}
+                  </span>
+                  {option.id !== OTHER_ID && isRecalled(option, recalled) && (
+                    <span className="w-fit rounded-full bg-ink px-2 py-0.5 text-xs font-bold text-page">
+                      {t("clarify.lastTime", lang)}
+                    </span>
+                  )}
                 </span>
               </label>
             ))}

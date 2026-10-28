@@ -59,13 +59,24 @@ TRIAGE_TEMPERATURES = [0.2, 0.8]
 # These are the places where a wrong translation changes what happened, which
 # is exactly what our bake-off saw go wrong ("they made me give them my money"
 # became "they gave me money").
-# NOTE: these are English only. For other languages the triage falls back to
-# "do the two passes disagree", which is language-neutral. A child writing
-# Arabic therefore gets verification driven by disagreement alone, which is
-# weaker. Replacing this with a model-based risk check is tracked for Monday.
+# These cover the three languages the app ships (English, German, Hindi in
+# Roman letters and in Devanagari). Until 28 Oct they were English only, so a
+# German or Hindi sentence that the two passes happened to agree on was never
+# verified however much it said: "usne mujhe zabardasti paise dene ko kaha"
+# could skip the judge. Any other language still falls back to "do the two
+# passes disagree", which is language-neutral but weaker.
 RISK_PATTERNS = [
     r"\b(not|никог|لا|değil|kein|nicht|never|nobody|no one|didn'?t|won'?t|can'?t)\b",  # negation
     r"\b(made|forced|threat|hurt|hit|kick|push|touch|afraid|scared|weapon|knife)\w*\b",  # force or threat
+    # German: negation, then force or threat.
+    r"\b(nie|niemals|niemand|nichts|keiner|keine)\b",
+    r"\b(gezwungen|zwing|gedroht|droh|bedroh|geschlagen|schlägt|schlug|getreten|tritt|geschubst|schubs|angefasst|fass\w* mich an|messer|waffe|angst)\w*\b",
+    # Hindi in Roman letters (how children type it): negation, then force or threat.
+    r"\b(nahi|nahin|nai|mat|kabhi nahi|koi nahi)\b",
+    r"\b(maara|maari|maarte|maarta|peeta|peet|dhakka|dhamki|dhamkaya|zabardasti|jabardasti|chhua|chhuaa|chaku|chaaku|darr|darta|darti|dar gaya|dar gayi)\w*\b",
+    # Hindi in Devanagari. No \b: word boundaries are unreliable around
+    # Devanagari vowel signs, and these stems are specific enough without.
+    r"(नहीं|कभी नहीं|कोई नहीं|मारा|मारी|पीटा|धक्का|धमकी|धमकाया|ज़बरदस्ती|जबरदस्ती|छुआ|चाकू|डर)",
     # An unnamed actor was a marker here until it was measured: it fired on
     # 29 of 50 English sentences and was the only reason 19 of them
     # escalated. Almost every disclosure says "they" or "he", so it selected
@@ -84,6 +95,28 @@ def _normalise(text: str) -> str:
 def looks_risky(text: str) -> bool:
     """True when this sentence is the kind that loses meaning in translation."""
     return any(pattern.search(text) for pattern in _RISK)
+
+
+_DEVANAGARI_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
+
+
+def _numbers(text: str) -> list[str]:
+    return re.findall(r"\d+", text.translate(_DEVANAGARI_DIGITS))
+
+
+def numbers_lost(source: str, output: str) -> bool:
+    """True when a number the child wrote is missing from the translation.
+
+    "3 times", "5 euros", "since 2 weeks": a number is a fact a teacher acts
+    on, and two passes can agree on dropping it. Checked in code, so it costs
+    no call; when it fires, the sentence gets the full verification. Only
+    digits: a number written as a word is left to the passes and the judge.
+    """
+    wanted = _numbers(source)
+    if not wanted:
+        return False
+    have = set(_numbers(output))
+    return any(number not in have for number in wanted)
 
 
 # Scripts we can recognise, so an untranslated answer cannot pass as German.
@@ -1003,7 +1036,16 @@ async def translate(
     # quietly choosing the lift home.
     passes_agree = _normalise(first[0]) == _normalise(first[1])
     known_ambiguous = bool(lexicon_ambiguities(text, source_lang))
-    if passes_agree and not known_ambiguous and not looks_risky(text):
+    # Two passes agreeing is one cross-check. It is only trusted when nothing
+    # else says the sentence needs more: no reviewed ambiguous word, no
+    # negation or force (in any of our three languages), and no number the
+    # agreed German dropped.
+    if (
+        passes_agree
+        and not known_ambiguous
+        and not looks_risky(text)
+        and not numbers_lost(text, first[0])
+    ):
         return _finish(
             {"translation": first[0], "confidence": 1.0, "ambiguities": []}, usage, ADAPTIVE
         )
