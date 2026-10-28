@@ -49,7 +49,7 @@ class Report(TypedDict):
 
 class SafetyResult(TypedDict):
     urgent: bool  # True: show emergency help at once (110/112, krisenchat)
-    category: Literal["none", "danger", "self_harm"]
+    category: Literal["none", "danger", "self_harm", "sexual"]
     message_child: str  # calm message in the child's language; "" when not urgent
 
 

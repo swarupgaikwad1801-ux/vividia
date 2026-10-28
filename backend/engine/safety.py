@@ -46,6 +46,13 @@ for today or tomorrow, being followed, a weapon, being hurt while writing.
 "self_harm" - the child says they want to die, to hurt themselves, or to
 disappear, or that they cannot go on.
 
+"sexual" - someone does, or tries to do, sexual things to or with this
+child, pressures them into it, asks them for nude pictures, or shares sexual
+pictures of them. Slang and short forms count ("bj", "nudes"). The child
+does not have to say it was unwanted. Sexual insults on their own ("they
+call me a slut") are "none": that is name-calling, and the rest of the app
+handles it.
+
 "none" - everything else, including serious bullying that already happened.
 This is the normal answer and most messages are "none".
 
@@ -65,6 +72,10 @@ now.
 If you are unsure, answer "none". Being wrong here costs a child their trust
 in the app, and help is available to them on every screen anyway."""
 
+# Every category that opens the help pop-up. The order is the order the
+# fixed rules are tried in (safety_rules.CRISIS).
+URGENT = ("danger", "self_harm", "sexual")
+
 SAFETY_SCHEMA = {
     "type": "json_schema",
     "json_schema": {
@@ -74,7 +85,7 @@ SAFETY_SCHEMA = {
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "category": {"type": "string", "enum": ["none", "danger", "self_harm"]},
+                "category": {"type": "string", "enum": ["none", *URGENT]},
                 "because": {
                     "type": "string",
                     "description": "the words that decided it, quoted from the child; empty for none",
@@ -147,10 +158,10 @@ async def safety_check(text: str, lang: str, usage: Usage | None = None) -> Safe
     # when the model is down, but they never overrule a model that did
     # fire. Narrow by design and held to the same MUST_NOT_FIRE list, so
     # this adds no false alarms the tests would not catch. Costs no call.
-    if category not in ("danger", "self_harm"):
+    if category not in URGENT:
         category = rule_category(text) or "none"
 
-    if category not in ("danger", "self_harm"):
+    if category not in URGENT:
         return {"urgent": False, "category": "none", "message_child": ""}
 
     return {

@@ -6,7 +6,7 @@
  */
 
 export type Strategy = "baseline" | "multi_pass" | "adaptive";
-export type SafetyCategory = "none" | "danger" | "self_harm";
+export type SafetyCategory = "none" | "danger" | "self_harm" | "sexual";
 export type Severity = "critical" | "minor";
 
 /** One reading of an ambiguous phrase, offered to the child. */

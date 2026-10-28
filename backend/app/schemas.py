@@ -31,6 +31,7 @@ class SafetyCategory(str, Enum):
     NONE = "none"
     DANGER = "danger"
     SELF_HARM = "self_harm"
+    SEXUAL = "sexual"
 
 
 # --- shared pieces -----------------------------------------------------------
