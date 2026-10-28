@@ -7,6 +7,7 @@ import WriteProgress from "../components/WriteProgress.tsx";
 import WriteResult from "../components/WriteResult.tsx";
 import DangerDialog, { HelpPulse, opensForResult } from "../components/DangerDialog.tsx";
 import type { EngineMode } from "../lib/engineMode.ts";
+import { rememberMeaning } from "../lib/meanings.ts";
 import SentenceStarters, { withStarter } from "../components/SentenceStarters";
 
 
@@ -247,6 +248,13 @@ export default function Write({
       Object.entries(choices).filter(([, id]) => id !== OTHER_ID),
     );
     if (Object.keys(sendable).length === 0) return;
+    // Learn this child's way of writing: the reading they picked is offered
+    // first next time the phrase is unclear (lib/meanings.ts). Kept on the
+    // phone only, and only the phrase and the reading.
+    for (const item of ambiguities) {
+      const chosen = item.options.find((option) => option.id === sendable[item.phrase]);
+      if (chosen) rememberMeaning(item.phrase, chosen);
+    }
     void run({ kind: "clarify", text: checkedText, choices: sendable, ambiguities });
   }
 
