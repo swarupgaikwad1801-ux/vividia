@@ -1287,6 +1287,34 @@ export const STRINGS = {
     de: "Oder dreimal Esc drücken",
     hi: "Ya Esc teen baar dabao",
   },
+  // Days you came back (components/LastFourWeeks.tsx). Counts days, never a
+  // streak: missing a day is never shown as a loss.
+  "visits.title": { en: "Days you came back", de: "Tage, an denen du da warst", hi: "Jin dinon tum wapas aaye" },
+  "visits.count": {
+    en: "{n} of the last 28 days",
+    de: "{n} der letzten 28 Tage",
+    hi: "Pichhle 28 dinon mein se {n} din",
+  },
+  "visits.first": {
+    en: "You came back. That is a step.",
+    de: "Du bist wieder da. Das ist ein Schritt.",
+    hi: "Tum wapas aaye. Yeh ek kadam hai.",
+  },
+  "visits.some": {
+    en: "You keep coming back for yourself.",
+    de: "Du kommst immer wieder, für dich.",
+    hi: "Tum apne liye baar baar wapas aa rahe ho.",
+  },
+  "visits.note": {
+    en: "Coming back is enough. There is no streak to keep, and a day away is fine.",
+    de: "Wiederkommen reicht. Es gibt keine Serie, und ein Tag Pause ist okay.",
+    hi: "Wapas aana kaafi hai. Koi streak nahi hai, aur ek din chhootna bhi theek hai.",
+  },
+  "visits.savedKey": {
+    en: "Dot: you saved something that day.",
+    de: "Punkt: An dem Tag hast du etwas gespeichert.",
+    hi: "Dot: us din tumne kuch save kiya.",
+  },
 } as const satisfies Record<string, Text>;
 
 export type StringKey = keyof typeof STRINGS;

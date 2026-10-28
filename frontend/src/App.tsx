@@ -62,6 +62,7 @@ import { BUILT_IN_EMERGENCY } from "./lib/contacts";
 import { languageNote } from "./lib/help";
 import { addEntry, listEntries } from "./lib/timeline";
 import { forgetDrafts, readDrafts, saveDrafts } from "./lib/drafts";
+import { recordVisit } from "./lib/visits";
 import { onQuickExit } from "./lib/quickExit";
 import type { Turn } from "./lib/listening";
 import { pinStatus } from "./lib/pin";
@@ -177,6 +178,8 @@ export default function App() {
   // Leave now wipes them before the page goes: leaving in a hurry must not
   // leave a half-written disclosure on the phone.
   useEffect(() => onQuickExit(forgetDrafts), []);
+  // Today counts as a day they came back (lib/visits.ts): the date only.
+  useEffect(() => recordVisit(), []);
   // "Saved. It is kept on this phone only.", once, on the screen a save
   // leads to (GOV.UK confirmation pattern: say it is done, and where it
   // is). Gone at the next screen change.

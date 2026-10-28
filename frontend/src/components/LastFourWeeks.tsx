@@ -1,28 +1,25 @@
 import type { StoredEntry } from "../lib/timeline";
+import { dayKey, visitDays } from "../lib/visits";
 import { fill, t } from "../lib/strings";
 
 /**
- * The last four weeks at a glance, on the timeline: one square per day, the
- * days with something saved filled in.
+ * "Days you came back": the last four weeks on the timeline, one square per
+ * day. A filled square is a day the child opened the app; a dot inside is a
+ * day they also saved something.
  *
- * Bullying is repeated behaviour, and how often it happens is what a school
- * acts on; services that advise keeping a log say dates are the part people
- * forget (Kidscape's incident log; Contact, "keeping a record"). So this
- * shows dates and nothing else: no count of "bad days", no colour for mood,
- * no trend line and no conclusion. It describes the child's own list, never
- * the child.
+ * Swarup, 28 Oct: show coming back as something achieved. It is counted,
+ * never chained: there is no streak, no "days in a row", no badge and no
+ * empty square drawn as a loss (index.css: no points, scores, streaks or
+ * badges). For a child in a hard place, a missed day must never feel like
+ * failing, so the note under it says so in words.
  *
- * The grid is decoration (aria-hidden); the sentence under it says the same.
+ * The dots also keep what the grid was first for: dates are what a school
+ * acts on (Kidscape's incident log; Contact, "keeping a record").
+ *
+ * The grid is decoration (aria-hidden); the sentences say the same.
  */
 
 const DAYS = 28;
-
-/** "YYYY-MM-DD" in local time, matching how the date is shown. */
-function dayKey(d: Date): string {
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
 
 /** The last 28 days, oldest first, ending today. */
 export function lastDays(today: Date = new Date()): string[] {
@@ -40,25 +37,40 @@ export function daysWithEntries(entries: readonly StoredEntry[], days: readonly 
 
 export default function LastFourWeeks({ entries, lang }: { entries: readonly StoredEntry[]; lang: string }) {
   const days = lastDays();
-  const marked = daysWithEntries(entries, days);
-  if (marked.size === 0) return null;
+  const inRange = new Set(days);
+  const visited = new Set(visitDays().filter((d) => inRange.has(d)));
+  const saved = daysWithEntries(entries, days);
   const today = days[days.length - 1];
+  const n = visited.size;
+  if (n === 0) return null;
 
   return (
-    <section aria-labelledby="weeks-title" className="flex flex-col gap-2 rounded-card border-[2.5px] border-ink bg-surface p-4">
-      <h2 id="weeks-title" className="text-base font-bold text-ink">{t("timeline.weeks", lang)}</h2>
+    <section aria-labelledby="visits-title" className="flex flex-col gap-3 rounded-card border-[2.5px] border-ink bg-surface p-4">
+      <div className="flex items-end justify-between gap-3">
+        <div className="flex flex-col">
+          <h2 id="visits-title" className="text-base font-bold text-ink">{t("visits.title", lang)}</h2>
+          <p className="text-sm text-ink-soft">{fill("visits.count", lang, { n })}</p>
+        </div>
+        {/* The number, big: this is the thing worth noticing. */}
+        <p aria-hidden="true" className="headline text-5xl leading-none text-ink tabular-nums">{n}</p>
+      </div>
+
       <ol aria-hidden="true" className="grid grid-cols-7 gap-1.5">
         {days.map((day) => (
           <li
             key={day}
-            className={`aspect-square rounded-md border-2 ${
-              marked.has(day) ? "border-ink bg-ink" : "border-line bg-surface"
+            className={`flex aspect-square items-center justify-center rounded-md border-2 ${
+              visited.has(day) ? "border-ink bg-scene-deep" : "border-line bg-surface"
             } ${day === today ? "ring-2 ring-ink ring-offset-2 ring-offset-surface" : ""}`}
-          />
+          >
+            {saved.has(day) && <span className="size-2 rounded-full bg-ink" />}
+          </li>
         ))}
       </ol>
-      <p className="text-sm text-ink">{fill("timeline.weeksCount", lang, { n: marked.size })}</p>
-      <p className="text-sm text-ink-soft">{t("timeline.weeksWhy", lang)}</p>
+
+      <p className="text-base font-bold text-ink">{t(n === 1 ? "visits.first" : "visits.some", lang)}</p>
+      <p className="text-sm text-ink-soft">{t("visits.note", lang)}</p>
+      {saved.size > 0 && <p className="text-sm text-ink-soft">{t("visits.savedKey", lang)}</p>}
     </section>
   );
 }

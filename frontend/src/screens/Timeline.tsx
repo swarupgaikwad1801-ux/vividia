@@ -144,6 +144,10 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
         {status}
       </p>
 
+      {/* Outside the "has entries" branch: coming back counts even on a day
+          nothing was saved. */}
+      <LastFourWeeks entries={entries} lang={lang} />
+
       {undoable && (
         <div role="status" className="animate-pop-in flex items-center justify-between gap-3 rounded-full border-[2.5px] border-ink bg-ink py-1 pr-1 pl-4 text-page">
           <span className="text-base font-bold">{t("timeline.deletedOne", lang)}</span>
@@ -165,8 +169,6 @@ export default function Timeline({ lang, onBuildReport, onSetPin }: TimelineProp
         <>
           {/* Oldest first, from `listEntries()`: a pattern of incidents only
               reads as a pattern in the order it happened. */}
-          <LastFourWeeks entries={entries} lang={lang} />
-
           <ul className="flex flex-col gap-3">
             {entries.map((entry) => (
               <TimelineEntryCard key={entry.id} entry={entry} lang={lang} onDelete={deleteOne} />
