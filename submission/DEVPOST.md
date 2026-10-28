@@ -114,8 +114,8 @@ exactly what the child meant, and leaves the child in charge of who hears it.
   per state for all 16 states, with results from any other host dropped in
   code; only the state name is sent, never the child's words. It is served by
   `/api/resources?state=…`; **the app's screens do not send a state yet**, so
-  the help screen shows the curated list. <!-- If the state picker ships
-  (Neel to decide, 28 Oct), change this to say where it is on screen. -->
+  the help screen shows the curated list. <!-- Decided 28 Oct (Swarup): no
+  state picker for the submission; the lookup stays backend-only, as written. -->
 - **Privacy:** Nebius Zero Data Retention is on, so prompts and outputs are not
   stored. Our backend keeps nothing and logs no message text. The timeline,
   the PIN (as a salted hash), unsent drafts and the meanings a child picked
@@ -235,7 +235,7 @@ Paste from `FEEDBACK.md` (Most Valuable Feedback prize).
 - [ ] The same demo URL in README, Devpost and the video
 - [ ] Daily spending cap (`DEMO_DAILY_USD_CAP`) raised for the judging days,
       then the site checked in a private window on a phone
-- [ ] Tavily: state picker shipped, or every doc says it is backend-only
+- [x] Tavily: every doc says it is backend-only (no picker, decided 28 Oct)
 - [ ] Video public, ≤ 3:00
 - [ ] MIT licence visible in the repo's About box
 - [ ] README says where Nemotron, Token Factory and Tavily are used
