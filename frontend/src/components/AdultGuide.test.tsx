@@ -42,27 +42,26 @@ const ENTRIES: Entry[] = [
   { date: "2026-10-20", mood: "sad", text_child: "They took my lunch again.", text_de: "Sie haben mir wieder mein Essen weggenommen." },
 ];
 
-test("the line the child reads is in the child's language, not the adult's", () => {
-  // The child is holding the phone out. The card may already be switched to
-  // German for the adult; the child still has to know what they are opening.
+test("the open line leads in the card's language and repeats in the child's", () => {
+  // Review, 28 Oct: the heading stayed English on a German card. The adult
+  // reads the card's language first; the child still has to know what they
+  // are opening, so their language follows, small.
   const html = renderToStaticMarkup(createElement(AdultGuide, { showing: "de", lang: "hi" }));
+  const german = html.indexOf(STRINGS["guide.open"].de);
+  const hinglish = html.indexOf(t("guide.open", "hi"));
+  assert.ok(german >= 0, "the card's language should lead");
+  assert.ok(hinglish > german, "the child's language should follow it");
 
-  assert.ok(
-    html.includes(t("guide.open", "hi")),
-    "the summary should be in the child's language (hi) even when the card shows German",
-  );
-  assert.ok(
-    !html.includes(STRINGS["guide.open"].de),
-    "the German label leaked onto the line the child reads",
-  );
+  const same = renderToStaticMarkup(createElement(AdultGuide, { showing: "en", lang: "en" }));
+  assert.equal(same.split(t("guide.open", "en")).length - 1, 1, "said once when both are the same");
 });
 
 test("nothing of the guide is on screen before it has loaded", () => {
   const html = renderToStaticMarkup(createElement(AdultGuide, { showing: "de", lang: "en" }));
 
-  assert.ok(html.includes(t("guide.loading", "en")), "the open state should say it is loading");
+  assert.ok(html.includes(t("guide.loading", "de")), "the open state should say it is loading, to the reader");
   assert.ok(!html.includes("<ol"), "no steps should be rendered before the response arrives");
-  assert.ok(!html.includes(t("guide.failed", "en")), "it must not claim failure before it has tried");
+  assert.ok(!html.includes(t("guide.failed", "de")), "it must not claim failure before it has tried");
 });
 
 test("the big card mounts it, so the Must is actually met", () => {

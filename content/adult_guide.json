@@ -56,10 +56,10 @@
   "escalation_ladder": {
     "_comment": "Shown to the child when nothing changes. Order from CLAUDE.md. School roles exist at every German school in some form, though names vary by state; contacts for steps 4-6 come from resources.py and safety_messages.json, never typed here.",
     "steps": [
-      {"id": "teacher", "en": "Your class teacher", "de": "Deine Klassenlehrerin oder dein Klassenlehrer"},
+      {"id": "teacher", "en": "Your class teacher", "de": "Deine Klassenlehrerin oder dein Klassenlehrer", "for_adult": {"en": "The child's class teacher", "de": "Die Klassenlehrerin oder der Klassenlehrer des Kindes"}},
       {"id": "trusted", "en": "The trusted teacher or the school social worker", "de": "Die Vertrauenslehrkraft oder die Schulsozialarbeit"},
       {"id": "head", "en": "The head of the school", "de": "Die Schulleitung"},
-      {"id": "school_psychology", "en": "The school psychology service for your area", "de": "Die schulpsychologische Beratungsstelle", "contacts_from": "resources.py (live, per state)"},
+      {"id": "school_psychology", "en": "The school psychology service for your area", "de": "Die schulpsychologische Beratungsstelle", "for_adult": {"en": "The school psychology service for the child's area", "de": "Die schulpsychologische Beratungsstelle"}, "contacts_from": "resources.py (live, per state)"},
       {"id": "helplines", "en": "Nummer gegen Kummer 116 111 or krisenchat", "de": "Nummer gegen Kummer 116 111 oder krisenchat", "contacts_from": "safety_messages.json"},
       {"id": "emergency", "en": "If you are in danger right now: 110 or 112", "de": "Wenn du gerade in Gefahr bist: 110 oder 112", "contacts_from": "safety_messages.json"}
     ],
