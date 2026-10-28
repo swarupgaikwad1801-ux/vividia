@@ -16,12 +16,9 @@ import { STRINGS } from "./strings.ts";
 
 const GENDERED = /\b(sakte|sakti|rahe|rahi|karte|karti) ho\b|\bwapas aaye\b|\bkiya hua\b|\bakela\b/i;
 
-// Being rewritten in #134 (the PIN on My notes); remove once that is merged.
-const PENDING = new Set(["draft.kept"]);
-
 test("no Hinglish line uses a verb or adjective that genders the child", () => {
   const found = Object.entries(STRINGS)
-    .filter(([key, text]) => !PENDING.has(key) && GENDERED.test((text as { hi: string }).hi))
+    .filter(([, text]) => GENDERED.test((text as { hi: string }).hi))
     .map(([key, text]) => `${key}: ${(text as { hi: string }).hi}`);
   assert.deepEqual(found, []);
 });

@@ -1373,7 +1373,7 @@ export const STRINGS = {
   "draft.kept": {
     en: "What you type stays here until you save it or leave with the door button, “Leave now”.",
     de: "Was du tippst, bleibt hier, bis du es speicherst oder auf den Tür-Knopf „Schnell raus“ tippst.",
-    hi: "Jo tum type karte ho woh yahin rehta hai, jab tak tum save na karo ya darwaze wala “Leave now” button na dabao.",
+    hi: "Jo type karo, woh yahin rehta hai, jab tak save na karo ya darwaze wala “Leave now” button na dabao.",
   },
 
   // Offline, everywhere except the two writing screens that say it themselves.
