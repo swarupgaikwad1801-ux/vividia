@@ -201,6 +201,25 @@ async def report(entries: list[Entry], child_lang: str) -> Report:
 # The wording still comes from safety_messages.json via message_for(), so the
 # mock generates no crisis text, exactly like live.
 _CRISIS: dict[str, list[str]] = {
+    # Danger first: "er hat gesagt, er will mich umbringen" is someone else's
+    # threat, and must not be read as the self-harm "mich umbringen".
+    "danger": [
+        r"\b(has|had|have|with|brought|bring|bringing|bringt|mitbringen)\s+(a|ein|einen)\s+(knife|gun|messer|waffe)",
+        r"\bweapon\b",
+        r"\bmesser\b",
+        r"चाकू",  # chaaku : knife
+        # A threat someone else MADE, reported by the child (28 Oct: the mock
+        # missed "he said he would kill me after school", which safety.py's
+        # own prompt names as danger). "said ... kill me" is narrow on
+        # purpose: "my mum will kill me" has no "said" and stays quiet.
+        r"\b(said|says|told me|tells me|threatened|threatens)\b.{0,40}\b(kill|stab|shoot|beat|hurt)\s+(me|me up)\b",
+        r"\b(gesagt|sagt|droht|gedroht)\b.{0,40}\b(umbringen|abstechen|erstechen|zusammenschlagen|verprügeln)\b",
+        r"\b(kaha|bola|boli|bole)\b.{0,40}\bmaar\s+(dalega|dalegi|dalenge|dega|degi|denge)\b",
+        r"(कहा|बोला|बोली).{0,40}मार\s*(डालेगा|डालेगी|डालेंगे|देगा|देंगे)",
+        # Being held somewhere right now.
+        r"\bwon'?t let me (out|leave|go home)\b",
+        r"\blassen mich nicht (raus|gehen)\b",
+    ],
     "self_harm": [
         r"kill myself",
         r"want to die",
@@ -214,13 +233,8 @@ _CRISIS: dict[str, list[str]] = {
         r"मरना चाह",  # marna chah- : want to die
         r"खुद को मार",  # khud ko maar- : hurt myself
     ],
-    "danger": [
-        r"\b(has|had|with|brought)\s+a\s+knife",
-        r"\bweapon\b",
-        r"\bmesser\b",
-        r"चाकू",  # chaaku : knife
-    ],
 }
+
 _CRISIS_PATTERNS = {
     category: [re.compile(pattern, re.IGNORECASE | re.UNICODE) for pattern in patterns]
     for category, patterns in _CRISIS.items()
