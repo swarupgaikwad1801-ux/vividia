@@ -93,9 +93,7 @@ export default function LanguagePicker({
     <div
       role="group"
       aria-label={label}
-      // On a wide screen the stack becomes three tall chips side by side,
-      // so each greeting can be large instead of a long, mostly empty bar.
-      className={stack ? "flex flex-col gap-3 lg:grid lg:grid-cols-3" : "flex gap-2"}
+      className={stack ? "flex flex-col gap-3" : "flex gap-2"}
     >
       {LANGUAGE_OPTIONS.map((option) => {
         const chosen = option.code === value;
@@ -115,7 +113,7 @@ export default function LanguagePicker({
               stack
                 ? // A sticker card (index.css), pressed in when chosen.
                   [
-                    "sticker relative flex min-h-tap items-center justify-between gap-3 rounded-card px-5 py-4 text-left text-ink motion-safe:active:translate-y-1 lg:min-h-44 lg:flex-col-reverse lg:items-start lg:py-5",
+                    "sticker relative flex min-h-tap items-center justify-between gap-3 rounded-card px-5 py-4 text-left text-ink motion-safe:active:translate-y-1",
                     chosen ? "sticker-on" : "bg-surface",
                   ].join(" ")
                 : [
@@ -140,7 +138,7 @@ export default function LanguagePicker({
                 {/* "Hallo!" on the Deutsch card, "Namaste!" on Hinglish: each
                     card greets in its own language. aria-hidden, so the
                     button is still announced by its name alone. */}
-                <span aria-hidden="true" className="headline text-2xl leading-tight lg:text-3xl">
+                <span aria-hidden="true" className="headline text-2xl leading-tight">
                   {t("langSetup.hello", option.code)}
                 </span>
                 <span className="text-base font-semibold text-ink-soft">{option.endonym}</span>

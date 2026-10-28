@@ -196,7 +196,7 @@ export default function GameMap({ places, at, avatar, lang, onAvatar }: GameMapP
   const here = looking === at;
 
   return (
-    <div className="mx-4 mt-1 flex flex-col gap-1 lg:max-w-md">
+    <div className="mx-4 mt-1 flex flex-col gap-1">
       {/* Left: "Step 2 of 9", always. Right: the answer to a tapped stop,
           and only that (it used to repeat the heading underneath). The
           height is held either way so nothing below it jumps. */}

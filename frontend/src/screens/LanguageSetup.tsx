@@ -73,8 +73,8 @@ export default function LanguageSetup({ lang, suggested = null, onChoose, changi
   // three languages; each card below repeats it in its own (27 Oct polish).
   // The name stays as a small wordmark above it.
   return (
-    <section className="split flex flex-col gap-8 px-4 pt-4 pb-8 lg:pt-12" aria-labelledby="language-setup-title">
-      <div className="flex flex-col gap-2 pt-[8vh] lg:pt-0">
+    <section className="flex flex-col gap-8 px-4 pt-4 pb-8" aria-labelledby="language-setup-title">
+      <div className="flex flex-col gap-2 pt-[8vh]">
         <p className="headline text-xl text-ink-soft">{t("app.name", lang)}</p>
         <h1 id="language-setup-title" className="q-title q-hero">
           {t(changing ? "lang.change" : "langSetup.hello", lang)}
