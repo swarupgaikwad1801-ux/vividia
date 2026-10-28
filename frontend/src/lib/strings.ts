@@ -193,7 +193,7 @@ export const STRINGS = {
   "danger.hint": {
     en: "You can call one of these now. Tap a number to call.",
     de: "Du kannst jetzt eine dieser Nummern anrufen. Tipp darauf.",
-    hi: "Tum abhi inme se kisi ko call kar sakte ho. Number dabao.",
+    hi: "Inme se kisi ko bhi abhi call karo. Number dabao.",
   },
   // Under 110 and 112, by position (helplines.json's names are German only).
   "danger.police": { en: "Police", de: "Polizei", hi: "Police" },
@@ -266,7 +266,7 @@ export const STRINGS = {
   "moodReply.alone": {
     en: "Feeling lonely is hard.",
     de: "Sich einsam zu fühlen ist schwer.",
-    hi: "Akela mehsoos karna mushkil hota hai.",
+    hi: "Akelapan mehsoos karna mushkil hota hai.",
   },
   "moodReply.skipped": {
     en: "Do you want to tell us something?",
@@ -347,7 +347,7 @@ export const STRINGS = {
   "heard.kind.left_out": {
     en: "Being left out hurts. You deserve to belong.",
     de: "Ausgeschlossen werden tut weh. Du gehörst dazu.",
-    hi: "Akela chhod diya jaana dukh deta hai. Tum bhi saath rehne layak ho.",
+    hi: "Shaamil na kiya jaana dukh deta hai. Tum bhi saath rehne layak ho.",
   },
   "heard.kind.taken": {
     en: "Your things are yours. Nobody should take them.",
@@ -1288,11 +1288,11 @@ export const STRINGS = {
   },
   "calm.start": { en: "Start", de: "Start", hi: "Shuru karo" },
   "calm.stop": { en: "Stop", de: "Stopp", hi: "Ruko" },
-  "calm.g5": { en: "5 things you can see", de: "5 Dinge, die du sehen kannst", hi: "5 cheezein jo tum dekh sakte ho" },
-  "calm.g4": { en: "4 things you can touch", de: "4 Dinge, die du anfassen kannst", hi: "4 cheezein jo tum chhoo sakte ho" },
-  "calm.g3": { en: "3 things you can hear", de: "3 Dinge, die du hören kannst", hi: "3 cheezein jo tum sun sakte ho" },
-  "calm.g2": { en: "2 things you can smell", de: "2 Dinge, die du riechen kannst", hi: "2 cheezein jo tum soongh sakte ho" },
-  "calm.g1": { en: "1 thing you can taste", de: "1 Ding, das du schmecken kannst", hi: "1 cheez jiska taste tum le sakte ho" },
+  "calm.g5": { en: "5 things you can see", de: "5 Dinge, die du sehen kannst", hi: "5 cheezein dhoondho jo dikh rahi hain" },
+  "calm.g4": { en: "4 things you can touch", de: "4 Dinge, die du anfassen kannst", hi: "4 cheezein chhoo kar dekho" },
+  "calm.g3": { en: "3 things you can hear", de: "3 Dinge, die du hören kannst", hi: "3 aawaazein suno" },
+  "calm.g2": { en: "2 things you can smell", de: "2 Dinge, die du riechen kannst", hi: "2 cheezon ki smell pehchano" },
+  "calm.g1": { en: "1 thing you can taste", de: "1 Ding, das du schmecken kannst", hi: "1 cheez ka taste pehchano" },
   "calm.groundHint": {
     en: "Name them in your head. Tap Next when you are ready.",
     de: "Nenn sie im Kopf. Tipp auf Weiter, wenn du so weit bist.",
@@ -1308,12 +1308,12 @@ export const STRINGS = {
   "feel.hint": {
     en: "Tap any that fit. They go into your writing, and you can change them.",
     de: "Tipp alle an, die passen. Sie kommen in deinen Text, und du kannst sie ändern.",
-    hi: "Jo sahi lage un par tap karo. Woh tumhare likhne mein aayenge, aur tum unhe badal sakte ho.",
+    hi: "Jo sahi lage un par tap karo. Woh tumhare likhne mein aayenge, aur unhe badla ja sakta hai.",
   },
   "feel.sentence": { en: "I feel {words}.", de: "Ich fühle mich {words}.", hi: "Mujhe {words} lag raha hai." },
   "feel.hurt": { en: "hurt", de: "verletzt", hi: "hurt" },
   "feel.embarrassed": { en: "embarrassed", de: "beschämt", hi: "sharminda" },
-  "feel.leftOut": { en: "left out", de: "ausgeschlossen", hi: "bahar kiya hua" },
+  "feel.leftOut": { en: "left out", de: "ausgeschlossen", hi: "alag-thalag" },
   "feel.disappointed": { en: "disappointed", de: "enttäuscht", hi: "niraash" },
   "feel.nervous": { en: "nervous", de: "nervös", hi: "nervous" },
   "feel.worried": { en: "worried", de: "besorgt", hi: "pareshaan" },
@@ -1321,10 +1321,10 @@ export const STRINGS = {
   "feel.panicky": { en: "panicky", de: "panisch", hi: "ghabrahat" },
   "feel.annoyed": { en: "annoyed", de: "genervt", hi: "irritated" },
   "feel.frustrated": { en: "frustrated", de: "frustriert", hi: "frustrated" },
-  "feel.unfair": { en: "treated unfairly", de: "unfair behandelt", hi: "unfair treat kiya hua" },
+  "feel.unfair": { en: "treated unfairly", de: "unfair behandelt", hi: "unfair" },
   "feel.furious": { en: "furious", de: "wütend", hi: "bahut gussa" },
-  "feel.lonely": { en: "lonely", de: "einsam", hi: "akela" },
-  "feel.ignored": { en: "ignored", de: "ignoriert", hi: "ignore kiya hua" },
+  "feel.lonely": { en: "lonely", de: "einsam", hi: "akelapan" },
+  "feel.ignored": { en: "ignored", de: "ignoriert", hi: "ignored" },
   "feel.invisible": { en: "invisible", de: "unsichtbar", hi: "jaise koi dekhta hi nahi" },
   "feel.different": { en: "different", de: "anders", hi: "alag" },
 
@@ -1398,7 +1398,7 @@ export const STRINGS = {
   },
   // Days you came back (components/LastFourWeeks.tsx). Counts days, never a
   // streak: missing a day is never shown as a loss.
-  "visits.title": { en: "Days you came back", de: "Tage, an denen du da warst", hi: "Jin dinon tum wapas aaye" },
+  "visits.title": { en: "Days you came back", de: "Tage, an denen du da warst", hi: "Wapas aane ke din" },
   "visits.count": {
     en: "{n} of the last 28 days",
     de: "{n} der letzten 28 Tage",
@@ -1407,12 +1407,12 @@ export const STRINGS = {
   "visits.first": {
     en: "You came back. That is a step.",
     de: "Du bist wieder da. Das ist ein Schritt.",
-    hi: "Tum wapas aaye. Yeh ek kadam hai.",
+    hi: "Wapas aana ek kadam hai.",
   },
   "visits.some": {
     en: "You keep coming back for yourself.",
     de: "Du kommst immer wieder, für dich.",
-    hi: "Tum apne liye baar baar wapas aa rahe ho.",
+    hi: "Baar baar wapas aana, apne liye. Yeh achhi baat hai.",
   },
   "visits.note": {
     en: "Coming back is enough. There is no streak to keep, and a day away is fine.",
