@@ -385,11 +385,37 @@
     box-shadow: none;
     transition:
       translate 90ms ease-out,
+      scale 160ms cubic-bezier(0.2, 0.8, 0.3, 1),
       filter 90ms ease-out,
       background-color 150ms ease-out;
   }
   .sticker:active {
     filter: brightness(0.94);
+  }
+  /* Hover zoom (Swarup, 28 Oct): a chip you can tap grows a little under the
+     mouse, or under keyboard focus (a picture tile is a label, so the focus
+     is on the checkbox inside it: hence :has), so it is clear what a click
+     would hit.
+     Only with a real pointer that can hover: on a phone a tap is already
+     answered by the press, and a hover state there sticks after the finger
+     lifts. `scale` is its own property, so it adds to the press's `translate`
+     instead of replacing it. 5% fits inside the 12px gap between tiles, so
+     a grown chip never covers its neighbour. Nothing that can't be tapped
+     grows: disabled buttons, and the card itself, which isn't a button. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    :is(button, a, label, summary, [role="button"]).sticker:not(:disabled, [aria-disabled="true"]):is(:hover, :focus-visible, :has(:focus-visible)) {
+      scale: 1.05;
+    }
+    :is(button, a, label, summary, [role="button"]).sticker:not(:disabled, [aria-disabled="true"]):active {
+      scale: 1.01;
+    }
+  }
+  /* With reduced motion nothing grows; the hovered chip darkens a little
+     instead, so the hint is still there. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+    :is(button, a, label, summary, [role="button"]).sticker:not(:disabled, [aria-disabled="true"]):hover {
+      filter: brightness(0.96);
+    }
   }
   /* Picked: the deeper, solid fill of the scene. The ✓ badge says the same
      thing without colour (PictureQuestions.tsx). Ink on it is 7.7:1 or more. */
