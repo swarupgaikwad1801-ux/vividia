@@ -77,30 +77,33 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: Qui
             360px (measured, en/de/hi). */}
         <div className="flex items-center justify-end gap-2">
           {beside}
-          {/* The Escape shortcut, said where it can be found: on hover or
-              keyboard focus only (a phone has no Esc key), and to screen
-              readers through aria-keyshortcuts. */}
+          {/* Its name and the Escape shortcut, said where they can be found:
+              on hover or keyboard focus only (a phone has no Esc key), and to
+              screen readers through aria-label and aria-keyshortcuts. */}
           <span className="group relative">
           <button
             type="button"
             onClick={() => quickExit(url)}
             // DangerDialog keeps this in its Tab cycle, so it stays reachable.
             data-quick-exit
+            // Icon only (Neel, 28 Oct): the door is the label a child sees;
+            // the name is read out and shown on hover, from strings.ts.
+            aria-label={t("quickExit.button", lang)}
             aria-keyshortcuts="Escape Escape Escape"
             // Big and clear (c-bigtype): an ink ring on the page, not a filled
             // chip. Quieter than the red Need help beside it, but the only
             // outlined thing on the screen, so it is never lost.
-            className="min-h-tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border-2 border-ink px-2.5 text-base font-bold text-ink transition-colors duration-100 hover:bg-ink/5 active:bg-ink/10"
+            className="size-tap inline-flex shrink-0 items-center justify-center rounded-full border-2 border-ink text-ink transition-colors duration-100 hover:bg-ink/5 active:bg-ink/10"
           >
             {/* An arrow out of a door, for a child who reads the shape faster
                 than the word, or reads no German or English at all. */}
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="h-5 w-5"
+              className="size-6"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.25"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -108,12 +111,12 @@ export default function QuickExitButton({ lang, url = NEUTRAL_URL, beside }: Qui
               <path d="M16 8l4 4-4 4" />
               <path d="M20 12H10" />
             </svg>
-            {t("quickExit.button", lang)}
           </button>
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute top-full right-0 z-50 mt-2 hidden rounded-full bg-ink px-3 py-1 text-xs font-bold whitespace-nowrap text-page group-has-[:focus-visible]:block [@media(hover:hover)]:group-hover:block"
+            className="pointer-events-none absolute top-full right-0 z-50 mt-2 hidden flex-col items-end rounded-card bg-ink px-3 py-1.5 text-xs font-bold whitespace-nowrap text-page group-has-[:focus-visible]:flex [@media(hover:hover)]:group-hover:flex"
           >
+            <span className="text-sm">{t("quickExit.button", lang)}</span>
             {t("exit.keys", lang)}
           </span>
           </span>

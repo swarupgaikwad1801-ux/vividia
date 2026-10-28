@@ -200,11 +200,14 @@ export const STRINGS = {
   "danger.ambulance": { en: "Ambulance and fire brigade", de: "Rettungsdienst und Feuerwehr", hi: "Ambulance aur fire brigade" },
   "danger.orWrite": { en: "Or write to someone", de: "Oder schreib jemandem", hi: "Ya kisi ko likho" },
   "danger.continue": { en: "Continue", de: "Weiter", hi: "Aage chalo" },
-  // Shown in the pop-up when /api/emergency cannot be reached.
+  // Shown in the pop-up when /api/emergency cannot be reached. The top-bar
+  // button is a red phone with no visible word (28 Oct), so every line that
+  // sends a child to it names the shape first, then its name (help.short,
+  // which is also its screen-reader name and hover label).
   "help.dangerLineNoNumber": {
-    en: "In danger right now? Tap Need help at the top.",
-    de: "Gerade in Gefahr? Tipp oben auf Hilfe.",
-    hi: "Abhi khatra hai? Upar “Need help” dabao.",
+    en: "In danger right now? Tap the red phone, “Need help”, at the top.",
+    de: "Gerade in Gefahr? Tipp oben auf das rote Telefon, „Hilfe“.",
+    hi: "Abhi khatra hai? Upar laal phone wala “Need help” button dabao.",
   },
   "help.source": { en: "Checked on", de: "Geprüft am", hi: "Check kiya" },
   // From #85's Help screen, kept at the merge. hi is draft Hinglish.
@@ -399,9 +402,9 @@ export const STRINGS = {
   // button is "Need help" in Hinglish too (ENGLISH_IN_HINGLISH below), so the
   // Hindi names it in English rather than as "Madad chahiye".
   "heard.urgent": {
-    en: "What you wrote matters a lot. You don't have to be alone with this. Tap Need help at the top, any time.",
-    de: "Was du geschrieben hast, ist sehr wichtig. Du musst damit nicht allein sein. Tipp oben auf Hilfe, jederzeit.",
-    hi: "Tumne jo likha, woh bahut important hai. Iske saath akele rehna zaroori nahi. Upar Need help dabao, kabhi bhi.",
+    en: "What you wrote matters a lot. You don't have to be alone with this. Tap the red phone, “Need help”, at the top, any time.",
+    de: "Was du geschrieben hast, ist sehr wichtig. Du musst damit nicht allein sein. Tipp oben auf das rote Telefon, „Hilfe“, jederzeit.",
+    hi: "Tumne jo likha, woh bahut important hai. Iske saath akele rehna zaroori nahi. Upar laal phone wala “Need help” button dabao, kabhi bhi.",
   },
   // The gentle questions, one after each answer, chosen by lib/listening.ts
   // from what the child has not said yet. Every one is optional: the child
@@ -945,14 +948,14 @@ export const STRINGS = {
     hi: "Yeh aakhri step hai jo yeh app jaanta hai. Agar yeh hota rahe, to inmein se kisi ke paas phir jaana theek hai. Do baar poochna theek hai.",
   },
   "ladder.dangerNow": {
-    en: "If you are in danger right now, press the help button in this app.",
-    de: "Bist du gerade in Gefahr? Dann drück den Hilfe-Knopf in dieser App.",
-    hi: "Agar abhi khatra hai, to is app mein “Need help” dabao.",
+    en: "If you are in danger right now, press the red phone, “Need help”, at the top.",
+    de: "Bist du gerade in Gefahr? Dann drück oben auf das rote Telefon, „Hilfe“.",
+    hi: "Agar abhi khatra hai, to upar laal phone wala “Need help” button dabao.",
   },
   "ladder.contactsElsewhere": {
-    en: "To see how to reach them, press the help button.",
-    de: "Wie du sie erreichst, siehst du unter dem Hilfe-Knopf.",
-    hi: "Inse kaise baat karein, yeh “Need help” mein hai.",
+    en: "To see how to reach them, press the red phone, “Need help”, at the top.",
+    de: "Wie du sie erreichst, siehst du oben unter dem roten Telefon, „Hilfe“.",
+    hi: "Inse kaise baat karein, yeh upar laal phone wale “Need help” button mein hai.",
   },
   "ladder.rung.head": { en: "The head of the school", de: "Die Schulleitung", hi: "School ke principal" },
   "ladder.rung.schoolPsychology": {
@@ -1008,9 +1011,9 @@ export const STRINGS = {
     hi: "Kaun dekhega, yeh tum chuno. App chupke se kisi ko kuch nahi batata.",
   },
   "onboarding.leaveNow": {
-    en: "“{button}” at the top closes the app fast. It does not delete your browser history.",
-    de: "„{button}“ oben schließt die App sofort. Dein Browser-Verlauf wird aber nicht gelöscht.",
-    hi: "Upar wala “{button}” button app turant band karta hai. Par browser history delete nahi hoti.",
+    en: "The door button at the top, “{button}”, closes the app fast. It does not delete your browser history.",
+    de: "Der Tür-Knopf oben, „{button}“, schließt die App sofort. Dein Browser-Verlauf wird aber nicht gelöscht.",
+    hi: "Upar darwaze wala “{button}” button app turant band karta hai. Par browser history delete nahi hoti.",
   },
   // "1 of 3" next to the dots, so a screen reader hears where it is.
   "onboarding.step": { en: "{n} of {total}", de: "{n} von {total}", hi: "{total} mein se {n}" },
@@ -1374,9 +1377,9 @@ export const STRINGS = {
 
   // Draft kept on the phone (lib/drafts.ts).
   "draft.kept": {
-    en: "What you type is kept on this phone until you save it or leave with Leave now.",
-    de: "Was du tippst, bleibt auf diesem Handy, bis du es speicherst oder auf Schnell raus tippst.",
-    hi: "Jo tum type karte ho woh is phone par rehta hai, jab tak tum save na karo ya Leave now na dabao.",
+    en: "What you type is kept on this phone until you save it or leave with the door button, “Leave now”.",
+    de: "Was du tippst, bleibt auf diesem Handy, bis du es speicherst oder auf den Tür-Knopf „Schnell raus“ tippst.",
+    hi: "Jo tum type karte ho woh is phone par rehta hai, jab tak tum save na karo ya darwaze wala “Leave now” button na dabao.",
   },
 
   // Offline, everywhere except the two writing screens that say it themselves.
@@ -1388,6 +1391,10 @@ export const STRINGS = {
 
   // Skip link (App.tsx), for keyboard and screen-reader users.
   "nav.skip": { en: "Skip to content", de: "Zum Inhalt springen", hi: "Content par jao" },
+  // Top bar (App.tsx): opens the timeline, the child's saved words and where
+  // the PIN is set. A feature name, so English on Hinglish screens. German is
+  // one word: "Meine Notizen" overlapped Need help at 360px beside "Zurück".
+  "nav.notes": { en: "My notes", de: "Notizen", hi: "Mere notes" },
 
   // Leave now: the keyboard shortcut, said where it can be found (QuickExitButton).
   "exit.keys": {
@@ -1451,6 +1458,7 @@ export const ENGLISH_IN_HINGLISH: ReadonlySet<StringKey> = new Set<StringKey>([
   "quickExit.button",
   "nav.back",
   "nav.next",
+  "nav.notes",
   "lang.change",
   "display.open",
   "display.large",
