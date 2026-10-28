@@ -1279,9 +1279,9 @@ export const STRINGS = {
   "calm.hold": { en: "Hold", de: "Halten", hi: "Roko" },
   "calm.out": { en: "Breathe out", de: "Ausatmen", hi: "Saans bahar chhodo" },
   "calm.breatheHint": {
-    en: "Follow the square: 4 seconds on each side. Stop whenever you like.",
-    de: "Folge dem Quadrat: 4 Sekunden pro Seite. Hör auf, wann du willst.",
-    hi: "Square ke saath chalo: har side 4 second. Jab chaho ruk jao.",
+    en: "Breathe with the bubble: in as it grows, out as it shrinks. 4 seconds each. Stop whenever you like.",
+    de: "Atme mit der Blase: ein, wenn sie wächst, aus, wenn sie kleiner wird. Je 4 Sekunden. Hör auf, wann du willst.",
+    hi: "Bubble ke saath saans lo: badhe to andar, chhota ho to bahar. Har baar 4 second. Jab chaho ruk jao.",
   },
   "calm.start": { en: "Start", de: "Start", hi: "Shuru karo" },
   "calm.stop": { en: "Stop", de: "Stopp", hi: "Ruko" },
